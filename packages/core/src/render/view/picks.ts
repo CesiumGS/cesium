@@ -435,7 +435,7 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
                 c.ndcX * c.tanX * c.right[i]! +
                 c.ndcY * c.tanY * c.up[i]!);
         }
-        request.resolvePosition({ position: p, cameraRecord: c.cameraRecord });
+        request.resolvePosition({ position: p, camera: c.cameraRecord });
         return;
       }
       request.resolve!(

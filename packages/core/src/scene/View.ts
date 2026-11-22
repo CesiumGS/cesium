@@ -150,7 +150,7 @@ export interface PickPositionResult {
    * anchor, or the render root while the view has none), for an image the
    * view's size in CSS pixels (as the pick's x and y).
    */
-  cameraRecord: CameraRecord;
+  camera: CameraRecord;
 }
 
 /** α clamped to [0, 1]; NaN is 1. */

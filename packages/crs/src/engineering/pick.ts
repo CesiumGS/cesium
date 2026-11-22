@@ -350,7 +350,7 @@ export async function pickInFrame(
     }
     const position = hit.position;
     // The lens the pick used (its record's intrinsics, CSS pixels).
-    const { fx, fy, cx, cy } = hit.cameraRecord;
+    const { fx, fy, cx, cy } = hit.camera;
     const camera: PickCamera = {
       position: eye,
       direction,

@@ -549,11 +549,11 @@ describe("views and picks", () => {
     // through the record it came with (on the default rig, render space and
     // the body anchor's coordinates are the same).
     const own = (await position)!;
-    expect(own.cameraRecord.cx).toBeCloseTo(OFF_CENTER.cx, 10);
-    expect(own.cameraRecord.pose.referenceFrame).toBe(earth);
+    expect(own.camera.cx).toBeCloseTo(OFF_CENTER.cx, 10);
+    expect(own.camera.pose.referenceFrame).toBe(earth);
     for (const [p, r] of [
       [pick.position, record],
-      [own.position, own.cameraRecord],
+      [own.position, own.camera],
     ] as const) {
       const along = projectToPixel(r, p, pixel);
       expect(along).toBeCloseTo(z, 6);

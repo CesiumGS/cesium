@@ -16,7 +16,7 @@ export function positionHit(
   return (
     position && {
       position,
-      cameraRecord: camera.record(width, height, { name: "fake" }, 0),
+      camera: camera.record(width, height, { name: "fake" }, 0),
     }
   );
 }

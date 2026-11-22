@@ -1105,7 +1105,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "crs:PickCamera",
     ],
     status: "changed",
-    note: "`view.pick` and `view.pickPosition` return promises, so every call site must `await`. They read a feature-ID target back, with no extra render. `view.pickPosition` resolves to the position with the camera record it used (`hit.position`, `hit.cameraRecord`), not to the bare position. A pick names its feature by a stable ID (`PickResult.id`, a 64-bit `bigint` made from what the content is), the same one ray hits give, in every run, with its labels by taxonomy (`PickResult.labels`).",
+    note: "`view.pick` and `view.pickPosition` return promises, so every call site must `await`. They read a feature-ID target back, with no extra render. `view.pickPosition` resolves to the position with the camera record it used (`hit.position`, `hit.camera`), not to the bare position. A pick names its feature by a stable ID (`PickResult.id`, a 64-bit `bigint` made from what the content is), the same one ray hits give, in every run, with its labels by taxonomy (`PickResult.labels`).",
     source: "Overall plan, sections 2 and 3.5",
     snippet: "pick",
   },
