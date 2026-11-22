@@ -2,7 +2,7 @@
 id: CS-535
 title: Rays query the scene on the GPU
 kind: milestone
-state: proposed
+state: planned
 created: 2026-11-15
 project: CS-197
 outcome: Rays query the scene on the GPU, from user code too, for a viewshed, a near-field terrain trace and a progressive path-traced view.

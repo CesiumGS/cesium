@@ -2,7 +2,7 @@
 id: CS-534
 title: Infrastructure and geoscience data shows in 2.0
 kind: milestone
-state: proposed
+state: planned
 created: 2026-11-15
 project: CS-196
 outcome: Scalar fields, volumes and per-element overrides draw at scale, models print to scale and align with their site in WebXR, and gallery examples show each.
