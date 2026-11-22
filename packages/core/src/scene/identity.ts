@@ -520,11 +520,13 @@ export function stableIdOf(key: StableKey): StableId {
 /** Hosts whose `v` query parameter is the asset's version, not a token. */
 const VERSIONED_HOSTS = /(^|\.)ion\.cesium\.com$|^assets\.cesium\.com$/i;
 
+/** A reference's scheme (RFC 3986's `scheme ":"`). */
+const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 /**
- * A reference's scheme, if any, and `//` (or `\\`, as http reads it): it
- * has an authority, `user:password@host:port`.
+ * The URL standard's special schemes: for these, any run of slashes or
+ * backslashes after the scheme, or none, starts the authority.
  */
-const AUTHORITY = /^([a-z][a-z0-9+.-]*:)?[\\/]{2}/i;
+const SPECIAL_SCHEME = /^(?:https?|wss?|ftp|file):$/i;
 /**
  * An opaque reference's user information (`scheme:user:password@rest`, no
  * `//`): up to its last `@` before any slash, so a password with `?` or `#`
@@ -721,13 +723,30 @@ function dataDigest(uri: string): string {
 }
 
 /**
+ * Where a reference's authority (`user:password@host:port`) starts, after
+ * its scheme and slashes, or -1 when it has none: a special scheme always
+ * has one; any other reference, after `//` (or `\\`, as http reads it).
+ */
+function authorityStart(text: string, scheme: string): number {
+  let end = scheme.length;
+  while (text[end] === "/" || text[end] === "\\") {
+    end++;
+  }
+  if (scheme && SPECIAL_SCHEME.test(scheme)) {
+    return end;
+  }
+  return end - scheme.length >= 2 ? scheme.length + 2 : -1;
+}
+
+/**
  * An asset's canonical reference, for its IDs and every message that names
  * a key: no credentials, query or fragment (session tokens never enter an
  * ID). It reads the reference as the URL parser does: leading and trailing
  * spaces and controls, and every tab and newline, go first.
  *
- * - A reference with an authority (`scheme://` or `//`) keeps its scheme,
- *   if any, and the host, port and path the URL parser finds. Cesium ion's
+ * - A reference with an authority (`scheme://`, `//`, or a special scheme
+ *   such as `https:` with any slashes) keeps its scheme, if any, and the
+ *   host, port and path the URL parser finds. Cesium ion's
  *   assets keep their `v` (the asset's version), so a new version of the
  *   data gets new IDs.
  * - When the parser can't read it, or finds no host, nothing before the
@@ -750,28 +769,29 @@ export function canonicalSource(reference: string): string {
     // blob:<origin>/<uuid>: the origin's own URL, canonical.
     return `blob:${canonicalSource(text.slice(5))}`;
   }
-  const authority = AUTHORITY.exec(text);
-  if (!authority) {
+  const scheme = SCHEME.exec(text)?.[0] ?? "";
+  const start = authorityStart(text, scheme);
+  if (start < 0) {
     // Relative or opaque: no query or fragment, no user information.
     return text.replace(OPAQUE_USER_INFO, "$1").replace(QUERY_AND_FRAGMENT, "");
   }
   let url: URL | undefined;
   try {
-    // The base only resolves a protocol-relative reference, as http.
-    url = new URL(text, "https://base.invalid/");
+    // A base only for a protocol-relative reference, read as http: with a
+    // scheme, "https:u:p@h" would resolve against it as a path.
+    url = scheme ? new URL(text) : new URL(text, "https://base.invalid/");
   } catch {
     url = undefined;
   }
   if (!url || url.host === "") {
     const at = text.lastIndexOf("@");
-    const rest = text.slice(Math.max(at + 1, authority[0].length));
-    return `${authority[0]}${rest}`.replace(QUERY_AND_FRAGMENT, "");
+    const rest = text.slice(Math.max(at + 1, start));
+    return `${text.slice(0, start)}${rest}`.replace(QUERY_AND_FRAGMENT, "");
   }
   const version = VERSIONED_HOSTS.test(url.hostname)
     ? url.searchParams.get("v")
     : null;
-  const scheme = authority[1] === undefined ? "" : url.protocol;
-  const base = `${scheme}//${url.host}${url.pathname}`;
+  const base = `${scheme ? url.protocol : ""}//${url.host}${url.pathname}`;
   return version !== null ? `${base}?v=${version}` : base;
 }
 

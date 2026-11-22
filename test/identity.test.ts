@@ -162,6 +162,11 @@ describe("canonical sources", () => {
     expect(canonicalSource("//user:pa?ss@h/x?t=1")).toBe("//h/x");
     expect(canonicalSource("s3://key:p?w@bucket/x")).toBe("s3://bucket/x");
     expect(canonicalSource("blob:https://u:p?s@h/x")).toBe("blob:https://h/x");
+    // A special scheme's authority starts after any slashes, or none.
+    expect(canonicalSource("https:/u:p@h/x")).toBe("https://h/x");
+    expect(canonicalSource("https:\\u:p@h/x")).toBe("https://h/x");
+    expect(canonicalSource("https:u:p@h/x")).toBe("https://h/x");
+    expect(canonicalSource("https:/user:pa?ss@h/x")).toBe("https:/h/x");
     // An opaque reference's password may hold "?" or "#" too.
     expect(canonicalSource("custom:user:p?w#x@site/x")).toBe("custom:site/x");
   });
@@ -459,6 +464,10 @@ describe("the identity table", () => {
       "https://user:pw/secret@tiles.test/site/tileset.json",
       "//user:pw?secret@tiles.test/site/tileset.json",
       "custom:user:pw?secret@site/tileset.json",
+      "https:/user:secret@tiles.test/site/tileset.json",
+      "https:\\user:secret@tiles.test/site/tileset.json",
+      "https:user:secret@tiles.test/site/tileset.json",
+      "https:/user:pw?secret@tiles.test/site/tileset.json",
     ];
     const { ids, reports } = table({ hash: () => 42n });
     sources.forEach((source, index) => {
