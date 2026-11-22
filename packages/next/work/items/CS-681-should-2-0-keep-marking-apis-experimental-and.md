@@ -2,10 +2,14 @@
 id: CS-681
 title: Should 2.0 keep marking APIs experimental, and how?
 kind: decision
-state: planned
+state: done
 created: 2026-11-17
 project: CS-437
 decider: owner
+answer: B
+answered_at: 2026-11-22T02:26:44.892Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -55,3 +59,5 @@ What the survey found goes wrong elsewhere:
 Open.
 
 From the owner's release planning on 2026-11-17: `docs/decisions/2026-11-17-release-plan-and-parity.md`.
+
+The owner's two calls, 2026-11-21: experimental packages carry a paired 0.x version line, as OpenTelemetry's do, not the lockstep 2.x numbers. The package names follow CS-616.
