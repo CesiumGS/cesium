@@ -2,10 +2,14 @@
 id: CS-796
 title: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-199
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, runs npm install in the merge worktree, reruns the type checks, work check, the WGSL test and the bundle check, fast-forwards main, regenerates the views and logs the merge; the chief of staff runs npm install in the main checkout; CS-777 can start."
+answered_at: 2026-11-22T00:49:29.086Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
