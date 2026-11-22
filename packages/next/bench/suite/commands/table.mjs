@@ -329,6 +329,184 @@ const COMPLETION_FIELDS = [
   "result_command",
 ];
 
+/** A study command whose module loads only when it runs (studies.mjs). */
+const studyCommand = (name, spec) => ({
+  ...spec,
+  async run(ctx) {
+    const module = await import("./studies.mjs");
+    return module[name](ctx);
+  },
+});
+
+/** The pre-registration options `study new` takes (studies.mjs, KIND_FIELDS). */
+const STUDY_FIELDS = {
+  baseline: o("comparison: what the candidate is compared against", "engine"),
+  candidate: o("comparison, feasibility: the change", "engine"),
+  axes: o("sweep: the settings it varies", "a,b"),
+  reference: o(
+    "sweep: the reference point; calibration: the reference",
+    "setting=value",
+  ),
+  primary: o(
+    "one to three, each with its direction and minimum effect (a fraction)",
+    "metric:lower|higher:effect",
+  ),
+  guardrails: o(
+    "each with its margin (a fraction) or a bound",
+    "metric:margin,…",
+  ),
+  secondary: o("metrics corrected for multiple comparisons", "a,b"),
+  criteria: o("feasibility: what feasible means", "metric<=budget,…"),
+  tolerances: o(
+    "calibration: each quantity's error tolerance",
+    "metric<=tolerance,…",
+  ),
+  runs: o("runs per arm (default: from --noise and the minimum effect)", "n"),
+  order: o("paired-interleaved (the only order)", "order"),
+  stopping: o("fixed (default) or sequential (always-valid intervals)", "rule"),
+  alpha: o("the false-positive rate (0.05)", "fraction"),
+  power: o("the chance to see the minimum effect (0.8)", "fraction"),
+  noise: o(
+    "the noise floor: one paired log ratio's standard deviation, from an A/A run",
+    "fraction",
+  ),
+  "aa-run": o("the A/A run that measured the noise floor", "run-id"),
+  prior: o(
+    "the prior on the effect (default normal:0:<noise>)",
+    "normal:mean:sd",
+  ),
+  health: o(
+    "the health bar runs must pass (default power:ac,thermal:nominal)",
+    "power:ac,load:n,thermal:nominal,battery:pct",
+  ),
+};
+
+const dateOption = {
+  date: o("the date to write (default today)", "YYYY-MM-DD", { hidden: true }),
+};
+
+const STUDY_COMMANDS = {
+  new: studyCommand("studyNew", {
+    summary:
+      "create a study: its question, kind, instruments and pre-registration",
+    usage:
+      'dyno study new <slug> --kind <kind> --item CS-n --question "…" [--hypothesis "…"] [--instruments a,b] [fields]',
+    args: [{ name: "slug", required: true }],
+    options: {
+      kind: o("comparison, sweep, feasibility or calibration", "kind"),
+      item: o("the item the study serves", "CS-n"),
+      title: o("a short title (default: the question)", "text"),
+      question: o("what the study asks", "text"),
+      hypothesis: o(
+        "what it expects, stated before any run that tests it",
+        "text",
+      ),
+      instruments: o("the instruments whose runs it draws on (suite)", "a,b"),
+      ...STUDY_FIELDS,
+      ...dateOption,
+    },
+    details: [
+      "The id is today's date and the slug; one that exists on any local branch is refused.",
+      "Each kind writes down what it needs before results, and new refuses a missing one",
+      "(exit 2, naming each): a comparison needs --baseline, --candidate, --primary",
+      "(metric:direction:effect), --guardrails (with margins) and --noise (runs come from",
+      "the power analysis unless --runs says). See packages/next/work/studies/README.md.",
+    ],
+  }),
+  note: studyCommand("studyNote", {
+    summary: "add a dated observation",
+    usage: 'dyno study note <id> "…"',
+    args: [
+      { name: "id", required: true },
+      { name: "text", required: true, variadic: true },
+    ],
+    options: dateOption,
+  }),
+  attach: studyCommand("studyAttach", {
+    summary: "add earlier runs as evidence (the runs stay as they are)",
+    usage: "dyno study attach <id> <run> [run…]",
+    args: [
+      { name: "id", required: true },
+      { name: "run", required: true, variadic: true },
+    ],
+  }),
+  verdict: studyCommand("studyVerdict", {
+    summary:
+      "compute the verdict from the pre-stated criteria and record it, with its citations",
+    usage:
+      'dyno study verdict <id> --cite <run>:"what it showed" [--reasoning "…"] [--decision CS-n] [--outcome o --override "why"]',
+    args: [{ name: "id", required: true }],
+    options: {
+      cite: o(
+        "a run and what it showed, with numbers and units (repeat it)",
+        "run:text",
+        {
+          repeatable: true,
+        },
+      ),
+      reasoning: o("the reasoning, in prose", "text"),
+      decision: o("the decision item the verdict informs", "CS-n"),
+      outcome: o(
+        "supported, refuted or inconclusive, when it differs from the computed one",
+        "outcome",
+      ),
+      override: o(
+        "why the outcome differs from the computed verdict (kept in the file)",
+        "text",
+      ),
+    },
+    details: [
+      "The verdict is computed: each device a stratum; runs failing the health bar are",
+      "excluded and named; a missing instrument's runs make it inconclusive. Citing an",
+      "invalid run, a recording, a run from another device or one not in this store warns.",
+      "Recording a verdict doesn't close the decision it informs: that stays the owner's.",
+    ],
+  }),
+  abandon: studyCommand("studyAbandon", {
+    summary: "abandon an open study, saying why",
+    usage: 'dyno study abandon <id> --reason "…"',
+    args: [{ name: "id", required: true }],
+    options: { reason: o("why", "text"), ...dateOption },
+  }),
+  reopen: studyCommand("studyReopen", {
+    summary:
+      "reopen a concluded or abandoned study (git keeps the old verdict)",
+    usage: 'dyno study reopen <id> --reason "…"',
+    args: [{ name: "id", required: true }],
+    options: { reason: o("why", "text"), ...dateOption },
+  }),
+  show: studyCommand("studyShow", {
+    summary: "a study, its evidence and its verdict so far",
+    usage: "dyno study show <id> [--branch b]",
+    args: [{ name: "id", required: true }],
+    options: {
+      branch: o("read it from another local branch (read-only)", "branch"),
+    },
+  }),
+  check: studyCommand("studyCheck", {
+    summary: "check every study file in this worktree (exit 1 on errors)",
+    usage: "dyno study check",
+  }),
+  power: studyCommand("studyPower", {
+    summary:
+      "the runs a comparison needs, from a noise floor and a minimum effect",
+    usage:
+      "dyno study power --noise <fraction> --effect <fraction> [--alpha a] [--power p]",
+    options: {
+      noise: o(
+        "one paired difference's standard deviation (an A/A run's)",
+        "fraction",
+      ),
+      effect: o(
+        "the minimum effect worth detecting, in the same units",
+        "fraction",
+      ),
+      alpha: o("the false-positive rate (0.05)", "fraction"),
+      power: o("the chance of seeing the effect (0.8)", "fraction"),
+    },
+  }),
+};
+
 const dataLines = (data) => [
   ...data.datasets.map((d) =>
     d.state === "current"
@@ -703,6 +881,23 @@ export const TABLE = {
           } else {
             args = checkPassthrough(rest, MEASURE_KIND_OPTIONS[kind]);
           }
+          if (kind !== "lab") {
+            // A hypothesis needs a study, and a study must be ready before
+            // a measurement is queued (the run checks it again).
+            const named = (option) => {
+              const at = args.indexOf(`--${option}`);
+              return at < 0 ? undefined : (args[at + 1] ?? true);
+            };
+            const { studyForRun } = await import("./studies.mjs");
+            try {
+              studyForRun(
+                { hypothesis: named("hypothesis"), study: named("study") },
+                { env },
+              );
+            } catch (error) {
+              throw new DynoError(error.kind ?? "usage", error.message);
+            }
+          }
           if (!fake && Object.keys(opts).some((k) => k.startsWith("fake-"))) {
             throw new DynoError(
               "usage",
@@ -854,7 +1049,29 @@ export const TABLE = {
   },
   study: {
     summary: "studies: a question, its runs and its answer",
-    planned: "CS-404",
+    children: STUDY_COMMANDS,
+  },
+  studies: {
+    summary: "list studies (here; --all-branches adds other local branches)",
+    usage:
+      "dyno studies [--item CS-n] [--status open|concluded|abandoned] [--kind k] [--all-branches]",
+    options: {
+      item: o("only the studies serving this item", "CS-n"),
+      status: o("open, concluded or abandoned", "status"),
+      kind: o("comparison, sweep, feasibility or calibration", "kind"),
+      "all-branches": o(
+        "also studies that exist only on other local branches (read through git, read-only)",
+      ),
+    },
+    details: [
+      "--json prints { studies: [{ id, title, kind, item, status, created, instruments,",
+      "question, outcome, decision, holds_for, branch, path, uncommitted, valid }] }:",
+      "the tracker reads it (studies --item CS-<n> --json).",
+    ],
+    async run(ctx) {
+      const { studiesList } = await import("./studies.mjs");
+      return studiesList(ctx);
+    },
   },
   device: {
     summary: "other devices: pairing and device runs",

@@ -130,6 +130,7 @@ import { acquireRunLock, defaultLockFile } from "../runLock.mjs";
 import { compareTable, defaultPlan, scorecard } from "../scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { runImages } from "../images.mjs";
+import { applyStudy, studyForRun } from "./studies.mjs";
 import {
   COLD_START_BUDGET_MS,
   COLD_START_GOAL_MS,
@@ -237,6 +238,8 @@ let command;
 let rest;
 let opts;
 let catalog;
+/** The run's study: its expectations and the options that override it. */
+let runStudy;
 let invokedAs;
 
 /** A command called without what it needs: the dispatcher's `usage`. */
@@ -256,6 +259,26 @@ function fail(message) {
  * the first line.
  */
 function beginRun(kind) {
+  // The run's study (CS-404): a hypothesis without one is refused, naming
+  // `study new`; a study's item and expectations are inherited before the
+  // identity is worked out, and explicit options that differ are recorded.
+  let found;
+  try {
+    found = studyForRun(opts, { env: process.env, cwd: root });
+  } catch (error) {
+    if (error.kind === "usage") {
+      throw new SuiteUsage(error.message);
+    }
+    fail(error.message);
+  }
+  runStudy = found
+    ? { expectations: found.expectations, overrides: applyStudy(opts, found) }
+    : undefined;
+  for (const [key, o] of Object.entries(runStudy?.overrides ?? {})) {
+    console.warn(
+      `warning: --${key} ${o.run} overrides study ${found.id}'s ${o.study} (recorded in the run)`,
+    );
+  }
   let identity;
   try {
     identity = resolveIdentity({ kind, opts, root });
@@ -610,7 +633,11 @@ async function coldStart() {
       primary: "firstFrameMs",
       guardrails: ["moduleRequests", "duplicateFetches"],
       ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
+      ...(runStudy ? { study: runStudy.expectations } : {}),
     },
+    ...(runStudy && Object.keys(runStudy.overrides).length
+      ? { studyOverrides: runStudy.overrides }
+      : {}),
     dirty: git("status --porcelain").length > 0,
     served: "dev",
     command: [...invokedAs, command, ...rest],
@@ -1234,7 +1261,11 @@ async function run() {
       ...(opts.guardrails ? { guardrails: opts.guardrails.split(",") } : {}),
       ...(opts.tolerance ? { tolerance: Number(opts.tolerance) } : {}),
       ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
+      ...(runStudy ? { study: runStudy.expectations } : {}),
     },
+    ...(runStudy && Object.keys(runStudy.overrides).length
+      ? { studyOverrides: runStudy.overrides }
+      : {}),
     dirty: git("status --porcelain").length > 0,
     // The commit the run served (the working tree frozen), and how:
     // "build" (production) or "dev" (--dev, the live tree).

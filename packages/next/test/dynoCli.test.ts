@@ -176,19 +176,14 @@ describe("the dispatch", () => {
   });
 
   it("says a planned command is planned, with exit 3 and its item", async () => {
-    const { code, body } = await json("study", "list");
+    const { code, body } = await json("device");
     expect(code).toBe(EXIT["not-built"]);
     expect(body).toMatchObject({
       ok: false,
       error: "not-built",
-      item: "CS-404",
+      item: "CS-408",
     });
-    for (const words of [
-      ["device"],
-      ["runner"],
-      ["store"],
-      ["result", "pin"],
-    ]) {
+    for (const words of [["runner"], ["store"], ["result", "pin"]]) {
       expect((await dyno(...words)).code).toBe(EXIT["not-built"]);
     }
   });
@@ -210,10 +205,8 @@ describe("each command's JSON", () => {
       expect(commands.has(words.join(" ")), words.join(" ")).toBe(true);
     }
     expect(commands.get("measure start")).toMatchObject({ state: "built" });
-    expect(commands.get("study")).toMatchObject({
-      state: "planned",
-      item: "CS-404",
-    });
+    expect(commands.get("study new")).toMatchObject({ state: "built" });
+    expect(commands.get("studies")).toMatchObject({ state: "built" });
     expect(body.targets.map((t: Json) => t.id)).toEqual(["local", "fake"]);
     expect(body.completion_record.fields).toContain("handle");
     expect(Object.keys(body.exit_codes)).toEqual(["0", "1", "2", "3", "4"]);

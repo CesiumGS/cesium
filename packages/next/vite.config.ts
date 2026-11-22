@@ -27,6 +27,7 @@ import { workApi } from "./scripts/vitePluginWork.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
 import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { isRunFile } from "./bench/suite/identity.mjs";
+import { studiesEndpoint } from "./bench/suite/studiesEndpoint.mjs";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory, slangWasmStatus } from "./scripts/slangTools.mjs";
@@ -466,6 +467,13 @@ export default defineConfig({
     workApi(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),
+    // Studies (CS-404): read and validated writes, into this worktree's
+    // work/studies/ (bench/suite/studiesEndpoint.mjs).
+    studiesEndpoint({
+      prefix: "/bench-results/studies",
+      root: fileURLToPath(new URL("../..", import.meta.url)),
+      results: benchResults,
+    }),
     serveBenchResults("/bench-results", benchResults),
     serveDirectory("/bench-results", benchResults),
     serveReleases("/cesium-release", cesiumReleases),

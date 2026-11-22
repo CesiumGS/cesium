@@ -9,7 +9,7 @@
 // CPU: Windows "% Processor Performance" (effective speed relative to
 // nominal; above 100 is turbo). No machine names are recorded.
 import { execFileSync, spawn } from "node:child_process";
-import { platform } from "node:os";
+import { loadavg, platform } from "node:os";
 import process from "node:process";
 
 /** nvidia-smi `clocks_event_reasons` bits that mean slowed down. */
@@ -31,6 +31,67 @@ function tryExec(file, args) {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The machine's state for a study's health bar (CS-404): power source
+ * ("ac" or "battery"), battery charge in percent, the load average (1, 5
+ * and 15 minutes; not on Windows, where Node reports zeros) and the thermal
+ * state ("nominal", or what slowed the machine). A field the platform
+ * doesn't tell is left out, so a check of it says "not recorded" instead of
+ * passing. Nothing names the machine: macOS's battery line carries an id,
+ * which is never kept.
+ */
+export function machineState({
+  os = platform(),
+  run = tryExec,
+  load = loadavg,
+} = {}) {
+  const out = {};
+  if (os !== "win32") {
+    out.loadAverage = load().map((v) => Math.round(v * 100) / 100);
+  }
+  if (os === "darwin") {
+    const batt = run("pmset", ["-g", "batt"]) ?? "";
+    const source = /Now drawing from '([^']+)'/.exec(batt)?.[1];
+    if (source) {
+      out.power = /battery/i.test(source) ? "battery" : "ac";
+    }
+    const charge = /\t(\d{1,3})%;/.exec(batt)?.[1];
+    if (charge !== undefined) {
+      out.battery = Number(charge);
+    }
+    const therm = run("pmset", ["-g", "therm"]);
+    if (therm !== undefined) {
+      const limit = Number(/CPU_Speed_Limit\s*=\s*(\d+)/.exec(therm)?.[1]);
+      const level = Number(
+        /thermal warning level set to (\d+)/i.exec(therm)?.[1],
+      );
+      out.thermal =
+        Number.isFinite(limit) && limit < 100
+          ? `CPU speed limited to ${limit}%`
+          : Number.isFinite(level) && level > 0
+            ? `thermal warning level ${level}`
+            : "nominal";
+    }
+  } else if (os === "win32") {
+    const battery = run("powershell", [
+      "-NoProfile",
+      "-Command",
+      "(Get-CimInstance Win32_Battery | Select-Object -First 1).BatteryStatus",
+    ]);
+    // Win32_Battery.BatteryStatus 2: on AC power; no battery: a desktop.
+    out.power = !battery || battery === "2" ? "ac" : "battery";
+  } else if (os === "linux") {
+    const online = run("sh", [
+      "-c",
+      "cat /sys/class/power_supply/A*/online 2>/dev/null",
+    ]);
+    if (online === "1" || online === "0") {
+      out.power = online === "1" ? "ac" : "battery";
+    }
+  }
+  return out;
 }
 
 /** Static conditions: power source, power plan, GPU driver and clocks. */
@@ -84,6 +145,7 @@ export function conditions() {
         ? "AC"
         : "battery";
   }
+  out.machineState = machineState();
   return out;
 }
 

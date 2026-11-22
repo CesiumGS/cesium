@@ -8,6 +8,8 @@ import type {
   EngineConfig,
   RunIdentity,
   Scene,
+  StudyRow,
+  StudyView,
 } from "./schema.ts";
 
 /**
@@ -220,4 +222,33 @@ export function titleOf(summaries: Summary[], key: string): string {
     }
   }
   return key;
+}
+
+/**
+ * The studies (bench/suite/studiesEndpoint.mjs): this worktree's, and with
+ * `allBranches` those only on other local branches, read-only.
+ */
+export async function loadStudies(allBranches = false): Promise<StudyRow[]> {
+  const r = await fetch(
+    `/bench-results/studies/index.json${allBranches ? "?all=1" : ""}`,
+  );
+  if (!r.ok) {
+    throw new Error(`studies: ${r.status}`);
+  }
+  return ((await r.json()) as { studies: StudyRow[] }).studies;
+}
+
+/** One study, its evidence and its verdict so far. */
+export async function loadStudy(
+  id: string,
+  branch?: string,
+): Promise<StudyView> {
+  const query = branch ? `?branch=${encodeURIComponent(branch)}` : "";
+  const r = await fetch(
+    `/bench-results/studies/${encodeURIComponent(id)}${query}`,
+  );
+  if (!r.ok) {
+    throw new Error(`study ${id}: ${r.status}`);
+  }
+  return (await r.json()) as StudyView;
 }

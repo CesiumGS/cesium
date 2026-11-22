@@ -96,12 +96,22 @@ export function parseOptions(tokens, spec = {}) {
           .join(", ")})`,
       );
     }
-    if (Object.hasOwn(opts, name)) {
+    if (Object.hasOwn(opts, name) && !option.repeatable) {
       throw new DynoError("usage", `--${name} given twice`);
     }
     const next = tokens[i + 1];
     const nextIsValue = next !== undefined && !next.startsWith("--");
-    if (option.value && !option.optional) {
+    if (option.repeatable && option.value) {
+      // A repeatable option collects its values in order (study verdict --cite).
+      if (!nextIsValue) {
+        throw new DynoError(
+          "usage",
+          `--${name} needs a value <${option.value}>`,
+        );
+      }
+      opts[name] = [...(opts[name] ?? []), next];
+      i++;
+    } else if (option.value && !option.optional) {
       if (!nextIsValue) {
         throw new DynoError(
           "usage",
@@ -201,8 +211,11 @@ export function helpLines(node, path) {
     lines.push(`       ${name} <command> --help`);
     // The bin is the private workspace package tools/dyno, @cesium/dyno (CS-774, CS-784).
     if (path.length === 0) {
-      lines.push("", "Run it as `npx @cesium/dyno`, from the repository root or packages/next.",
-        "(The scoped name: a missing link then fails instead of downloading the public `dyno` package.)");
+      lines.push(
+        "",
+        "Run it as `npx @cesium/dyno`, from the repository root or packages/next.",
+        "(The scoped name: a missing link then fails instead of downloading the public `dyno` package.)",
+      );
     }
     lines.push("");
     lines.push("Commands:");

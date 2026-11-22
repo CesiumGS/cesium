@@ -480,3 +480,78 @@ export interface RunIdentity {
   /** The machine whose servers the pages came from (the same, locally). */
   servedFrom: string;
 }
+
+/** A study's kind (bench/suite/studies.mjs; work/studies/README.md). */
+export type StudyKind = "comparison" | "sweep" | "feasibility" | "calibration";
+export type StudyStatus = "open" | "concluded" | "abandoned";
+/** A study's verdict. A run has a result and a validity, never a verdict. */
+export type StudyOutcome = "supported" | "refuted" | "inconclusive";
+
+/** One study in the list (GET /bench-results/studies/index.json; `dyno studies --json`). */
+export interface StudyRow {
+  id: string;
+  title: string;
+  kind: StudyKind | null;
+  item: string | null;
+  status: StudyStatus | null;
+  created: string | null;
+  instruments: string[];
+  /** The question's first line. */
+  question: string;
+  outcome: StudyOutcome | null;
+  /** The decision item the verdict informs. */
+  decision: string | null;
+  /** The devices the verdict holds for. */
+  holds_for: string[];
+  branch: string;
+  /** From the repository's top level. */
+  path: string;
+  /** Changed in this worktree and not committed yet. */
+  uncommitted: boolean;
+  /** Whether the file passes the validator (dyno study check). */
+  valid: boolean;
+  /** A study that exists only on another local branch, read through git. */
+  readOnly?: boolean;
+}
+
+/** One run a study draws on, without its values (GET /bench-results/studies/<id>). */
+export interface StudyEvidence {
+  id: string;
+  /** False for a run made on another machine: shown by id and machine. */
+  inStore: boolean;
+  machine: string;
+  kind: string | null;
+  instrument: string | null;
+  /** Made for the study (the run's `study`), attached, or cited. */
+  made: boolean;
+  attached: boolean;
+  cited: boolean;
+  validity: "valid" | "warning" | "invalid" | "unknown";
+  health?: { ok: boolean; reasons: string[]; unknown: string[] };
+}
+
+/** A study as Dyno's Studies page reads it (GET /bench-results/studies/<id>). */
+export interface StudyView {
+  id: string;
+  path: string;
+  branch: string;
+  /** The front matter as written: strings, and lists of strings. */
+  study: Record<string, string | string[]>;
+  sections: Partial<
+    Record<"Question" | "Hypothesis" | "Design" | "Notes" | "Verdict", string>
+  >;
+  errors: string[];
+  warnings: string[];
+  evidence: StudyEvidence[];
+  /** The verdict computed from the pre-stated criteria, so far. */
+  computed: {
+    outcome: StudyOutcome;
+    holds_for: string[];
+    reasons: string[];
+    warnings: string[];
+    settle: string | null;
+    excluded: Array<{ id: string; machine: string; reasons: string[] }>;
+    /** Relative changes and probabilities, never milliseconds or bytes. */
+    readout: string[];
+  };
+}
