@@ -51,13 +51,11 @@ CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
+  CS-950  Merge CS-940, stableIdToHex and parseStableId (owner)
 
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617, CS-932
-
-CS-199 Dyno hardening, packaging and CI
-  CS-947  Merge CS-919, dyno lab --commit serves the commit's own packages (owner)
 
 17 open decision(s) for owner
 ```

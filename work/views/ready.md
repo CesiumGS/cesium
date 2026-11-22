@@ -31,6 +31,7 @@ CS-10 Cesium IR
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
   CS-921  A compiled route's center term subtracts its highs as integers on both emitters
   CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
+  CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -211,8 +212,6 @@ CS-199 Dyno hardening, packaging and CI
   CS-544  The handbook's reel runs in the served handbook as well as the static file
   CS-583  The casterLoop slow-orbit test holds under full-suite load
   CS-851  npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport
-  CS-919  dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it
-  CS-947  decision: Merge CS-919, dyno lab --commit serves the commit's own packages
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -242,6 +241,7 @@ CS-437 The public API reviews
   CS-939  PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
   CS-940  stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
   CS-943  Route, RouteStep and Recordable are exported, so the library build's declaration check passes
+  CS-950  decision: Merge CS-940, stableIdToHex and parseStableId
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample

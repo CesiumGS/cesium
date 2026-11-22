@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 26 of 52 done, 12 ready, 10 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 27 of 54 done, 13 ready, 10 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -200,6 +200,8 @@ No milestone
 - [ ] [CS-921](./items/CS-921-a-compiled-route-s-center-term-subtracts-its.md) A compiled route's center term subtracts its highs as integers on both emitters. Needs CS-54.
 - [x] [CS-925](./items/CS-925-merge-cs-54-routes-on-both-emitters.md) decision: Merge CS-54, routes on both emitters. Done.
 - [ ] [CS-941](./items/CS-941-a-compiled-route-s-residual-statements-go.md) A compiled route's residual statements go through Cesium IR's emitters (CS-920 B). Needs CS-54.
+- [x] [CS-954](./items/CS-954-does-alpha-1-wait-for-a-measurement-of-the-df64.md) decision: Does alpha.1 wait for a measurement of the df64 route-center pass on Apple GPUs?. Done.
+- [ ] [CS-955](./items/CS-955-the-df64-route-center-pass-is-measured-on-an.md) The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails. Needs nothing.
 
 ### Live MaterialX graph editing
 
@@ -494,7 +496,7 @@ No milestone
 - [x] [CS-527](./items/CS-527-which-milestones-does-2-0-0-beta-1-need.md) decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] [CS-528](./items/CS-528-which-milestones-does-2-0-0-rc-1-need.md) decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] [CS-529](./items/CS-529-which-milestones-does-2-0-0-need.md) decision: Which milestones does 2.0.0 need?. Done.
-- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats), CS-906 (Content sources and formats), CS-921 (Cesium IR), CS-939 (public API reviews), CS-940 (public API reviews) and CS-943 (public API reviews).
+- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats), CS-906 (Content sources and formats), CS-921 (Cesium IR), CS-939 (public API reviews), CS-940 (public API reviews), CS-943 (public API reviews) and CS-955 (Cesium IR).
 - [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory) and CS-830 (Sandcastle as 2.0's gallery).
 - [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
@@ -679,7 +681,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 20 of 65 done, 20 ready, 19 blocked, 6 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 21 of 66 done, 20 ready, 19 blocked, 6 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -763,6 +765,7 @@ No milestone
 - [x] [CS-917](./items/CS-917-merge-cs-900-three-usd-readers-compared-in-dyno.md) decision: Merge CS-900, three USD readers compared in Dyno. Done.
 - [?] [CS-945](./items/CS-945-a-per-feature-visibility-bit-so-the-edit-layer.md) A per-feature visibility bit, so the edit layer can hide one feature in a batched tile draw, and draw replaced or inserted features. Proposed. Needs CS-847.
 - [?] [CS-946](./items/CS-946-one-content-can-have-several-items-and-world.md) One content can have several items, and World.items lists content items. Proposed. Needs CS-847.
+- [x] [CS-952](./items/CS-952-what-addresses-a-feature-in-a-change-set.md) decision: What addresses a feature in a change set?. Done.
 
 ### Sky, light and atmosphere
 
@@ -968,7 +971,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 25 done, 16 ready, 0 blocked, 4 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 7 of 26 done, 14 ready, 0 blocked, 5 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -999,10 +1002,11 @@ No milestone
 - [x] [CS-796](./items/CS-796-merge-cs-580-naga-wasm-30-2-0-is-a-dev.md) decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
 - [x] [CS-852](./items/CS-852-merge-cs-850-eslint-passes-on-main-again-the.md) decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
 - [?] [CS-912](./items/CS-912-dyno-s-rough-edges-found-by-cs-611-a-hang-after.md) Dyno's rough edges found by CS-611: a hang after a throwing suite, baseline IDs in studies, a port for suite run. Proposed. Needs nothing.
-- [ ] [CS-919](./items/CS-919-dyno-lab-commit-runs-the-worktree-s-packages.md) dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it. Needs nothing.
+- [x] [CS-919](./items/CS-919-dyno-lab-commit-runs-the-worktree-s-packages.md) dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it. Done.
 - [?] [CS-926](./items/CS-926-dyno-lab-exits-nonzero-when-a-row-fails-not.md) dyno lab exits nonzero when a row fails, not only on console errors. Proposed. Needs nothing.
 - [?] [CS-928](./items/CS-928-importboundary-s-globe-only-viewer-bundle-test.md) importBoundary's globe-only Viewer bundle test fails in full runs under load, and passes alone. Proposed. Needs nothing.
-- [ ] [CS-947](./items/CS-947-merge-cs-919-dyno-lab-commit-serves-the-commit.md) decision: Merge CS-919, dyno lab --commit serves the commit's own packages. Needs nothing. Decided by owner.
+- [x] [CS-947](./items/CS-947-merge-cs-919-dyno-lab-commit-serves-the-commit.md) decision: Merge CS-919, dyno lab --commit serves the commit's own packages. Done.
+- [?] [CS-948](./items/CS-948-test-data-s-dish-tracks-fails-in-full-runs.md) test:data's dish-tracks fails in full runs under load and passes alone. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1132,7 +1136,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 20 of 38 done, 11 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 20 of 39 done, 12 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1186,6 +1190,7 @@ No milestone
 - [ ] [CS-940](./items/CS-940-stableidtohex-and-parsestableid-a-bigint.md) stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
 - [ ] [CS-943](./items/CS-943-route-routestep-and-recordable-are-exported-so.md) Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Needs nothing.
 - [x] [CS-944](./items/CS-944-cs-939-corepick-already-has-a-camera-field-how.md) decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
+- [ ] [CS-950](./items/CS-950-merge-cs-940-stableidtohex-and-parsestableid.md) decision: Merge CS-940, stableIdToHex and parseStableId. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -1259,7 +1264,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 20 of 25 done, 1 ready, 0 blocked, 4 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 21 of 28 done, 1 ready, 1 blocked, 5 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1291,6 +1296,9 @@ No milestone
 - [x] [CS-937](./items/CS-937-merge-cs-931-the-handbook-builds-again.md) decision: Merge CS-931, the handbook builds again. Done.
 - [x] [CS-938](./items/CS-938-packed-pre-release-builds-a-host-application.md) Packed pre-release builds a host application can install, at a named commit. Done.
 - [x] [CS-942](./items/CS-942-merge-cs-938-packed-pre-release-sets-for-a-host.md) decision: Merge CS-938, packed pre-release sets for a host application. Done.
+- [?] [CS-949](./items/CS-949-the-packed-builds-guide-scope-each-override-to.md) The packed-builds guide: scope each override to the 2.0 packages, and say how pnpm hosts set them. Proposed. Needs nothing.
+- [ ] [CS-951](./items/CS-951-a-pnpm-spike-install-time-and-disk-across.md) A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm. Needs CS-613.
+- [x] [CS-953](./items/CS-953-do-the-harness-milestones-the-spike-and-the.md) decision: Do the harness milestones, the spike and the sample stay alpha.1 gates?. Done.
 
 ### Packaging and package names
 

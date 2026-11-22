@@ -103,6 +103,8 @@ graph LR
     CS_921["CS-921 A compiled route's center term subtracts its highs as integers "]:::open
     CS_925["CS-925 Merge CS-54, routes on both emitters"]:::done
     CS_941["CS-941 A compiled route's residual statements go through Cesium IR's e"]:::open
+    CS_954["CS-954 Does alpha.1 wait for a measurement of the df64 route-center pa"]:::done
+    CS_955["CS-955 The df64 route-center pass is measured on an Apple GPU, with a "]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -466,6 +468,7 @@ graph LR
     CS_917["CS-917 Merge CS-900, three USD readers compared in Dyno"]:::done
     CS_945["CS-945 A per-feature visibility bit, so the edit layer can hide one fe"]:::proposed
     CS_946["CS-946 One content can have several items, and World.items lists conte"]:::proposed
+    CS_952["CS-952 What addresses a feature in a change set?"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -605,10 +608,11 @@ graph LR
     CS_851["CS-851 npm run handbook type-checks again: handbook/viewer/workerPool."]:::open
     CS_852["CS-852 Merge CS-850, eslint passes on main again (the unused PostStage"]:::done
     CS_912["CS-912 Dyno's rough edges found by CS-611: a hang after a throwing sui"]:::proposed
-    CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::open
+    CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::done
     CS_926["CS-926 dyno lab exits nonzero when a row fails, not only on console er"]:::proposed
     CS_928["CS-928 importBoundary's globe-only Viewer bundle test fails in full ru"]:::proposed
-    CS_947["CS-947 Merge CS-919, dyno lab --commit serves the commit's own package"]:::decision
+    CS_947["CS-947 Merge CS-919, dyno lab --commit serves the commit's own package"]:::done
+    CS_948["CS-948 test:data's dish-tracks fails in full runs under load and passe"]:::proposed
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -746,6 +750,7 @@ graph LR
     CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::open
     CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::open
     CS_944["CS-944 CS-939: CorePick already has a camera field; how is CorePick na"]:::done
+    CS_950["CS-950 Merge CS-940, stableIdToHex and parseStableId"]:::decision
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -819,6 +824,9 @@ graph LR
     CS_937["CS-937 Merge CS-931, the handbook builds again"]:::done
     CS_938["CS-938 Packed pre-release builds a host application can install, at a "]:::done
     CS_942["CS-942 Merge CS-938, packed pre-release sets for a host application"]:::done
+    CS_949["CS-949 The packed-builds guide: scope each override to the 2.0 package"]:::proposed
+    CS_951["CS-951 A pnpm spike: install time and disk across worktrees, strict de"]:::open
+    CS_953["CS-953 Do the harness milestones, the spike and the sample stay alpha."]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1389,6 +1397,7 @@ graph LR
   CS_939 --> CS_530
   CS_940 --> CS_530
   CS_943 --> CS_530
+  CS_955 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1745,6 +1754,7 @@ graph LR
   CS_54 --> CS_941
   CS_847 --> CS_945
   CS_847 --> CS_946
+  CS_613 --> CS_951
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

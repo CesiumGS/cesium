@@ -101,6 +101,7 @@ CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
   CS-580  naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output
   CS-850  eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes
+  CS-919  dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it
 
 CS-191 Content sources and formats
   CS-552  The content-source seam: one interface every source module implements, designed and planned
@@ -130,5 +131,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-95 merged item(s) not in a release
+96 merged item(s) not in a release
 ```

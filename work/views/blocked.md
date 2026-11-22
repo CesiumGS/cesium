@@ -516,6 +516,7 @@ CS-18 The work tracker
         CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
         CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
         CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes
+        CS-955 The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -724,5 +725,9 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-228 blocked
+CS-609 A clean 2.0 branch and a modern build
+  CS-951  A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm
+      ← CS-613 CI/CD on the new build, with the release pipeline
+
+229 blocked
 ```
