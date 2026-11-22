@@ -2,7 +2,7 @@
 id: CS-775
 title: "The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-20
 project: CS-389
 needs: [CS-746, CS-748, CS-749]

@@ -174,9 +174,6 @@ describe("the view shell's mounting (workModel.ts, mountViews)", () => {
     v("move", "page", 10),
     v("roadmap", "page", 20),
     v("proposals", "page", 60),
-    v("plan", "older", 10),
-    v("deps", "older", 20),
-    v("projects", "older", 30),
   ];
 
   it("puts each view in its row, in order, a mounted one beside the built-in", () => {
@@ -191,18 +188,16 @@ describe("the view shell's mounting (workModel.ts, mountViews)", () => {
       "proposals",
     ]);
     expect(out.roadmap.map((x) => x.id)).toEqual(["release"]);
-    expect(out.older.map((x) => x.id)).toEqual(["plan", "deps", "projects"]);
     expect(out.problems).toEqual([]);
   });
 
-  it("lets a mounted view take a built-in's place by its ID, and retire older ones", () => {
+  it("lets a mounted view take a built-in's place by its ID, and retire another", () => {
     const mine = v("proposals", "page", 60);
-    const out = mountViews(builtIn, [
-      mine,
-      v("order", "roadmap", 30, ["plan"]),
-    ]);
+    const out = mountViews(
+      [...builtIn, v("plan", "roadmap", 10)],
+      [mine, v("order", "roadmap", 30, ["plan"])],
+    );
     expect(out.page.find((x) => x.id === "proposals")).toBe(mine);
-    expect(out.older.map((x) => x.id)).toEqual(["deps", "projects"]);
     expect(out.roadmap.map((x) => x.id)).toEqual(["order"]);
   });
 
@@ -440,7 +435,7 @@ describe("the shell's shared parts (views/Work.tsx)", () => {
       expect(typeof v.label).toBe("string");
       expect(typeof v.question).toBe("string");
       expect(typeof v.Component).toBe("function");
-      expect(["page", "roadmap", "older"]).toContain(v.place);
+      expect(["page", "roadmap"]).toContain(v.place);
     }
     const out = mountViews([], mounted);
     expect(out.problems).toEqual([]);

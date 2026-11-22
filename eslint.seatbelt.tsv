@@ -1,9 +1,7 @@
 # eslint-seatbelt temporarily allowed errors
 # docs: https://github.com/justjake/eslint-seatbelt#readme
 
-"packages/next/bench/suite/views/Dependencies.tsx"	"@typescript-eslint/no-deprecated"	2
 "packages/next/bench/suite/views/Examples.tsx"	"@typescript-eslint/no-deprecated"	1
 "packages/next/bench/suite/views/HoverCard.tsx"	"@typescript-eslint/no-deprecated"	5
-"packages/next/bench/suite/views/Projects.tsx"	"@typescript-eslint/no-deprecated"	1
 "packages/next/bench/suite/views/Viewer.tsx"	"@typescript-eslint/no-deprecated"	4
 "packages/next/bench/suite/views/Work.tsx"	"@typescript-eslint/no-deprecated"	4

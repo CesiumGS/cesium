@@ -175,7 +175,7 @@ export interface WorkCardScope {
   flight: InFlight;
   /** The Plan view's sequence, with its slots: the slip line measures on it. */
   plan?: Plan;
-  /** Opens the Dependencies view on a milestone or item (the D key). */
+  /** Opens the Path view on a milestone or item (the D key). */
   onDeps?: (id: string) => void;
 }
 
@@ -280,7 +280,7 @@ export function StageBar({
 /**
  * The card for one mark on the Work page. `items` and `release` describe a
  * set given outright (a Projects cell); `onDeps` overrides the D key (the
- * Dependencies view centers in place). Without the page's scope, or for an
+ * Path view retargets in place). Without the page's scope, or for an
  * ID the tracker doesn't know, the mark goes bare.
  */
 export function WorkHoverCard({
@@ -305,7 +305,7 @@ export function WorkHoverCard({
   children: ReactElement;
 }) {
   const scope = useContext(WorkCardContext);
-  // A project, or a set given outright, has no Dependencies view of its own.
+  // A project, or a set given outright, has no Path of its own.
   const own = !items && !!scope && !scope.s.projects.some((p) => p.id === id);
   const deps = own ? (onDeps ?? scope?.onDeps) : undefined;
   const keys = useMemo(
@@ -324,7 +324,7 @@ export function WorkHoverCard({
           title={title}
           items={items}
           release={release}
-          footer={deps ? `${click} · D for dependencies` : click}
+          footer={deps ? `${click} · D for path` : click}
         />
       }
       keys={keys}

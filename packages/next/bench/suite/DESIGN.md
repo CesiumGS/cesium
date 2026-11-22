@@ -260,19 +260,18 @@ milestones named by their outcome, each with an `outcome` sentence,
   - **The roadmap's three views (CS-692; the owner, 2026-11-18).** The
     owner asked to step back and present "what is getting built when and
     what the dependencies are and what milestones are going into what
-    releases" from first principles. The roadmap answers three questions,
-    one view each: **Plan**, when things get built (CS-692, the default
-    until CS-744 made the Release view the roadmap's first, below; the
-    Order view since CS-749);
-    **Dependencies**, why something waits and what it unblocks, for one
-    chosen milestone or item (CS-694); and **Projects**, how ready each
-    project is for each release (CS-693). They rest on five principles,
-    which every roadmap view follows:
+    releases" from first principles. The roadmap answered three
+    questions, one view each: **Plan**, when things get built (the Order
+    view since CS-749); **Dependencies**, why something waits and what
+    it unblocks (the Path view since CS-746); and **Projects**, how
+    ready each project is for each release (Projects as bets since
+    CS-748). CS-775 retired the older three ("The retired older views"
+    below). Their five principles still hold for every roadmap view:
     - Position carries the question being asked. Across is sequence,
       never dependency depth, because a position always reads as an
       order. Depth, where it is shown, is labeled "earliest possible
       start" and counted in waves, never steps.
-    - One view per question: when (Plan), why (Dependencies), how ready
+    - One view per question: when (Order), why (Path), how ready
       (Projects).
     - Overview by aggregation, not by shrinking: release, then
       milestone, then item, opened rather than zoomed out until
@@ -297,14 +296,12 @@ milestones named by their outcome, each with an `outcome` sentence,
     tooltip in conflict. Its slot control, zoomable plot, release
     markers and "Releases and the milestones they need" panel went with
     it. `planOf` in `work.ts` stays: the Order view and the hover card
-    sequence with it. The route still reads `&slots=` and nothing uses
-    it.
+    sequence with it. The route stopped reading `&slots=` (CS-775).
   - **Earliest possible start** (the depth layering): each open
     milestone in the first wave it could start, in project lanes. It
-    lives only in the Dependencies view's whole structure (CS-694,
-    `&roadmap=deps&deps=all`; the older `&roadmap=waves` lands there),
-    as that view's waves grid; "The roadmap's Dependencies view" below
-    describes it. The milestone map and list that showed it before, with
+    lived only in the Dependencies view's whole structure (CS-694, as
+    its waves grid) and went with that view (CS-775; "The retired older
+    views" below). The milestone map and list that showed it before, with
     their legend block, flags, release-band arrangement, zoom and
     long hover cards (CS-683, CS-685), were taken off the page with it
     (the owner, 2026-11-19: the old map's legend and hover must not come
@@ -316,9 +313,6 @@ milestones named by their outcome, each with an `outcome` sentence,
     switch since CS-744, `&proposed=show`, off when absent, the count of
     proposed milestones in its tip) adds the proposed milestones and
     release items to every view that can include them, outlined dashed.
-    In Projects, the proposed releases join as
-    columns and proposed milestones' items join their releases; the
-    project matrix counts every open item either way.
   - **Release bands (CS-685).** The owner's rule: a release needs whole
     milestones, and every open item a milestone it needs pulls in,
     directly or through other items, belongs to a milestone the same
@@ -375,7 +369,7 @@ is cheap and clashes with nothing, and that the tabs never move.
 - **Two rows.** The page's views are the first tab row (`view=`):
   Your move, Roadmap, Proposals, Flow, and any mounted page view. The
   Roadmap tab has its own row under it (`roadmap=`): its views as tabs,
-  the **Older views** menu, and the shared **Proposed switch**. The
+  and the shared **Proposed switch**. The
   roadmap opens on its first view, the Release view.
 - **How a view mounts.** A view is one file,
   `bench/suite/views/work<Name>.tsx` (and its `work<Name>.css`), that
@@ -403,7 +397,7 @@ is cheap and clashes with nothing, and that the tabs never move.
   of the views they replace (`"plan"`, `"projects"`), so old links open
   them. A doubled ID or one that isn't a slug is left out and logged.
   Built-in orders: page Your move 10, Roadmap 20; roadmap Release 10;
-  older Dependencies 20, Projects 30. Mounted: page Health 30, What
+  Mounted: page Health 30, What
   changed 40, Proposals 60 (CS-750 keeps the ID `"proposals"`), Flow 70
   (CS-752 keeps the ID `"flow"`); roadmap Path 20,
   Projects 30, Order 40. The route
@@ -432,9 +426,8 @@ is cheap and clashes with nothing, and that the tabs never move.
   `bench/suite`.
 - **No movement.** Each row is one line at every width: tabs that don't
   fit scroll sideways under the edge fade, with no scroll buttons to
-  come and go, and what sits beside them keeps its width. The Older
-  views button keeps its words whichever older view is open, and is
-  marked like a chosen tab; the switch's state words share one cell
+  come and go, and what sits beside them keeps its width. The
+  switch's state words share one cell
   (`ReservedText`), so "shown" and "hidden" take the same room. Narrow
   (under 560 px of view), tabs pad less, the Key keeps only its marks,
   and the switch takes its own line under the roadmap's tabs, the same
@@ -594,9 +587,9 @@ milestones, does.
 
 - **Where it is.** `?view=roadmap&roadmap=path`, after Release. The
   target is in the URL, so a link opens the same path: `focus=CS-<n>`
-  names a milestone or an item (the Dependencies view's center, the
-  same field), and otherwise the release picked (`release=`, alpha.1 by
-  default) is the target. The release picker, or a search for any
+  names a milestone or an item (the retired Dependencies view's
+  center, the same field), and otherwise the release picked
+  (`release=`, alpha.1 by default) is the target. The release picker, or a search for any
   milestone or item by ID or title (Enter takes the first match, the
   arrow keys walk them), chooses it; every node but a group has a
   re-center button that makes it the target, and "Back to the path to
@@ -659,10 +652,8 @@ milestones, does.
   and the page doesn't), with the keyboard only, and with a clean
   console. Nothing in the view animates; under reduced motion the opened
   panel appears without its grow.
-- **The waves grid** in the Dependencies view's whole structure is the
-  wave chart this view is meant to replace. It is part of the built-in
-  Dependencies view, not a view of its own, so it stays until the owner
-  says whether to remove it.
+- **The waves grid** of the Dependencies view, the wave chart this view
+  was meant to replace, went with that view (CS-775).
 - **Model.** `pathViewOf`, `whyNotDone` and `pathTargetOf` in
   `bench/suite/workPath.ts`, tested in `test/dynoWorkPath.test.ts`.
 
@@ -679,8 +670,8 @@ for. No dates and no priorities.
 - **Where it is.** `?view=roadmap&roadmap=projects`, mounted by
   `views/workProjects.tsx` (place `roadmap`, order 30). It keeps the
   older view's ID, so it takes that view's place and old links keep
-  working; CS-693's view (see "The roadmap's Projects view") is retired
-  from Older views. The project matrix stays in the Dependencies view.
+  working; CS-693's view is retired (CS-775; "The retired older views"
+  below).
   The view is `ProjectBetsView` in `views/Projects.tsx`, the model
   `projectBetsOf` in `bench/suite/projectBets.ts`, tested in
   `test/dynoWorkProjects.test.ts`.
@@ -993,147 +984,40 @@ conflict (2026-11-20).
   `barReducer` in `views/workOrder.tsx`, tested in
   `test/dynoWorkPlanOrder.test.ts`.
 
-### The roadmap's Dependencies view (CS-694)
+### The retired older views (CS-775)
 
-The second of the roadmap's three views (the owner, 2026-11-18: Plan,
-CS-692; Dependencies; Projects, CS-693), on the three-view brief CS-692
-records: one view per question, and this one answers why. Every wait
-between 90-odd milestones drawn at once answers neither "what is this
-waiting on?" nor "what does this unblock?", so the view asks about one
-thing at a time and shows the rest on demand.
+The roadmap kept three older views behind an **Older views** menu
+(CS-744) until their replacements landed: Plan, Dependencies and
+Projects. The owner, 2026-11-22: "you can get rid of the older views in
+the work tab." Each answered a question that a newer view answers
+better, and two views of one answer drift apart, so they went, with the
+menu:
 
-- **Where it is.** `?view=roadmap&roadmap=deps`, under Older views. `&focus=CS-<n>` is the center;
-  `&depth=` the levels shown, 1 to 6 (3 when absent); `&deps=all` the
-  whole structure. It follows the roadmap's Proposed toggle: proposed
-  milestones join only when asked for, outlined dashed (CS-563).
-- **Choosing the center.** From the pane (Its dependencies, on any
-  milestone or item, so from a list, Find or the map), from its own
-  search field (ID or words in the title, milestones
-  first; the arrow keys walk the matches, Enter takes the first), or,
-  with nothing chosen, from the milestones most work waits on, or the
-  one open in the pane. A node's center button moves the center to it.
-- **Layout.** What the center waits on to its left, the center, what it
-  unblocks to its right; narrower than 900 px they stack, the center
-  first. Each side is a small tree, expanded to the depth chosen. Its
-  head says how far its chain goes: how many open milestones and items,
-  up to how many levels, and how many of them are the owner's decisions
-  and outside waits, in their kinds' ink.
-- **A node** is one line: a stage fill, its ID with its kind's mark,
-  its title (which opens it in the pane), and the center button. Under
-  it, small: its state and whether it is ready (a milestone's items
-  ready and done; an owner decision as "Your decision" and an outside
-  wait as "Waits outside:" and the party, each in its kind's ink with its
-  mark), its release, and why it is there ("CS-200 needs CS-210", the
-  item needs behind a wait between milestones). A node cut short by the
-  depth says what lies beyond ("16 more, 7 levels") and opens one level
-  more. A node the tree reaches twice is expanded where it is nearest
-  the center and quiet elsewhere ("also elsewhere"); one that leads back
-  to a node on the way is a loop and ends there.
-- **Two levels, each read at its own** (`dependencies.ts`). An item
-  waits on its open needs, items and milestones. A milestone waits on
-  what holds it up besides its own work: the milestones (or items in
-  none) its open items need, the milestones it names, and its own open
-  decisions and outside waits; its own work is its content, listed in
-  the pane. Unblocks is the other way round, and an item also leads up
-  to the milestones that hold it, so the chain carries on there. Done
-  and dropped work isn't in the trees.
-- **A node's release** is CS-685's band: the earliest release that needs
-  the milestone; for an item, the earliest of its milestones' and of a
-  release that needs it directly; otherwise "No release".
-- **The whole structure, behind the toggle,** for reshaping work, and
-  the depth layering's only home. First every open milestone at its
-  **earliest possible start, in waves** (`wavesOf` in
-  `dependencies.ts`): a grid with project lanes down and waves across,
-  each cell listing its milestones as small chips (the mark, the ID, the
-  title cut to fit). A milestone's wave is one more than the latest wave
-  of the milestones it waits on; it is the earliest it could start with
-  unlimited hands, never when it will (the Order view gives the order).
-  Release items take no wave. One key line (the lead sentence, dashed
-  for proposed, ↻ for a loop) carries a "?" whose popover explains the
-  rest. No wait is drawn; a chip's tip is short
-  (its title, its loop, how many it waits on), and choosing it centers
-  the view on it. The grid scrolls sideways in its own box, the lanes'
-  names held. Then the project matrix, CS-693's, the roadmap's only
-  one (see "The roadmap's Projects view").
-- **The key** is one line, worded for the layout (left and right, or
-  under it when stacked); stages, kinds and proposed are explained in
-  tooltips. Nothing animates.
+- **Plan** (CS-692) is the Order view (CS-749).
+- **Dependencies** (CS-694), with its waves grid and the project matrix
+  under it, is the Path view (CS-746). Path answers "why isn't it done"
+  for one release, milestone or item, which was the view's own question
+  ("what does it wait on, what does it unblock"). The waves grid, the
+  "earliest possible start" layering, and the matrix of projects waiting
+  on each other have no replacement.
+- **Projects** (CS-693), the project-by-release matrix, is Projects as
+  bets (CS-748).
 
-### The roadmap's Projects view (CS-693)
+What stayed: `matchFocus` in `dependencies.ts`, since Path's search uses
+it, and `planOf` and the other helpers `work.ts` shares. The Dependencies
+and Projects models (`dependencyGraphOf` and its trees, `projects.ts`)
+and `dependencyMatrix` went with their views. Old links keep working:
 
-The third of the roadmap's three views (the owner, 2026-11-18): Plan
-answers when (CS-692), Dependencies why (CS-694), and Projects how
-ready. It replaces Project waits, a matrix that said which project
-waits on which but not what that means for the releases (the owner: "i
-also haven't found it super useful thus far"). It answers, for the
-owner and for whoever picks the next work: what does each release
-still need from each project, how far along is it, what holds it up,
-and which projects are the bottlenecks. `?view=roadmap&roadmap=projects`,
-the third toggle after Plan and Dependencies; the model is
-`bench/suite/projects.ts`, the view `views/Projects.tsx`.
-
-- **By release.** Projects are rows; releases are columns in ladder
-  order, as CS-685's release bands, then No release. An item belongs to
-  the earliest release whose milestones hold it; one no milestone holds
-  belongs to the earliest release that reaches it through needs, as
-  the closure rule allows; the rest are in no release. A cell is what
-  that release is the first to need from that project, every kind of
-  item: done of all, a stage bar, then each other stage's count by its
-  swatch (in progress, ready, blocked, proposed), and "By" with the IDs
-  of what holds the blocked ones up. Those are open decisions and
-  outside waits anywhere upstream, and the first open item of another
-  project on each way up (that project's own row says what holds it),
-  decisions first. An empty cell says "Needs nothing". Choosing a cell
-  opens it under its row: the items by stage, each blocked one with
-  what blocks it, each opening in the pane.
-- **Holds up**, the column beside the name and the default sort: how
-  many open items in other projects wait on the project's open work,
-  directly or through others, in how many projects and for which
-  releases. Sorted by it, the bottlenecks rise to the top; its head
-  sorts by it, the Project head by project number (`&psort=project`).
-  Choosing the figure lists what waits, by project.
-- **What sets a release's finish** is the Plan view's: the chain of
-  needs that ends at the last item the release needs, as `planOf`
-  sequences the work with the Plan's executor slots (`&slots=`). The
-  words "critical path" are not used. A cell holding items on it gets
-  the accent bar at its left and "Sets the finish of beta.1", as the
-  Plan outlines the chain; Holds up says which releases' finish the
-  project sets, and in the sort it breaks ties.
-- **Decisions in their row.** A project's open decisions of the
-  owner's that hold up release work sit under its row as cards (the
-  decision's mark, its question, and how many items wait on it for
-  which releases), as CS-683 drew them on the map. Each opens in the
-  pane. This settles the question CS-683's executor asked: this view
-  draws decisions.
-- **The project matrix lives in the Dependencies view's whole
-  structure** (`&roadmap=deps&deps=all`), under the waves, and is the
-  roadmap's only one; "Projects' waits on each other" above the
-  Projects view goes there. Old links to Project waits
-  (`&roadmap=matrix`) land there too. The cells are `dependencyMatrix`'s:
-  each row's open items that need the column's. The order
-  (`projectMatrixOf`) is upstream first, so marks sit below the
-  diagonal, and among the projects that can come next, the one most
-  coupled to those just placed, so tightly coupled projects sit
-  together. Loops, projects that wait on each other through their items
-  (strongly connected components), sit together in a double outline,
-  as the old map drew loops, its first row marked ↻ with its number, as
-  the waves grid marks a loop; inside a loop, the order
-  puts as few marks above the diagonal as a greedy rule finds, so every
-  mark above it sits inside a loop. Pointing at or moving to a cell
-  names its row and column; choosing it lists the items behind it. The
-  old matrix's release strip is gone: which projects feed a release is
-  now a column of the Projects view.
-- **Encoding.** One key line above the view: the stage fills, the
-  decision and outside-wait marks, and the finish bar. Kind color is
-  only ink on a glyph or name, stage color only a fill (CS-573); a
-  dashed outline is proposed (CS-563): a proposed release's head, and a
-  cell all in proposed milestones. Labels sit on the marks; the details
-  are in the cell's detail and in the shared hover card (CS-696).
-- **Narrow.** Below 560 px the table becomes a card per project: its
-  name, Holds up, each release it has work for, the releases that need
-  nothing from it on one line, and its decisions; a toggle sorts. The
-  matrix scrolls inside its box. Nothing animates, so reduced motion
-  changes nothing.
+- `roadmap=deps` (and the older `waves` and `matrix`) open Path, and one
+  line under the roadmap's tabs says the Dependencies view is now Path.
+  `&focus=` carries over, since Path takes the same field. The note
+  carries `&moved=deps` and goes when dismissed or another tab is chosen.
+  `&depth=`, `&deps=all`, `&slots=` and `&psort=` are no longer read.
+- `roadmap=plan` opens the Order view, and `roadmap=projects` opens
+  Projects as bets.
+- In an item's or milestone's pane, **Its path** (was "Its
+  dependencies") opens Path with `&focus=` set to it. The hover card's
+  D key does the same.
 
 ### The hover card (CS-696)
 
@@ -1144,8 +1028,8 @@ its content comes from `workCardOf` in `work.ts`.
 
 - **Where.** The same card on every mark that stands for work: an
   Order bar (opened by the Order view itself, so the pointer and the
-  keyboard share one), a Dependencies node and
-  waves chip, a Projects cell, project and release head, and every row
+  keyboard share one), a Path node, a Projects row,
+  project and release head, and every row
   of the lists (Your move, the pane's trees, the chains, the tables). It
   opens on hover after a short pause and on keyboard focus, beside its
   mark and never over it: below by default, flipped or shifted along the
@@ -1179,8 +1063,8 @@ its content comes from `workCardOf` in `work.ts`.
   token or budget line: while across is item count, one muted note says
   so; without a release to measure against, the slip section goes.
 - **Next step.** A muted footer: "Click for details · D for
-  dependencies". D opens the Dependencies view on it (in that view, it
-  centers there); a project or a cell has no D.
+  path". D opens the Path view on it (in that view, it retargets
+  there); a project or a cell has no D.
 - **Progress bars.** Every progress bar's segments name themselves on
   hover, "2 blocked: waiting on CS-22 and CS-23", in CS-573's stage
   colors. In the pane each segment is also a stop for the keyboard; in

@@ -23,11 +23,8 @@ import {
 
 // ------------------------------------------------------------ the shell
 
-/**
- * Where a view's tab sits: in the page's tab row, in the roadmap's view
- * row, or behind the roadmap's "Older views" menu.
- */
-export type ViewPlace = "page" | "roadmap" | "older";
+/** Where a view's tab sits: in the page's tab row or in the roadmap's view row. */
+export type ViewPlace = "page" | "roadmap";
 
 /** What the shell needs to place a view; the view's own parts ride along. */
 export interface ViewEntry {
@@ -36,7 +33,7 @@ export interface ViewEntry {
   place: ViewPlace;
   /** Its place in the row: lower first. */
   order: number;
-  /** The views it retires: a built-in or older view with one of these IDs goes. */
+  /** The views it retires: a built-in view with one of these IDs goes. */
   replaces?: readonly string[];
 }
 
@@ -46,14 +43,14 @@ export const VIEW_ID = /^[a-z][a-z0-9-]{0,23}$/;
 /**
  * The views the shell shows, by place and in order. A mounted view with a
  * built-in view's ID takes its place; one that `replaces` other IDs
- * retires them (an older view whose replacement has landed). Two mounted
+ * retires them (a view whose replacement has landed). Two mounted
  * views with one ID, or an ID that isn't a slug, are problems: the first
  * by file name stays, the other is left out and named.
  */
 export function mountViews<T extends ViewEntry>(
   builtIn: readonly T[],
   mounted: readonly T[],
-): { page: T[]; roadmap: T[]; older: T[]; problems: string[] } {
+): { page: T[]; roadmap: T[]; problems: string[] } {
   const problems: string[] = [];
   const added = new Map<string, T>();
   for (const v of mounted) {
@@ -77,7 +74,6 @@ export function mountViews<T extends ViewEntry>(
   return {
     page: at("page"),
     roadmap: at("roadmap"),
-    older: at("older"),
     problems,
   };
 }

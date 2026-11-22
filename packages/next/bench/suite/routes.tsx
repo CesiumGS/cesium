@@ -66,28 +66,23 @@ export interface WorkSearch {
   item?: string;
   /** The release chosen: the Plan view lights what sets its finish. */
   release?: string;
-  /** The roadmap's view, by its ID: the Release view by default (CS-744), a mounted view's, or an older one, "plan" (CS-692), "deps" (CS-694) or "projects" (CS-693). */
+  /** The roadmap's view, by its ID: the Release view by default (CS-744), or a mounted view's. */
   roadmap?: string;
-  /** The Plan view's executor slots, 2 to 8 (one, the run's max_executors today, by default). */
-  slots?: string;
-  /** The Dependencies view's center: a milestone or item (CS-694). */
+  /** The Path view's target: a milestone or item (CS-746). */
   focus?: string;
-  /** The Dependencies view's whole structure, "all" (one at a time by default). */
-  deps?: string;
-  /** The levels the Dependencies view's trees show, 1 to 6 (3 by default). */
-  depth?: string;
+  /** An old link's view that has gone, "deps": the page says where it went (CS-775). */
+  moved?: string;
   /** The roadmap with its proposed milestones too, "show" (committed work only by default). */
   proposed?: string;
   /** The Proposals view narrowed to one stage of the proposal flow (CS-688): "discuss", "shaping", "ready" or "later" (every stage by default). */
   stage?: string;
-  /** The Projects view's rows by project number, "project" (by what each holds up by default; CS-693). */
-  psort?: string;
 }
-/** A slot count from 2 to 8, as text; one (the default) is left out. */
-const slotsIn = (v: unknown): string | undefined => {
-  const n = Math.round(Number(v));
-  return Number.isFinite(n) && n >= 2 && n <= 8 ? String(n) : undefined;
-};
+/** The roadmap IDs the retired Dependencies view answered to. */
+const OLD_DEPENDENCIES: ReadonlySet<unknown> = new Set([
+  "deps",
+  "waves",
+  "matrix",
+]);
 /** A view's ID on the Work page: a short lowercase slug (workModel.ts, VIEW_ID). */
 const viewIdIn = (v: unknown) =>
   typeof v === "string" && /^[a-z][a-z0-9-]{0,23}$/.test(v) ? v : undefined;
@@ -106,25 +101,14 @@ export const workRoute = createRoute({
       list: str(s.list),
       item: str(s.item),
       release: str(s.release),
-      // "waves" was the depth layering's own view, and "matrix" the
-      // projects' waits on each other (Project waits), before CS-694 and
-      // CS-693 moved both into the Dependencies view's whole structure:
-      // old links land there.
-      roadmap:
-        s.roadmap === "waves" || s.roadmap === "matrix"
-          ? "deps"
-          : viewIdIn(s.roadmap),
-      slots: slotsIn(s.slots),
+      // The Dependencies view (CS-694, with its "waves" and "matrix"
+      // links before it) retired into Path (CS-775): old links land on
+      // Path, and `moved` makes the page say so.
+      roadmap: OLD_DEPENDENCIES.has(s.roadmap) ? "path" : viewIdIn(s.roadmap),
       focus: str(s.focus),
-      deps:
-        s.deps === "all" || s.roadmap === "waves" || s.roadmap === "matrix"
-          ? "all"
-          : undefined,
-      depth:
-        typeof s.depth === "string" || typeof s.depth === "number"
-          ? /^[1-6]$/.test(String(s.depth))
-            ? String(s.depth)
-            : undefined
+      moved:
+        OLD_DEPENDENCIES.has(s.roadmap) || s.moved === "deps"
+          ? "deps"
           : undefined,
       proposed: s.proposed === "show" ? "show" : undefined,
       stage:
@@ -134,7 +118,6 @@ export const workRoute = createRoute({
         s.stage === "later"
           ? s.stage
           : undefined,
-      psort: s.psort === "project" ? "project" : undefined,
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),
 });

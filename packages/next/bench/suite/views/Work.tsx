@@ -2,8 +2,6 @@ import "./work.css";
 import {
   Alert,
   Button,
-  Menu,
-  MenuItem,
   Switch,
   CircularProgress,
   Drawer,
@@ -26,6 +24,7 @@ import { svgCopy } from "@stratakit/icons/copy";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgFilter } from "@stratakit/icons/filter";
 import { svgFolderOpen } from "@stratakit/icons/folder-open";
+import { svgHierarchyTree } from "@stratakit/icons/hierarchy-tree";
 import { svgGitBranch } from "@stratakit/icons/git-branch";
 import { svgSearch } from "@stratakit/icons/search";
 import { svgStatusWarning } from "@stratakit/icons/status-warning";
@@ -68,7 +67,6 @@ import {
   liveBoxOf,
   queueText,
   byProject,
-  dependencyMatrix,
   ENTITY_KIND_NAMES,
   ENTITY_KIND_TIPS,
   ENTITY_KINDS,
@@ -114,7 +112,6 @@ import {
   type WorkSnapshot,
 } from "../work.ts";
 import { Empty, Page, toast, useChartTokens } from "./common.tsx";
-import { DependenciesLink, DependenciesView } from "./Dependencies.tsx";
 import {
   HoverCard,
   StageBar as LabeledStageBar,
@@ -122,7 +119,6 @@ import {
   WorkHoverCard,
 } from "./HoverCard.tsx";
 import { InlineText, ItemText } from "./ItemText.tsx";
-import { ProjectMatrixView, ProjectsView } from "./Projects.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
 import {
   HEALTH_KIND_DEFS,
@@ -316,22 +312,6 @@ const BUILT_IN_VIEWS: WorkViewDef[] = [
     place: "page",
     order: 20,
   },
-  {
-    id: "deps",
-    label: "Dependencies",
-    question: "What one milestone or item waits on and unblocks",
-    place: "older",
-    order: 20,
-    proposals: true,
-  },
-  {
-    id: "projects",
-    label: "Projects",
-    question: "How ready each project's work is for each release",
-    place: "older",
-    order: 30,
-    proposals: true,
-  },
 ];
 
 /** Every `views/work<Name>.tsx` with a `workView`: the mounted views. */
@@ -344,9 +324,7 @@ const VIEWS = mountViews(BUILT_IN_VIEWS, MOUNTED);
 if (VIEWS.problems.length) {
   console.error(`The Work page's views: ${VIEWS.problems.join("; ")}`);
 }
-const VIEW_IDS = new Set(
-  [...VIEWS.page, ...VIEWS.roadmap, ...VIEWS.older].map((v) => v.id),
-);
+const VIEW_IDS = new Set([...VIEWS.page, ...VIEWS.roadmap].map((v) => v.id));
 
 /** The layout's width at which the pane sits beside the view, not over it. */
 const PANE_MIN = 1000;
@@ -435,7 +413,6 @@ function Board({
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const unblocks = useMemo(() => unblocksOf(s), [s]);
-  const chains = useMemo(() => longestChains(items), [items]);
   const flow = useMemo(() => flowOf(s, items, { flight }), [s, items, flight]);
   const byActor = useMemo(() => {
     const by: Record<Actor, WorkItem[]> = {
@@ -536,15 +513,9 @@ function Board({
     scopeNames.length > 2
       ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
       : scopeNames.join(" and ") || undefined;
-  // The roadmap opens on its first view, the Release view (CS-744); the
-  // Dependencies view (CS-694) waits behind the Older views menu until its
-  // replacement lands. The Order view (CS-749) took the Plan view's place.
-  const roadmapView = pickView(
-    [...VIEWS.roadmap, ...VIEWS.older],
-    search.roadmap,
-  )!;
+  // The roadmap opens on its first view, the Release view (CS-744).
+  const roadmapView = pickView(VIEWS.roadmap, search.roadmap)!;
   const roadmapBy = roadmapView.id;
-  const olderActive = VIEWS.older.includes(roadmapView);
   // Proposed milestones join the roadmap only when asked for (CS-563).
   const withProposed = search.proposed === "show";
   const proposedCount = s.milestones.filter(
@@ -562,6 +533,7 @@ function Board({
       : set({
           view: "roadmap",
           roadmap: id === VIEWS.roadmap[0]?.id ? undefined : id,
+          moved: undefined,
           ...patch,
         });
   const viewProps: WorkViewProps = {
@@ -610,9 +582,9 @@ function Board({
       onDeps: (id: string) =>
         set({
           view: "roadmap",
-          roadmap: "deps",
+          roadmap: "path",
           focus: id,
-          deps: undefined,
+          moved: undefined,
         }),
     }),
     [s, flight, cardPlan, set],
@@ -727,10 +699,11 @@ function Board({
                 <div className="work-roadmap">
                   <div className="work-subtabs-row">
                     <Tabs
-                      value={olderActive ? false : roadmapBy}
+                      value={roadmapBy}
                       onChange={(_, v: string) =>
                         set({
                           roadmap: v === VIEWS.roadmap[0]?.id ? undefined : v,
+                          moved: undefined,
                         })
                       }
                       aria-label="Roadmap views"
@@ -748,11 +721,6 @@ function Board({
                         />
                       ))}
                     </Tabs>
-                    <OlderViews
-                      views={VIEWS.older}
-                      active={olderActive ? roadmapBy : undefined}
-                      onPick={(id) => set({ roadmap: id })}
-                    />
                     <ProposedSwitch
                       on={withProposed}
                       count={proposedCount}
@@ -762,87 +730,18 @@ function Board({
                       }
                     />
                   </div>
+                  {search.moved === "deps" && roadmapBy === "path" && (
+                    <MovedNote
+                      onDismiss={() => set({ moved: undefined }, true)}
+                    />
+                  )}
                   <div
                     id="work-roadmap-view"
                     role="tabpanel"
-                    aria-labelledby={
-                      olderActive
-                        ? "work-older-views"
-                        : `work-rtab-${roadmapBy}`
-                    }
+                    aria-labelledby={`work-rtab-${roadmapBy}`}
                   >
-                    {roadmapView.Component ? (
+                    {roadmapView.Component && (
                       <roadmapView.Component {...viewProps} />
-                    ) : (
-                      <div className="work-dash">
-                        <Card
-                          id="work-roadmap-h"
-                          title={
-                            projectScope ? "Linked projects" : roadmapView.label
-                          }
-                          caption={
-                            projectScope
-                              ? "What it waits on, and what waits on it"
-                              : roadmapBy === "projects"
-                                ? "How ready each project's work is for each release, and what it holds up"
-                                : "What one milestone or item waits on, and what it unblocks"
-                          }
-                          className="span-12"
-                        >
-                          {projectScope ? (
-                            <ProjectLinks
-                              s={s}
-                              project={oneProject!}
-                              onCell={(from, to) => open(`dep:${from}:${to}`)}
-                            />
-                          ) : roadmapBy === "projects" ? (
-                            <ProjectsView
-                              s={s}
-                              flight={flight}
-                              items={items}
-                              scoped={size > 0}
-                              proposals={withProposed}
-                              search={search}
-                              set={set}
-                              onItem={(id) =>
-                                set({ item: id, list: undefined })
-                              }
-                            />
-                          ) : (
-                            <DependenciesView
-                              s={s}
-                              flight={flight}
-                              search={search}
-                              set={set}
-                              proposals={withProposed}
-                              matrix={
-                                <ProjectMatrixView
-                                  s={s}
-                                  items={items}
-                                  onCell={(from, to) =>
-                                    open(`dep:${from}:${to}`)
-                                  }
-                                />
-                              }
-                            />
-                          )}
-                        </Card>
-
-                        <Card
-                          id="work-chain-h"
-                          title="Longest chains"
-                          caption="Items that must happen in order, by where they start"
-                          className="span-12"
-                        >
-                          <ChainBars
-                            chains={chains}
-                            flight={flight}
-                            projectOf={projectOf}
-                            limit={6}
-                            onChain={(head) => open(`chain:${head}`)}
-                          />
-                        </Card>
-                      </div>
                     )}
                   </div>
                 </div>
@@ -2121,71 +2020,41 @@ export function ProposedSwitch({
 }
 
 /**
- * The roadmap's older views behind one menu (CS-744), until their
- * replacements land. The button keeps its words whichever is open, and
- * is marked like a chosen tab when one is.
+ * Says where the Dependencies view went (CS-775): an old
+ * `roadmap=deps` link lands on Path, and this one line explains why.
  */
-function OlderViews({
-  views,
-  active,
-  onPick,
-}: {
-  views: readonly WorkViewDef[];
-  active?: string;
-  onPick: (id: string) => void;
-}) {
-  const [at, setAt] = useState<HTMLElement | null>(null);
-  if (!views.length) {
-    return null;
-  }
+function MovedNote({ onDismiss }: { onDismiss: () => void }) {
   return (
-    <>
-      <Button
-        id="work-older-views"
-        variant="text"
-        size="small"
-        className={`work-older-views${active ? " active" : ""}`}
-        aria-haspopup="menu"
-        aria-expanded={!!at}
-        aria-controls={at ? "work-older-menu" : undefined}
-        onClick={(e) => setAt(e.currentTarget)}
-        title={
-          active
-            ? `Showing the older ${views.find((v) => v.id === active)?.label} view`
-            : "The roadmap's earlier views, until their replacements land"
-        }
-      >
-        Older views
-        <Icon href={svgChevronDown} />
-      </Button>
-      <Menu
-        id="work-older-menu"
-        anchorEl={at}
-        open={!!at}
-        onClose={() => setAt(null)}
-        slotProps={{ list: { "aria-labelledby": "work-older-views" } }}
-      >
-        {views.map((v) => (
-          <MenuItem
-            key={v.id}
-            selected={v.id === active}
-            onClick={() => {
-              setAt(null);
-              onPick(v.id);
-            }}
-            className="work-older-item"
-          >
-            <span className="work-older-check" aria-hidden="true">
-              {v.id === active && <Icon href={svgCheckmark} />}
-            </span>
-            <span>
-              <span className="work-older-name">{v.label}</span>
-              <span className="work-older-question">{v.question}</span>
-            </span>
-          </MenuItem>
-        ))}
-      </Menu>
-    </>
+    <Alert severity="info" className="work-moved" onClose={onDismiss}>
+      The Dependencies view is now Path: what lies upstream of the milestone or
+      item picked.
+    </Alert>
+  );
+}
+
+/** A link that opens the Path view on a milestone or item (the pane's). */
+function PathLink({ id }: { id: string }) {
+  return (
+    <Button
+      variant="outlined"
+      size="small"
+      startIcon={<Icon href={svgHierarchyTree} />}
+      render={
+        <RouterLink
+          to="/work"
+          search={(prev: WorkSearch) => ({
+            ...prev,
+            view: "roadmap",
+            roadmap: "path",
+            focus: id,
+            moved: undefined,
+          })}
+        />
+      }
+      nativeButton={false}
+    >
+      Its path
+    </Button>
   );
 }
 
@@ -2273,45 +2142,6 @@ export function ItemRef({
         </span>
       )}
     </ItemLink>
-  );
-}
-
-/** A dashboard card: a titled section, optional tools at its head, links at its foot. */
-function Card({
-  id,
-  title,
-  caption,
-  className,
-  tools,
-  foot,
-  children,
-}: {
-  id: string;
-  title: string;
-  caption?: string;
-  className?: string;
-  tools?: ReactNode;
-  foot?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section className={`work-card ${className ?? ""}`} aria-labelledby={id}>
-      <header className="work-card-head">
-        <span className="work-card-titles">
-          <Typography variant="subtitle-md" render={<h2 />} id={id}>
-            {title}
-          </Typography>
-          {caption && (
-            <Typography variant="caption-md" color="textSecondary">
-              {caption}
-            </Typography>
-          )}
-        </span>
-        {tools}
-      </header>
-      {children}
-      {foot && <div className="work-card-foot">{foot}</div>}
-    </section>
   );
 }
 
@@ -4397,7 +4227,7 @@ function EntityPane({
                 )}
               </dl>
             )}
-            {(it || m) && <DependenciesLink id={id} />}
+            {(it || m) && <PathLink id={id} />}
             {p && (
               <Button
                 variant="outlined"
@@ -4962,171 +4792,6 @@ function Fact({ name, children }: { name: string; children: ReactNode }) {
 }
 
 // ------------------------------------------------------------ dependencies
-
-/**
- * A project's place among the others: the projects it waits on and the
- * ones that wait on it, each with how many items (its row and column of
- * the matrix, as lists).
- */
-function ProjectLinks({
-  s,
-  project,
-  onCell,
-}: {
-  s: WorkSnapshot;
-  project: string;
-  onCell: (from: string, to: string) => void;
-}) {
-  const m = useMemo(() => dependencyMatrix(s, s.items), [s]);
-  const title = (id: string) =>
-    s.projects.find((p) => p.id === id)?.title ?? id;
-  const waitsOn: Array<[string, number]> = [];
-  const waitedOnBy: Array<[string, number]> = [];
-  for (const [k, list] of m.cells) {
-    const [from, to] = k.split("|") as [string, string];
-    if (from === project) {
-      waitsOn.push([to, list.length]);
-    } else if (to === project) {
-      waitedOnBy.push([from, list.length]);
-    }
-  }
-  const max = Math.max(
-    1,
-    ...waitsOn.map((x) => x[1]),
-    ...waitedOnBy.map((x) => x[1]),
-  );
-  const rows = (list: Array<[string, number]>, dir: "on" | "by") =>
-    !list.length ? (
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="work-empty"
-      >
-        None
-      </Typography>
-    ) : (
-      <ol className="work-bars">
-        {list
-          .sort((a, b) => b[1] - a[1])
-          .map(([id, n]) => (
-            <li key={id}>
-              <button
-                type="button"
-                className="work-bar"
-                onClick={() =>
-                  dir === "on" ? onCell(project, id) : onCell(id, project)
-                }
-              >
-                <span className="work-bar-label work-marked">
-                  <LevelMark level="project" />
-                  <span className="work-outline-label">{title(id)}</span>
-                </span>
-                <span className="work-bar-track" aria-hidden="true">
-                  <span
-                    className="work-bar-fill"
-                    style={{ width: `${(100 * n) / max}%` }}
-                  />
-                </span>
-                <span className="work-bar-value">{n}</span>
-              </button>
-            </li>
-          ))}
-      </ol>
-    );
-  return (
-    <div className="work-links">
-      <div>
-        <Typography variant="caption-lg" color="textSecondary" render={<h3 />}>
-          Waits on
-        </Typography>
-        {rows(waitsOn, "on")}
-      </div>
-      <div>
-        <Typography variant="caption-lg" color="textSecondary" render={<h3 />}>
-          Waited on by
-        </Typography>
-        {rows(waitedOnBy, "by")}
-      </div>
-    </div>
-  );
-}
-
-/**
- * The longest chains, ranked: each a bar for how many items it runs in
- * order, labeled with where it starts and who moves that first item now.
- * Choosing one lists the chain step by step.
- */
-function ChainBars({
-  chains,
-  flight,
-  projectOf,
-  limit,
-  onChain,
-}: {
-  chains: WorkItem[][];
-  flight: InFlight;
-  projectOf: Map<string, WorkContainer>;
-  limit: number;
-  onChain: (head: string) => void;
-}) {
-  if (!chains.length) {
-    return (
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="work-empty"
-      >
-        No open item waits on another here.
-      </Typography>
-    );
-  }
-  const shown = chains.slice(0, limit);
-  const max = shown[0]!.length;
-  return (
-    <ol className="work-bars work-chains">
-      {shown.map((chain) => {
-        const head = chain[0]!;
-        const actor = nextActor(head, flight);
-        const projects = new Set(chain.map((it) => it.project));
-        const where = projectOf.get(head.project ?? "")?.title ?? head.project;
-        return (
-          <li key={head.id}>
-            <button
-              type="button"
-              className="work-bar"
-              onClick={() => onChain(head.id)}
-              aria-label={`${chain.length} items from ${head.id} ${head.title}`}
-            >
-              <span className="work-bar-label">
-                <KindId id={head.id} /> <InlineText text={head.title} />
-                <span className="work-chain-meta">
-                  {where}
-                  {projects.size > 1 && ` +${projects.size - 1}`} ·{" "}
-                  {actor === "owner"
-                    ? "your decision first"
-                    : actor === "outside"
-                      ? "waits outside first"
-                      : stageOf(head, flight) === "In flight"
-                        ? "first is in progress"
-                        : "first is ready"}
-                </span>
-              </span>
-              <span className="work-bar-track" aria-hidden="true">
-                <span
-                  className="work-bar-fill"
-                  style={{ width: `${(100 * chain.length) / max}%` }}
-                />
-              </span>
-              <span className="work-bar-value">{chain.length}</span>
-            </button>
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
 
 /**
  * An item's dependencies as two trees around it: what it waits on above

@@ -395,7 +395,7 @@ describe("the Projects view's model (CS-748)", () => {
     }
   });
 
-  it("mounts as the roadmap's Projects view, after Release, and retires the older one", async () => {
+  it("mounts as the roadmap's Projects view, after Release, and takes the older one's place", async () => {
     const { workView } = await import("../bench/suite/views/workProjects.tsx");
     expect(workView).toMatchObject({
       id: "projects",
@@ -403,8 +403,7 @@ describe("the Projects view's model (CS-748)", () => {
       proposals: true,
     });
     const builtIn: ViewEntry[] = [
-      { id: "plan", place: "older", order: 10 },
-      { id: "projects", place: "older", order: 30 },
+      { id: "projects", place: "roadmap", order: 30 },
     ];
     const out = mountViews(builtIn, [
       { id: "release", place: "roadmap", order: 10 },
@@ -412,6 +411,5 @@ describe("the Projects view's model (CS-748)", () => {
     ]);
     expect(out.problems).toEqual([]);
     expect(out.roadmap.map((v) => v.id)).toEqual(["release", "projects"]);
-    expect(out.older.map((v) => v.id)).toEqual(["plan"]);
   });
 });
