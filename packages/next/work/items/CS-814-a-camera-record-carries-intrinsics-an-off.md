@@ -2,9 +2,10 @@
 id: CS-814
 title: A camera record carries intrinsics, an off-center principal point and a named distortion model
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-437
+claimed_by: orch-11-CS-814
 touches: [packages/next/src/scene/Camera.ts, packages/next/src/scene/View.ts, packages/next/src/query/**, packages/next/src/index.ts, packages/next/test, packages/next/api/surface.txt]
 ---
 
