@@ -2,10 +2,14 @@
 id: CS-937
 title: Merge CS-931, the handbook builds again
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge."
+answered_at: 2026-11-22T17:23:02.463Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -28,3 +32,5 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+The chief of staff answered A on 2026-11-22 under the owner's approval of the clean-tree work. Every gate passes on the replay in a fresh worktree, the diff touches no owner path, and the type check now covers `handbook/viewer`. A correction to CS-931's header: the handbook broke on 2026-11-19 (CS-22, then CS-809), not with CS-612.
