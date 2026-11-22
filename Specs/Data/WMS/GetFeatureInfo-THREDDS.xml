@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<FeatureInfoResponse xmlns="http://www.esri.com/wms" xmlns:esri_wms="http://www.esri.com/wms">
-    <iIndex>348</iIndex>
-    <jIndex>5594</jIndex>
-    <FeatureInfo>
-        <value>42</value>
-    </FeatureInfo>
-</FeatureInfoResponse>

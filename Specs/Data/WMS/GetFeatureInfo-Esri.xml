@@ -1,4 +1,0 @@
-<?xml version="1.0"?>
-<FeatureInfoResponse xmlns="http://www.esri.com/wms" xmlns:esri_wms="http://www.esri.com/wms">
-    <FIELDS LGA_CODE_2012="14550" LGA_NAME_2012="Kyogle (A)" OBJECTID="76" SHAPE="Polygon" SHAPE_Area="0.330673" SHAPE_Length="4.004193" STATE="New South Wales" STRUCTURAL_VALUE="0"/>
-</FeatureInfoResponse>
