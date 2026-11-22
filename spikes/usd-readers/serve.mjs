@@ -204,6 +204,21 @@ function inside(dir, rel) {
     : undefined;
 }
 
+/**
+ * Each file read once and kept: the samples and builds don't change while
+ * the server runs, and only the files the routes allow are ever read
+ * (about 100 MB in all).
+ */
+const fileCache = new Map();
+const readOnce = (p) => {
+  let bytes = fileCache.get(p);
+  if (!bytes) {
+    bytes = readFileSync(p);
+    fileCache.set(p, bytes);
+  }
+  return bytes;
+};
+
 function routes(bundle) {
   let cached;
   return {
@@ -244,17 +259,14 @@ function routes(bundle) {
         if (m && READERS[m[1]].files.includes(m[2])) {
           const p = inside(READERS[m[1]].dir, m[2]);
           if (p) {
-            send(
-              readFileSync(p),
-              TYPES[extname(p)] ?? "application/octet-stream",
-            );
+            send(readOnce(p), TYPES[extname(p)] ?? "application/octet-stream");
             return;
           }
         }
         if (path.startsWith("/usd-readers/data/")) {
           const p = inside(data, path.slice("/usd-readers/data/".length));
           if (p) {
-            send(readFileSync(p), "application/octet-stream");
+            send(readOnce(p), "application/octet-stream");
             return;
           }
         }

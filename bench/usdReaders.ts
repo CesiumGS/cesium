@@ -98,7 +98,12 @@ function openOnce(
       resolve(out);
     };
     worker.addEventListener("message", (event: MessageEvent<WorkerAnswer>) => {
-      const m = event.data;
+      // A dedicated worker's messages have no origin to check; only this
+      // page's own worker can send them. Check their shape instead.
+      const m = event.data as WorkerAnswer | undefined;
+      if (typeof m !== "object" || m === null || typeof m.kind !== "string") {
+        return;
+      }
       if (m.kind === "composed") {
         out.run = {
           startMs: performance.now() - t0,
