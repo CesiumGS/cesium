@@ -401,8 +401,6 @@ CS-191 Content sources and formats
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-849  Streams for push sources: connect on the fetch and credential provider
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-901  Which USD reader does CS-559 use, from CS-900's comparison?
-      ← CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD
   CS-902  CS-559's scope, from the chosen reader and CS-833's study
       ← CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
   CS-903  Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
@@ -738,5 +736,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-235 blocked
+234 blocked
 ```

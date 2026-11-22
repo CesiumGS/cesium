@@ -675,7 +675,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 17 of 62 done, 17 ready, 22 blocked, 6 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 19 of 63 done, 17 ready, 21 blocked, 6 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -746,7 +746,7 @@ No milestone
 - [x] [CS-846](./items/CS-846-d6-what-is-ion-s-interface-an-asset-resolver-or.md) decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
 - [x] [CS-853](./items/CS-853-merge-cs-832-the-design-for-semantic-metadata.md) decision: Merge CS-832, the design for semantic metadata and picking. Done.
 - [x] [CS-898](./items/CS-898-64-bit-integer-properties-keep-their-exact-value.md) 64-bit integer properties keep their exact value. Done.
-- [ ] [CS-900](./items/CS-900-three-usd-readers-compared-in-dyno-the-subset.md) Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Needs nothing.
+- [x] [CS-900](./items/CS-900-three-usd-readers-compared-in-dyno-the-subset.md) Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Done.
 - [ ] [CS-901](./items/CS-901-which-usd-reader-does-cs-559-use-from-cs-900-s.md) decision: Which USD reader does CS-559 use, from CS-900's comparison?. Needs CS-900. Decided by owner.
 - [ ] [CS-902](./items/CS-902-cs-559-s-scope-from-the-chosen-reader-and-cs.md) CS-559's scope, from the chosen reader and CS-833's study. Needs CS-901.
 - [ ] [CS-903](./items/CS-903-label-precedence-the-bound-material-taxonomy.md) Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs CS-835 (Packaging and package names) and CS-847.
@@ -756,6 +756,7 @@ No milestone
 - [x] [CS-909](./items/CS-909-merge-cs-898-64-bit-integer-properties-keep.md) decision: Merge CS-898, 64-bit integer properties keep their exact value. Done.
 - [?] [CS-913](./items/CS-913-the-subset-reader-s-composition-faults-on.md) The subset reader's composition faults on broken assets, tested against OpenUSD. Proposed. Needs CS-901.
 - [?] [CS-914](./items/CS-914-openusd-in-webassembly-as-a-test-oracle-for-the.md) OpenUSD in WebAssembly as a test oracle for the USD source. Proposed. Needs CS-901.
+- [x] [CS-917](./items/CS-917-merge-cs-900-three-usd-readers-compared-in-dyno.md) decision: Merge CS-900, three USD readers compared in Dyno. Done.
 
 ### Sky, light and atmosphere
 

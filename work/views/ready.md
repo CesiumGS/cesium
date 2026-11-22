@@ -142,7 +142,7 @@ CS-191 Content sources and formats
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
   CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
   CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
-  CS-900  Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD
+  CS-901  decision: Which USD reader does CS-559 use, from CS-900's comparison?
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws

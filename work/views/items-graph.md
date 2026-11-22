@@ -449,7 +449,7 @@ graph LR
     CS_849["CS-849 Streams for push sources: connect on the fetch and credential p"]:::open
     CS_853["CS-853 Merge CS-832, the design for semantic metadata and picking"]:::done
     CS_898["CS-898 64-bit integer properties keep their exact value"]:::done
-    CS_900["CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD"]:::open
+    CS_900["CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD"]:::done
     CS_901["CS-901 Which USD reader does CS-559 use, from CS-900's comparison?"]:::decision
     CS_902["CS-902 CS-559's scope, from the chosen reader and CS-833's study"]:::open
     CS_903["CS-903 Label precedence: the bound material, taxonomy aliases and Geom"]:::open
@@ -459,6 +459,7 @@ graph LR
     CS_909["CS-909 Merge CS-898, 64-bit integer properties keep their exact value"]:::done
     CS_913["CS-913 The subset reader's composition faults on broken assets, tested"]:::proposed
     CS_914["CS-914 OpenUSD in WebAssembly as a test oracle for the USD source"]:::proposed
+    CS_917["CS-917 Merge CS-900, three USD readers compared in Dyno"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external

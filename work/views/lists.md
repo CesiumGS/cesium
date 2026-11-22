@@ -618,7 +618,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 17 of 62 done, 17 ready, 22 blocked, 6 proposed.
+CS-191, Planned, led by owner: 19 of 63 done, 17 ready, 21 blocked, 6 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -689,7 +689,7 @@ No milestone
 - [x] CS-846 decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
 - [x] CS-853 decision: Merge CS-832, the design for semantic metadata and picking. Done.
 - [x] CS-898 64-bit integer properties keep their exact value. Done.
-- [ ] CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Needs nothing.
+- [x] CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Done.
 - [ ] CS-901 decision: Which USD reader does CS-559 use, from CS-900's comparison?. Needs CS-900. Decided by owner.
 - [ ] CS-902 CS-559's scope, from the chosen reader and CS-833's study. Needs CS-901.
 - [ ] CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs CS-835 (Packaging and package names) and CS-847.
@@ -699,6 +699,7 @@ No milestone
 - [x] CS-909 decision: Merge CS-898, 64-bit integer properties keep their exact value. Done.
 - [?] CS-913 The subset reader's composition faults on broken assets, tested against OpenUSD. Proposed. Needs CS-901.
 - [?] CS-914 OpenUSD in WebAssembly as a test oracle for the USD source. Proposed. Needs CS-901.
+- [x] CS-917 decision: Merge CS-900, three USD readers compared in Dyno. Done.
 
 ### Sky, light and atmosphere
 
