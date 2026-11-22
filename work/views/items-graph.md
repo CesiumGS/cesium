@@ -603,6 +603,7 @@ graph LR
     CS_912["CS-912 Dyno's rough edges found by CS-611: a hang after a throwing sui"]:::proposed
     CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::proposed
     CS_926["CS-926 dyno lab exits nonzero when a row fails, not only on console er"]:::proposed
+    CS_928["CS-928 importBoundary's globe-only Viewer bundle test fails in full ru"]:::proposed
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -781,7 +782,7 @@ graph LR
   subgraph CS_609["A clean 2.0 branch and a modern build"]
     CS_610["CS-610 The 2.0 repository's design: build system, CI/CD and release pi"]:::done
     CS_611["CS-611 The 1.x code is replaced in the branch"]:::done
-    CS_612["CS-612 The new build system"]:::open
+    CS_612["CS-612 The new build system"]:::done
     CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
     CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::done
     CS_887["CS-887 CS-610 D1: does 1.x leave (CS-611) before the package move (CS-"]:::done
@@ -798,6 +799,7 @@ graph LR
     CS_910["CS-910 Merge CS-611, 1.x leaves the 2.0 branch"]:::done
     CS_911["CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale"]:::done
     CS_918["CS-918 Merge CS-911, the move's fix-ups after CS-611"]:::done
+    CS_927["CS-927 Merge CS-612, the new build system"]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision

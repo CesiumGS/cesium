@@ -653,10 +653,6 @@ CS-596 Trust and evals
   CS-604  Cesium engineers review a random sample of merged changes
       ← CS-603 A trust report per module and per release, from each merge's provenance
 
-CS-609 A clean 2.0 branch and a modern build
-  CS-613  CI/CD on the new build, with the release pipeline
-      ← CS-612 The new build system
-
 CS-615 Packaging and package names
   CS-617  2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
       ← CS-616 Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
@@ -733,5 +729,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-233 blocked
+232 blocked
 ```

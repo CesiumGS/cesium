@@ -964,7 +964,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 23 done, 14 ready, 0 blocked, 4 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 24 done, 14 ready, 0 blocked, 5 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -997,6 +997,7 @@ No milestone
 - [?] [CS-912](./items/CS-912-dyno-s-rough-edges-found-by-cs-611-a-hang-after.md) Dyno's rough edges found by CS-611: a hang after a throwing suite, baseline IDs in studies, a port for suite run. Proposed. Needs nothing.
 - [?] [CS-919](./items/CS-919-dyno-lab-commit-runs-the-worktree-s-packages.md) dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it. Proposed. Needs nothing.
 - [?] [CS-926](./items/CS-926-dyno-lab-exits-nonzero-when-a-row-fails-not.md) dyno lab exits nonzero when a row fails, not only on console errors. Proposed. Needs nothing.
+- [?] [CS-928](./items/CS-928-importboundary-s-globe-only-viewer-bundle-test.md) importBoundary's globe-only Viewer bundle test fails in full runs under load, and passes alone. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1244,13 +1245,13 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 14 of 19 done, 1 ready, 1 blocked, 3 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 16 of 20 done, 1 ready, 0 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
 - [x] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Done.
 - [x] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Done.
-- [ ] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Needs CS-610.
+- [x] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Done.
 - [ ] [CS-613](./items/CS-613-ci-cd-on-the-new-build-with-the-release-pipeline.md) CI/CD on the new build, with the release pipeline. Needs CS-612.
 
 No milestone
@@ -1270,6 +1271,7 @@ No milestone
 - [x] [CS-910](./items/CS-910-merge-cs-611-1-x-leaves-the-2-0-branch.md) decision: Merge CS-611, 1.x leaves the 2.0 branch. Done.
 - [x] [CS-911](./items/CS-911-the-move-s-fix-ups-after-cs-611-an-https.md) The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Done.
 - [x] [CS-918](./items/CS-918-merge-cs-911-the-move-s-fix-ups-after-cs-611.md) decision: Merge CS-911, the move's fix-ups after CS-611. Done.
+- [x] [CS-927](./items/CS-927-merge-cs-612-the-new-build-system.md) decision: Merge CS-612, the new build system. Done.
 
 ### Packaging and package names
 

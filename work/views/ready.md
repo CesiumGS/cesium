@@ -249,7 +249,7 @@ CS-596 Trust and evals
   CS-605  external: Extension users validate 2.0 with their own data
 
 CS-609 A clean 2.0 branch and a modern build
-  CS-612  The new build system
+  CS-613  CI/CD on the new build, with the release pipeline
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
