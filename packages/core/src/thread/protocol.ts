@@ -607,7 +607,8 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
       "cannot-cross": `
         addItem attach baseFeature contentSource drawCount drawSink feed
-        noteInvalidated onDestroy refreshDraws rows shows takeInvalidated
+        noteInvalidated onDestroy refreshDraws restoreInvalidated rows shows
+        takeInvalidated
       `,
     },
     SourceHost: {
@@ -655,7 +656,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         open
       `,
       "cannot-cross": `
-        tick
+        reservesItemKey tick
       `,
     },
     SourceWriter: {

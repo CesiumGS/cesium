@@ -44,6 +44,8 @@ interface SampleOptions {
   polls?: number;
   /** Declare pushes: false. */
   silent?: boolean;
+  /** Submit a decode job, then throw, while its kind opens it. */
+  throwOnOpen?: boolean;
 }
 
 export class SampleSource implements ContentSource {
@@ -93,6 +95,10 @@ export class SampleSource implements ContentSource {
     this.writer = this.options.writable
       ? { commit: async () => ({ ok: true as const, version: "2" }) }
       : undefined;
+    if (this.options.throwOnOpen) {
+      this.sum(Float64Array.of(1)).catch(() => {});
+      throw new Error("the sample's open failed");
+    }
   }
 
   update(tick: SourceTick): void {

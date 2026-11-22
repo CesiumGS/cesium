@@ -23,6 +23,7 @@ import {
 } from "../packages/core/src/render/layout.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { stableIdOf } from "../packages/core/src/scene/identity.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
 import { BudgetArbiter } from "../packages/core/src/source/budget.ts";
@@ -1283,7 +1284,7 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     expect(first.id).toBe("https://data.test/city.sample");
     expect(second.id).toBe("https://data.test/city.sample#2");
     expect(reports).toEqual([
-      expect.stringContaining("is open already; without an id"),
+      expect.stringContaining("is open or drawn already; without an id"),
     ]);
     await rt.open({ url: "https://data.test/a.sample" }, { id: "mine" });
     await expect(
@@ -1401,5 +1402,284 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
         }),
       ).toThrow(/a number JSON can't carry/);
     }
+  });
+});
+
+describe("a want larger than the whole budget", () => {
+  it("is refused and reported once, and doesn't stop another origin's prefetch", () => {
+    const reports: string[] = [];
+    const arbiter = new BudgetArbiter({ bytes: 3000, slotsPerOrigin: 8 }, (m) =>
+      reports.push(m),
+    );
+    const a = arbiter.client();
+    const b = arbiter.client();
+    for (let tick = 0; tick < 3; tick++) {
+      a.want({
+        key: "huge",
+        class: "now",
+        benefit: 1,
+        cost: { bytes: 5000 },
+        origin: "https://a.test",
+      });
+      b.want({
+        key: `extra-${tick}`,
+        class: "prefetch",
+        benefit: 1,
+        cost: { bytes: 500 },
+        origin: "https://b.test",
+      });
+      expect(arbiter.arbitrate()).toBe(1);
+      expect(arbiter.takeGrant(a).keys).toEqual([]);
+      expect(arbiter.takeGrant(b).keys).toEqual([`extra-${tick}`]);
+    }
+    expect(reports).toEqual([
+      'BudgetClient.want: "huge" asks 5000 bytes, more than the whole budget of 3000; refused.',
+    ]);
+    // Wanted again after a tick without it: news again.
+    arbiter.arbitrate();
+    a.want({
+      key: "huge",
+      class: "now",
+      benefit: 1,
+      cost: { bytes: 5000 },
+      origin: "https://a.test",
+    });
+    arbiter.arbitrate();
+    expect(reports).toHaveLength(2);
+  });
+
+  it("reports a settle for a key that isn't in flight, so a load done twice is seen", () => {
+    const reports: string[] = [];
+    const arbiter = new BudgetArbiter({ bytes: 3000 }, (m) => reports.push(m));
+    const c = arbiter.client();
+    c.settle("never");
+    expect(reports).toEqual([
+      'BudgetClient.settle: "never" isn\'t in flight (never granted, settled already or released); ignored.',
+    ]);
+    expect(arbiter.resident).toBe(0);
+    c.want({
+      key: "k",
+      class: "now",
+      benefit: 1,
+      cost: { bytes: 10 },
+      origin: "https://x.test",
+    });
+    arbiter.arbitrate();
+    arbiter.returnGrant(c, arbiter.takeGrant(c).keys); // its update threw
+    c.settle("k"); // the source settles it all the same: ignored, and said
+    expect(reports).toHaveLength(2);
+    expect(arbiter.resident).toBe(0);
+  });
+});
+
+describe("a throwing update, destroy or open loses nothing and stops nothing", () => {
+  it("gives an update that throws its invalidations again on the next update", async () => {
+    const { rt, jobs, place } = runtime({ phased: true });
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    place(content);
+    rt.tick();
+    rt.tick(); // "a" loaded
+    const source = sourceOf(content);
+    source.push({ kind: "invalidate", keys: ["a"] });
+    jobs.apply(Infinity);
+    source.throwOnUpdate = 1;
+    rt.tick(); // it sees the invalidation, and throws
+    rt.tick(); // it sees it again
+    expect(source.ticks.slice(-2).map((t) => t.invalidated)).toEqual([1, 1]);
+    rt.tick();
+    expect(source.ticks.at(-1)!.invalidated).toBe(0);
+  });
+
+  it("closes every source when one's destroy throws, and reports it", async () => {
+    const { rt, jobs, place, reports } = runtime({ phased: true });
+    const first = await rt.open({ url: "https://data.test/one.sample" });
+    const second = await rt.open({ url: "https://data.test/two.sample" });
+    place(first);
+    place(second);
+    sourceOf(first).destroy = () => {
+      throw new Error("the sample's destroy failed");
+    };
+    sourceOf(second).push({ kind: "invalidate" });
+    expect(() => rt.destroy()).not.toThrow();
+    expect(reports).toEqual([
+      "the \"sample\" source's destroy threw: the sample's destroy failed",
+    ]);
+    expect(first.destroyed).toBe(true);
+    expect(second.destroyed).toBe(true);
+    expect(sourceOf(second).destroyed).toBe(true);
+    expect(rt.contents).toEqual([]);
+    jobs.apply(Infinity); // the queue was cleared: nothing applies
+    expect(reports).toHaveLength(1);
+  });
+
+  it("destroys the content when its kind's open throws: its jobs are canceled and its sinks close", async () => {
+    const { rt, posted } = runtime();
+    await expect(
+      rt.open({
+        url: "https://data.test/bad.sample",
+        options: { throwOnOpen: true },
+      }),
+    ).rejects.toThrow(/the sample's open failed/);
+    const source = SampleSource.made.at(-1)!;
+    const sent = posted.find((m) => m.type === SUM)!;
+    expect(posted.at(-1)).toEqual({ id: sent.id, type: "cancel" });
+    expect(() =>
+      source.host.sinks.points.put({
+        key: "b",
+        crs: "EPSG:4978",
+        count: 1,
+        positions: new Float64Array(3),
+      }),
+    ).toThrow(/content is destroyed/);
+    expect(rt.contents).toEqual([]);
+  });
+});
+
+describe("the bounds keep others' edits and say what they drop", () => {
+  const set = (n: number, id: StableIdLike): ChangeSet => ({
+    id: `cs-${n}`,
+    source: "city",
+    ops: [{ op: "delete", id }],
+  });
+  type StableIdLike = ReturnType<typeof stableIdOf>;
+
+  it("keeps queued change sets through a collapse, and reports dropped change sets plainly, once", async () => {
+    const { rt, jobs, place, reports } = runtime({ phased: true });
+    const content = await rt.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
+    place(content);
+    rt.tick();
+    jobs.apply(Infinity);
+    rt.tick();
+    jobs.apply(Infinity);
+    const road0 = stableIdOf({
+      kind: "named",
+      item: "city",
+      source: content.source,
+      name: "road-0",
+    });
+    const source = sourceOf(content);
+    source.push({ kind: "features", changes: set(0, road0) });
+    for (let i = 0; i < MAX_QUEUED_CHANGES; i++) {
+      source.push({ kind: "invalidate", keys: ["none"] });
+    }
+    expect(reports).toEqual([expect.stringContaining("its change sets stay")]);
+    jobs.apply(Infinity);
+    // The change set applied, and everything reloads.
+    expect(content.feature(road0)).toBeUndefined();
+    expect(content.feed.get(road0)?.kind).toBe("hide");
+    expect(content.rows.points.has("a")).toBe(false);
+    // Change sets alone past the bound: the rest are dropped, said once.
+    reports.length = 0;
+    for (let i = 1; i <= MAX_QUEUED_CHANGES + 5; i++) {
+      source.push({ kind: "features", changes: set(i, road0) });
+    }
+    expect(reports).toEqual([
+      expect.stringContaining(
+        "others' edits are dropped until its queue drains, and a reload doesn't bring them back",
+      ),
+    ]);
+  });
+
+  it("reports samples dropped at the bound once per run of drops", async () => {
+    const { rt, place, reports } = runtime({
+      clock: () => ({ seconds: 0, stepped: true }),
+    });
+    const content = await rt.open({ url: "https://feed.test/cars.sample" });
+    place(content);
+    const source = sourceOf(content);
+    const push = (count: number) =>
+      source.push({
+        kind: "samples",
+        samples: {
+          times: new Float64Array(count).fill(10),
+          names: Array.from({ length: count }, () => "car-0"),
+        },
+      });
+    push(MAX_BUFFERED_SAMPLES - 1);
+    push(2);
+    push(2);
+    push(2);
+    expect(reports).toHaveLength(1);
+    push(1); // fits: the run ends
+    push(2);
+    expect(reports).toHaveLength(2);
+    expect(rt.bufferedSamples).toBe(MAX_BUFFERED_SAMPLES);
+  });
+});
+
+describe("content and tileset items take one ordinal rule", () => {
+  let engine: Engine;
+  let world: World;
+  const URL_ = "https://data.test/site.sample";
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+    vi.stubGlobal(
+      "fetch",
+      async () =>
+        new Response(
+          JSON.stringify({
+            asset: { version: "1.1" },
+            geometricError: 10,
+            root: {
+              geometricError: 10,
+              boundingVolume: { sphere: [0, 0, 0, 10] },
+            },
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        ),
+    );
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    engine.destroy();
+  });
+
+  it("gives content opened after a tileset item of its URL an ordinal", async () => {
+    const tileset = await engine.loadTileset(URL_);
+    const tilesetItem = world.add(tileset);
+    expect(tilesetItem.identity.key).toBe(URL_);
+    const content = await engine.open({ url: URL_ });
+    expect(content.id).toBe(`${URL_}#2`);
+    const item = world.add(content);
+    expect(item.identity.key).toBe(`${URL_}#2`);
+  });
+
+  it("gives a tileset item added after content of its URL an ordinal, even while the content isn't placed", async () => {
+    const content = await engine.open({ url: URL_ });
+    expect(content.id).toBe(URL_);
+    const tileset = await engine.loadTileset(URL_);
+    expect(world.add(tileset).identity.key).toBe(`${URL_}#2`);
+    const item = world.add(content);
+    expect(item.identity.key).toBe(URL_);
+    // Removed and placed again, it keeps its key: no tileset item took it.
+    item.remove();
+    expect(world.add(tileset).identity.key).toBe(`${URL_}#3`);
+    expect(world.add(content).identity.key).toBe(URL_);
+  });
+
+  it("gives a draw added after its item is removed the IDs it has placed", async () => {
+    const content = await engine.open({ url: URL_ }, { id: "site" });
+    const item = world.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    item.remove();
+    const { sinks } = sourceOf(content).host;
+    sinks.draws.addDraw({
+      mesh: sinks.draws.addMesh(createBox()),
+      id: "late/box",
+      origin: Float64Array.of(0, 0, 0),
+    });
+    const late = stableIdOf({
+      kind: "draw",
+      item: "site",
+      source: content.source,
+      content: "late/box",
+    });
+    expect(world.identity.identify(late)).toBeDefined();
   });
 });

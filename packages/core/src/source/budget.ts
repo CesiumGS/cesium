@@ -10,7 +10,8 @@
  *   Prefetch is the idle class: on an origin, it is granted only when no
  *   `now` or `refine` want waits there for a slot; and while any `now` or
  *   `refine` want waits for bytes, on any origin, no prefetch is granted,
- *   since the byte budget is shared.
+ *   since the byte budget is shared. A want larger than the whole budget
+ *   can never fit: it is refused and reported, and holds nothing back.
  * - **Then benefit per cost,** with aging: a want's score rises the longer it
  *   waits, so no source starves another inside a class.
  * - **One window per origin** (`slotsPerOrigin` loads in flight), and **one
@@ -67,6 +68,8 @@ class Client implements BudgetClient {
   ages = new Map<ContentKey, number>();
   /** Granted since its last update, most urgent first. */
   granted: ContentKey[] = [];
+  /** Wanted keys larger than the whole budget, reported once while wanted. */
+  oversized = new Set<ContentKey>();
   private resident_ = 0;
 
   constructor(
@@ -88,6 +91,11 @@ class Client implements BudgetClient {
   settle(key: ContentKey, bytes?: number): void {
     const flight = this.inFlight.get(key);
     if (!flight) {
+      // Never granted, or released (a grant its update threw on goes back):
+      // ignored, and said, since a load it settles this way runs twice.
+      this.arbiter.report(
+        `BudgetClient.settle: "${key.slice(0, 64)}" isn't in flight (never granted, settled already or released); ignored.`,
+      );
       return;
     }
     let held = bytes ?? flight.bytes;
@@ -132,6 +140,7 @@ class Client implements BudgetClient {
     }
     this.wants.clear();
     this.ages.clear();
+    this.oversized.clear();
     this.granted = [];
   }
 }
@@ -208,7 +217,19 @@ export class BudgetArbiter {
     let seq = 0;
     for (const client of this.clients) {
       const ages = new Map<ContentKey, number>();
+      const oversized = new Set<ContentKey>();
       for (const want of client.wants.values()) {
+        if (want.cost.bytes > this.bytes) {
+          // It can never fit: refused, said once while it's wanted, and it
+          // holds back nothing else (it never makes the bytes busy).
+          if (!client.oversized.has(want.key)) {
+            this.report(
+              `BudgetClient.want: "${want.key.slice(0, 64)}" asks ${want.cost.bytes} bytes, more than the whole budget of ${this.bytes}; refused.`,
+            );
+          }
+          oversized.add(want.key);
+          continue;
+        }
         const age = client.ages.get(want.key) ?? 0;
         ages.set(want.key, age);
         const cost = Math.max(
@@ -224,6 +245,7 @@ export class BudgetArbiter {
         });
       }
       client.ages = ages; // keys no longer wanted forget their age
+      client.oversized = oversized;
     }
     entries.sort(
       (a, b) =>
@@ -234,7 +256,11 @@ export class BudgetArbiter {
     );
     /** Origins where a `now` or `refine` want waits ungranted this tick. */
     const busy = new Set<string>();
-    /** A `now` or `refine` want waits for bytes: no prefetch goes anywhere. */
+    /**
+     * A `now` or `refine` want that would fit in an empty budget waits for
+     * bytes: no prefetch goes anywhere. (One larger than the budget never
+     * gets here: it can't fit, so waiting for it would stop prefetch for good.)
+     */
     let bytesBusy = false;
     let granted = 0;
     for (const { client, want, rank } of entries) {

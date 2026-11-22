@@ -109,6 +109,11 @@ export class SourceContent {
   private source_: ContentSource | undefined;
   private world_: ContentWorld | undefined;
   private item_: ContentItem | undefined;
+  /**
+   * Its item's identity, kept once its item is removed: a draw its source
+   * adds then (a job finishing late) has the same IDs it would have placed.
+   */
+  private identity_: ItemIdentity | undefined;
   private readonly draws = new Map<string, TrackedDraw>();
   private readonly drawsById = new Map<StableId, Set<string>>();
   private invalidated: InvalidateChange[] = [];
@@ -295,6 +300,7 @@ export class SourceContent {
       );
     }
     this.world_ = world;
+    this.identity_ = identity;
     const item = new ContentItem(this, world, identity, options, () => {
       this.item_ = undefined;
       this.refreshDraws(undefined);
@@ -310,6 +316,13 @@ export class SourceContent {
     const out = this.invalidated;
     this.invalidated = [];
     return out;
+  }
+
+  /** @internal Its source's update threw: what it took goes back, ahead of any since. */
+  restoreInvalidated(changes: readonly InvalidateChange[]): void {
+    if (changes.length > 0) {
+      this.invalidated = [...changes, ...this.invalidated];
+    }
   }
 
   /** @internal The engine applied an invalidation: its source selects again. */
@@ -408,7 +421,7 @@ export class SourceContent {
         );
       }
       const w = world();
-      const item = this.item_?.identity;
+      const item = this.identity_;
       const handle = w.addDraw({
         ...options,
         viewMask: this.item_?.viewMask ?? ALL_VIEWS,

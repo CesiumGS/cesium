@@ -17,9 +17,12 @@
  *   wait until the clock reaches them, so a replayed feed gives the same rows.
  *   The engine never polls a source (CS-863: a source may poll its own server).
  * - **Bounds:** between ticks a source may queue at most `MAX_QUEUED_CHANGES`
- *   changes; past that its queue collapses into one invalidation of
- *   everything (it reloads, reported). At most `MAX_BUFFERED_SAMPLES` samples
- *   wait for their times; a push past that is dropped and reported.
+ *   changes; past that its queued invalidations collapse into one
+ *   invalidation of everything (it reloads, reported). Its queued change sets
+ *   (`features`) stay, since a reload doesn't replay others' edits; once its
+ *   queue holds nothing else, a further change set is dropped, and that is
+ *   reported plainly. At most `MAX_BUFFERED_SAMPLES` samples wait for their
+ *   times; a push past that is dropped, reported once per run of drops.
  * - **Close:** destroying content cancels its source's jobs, and its sinks
  *   and `jobs.submit` throw from then on; its pushes are dropped.
  */
@@ -89,6 +92,11 @@ export interface SourceRuntimeOptions {
   readonly load?: ModuleLoader;
   /** Where a source's failure or a dropped change is reported. */
   readonly report?: (message: string) => void;
+  /**
+   * Whether a world's item holds `key`: a content ID derived from its
+   * source skips it, as a second item of a tileset takes an ordinal.
+   */
+  readonly itemKeyTaken?: (key: string) => boolean;
 }
 
 /**
@@ -108,6 +116,12 @@ interface Opened {
   readonly jobs: Set<Job<unknown>>;
   /** Its changes in the queue now (`MAX_QUEUED_CHANGES`). */
   queued: number;
+  /** Of those, change sets (`features`), which a collapse keeps. */
+  queuedSets: number;
+  /** Of those, invalidations of everything. */
+  queuedAll: number;
+  /** What its queue's overflow reported (once each until its queue drains). */
+  readonly overflowReported: Set<"collapsed" | "dropped">;
 }
 
 interface BufferedSample {
@@ -128,10 +142,22 @@ export class SourceRuntime {
   private readonly resolvers: AssetResolver[] = [];
   private readonly url = new UrlResolver();
   private readonly opened: Opened[] = [];
-  /** Changes waiting for the apply phase, in arrival order (samples aside). */
+  /**
+   * Changes waiting for the apply phase, in arrival order (samples aside),
+   * from `queueHead` on: applied ones are skipped, not shifted out.
+   */
   private queue: { opened: Opened; change: SourceChange }[] = [];
-  /** Samples waiting for their times. */
+  private queueHead = 0;
+  /**
+   * Samples waiting for their times, from `samplesHead` on, in time order
+   * (then arrival) once `samplesSorted`: the due ones are a prefix, so a
+   * tick reads one sample to know whether any is due.
+   */
   private samples: BufferedSample[] = [];
+  private samplesHead = 0;
+  private samplesSorted = true;
+  /** A push of samples was dropped at the bound; cleared by one that fits. */
+  private samplesDropping = false;
   private seq = 0;
   private applyScheduled = false;
   private destroyed = false;
@@ -163,6 +189,19 @@ export class SourceRuntime {
       );
     }
     this.resolvers.unshift(resolver);
+  }
+
+  /**
+   * @internal Whether an open content's item key is `key` in `world`: its
+   * content ID, while it is open and in that world or in none yet. A tileset
+   * item's derived key there skips it.
+   */
+  reservesItemKey(key: string, world: unknown): boolean {
+    return this.opened.some(
+      ({ content }) =>
+        content.id === key &&
+        (content.world === undefined || content.world === world),
+    );
   }
 
   /** Every open content, in the order opened. */
@@ -201,21 +240,35 @@ export class SourceRuntime {
       kind.id,
     );
     const client = this.budget.client();
-    const opened: Opened = { content, client, jobs: new Set(), queued: 0 };
+    const opened: Opened = {
+      content,
+      client,
+      jobs: new Set(),
+      queued: 0,
+      queuedSets: 0,
+      queuedAll: 0,
+      overflowReported: new Set(),
+    };
+    content.onDestroy = () => this.close(opened);
     let source: ContentSource | undefined;
     try {
       source = kind.open(asset, this.host(opened, types));
       content.attach(source);
     } catch (error) {
-      this.budget.remove(client);
+      // Closed as any content is: jobs it submitted are canceled, its sinks
+      // close and its budget client goes.
       try {
-        source?.destroy(); // opened, then refused (`attach`)
+        content.destroy();
+      } catch (destroyError) {
+        this.report(`the "${kind.id}" content's destroy`, destroyError);
+      }
+      try {
+        source?.destroy(); // opened, then refused (`attach`): the content never held it
       } catch (destroyError) {
         this.report(`the "${kind.id}" source's destroy`, destroyError);
       }
       throw error;
     }
-    content.onDestroy = () => this.close(opened);
     this.opened.push(opened);
     this.options.wake?.();
     return content;
@@ -238,22 +291,25 @@ export class SourceRuntime {
         continue;
       }
       const grant = this.budget.takeGrant(opened.client);
+      const invalidated = content.takeInvalidated();
       try {
         content.contentSource.update({
           views: this.options.views?.(content) ?? [],
           seconds: clock.seconds,
           grant,
-          invalidated: content.takeInvalidated(),
+          invalidated,
         });
       } catch (error) {
         // What it was granted and didn't settle goes back: in flight, its
-        // wants would be ignored and its origin's slots held for good.
+        // wants would be ignored and its origin's slots held for good. So do
+        // its invalidations: its next update sees them again.
         this.budget.returnGrant(opened.client, grant.keys);
+        content.restoreInvalidated(invalidated);
         this.report(`the "${content.kind}" source's update`, error);
       }
     }
     const granted = this.budget.arbitrate();
-    if (this.dueSamples(clock).length > 0) {
+    if (this.hasDueSample(clock)) {
       this.scheduleApply();
     }
     return granted > 0;
@@ -261,17 +317,26 @@ export class SourceRuntime {
 
   /** How many samples wait for their times. */
   get bufferedSamples(): number {
-    return this.samples.length;
+    return this.samples.length - this.samplesHead;
   }
 
-  /** Closes every source. */
+  /**
+   * Closes every source. One whose `destroy` throws is reported, and the
+   * others close all the same.
+   */
   destroy(): void {
     this.destroyed = true;
     for (const opened of [...this.opened]) {
-      opened.content.destroy();
+      try {
+        opened.content.destroy();
+      } catch (error) {
+        this.report(`the "${opened.content.kind}" source's destroy`, error);
+      }
     }
     this.queue = [];
+    this.queueHead = 0;
     this.samples = [];
+    this.samplesHead = 0;
   }
 
   private host(opened: Opened, types: ReadonlySet<string>): SourceHost {
@@ -346,29 +411,97 @@ export class SourceRuntime {
         return;
       }
     } else if (opened.queued >= MAX_QUEUED_CHANGES) {
-      // Coalesced: everything it queued becomes one reload of everything.
-      this.queue = this.queue.filter((q) => q.opened !== opened);
-      this.queue.push({ opened, change: { kind: "invalidate" } });
-      opened.queued = 1;
-      this.report(
-        `the "${opened.content.kind}" source's push`,
-        new Error(
-          `more than ${MAX_QUEUED_CHANGES} changes queued between ticks; they collapse into one invalidation of everything.`,
-        ),
-      );
+      if (!this.overflow(opened, change)) {
+        return;
+      }
     } else {
-      this.queue.push({ opened, change });
-      opened.queued++;
+      this.enqueue(opened, change);
     }
     this.scheduleApply();
     this.options.wake?.();
   }
 
+  private enqueue(opened: Opened, change: SourceChange): void {
+    this.queue.push({ opened, change });
+    opened.queued++;
+    if (change.kind === "features") {
+      opened.queuedSets++;
+    } else if (invalidatesAll(change)) {
+      opened.queuedAll++;
+    }
+  }
+
+  /**
+   * A push past `MAX_QUEUED_CHANGES`. Its queued invalidations (and any
+   * other kind but change sets) collapse into one invalidation of
+   * everything, which reloads all; its change sets stay, since a reload
+   * doesn't replay others' edits. A further change set that doesn't fit is
+   * dropped. Each is reported once until its queue drains. Returns whether
+   * the push queued (or is covered by what did).
+   */
+  private overflow(opened: Opened, change: SourceChange): boolean {
+    const where = `the "${opened.content.kind}" source's push`;
+    // Collapse when it frees something, or when an invalidation arrives
+    // at a queue of change sets only (then its queue passes the bound by one).
+    const others = opened.queued - opened.queuedSets;
+    const collapse =
+      others > 1 ||
+      (others === 1 && opened.queuedAll === 0) ||
+      (others === 0 && change.kind !== "features");
+    if (collapse) {
+      const kept: { opened: Opened; change: SourceChange }[] = [];
+      for (let i = this.queueHead; i < this.queue.length; i++) {
+        const q = this.queue[i]!;
+        if (q.opened !== opened || q.change.kind === "features") {
+          kept.push(q);
+        }
+      }
+      this.queue = kept;
+      this.queueHead = 0;
+      opened.queued = opened.queuedSets;
+      opened.queuedAll = 0;
+      this.enqueue(opened, { kind: "invalidate" });
+      this.reportOverflow(
+        opened,
+        "collapsed",
+        where,
+        `more than ${MAX_QUEUED_CHANGES} changes queued between ticks; its invalidations collapse into one invalidation of everything, and its change sets stay.`,
+      );
+    }
+    if (change.kind !== "features") {
+      return true; // the invalidation of everything covers it
+    }
+    if (opened.queued < MAX_QUEUED_CHANGES) {
+      this.enqueue(opened, change);
+      return true;
+    }
+    this.reportOverflow(
+      opened,
+      "dropped",
+      where,
+      `more than ${MAX_QUEUED_CHANGES} change sets queued between ticks; others' edits are dropped until its queue drains, and a reload doesn't bring them back.`,
+    );
+    return false;
+  }
+
+  /** Reports an overflow of `opened`'s queue once until its queue drains. */
+  private reportOverflow(
+    opened: Opened,
+    what: "collapsed" | "dropped",
+    where: string,
+    message: string,
+  ): void {
+    if (!opened.overflowReported.has(what)) {
+      opened.overflowReported.add(what);
+      this.report(where, new Error(message));
+    }
+  }
+
   /**
    * Buffers a push's samples for the apply phase. Drops the push when its
    * arrays don't agree in length or it would pass `MAX_BUFFERED_SAMPLES`,
-   * and each sample whose time isn't finite; reports each. Returns whether
-   * any sample was buffered.
+   * and each sample whose time isn't finite; reports each (a run of pushes
+   * dropped at the bound, once). Returns whether any sample was buffered.
    */
   private bufferSamples(opened: Opened, samples: SampleBatch): boolean {
     const where = `the "${opened.content.kind}" source's samples`;
@@ -389,21 +522,29 @@ export class SourceRuntime {
       );
       return false;
     }
-    if (this.samples.length + count > MAX_BUFFERED_SAMPLES) {
-      this.report(
-        where,
-        new Error(
-          `more than ${MAX_BUFFERED_SAMPLES} samples would wait for their times; dropped.`,
-        ),
-      );
+    if (this.bufferedSamples + count > MAX_BUFFERED_SAMPLES) {
+      if (!this.samplesDropping) {
+        this.samplesDropping = true;
+        this.report(
+          where,
+          new Error(
+            `more than ${MAX_BUFFERED_SAMPLES} samples would wait for their times; dropped, and so is each push after it until one fits.`,
+          ),
+        );
+      }
       return false;
     }
+    this.samplesDropping = false;
     let dropped = 0;
     for (let i = 0; i < count; i++) {
       const time = samples.times[i]!;
       if (!Number.isFinite(time)) {
         dropped++;
         continue;
+      }
+      const last = this.samples[this.samples.length - 1];
+      if (last && this.samples.length > this.samplesHead && time < last.time) {
+        this.samplesSorted = false; // sorted when next read
       }
       this.samples.push({ opened, samples, index: i, time, seq: this.seq++ });
     }
@@ -444,17 +585,19 @@ export class SourceRuntime {
     const start = performance.now();
     const spent = () =>
       budgetMs !== Infinity && performance.now() - start >= budgetMs;
-    if (this.queue.length > 0) {
+    if (this.queueHead < this.queue.length) {
       // Its source selects again in the next tick (`SourceTick.invalidated`).
       this.options.wake?.();
     }
     let applied = 0;
-    while (this.queue.length > 0) {
+    while (this.queueHead < this.queue.length) {
       if (applied > 0 && spent()) {
+        this.compactQueue();
         return false;
       }
-      const { opened, change } = this.queue.shift()!;
-      opened.queued--;
+      const { opened, change } = this.queue[this.queueHead]!;
+      this.queue[this.queueHead++] = undefined!; // let it go
+      this.dequeued(opened, change);
       applied++;
       if (opened.content.destroyed) {
         continue;
@@ -473,20 +616,18 @@ export class SourceRuntime {
         );
       }
     }
+    this.queue = [];
+    this.queueHead = 0;
     const clock = this.options.clock();
-    const due = this.dueSamples(clock);
-    if (due.length === 0) {
-      return true;
-    }
-    due.sort((a, b) => a.time - b.time || a.seq - b.seq);
-    const done = new Set<BufferedSample>();
     let finished = true;
-    for (const s of due) {
+    // Due samples are a prefix once sorted: applied by time, then arrival.
+    while (this.hasDueSample(clock)) {
       if (applied > 0 && spent()) {
         finished = false;
         break;
       }
-      done.add(s);
+      const s = this.samples[this.samplesHead]!;
+      this.samples[this.samplesHead++] = undefined!; // let it go
       applied++;
       if (s.opened.content.destroyed) {
         continue;
@@ -498,14 +639,60 @@ export class SourceRuntime {
         this.report(`the "${s.opened.content.kind}" source's sample`, error);
       }
     }
-    this.samples = this.samples.filter((s) => !done.has(s));
+    this.compactSamples();
     return finished;
   }
 
-  private dueSamples(clock: SourceClock): BufferedSample[] {
-    return clock.stepped
-      ? this.samples.filter((s) => s.time <= clock.seconds)
-      : [...this.samples];
+  /** A queued change left the queue: its source's counts follow. */
+  private dequeued(opened: Opened, change: SourceChange): void {
+    opened.queued--;
+    if (change.kind === "features") {
+      opened.queuedSets--;
+    } else if (invalidatesAll(change)) {
+      opened.queuedAll--;
+    }
+    if (opened.queued === 0) {
+      opened.overflowReported.clear(); // a later overflow is news again
+    }
+  }
+
+  /** Whether a buffered sample is due: in real time any; on a stepped clock, one the clock reached. */
+  private hasDueSample(clock: SourceClock): boolean {
+    if (this.samplesHead >= this.samples.length) {
+      return false;
+    }
+    if (!this.samplesSorted) {
+      this.samples = this.samples
+        .slice(this.samplesHead)
+        .sort((a, b) => a.time - b.time || a.seq - b.seq);
+      this.samplesHead = 0;
+      this.samplesSorted = true;
+    }
+    return (
+      !clock.stepped || this.samples[this.samplesHead]!.time <= clock.seconds
+    );
+  }
+
+  /** Drops the applied part of the queue once it is most of it. */
+  private compactQueue(): void {
+    if (this.queueHead > 1024 && this.queueHead * 2 > this.queue.length) {
+      this.queue = this.queue.slice(this.queueHead);
+      this.queueHead = 0;
+    }
+  }
+
+  /** Drops the applied samples once they are most of the buffer. */
+  private compactSamples(): void {
+    if (this.samplesHead === this.samples.length) {
+      this.samples = [];
+      this.samplesHead = 0;
+    } else if (
+      this.samplesHead > 1024 &&
+      this.samplesHead * 2 > this.samples.length
+    ) {
+      this.samples = this.samples.slice(this.samplesHead);
+      this.samplesHead = 0;
+    }
   }
 
   private invalidate(
@@ -556,8 +743,14 @@ export class SourceRuntime {
     }
     opened.jobs.clear();
     this.budget.remove(opened.client);
-    this.queue = this.queue.filter((q) => q.opened !== opened);
-    this.samples = this.samples.filter((s) => s.opened !== opened);
+    this.queue = this.queue
+      .slice(this.queueHead)
+      .filter((q) => q.opened !== opened);
+    this.queueHead = 0;
+    this.samples = this.samples
+      .slice(this.samplesHead)
+      .filter((s) => s.opened !== opened);
+    this.samplesHead = 0;
   }
 
   /**
@@ -565,6 +758,8 @@ export class SourceRuntime {
    * is given. Two open contents never share one, since their rows' IDs are
    * made from it: a second `explicit` is refused, and a second `derived`
    * takes an ordinal (`#2`), reported, as a second item of a tileset does.
+   * A `derived` one also skips the keys worlds' items hold: content and
+   * tileset items take one ordinal rule.
    */
   private contentId(explicit: string | undefined, derived: string): string {
     const taken = new Set(this.opened.map((o) => o.content.id));
@@ -581,12 +776,14 @@ export class SourceRuntime {
     }
     let ordinal = 1;
     const idOf = (n: number) => (n === 1 ? derived : `${derived}#${n}`);
-    while (taken.has(idOf(ordinal))) {
+    const held = (id: string) =>
+      taken.has(id) || (this.options.itemKeyTaken?.(id) ?? false);
+    while (held(idOf(ordinal))) {
       ordinal++;
     }
     if (ordinal > 1) {
       this.reportMessage(
-        `open: ${derived} is open already; without an id this content's IDs take the ordinal #${ordinal}, which depends on the order it was opened. Give each content an id (OpenOptions.id).`,
+        `open: ${derived} is open or drawn already; without an id this content's IDs take the ordinal #${ordinal}, which depends on the order it was opened. Give each content an id (OpenOptions.id).`,
       );
     }
     return idOf(ordinal);
@@ -605,6 +802,15 @@ export class SourceRuntime {
       console.error(message);
     }
   }
+}
+
+/** An invalidation of everything: neither keys nor a region. */
+function invalidatesAll(change: SourceChange): boolean {
+  return (
+    change.kind === "invalidate" &&
+    change.keys === undefined &&
+    change.region === undefined
+  );
 }
 
 /** What a feed's update patches: the feature as the feed has it, else as the source does. */

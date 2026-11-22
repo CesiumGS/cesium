@@ -1851,7 +1851,12 @@ export class World {
     this.markDirty(handle.index);
   }
 
-  /** Resolves a picked global feature ID to its draw, local ID and properties. */
+  /**
+   * Resolves a picked global feature ID to its draw, local ID and properties.
+   * @internal A global feature ID is a running counter that changes between
+   * runs; hosts read a pick's feature through `PickResult` and its stable
+   * IDs (CS-815, CS-922).
+   */
   feature(featureId: number): FeatureInfo | undefined {
     const first = this.scene.featureRangeFirst;
     if (featureId <= 0 || first.length === 0 || featureId < first[0]!) {

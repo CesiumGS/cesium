@@ -1517,6 +1517,9 @@ export class Engine {
           }),
       options,
     );
+    // Content IDs and this world's item keys take one ordinal rule (CS-847).
+    world.identities.reserved = (key) =>
+      this.sources_?.reservesItemKey(key, world) ?? false;
     this.worlds.push(world);
     this.wake();
     return world;

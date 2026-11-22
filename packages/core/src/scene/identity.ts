@@ -1115,9 +1115,14 @@ export class IdentityTable implements Identity {
   private readonly collided = new Map<StableId, [string, string]>();
   /** Collisions reported, by both keys' text: each once. */
   private readonly reported = new Set<string>();
-  /** Item keys in use, for ordinals of an item without a host key. */
   /** Every item key held now, the host's and the derived alike. */
   private readonly itemKeys = new Set<string>();
+  /**
+   * @internal Keys an open content holds for its item, placed or not
+   * (its content ID, `Engine.open`): a derived key skips them as it skips
+   * held ones, so content and tileset items share the ordinal rule.
+   */
+  reserved: ((key: string) => boolean) | undefined;
 
   constructor(
     world: IdentityWorld,
@@ -1154,11 +1159,11 @@ export class IdentityTable implements Identity {
       this.itemKeys.add(explicit);
       return explicit;
     }
-    // The first ordinal whose key no item holds: a host's id that looks
-    // like an ordinal ("wall#2") is skipped, never shared.
+    // The first ordinal whose key no item holds or content reserves: a
+    // host's id that looks like an ordinal ("wall#2") is skipped, never shared.
     const keyOf = (n: number) => (n === 1 ? derived : `${derived}#${n}`);
     let ordinal = 1;
-    while (this.itemKeys.has(keyOf(ordinal))) {
+    while (this.holdsItemKey(keyOf(ordinal))) {
       ordinal++;
     }
     const key = keyOf(ordinal);
@@ -1169,6 +1174,11 @@ export class IdentityTable implements Identity {
       );
     }
     return key;
+  }
+
+  /** @internal Whether an item holds `key`, or an open content reserves it. */
+  holdsItemKey(key: string): boolean {
+    return this.itemKeys.has(key) || (this.reserved?.(key) ?? false);
   }
 
   /**

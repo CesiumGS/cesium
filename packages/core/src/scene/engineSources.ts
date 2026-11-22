@@ -23,6 +23,8 @@ export function engineSources(
     fetch: () => FetchProvider.default,
     clock,
     report,
+    itemKeyTaken: (key) =>
+      engine.worlds.some((world) => world.identities.holdsItemKey(key)),
     views: (content) => {
       const item = content.item;
       if (!item) {
