@@ -1,5 +1,4 @@
-import { frameTransform } from "../../../frames/src/Frame.ts";
-import type { Frames } from "../../../frames/src/frames.ts";
+import { frameTransform, type Frames } from "@cesium/frames";
 import { transformPoint } from "@cesium/core/internal";
 import { EARTH, MOON, type Body } from "@cesium/core";
 import { Instant } from "@cesium/time";

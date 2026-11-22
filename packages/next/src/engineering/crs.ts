@@ -49,14 +49,10 @@ import type {
   CoordinateOperation,
   CrsRef,
   CrsUnits,
-} from "../../../frames/src/coordinates.ts";
+} from "@cesium/frames";
 
 // The CRS data types live with the coordinate service (the plan's call 36).
-export type {
-  AreaOfInterest,
-  CrsRef,
-  CrsUnits,
-} from "../../../frames/src/coordinates.ts";
+export type { AreaOfInterest, CrsRef, CrsUnits } from "@cesium/frames";
 
 /**
  * The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360",

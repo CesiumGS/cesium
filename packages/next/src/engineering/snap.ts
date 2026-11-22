@@ -22,9 +22,11 @@ import {
   type Tileset3D,
   meshGeometry,
 } from "@cesium/core";
-import type { CoordinateOperation } from "../../../frames/src/coordinates.ts";
-import type { DrawnThrough } from "../../../frames/src/drawn.ts";
-import type { TruePick } from "../../../frames/src/pickTruth.ts";
+import type {
+  CoordinateOperation,
+  DrawnThrough,
+  TruePick,
+} from "@cesium/frames";
 import {
   designPoint,
   type DesignPoint,

@@ -31,7 +31,7 @@ import type {
   CrsRef,
   CrsUnits,
   ResolvedCoordinates,
-} from "../../../frames/src/coordinates.ts";
+} from "@cesium/frames";
 import type { RecordedOperation } from "./crs.ts";
 import type { Pipeline } from "./pipeline.ts";
 import type { GridSource } from "./proj.ts";

@@ -1,7 +1,4 @@
-import type {
-  CoordinateOperation,
-  ResolvedCoordinates,
-} from "../../../frames/src/coordinates.ts";
+import type { CoordinateOperation, ResolvedCoordinates } from "@cesium/frames";
 import {
   cartographic,
   EARTH,

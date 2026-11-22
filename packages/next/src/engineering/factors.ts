@@ -12,17 +12,13 @@
 // position: that is on the target's datum (WGS84 for EPSG:4979) after the
 // datum operation, a meter or two away, which would change k by about 1e-10
 // (and the results would not match pyproj's Proj.get_factors at 1e-12).
-import type {
-  CoordinateOperation,
-  CrsRef,
-  GridFactors,
-} from "../../../frames/src/coordinates.ts";
+import type { CoordinateOperation, CrsRef, GridFactors } from "@cesium/frames";
 import { crsObject, normalizeExisting, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import { exists, type PJ, type ProjApi } from "./projApi.ts";
 
 // The data type lives with the coordinate service (the plan's call 36).
-export type { GridFactors } from "../../../frames/src/coordinates.ts";
+export type { GridFactors } from "@cesium/frames";
 
 interface Projection {
   /** The horizontal projected CRS, for proj_factors. */

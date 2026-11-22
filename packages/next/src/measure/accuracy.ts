@@ -1,11 +1,13 @@
-import { Frame } from "../../../frames/src/Frame.ts";
 import {
-  DE440_EARTH_MOON_METERS,
-  type Frames,
-} from "../../../frames/src/frames.ts";
-import { convertPoint, type FramePoint } from "../../../frames/src/local.ts";
+  Frame,
+  convertPoint,
+  type FramePoint,
+  Trajectory,
+  type CoordinateOperation,
+  earthOrientationSigma,
+} from "@cesium/frames";
+import { DE440_EARTH_MOON_METERS, type Frames } from "@cesium/frames/internal";
 import type { Instant } from "@cesium/time";
-import { Trajectory } from "../../../frames/src/trajectory/Trajectory.ts";
 import type {
   DesignPointObtained,
   EngineeringFrame,
@@ -14,8 +16,6 @@ import type {
 } from "../engineering/EngineeringFrame.ts";
 import type { BetterCandidate } from "../engineering/crs.ts";
 import { projResolution } from "../engineering/projCoordinates.ts";
-import type { CoordinateOperation } from "../../../frames/src/coordinates.ts";
-import { earthOrientationSigma } from "../../../frames/src/orientationSigma.ts";
 import { EARTH_ROTATION_RATE } from "./constants.ts";
 
 /** One contribution to a measurement's uncertainty. */

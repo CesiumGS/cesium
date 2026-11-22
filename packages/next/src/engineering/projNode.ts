@@ -28,7 +28,7 @@
 // Its own module, typed by the little of Node it uses, so the library's
 // declaration build (tsconfig.lib.json, browser types only) checks it without
 // Node's types.
-import { framesDataFormatProblem } from "../../../frames/src/ephemeris/framesDataFormat.ts";
+import { framesDataFormatProblem } from "@cesium/frames/internal";
 import type { ProjApi } from "./projApi.ts";
 import { verify } from "./projCheck.ts";
 

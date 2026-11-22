@@ -5,4 +5,4 @@ export {
   positionIn,
   velocityIn,
   type Sampler,
-} from "../../../frames/src/motion.ts";
+} from "@cesium/frames/internal";

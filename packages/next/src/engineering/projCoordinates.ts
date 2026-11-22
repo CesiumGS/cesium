@@ -17,7 +17,7 @@ import type {
   CrsRef,
   CrsUnits,
   ResolvedCoordinates,
-} from "../../../frames/src/coordinates.ts";
+} from "@cesium/frames";
 import {
   MOON_GEOGRAPHIC_CRS,
   compoundParts,
