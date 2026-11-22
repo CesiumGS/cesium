@@ -278,9 +278,9 @@ CS-481 Other machines and devices run Dyno's scenes [Planned], under CS-389 Dyno
 
 CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: Dedicated GPU runners run the suite nightly and per merge into a results store, alerts bisect themselves, pull requests get the report, Dyno builds engines at git refs, and publishing results is cleared.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-323, CS-324, CS-325, CS-326, CS-331, CS-336; check not passed)
-  to shape: done_when; check; link CS-323, CS-324, CS-325, CS-326, CS-331, CS-336 to a clause
+  constraints: 0 of 7 done
+  unmet: not linked to a clause yet (open: CS-323, CS-324, CS-325, CS-326, CS-331, CS-336, CS-856; check not passed)
+  to shape: done_when; check; link CS-323, CS-324, CS-325, CS-326, CS-331, CS-336, CS-856 to a clause
 
 CS-483 Image regression and parity are checked in CI [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference.
@@ -603,8 +603,8 @@ CS-751 The owner's views answer what needs me, what's on track and what's wrong 
 
 CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping [Planned], under CS-437 The public API reviews
   outcome: A simulator, a synthetic-data pipeline or a world model drives the engine step by step and reads back depth, normals, motion and IDs, with each frame's camera record and stable, labeled identity.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-813, CS-814, CS-815, CS-816, CS-832, CS-833; check not passed)
+  constraints: 1 of 6 done
+  unmet: not linked to a clause yet (open: CS-813, CS-814, CS-815, CS-816, CS-833; check not passed)
   to shape: done_when; check; link CS-813, CS-814, CS-815, CS-816, CS-832, CS-833 to a clause
 
 CS-830 2.0's examples show its seams in use [Planned], under CS-628 Sandcastle as 2.0's gallery

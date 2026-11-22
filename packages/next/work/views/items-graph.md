@@ -444,6 +444,7 @@ graph LR
     CS_847["CS-847 The content-source seam's core: types, kind registry, host, sha"]:::open
     CS_848["CS-848 Render features: content modules register passes in named slots"]:::open
     CS_849["CS-849 Streams for push sources: connect on the fetch and credential p"]:::open
+    CS_853["CS-853 Merge CS-832, the design for semantic metadata and picking"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -546,6 +547,7 @@ graph LR
     CS_348["CS-348 A GPU viewshed"]:::open
     CS_349["CS-349 A near-field bounded terrain trace, and terrain error over open"]:::proposed
     CS_673["CS-673 A sensor module"]:::open
+    CS_854["CS-854 GPU rays hit Gaussian splats through an acceleration structure "]:::proposed
   end
   subgraph CS_198["GPU-driven rendering and capacities"]
     CS_350["CS-350 The Slang gate and probes on Windows (D3D12)"]:::open
@@ -673,6 +675,7 @@ graph LR
     CS_804["CS-804 The Scenes view lists group D's example scenes beside the catal"]:::proposed
     CS_805["CS-805 Catalog scenes record the development metrics that example scen"]:::proposed
     CS_812["CS-812 Merge CS-787, the Work page's code says Order where it still sa"]:::done
+    CS_856["CS-856 Dyno measures what each merge touched: targeted A/B runs after "]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -699,13 +702,14 @@ graph LR
     CS_815["CS-815 Scene content has stable identity and semantic labels that don'"]:::open
     CS_816["CS-816 The host steps the engine: advance to a time, wait until settle"]:::open
     CS_817["CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomiz"]:::proposed
-    CS_832["CS-832 A design for semantic metadata and picking: how metadata reache"]:::open
+    CS_832["CS-832 A design for semantic metadata and picking: how metadata reache"]:::done
     CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::open
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
     CS_578["CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces,"]:::open
     CS_831["CS-831 A design for editing back through the seams: write capabilities"]:::open
+    CS_855["CS-855 Merge CS-831, the design for editing back through the seams"]:::decision
   end
   subgraph CS_584["widgets library"]
     CS_585["CS-585 The widgets library's design: React components on StrataKit, DO"]:::open
@@ -1585,6 +1589,7 @@ graph LR
   CS_847 --> CS_849
   CS_809 --> CS_849
   CS_844 --> CS_849
+  CS_721 --> CS_856
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

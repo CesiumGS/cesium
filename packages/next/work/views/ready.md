@@ -221,6 +221,7 @@ CS-389 Dyno as the development harness
   CS-733  Each run records its device, configuration and state
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
+  CS-856  Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -232,13 +233,14 @@ CS-437 The public API reviews
   CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-814  A camera record carries intrinsics, an off-center principal point and a named distortion model
+  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-832  A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
   CS-833  A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
   CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
+  CS-855  decision: Merge CS-831, the design for editing back through the seams
 
 CS-584 The widgets library
   CS-585  The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
@@ -272,5 +274,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-203 ready
+205 ready
 ```

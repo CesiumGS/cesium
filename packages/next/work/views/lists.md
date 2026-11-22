@@ -615,7 +615,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 12 of 50 done, 15 ready, 20 blocked, 3 proposed.
+CS-191, Planned, led by owner: 13 of 51 done, 15 ready, 20 blocked, 3 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -684,6 +684,7 @@ No milestone
 - [x] CS-844 decision: D4: how do push sources get streams under the same proxies and credentials?. Done.
 - [x] CS-845 decision: D5: how are the content sources' entry points grouped and named?. Done.
 - [x] CS-846 decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
+- [x] CS-853 decision: Merge CS-832, the design for semantic metadata and picking. Done.
 
 ### Sky, light and atmosphere
 
@@ -844,7 +845,7 @@ No milestone
 
 ### Ray queries and path tracing
 
-CS-197, Planned, led by owner: 0 of 7 done, 0 ready, 2 blocked, 5 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
+CS-197, Planned, led by owner: 0 of 8 done, 0 ready, 2 blocked, 6 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
 
 Milestone: Rays query the scene on the GPU (CS-535, Planned)
 
@@ -858,6 +859,7 @@ Milestone: Rays query the scene on the GPU (CS-535, Planned)
 No milestone
 
 - [ ] CS-673 A sensor module. Needs CS-654 (Vector drawing and the styling language) and CS-348.
+- [?] CS-854 GPU rays hit Gaussian splats through an acceleration structure over ellipsoids. Proposed. Needs nothing.
 
 ### GPU-driven rendering and capacities
 
@@ -916,7 +918,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 56 of 92 done, 14 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 56 of 93 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -1033,10 +1035,11 @@ No milestone
 - [?] CS-804 The Scenes view lists group D's example scenes beside the catalog. Proposed. Needs CS-394.
 - [?] CS-805 Catalog scenes record the development metrics that example scenes now do. Proposed. Needs CS-394.
 - [x] CS-812 decision: Merge CS-787, the Work page's code says Order where it still said Plan view, and its dead code goes. Done.
+- [ ] CS-856 Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items. Needs CS-721.
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 7 of 26 done, 12 ready, 5 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 8 of 26 done, 12 ready, 4 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1067,7 +1070,7 @@ Milestone: Machines can read the engine: render products, camera records, stable
 - [ ] CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model. Needs nothing.
 - [ ] CS-815 Scene content has stable identity and semantic labels that don't depend on load order. Needs CS-832.
 - [ ] CS-816 The host steps the engine: advance to a time, wait until settled, render, read back. Needs nothing.
-- [ ] CS-832 A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds. Needs nothing.
+- [x] CS-832 A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds. Done.
 - [ ] CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802. Needs nothing.
 
 No milestone
@@ -1081,11 +1084,12 @@ No milestone
 
 ### Editing
 
-CS-579, Planned, led by owner: 0 of 3 done, 2 ready, 1 blocked.
+CS-579, Planned, led by owner: 0 of 4 done, 3 ready, 1 blocked.
 
 - [ ] CS-453 decision: What editing should the engine support, with vector data and GIS sources among it?. Needs CS-831. Decided by owner.
 - [ ] CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample. Needs nothing.
 - [ ] CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration. Needs nothing.
+- [ ] CS-855 decision: Merge CS-831, the design for editing back through the seams. Needs nothing. Decided by owner.
 
 ### The widgets library
 

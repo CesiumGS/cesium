@@ -132,8 +132,6 @@ CS-437 The public API reviews
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-438  Which of the first public API review's proposed changes do you approve?
       ← CS-102 The public API review, with the protocol table and the façade's constraints
-  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
-      ← CS-832 A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
 
 CS-13 The worker-mode façade
   CS-103  Reads reshaped, on the main thread
@@ -755,5 +753,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-238 blocked
+237 blocked
 ```
