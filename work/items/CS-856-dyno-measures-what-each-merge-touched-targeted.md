@@ -20,3 +20,7 @@ Source: the owner, through the chief of staff. Why now: four engine merges sat b
 - **Overnight full run.** The full benchmark suite runs overnight on AC power, under a quiet request, against the previous night. Change-point detection (`changepoints.mjs`) runs on the trends.
 - **Regressions become items.** A new alert files an item naming the metric, the runs and the suspect commits, with CS-325's bisect when that exists. It never holds a merge. Budgets, the 1,400 ms cold start among them, are alert thresholds.
 - **The orchestrators know the rule.** The merge brief and the root AGENTS.md's Dyno paragraph say that merges check correctness only, and that measurement follows from Dyno.
+
+## Note (2026-11-22)
+
+Until CS-919 is fixed, the after-merge A/B must not use `dyno lab --commit`. It runs the worktree's packages, not the commit's. Use a separate checkout and server for each side.
