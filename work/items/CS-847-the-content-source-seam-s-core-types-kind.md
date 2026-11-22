@@ -2,7 +2,7 @@
 id: CS-847
 title: "The content-source seam's core: types, kind registry, host, shared budget, sinks and push"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-191
 needs: [CS-552, CS-809, CS-815, CS-831, CS-846]
