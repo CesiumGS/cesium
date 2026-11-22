@@ -2,10 +2,14 @@
 id: CS-800
 title: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the GLSL tests, fast-forwards main, regenerates the views and logs the merge; CS-52's done-when is then met in full."
+answered_at: 2026-11-22T01:21:56.572Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
