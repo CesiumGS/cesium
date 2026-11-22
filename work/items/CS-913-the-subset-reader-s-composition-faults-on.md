@@ -2,10 +2,11 @@
 id: CS-913
 title: The subset reader's composition faults on broken assets, tested against OpenUSD
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-191
 needs: [CS-901]
+claimed_by: orch-11-CS-913
 ---
 
 > **Committed by the owner (2026-11-22, through CS-901's answer A).** Source: CS-900's comparison (run `2026-11-22T10-56-32-200Z-apple-metal-3`). Filed 2026-11-22.
