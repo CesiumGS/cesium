@@ -168,7 +168,7 @@ describe("the build configs", () => {
     // handbook's page and its live-engine build have one each.
     for (const file of [
       "vite.config.ts",
-      "vite.lib.config.ts",
+      "packages/cesium/vite.lib.config.ts",
       "handbook/vite.config.ts",
     ]) {
       expect(guards(readFileSync(join(root, file), "utf8")), file).toBe(2);
@@ -183,7 +183,7 @@ describe("the build configs", () => {
     const has = (file: string) =>
       readFileSync(join(root, file), "utf8").includes("skyPackDevRoute()");
     expect(has("vite.config.ts")).toBe(true);
-    expect(has("vite.lib.config.ts")).toBe(false);
+    expect(has("packages/cesium/vite.lib.config.ts")).toBe(false);
     expect(has("handbook/vite.config.ts")).toBe(false);
   });
 });

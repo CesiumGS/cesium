@@ -757,15 +757,12 @@ describe("the catalog uses only the package's public API (F7)", () => {
     const tests = files
       .map((f) => readFileSync(new URL(f, root), "utf8"))
       .join("\n");
-    const entries = Object.values(
-      (
-        JSON.parse(read("../package.json")) as {
-          exports: Record<string, string>;
-        }
-      ).exports,
+    // The umbrella's entries re-export the six packages (CS-835): what
+    // those packages' entries export.
+    const entries = ["core", "time", "frames", "crs", "measure", "ui"].map(
+      (name) => `../packages/${name}/src/index.ts`,
     );
-    expect(entries).toContain("./src/index.ts");
-    const index = entries.map((e) => read(`../${e.slice(2)}`)).join("\n");
+    const index = entries.map((e) => read(e)).join("\n");
     const exported = new Set<string>();
     for (const m of index.matchAll(/export\s+(?:type\s+)?\{([^}]*)\}/g)) {
       for (const part of m[1]!.split(",")) {
@@ -789,7 +786,7 @@ describe("the catalog uses only the package's public API (F7)", () => {
     ];
     for (const m of statements) {
       const from = m[2]!;
-      if (!/^(\.\.\/)+src\//.test(from)) {
+      if (!/^(\.\.\/)+packages\/[a-z]+\/src\//.test(from)) {
         continue;
       }
       for (const part of m[1]!.split(",")) {
@@ -808,9 +805,11 @@ describe("the catalog uses only the package's public API (F7)", () => {
       expect(exported.has(name), `${name} is exported by an entry`).toBe(true);
     }
     // Every library import goes through a named import that the check sees.
-    expect(tests).not.toMatch(/import\s+\*\s+as\s+\w+\s+from\s+"(\.\.\/)+src/);
     expect(tests).not.toMatch(
-      /import\s+(?!type\b)\w+\s*,?\s*(\{|from)\s*[^;]*"(\.\.\/)+src/,
+      /import\s+\*\s+as\s+\w+\s+from\s+"(\.\.\/)+packages\/[a-z]+\/src/,
+    );
+    expect(tests).not.toMatch(
+      /import\s+(?!type\b)\w+\s*,?\s*(\{|from)\s*[^;]*"(\.\.\/)+packages\/[a-z]+\/src/,
     );
   });
 });

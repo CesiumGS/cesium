@@ -163,14 +163,14 @@ const INPUTS = [
   "scripts/designTiles/gltf.mjs",
   "scripts/designTiles/tileset.mjs",
   // The library the tiles and answers come from.
-  "src/engineering/alignment.ts",
-  "src/engineering/EngineeringFrame.ts",
-  "src/engineering/georeference.ts",
-  "src/engineering/placement.ts",
-  "src/engineering/factors.ts",
-  "src/engineering/pipeline.ts",
-  "src/engineering/projPins.ts",
-  "src/measure/measure.ts",
+  "packages/crs/src/engineering/alignment.ts",
+  "packages/crs/src/engineering/EngineeringFrame.ts",
+  "packages/crs/src/engineering/georeference.ts",
+  "packages/crs/src/engineering/placement.ts",
+  "packages/crs/src/engineering/factors.ts",
+  "packages/crs/src/engineering/pipeline.ts",
+  "packages/crs/src/engineering/projPins.ts",
+  "packages/measure/src/measure.ts",
 ];
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
