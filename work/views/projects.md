@@ -88,7 +88,7 @@ CS-196 Infrastructure and geoscience capabilities [Planned], led by owner
   waits on: CS-190 Vector drawing and the styling language (2); CS-188 Earth to Moon (frames 5c to 5h) (2); CS-191 Content sources and formats (1)
   waited on by: CS-18 The work tracker (1); CS-584 The widgets library (1)
 CS-197 Ray queries and path tracing [Planned], led by owner
-  0 of 8 done, 0 ready, 2 blocked, 6 proposed
+  0 of 9 done, 0 ready, 2 blocked, 7 proposed
   waits on: CS-190 Vector drawing and the styling language (1)
   waited on by: CS-18 The work tracker (1)
 CS-198 GPU-driven rendering and capacities [Planned], led by owner
@@ -104,7 +104,7 @@ CS-389 Dyno as the development harness [Planned], led by owner
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (8)
 CS-437 The public API reviews [Planned], led by owner
-  11 of 30 done, 12 ready, 4 blocked, 3 proposed
+  11 of 34 done, 16 ready, 4 blocked, 3 proposed
   waits on: nothing open
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1); CS-18 The work tracker (4); CS-628 Sandcastle as 2.0's gallery (4); CS-191 Content sources and formats (1); CS-579 Editing (1)
 CS-579 Editing [Planned], led by owner
@@ -120,13 +120,13 @@ CS-596 Trust and evals [Planned], led by owner
   waits on: CS-195 Benchmarks, parity and image regression (1)
   waited on by: CS-18 The work tracker (3)
 CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
-  16 of 20 done, 1 ready, 0 blocked, 3 proposed
-  waits on: nothing open
+  18 of 24 done, 2 ready, 0 blocked, 4 proposed
+  waits on: CS-615 Packaging and package names (1)
   waited on by: CS-18 The work tracker (1)
 CS-615 Packaging and package names [Planned], led by owner
   7 of 12 done, 1 ready, 4 blocked
   waits on: CS-193 B-reps and geometry queries (1); CS-191 Content sources and formats (1)
-  waited on by: CS-18 The work tracker (2)
+  waited on by: CS-18 The work tracker (2); CS-609 A clean 2.0 branch and a modern build (1)
 CS-622 The agent-first migration kit [Planned], led by owner
   0 of 4 done, 1 ready, 3 blocked
   waits on: nothing open

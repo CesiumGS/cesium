@@ -924,7 +924,7 @@ No milestone
 
 ### Ray queries and path tracing
 
-[CS-197](./projects/CS-197-ray-queries-and-path-tracing.md), Planned, led by owner: 0 of 8 done, 0 ready, 2 blocked, 6 proposed. Plan: [ray-queries-where-they-run.md](../../../docs/design/ray-queries-where-they-run.md).
+[CS-197](./projects/CS-197-ray-queries-and-path-tracing.md), Planned, led by owner: 0 of 9 done, 0 ready, 2 blocked, 7 proposed. Plan: [ray-queries-where-they-run.md](../../../docs/design/ray-queries-where-they-run.md).
 
 Milestone: Rays query the scene on the GPU ([CS-535](./milestones/CS-535-rays-query-the-scene-on-the-gpu.md), Planned)
 
@@ -939,6 +939,7 @@ No milestone
 
 - [ ] [CS-673](./items/CS-673-a-sensor-module.md) A sensor module. Needs CS-654 (Vector drawing and the styling language) and CS-348.
 - [?] [CS-854](./items/CS-854-gpu-rays-hit-gaussian-splats-through-an.md) GPU rays hit Gaussian splats through an acceleration structure over ellipsoids. Proposed. Needs nothing.
+- [?] [CS-933](./items/CS-933-ray-casts-are-watertight-at-the-shared-edge-of.md) Ray casts are watertight at the shared edge of two draws. Proposed. Needs nothing.
 
 ### GPU-driven rendering and capacities
 
@@ -1127,7 +1128,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 11 of 30 done, 12 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 11 of 34 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1173,6 +1174,10 @@ No milestone
 - [ ] [CS-922](./items/CS-922-cs-815-q1-keep-the-public-names-cs-815-added.md) decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?. Needs nothing. Decided by owner.
 - [ ] [CS-923](./items/CS-923-cs-815-q2-usd-s-union-of-inherited-labels-or-cs.md) decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?. Needs nothing. Decided by owner.
 - [?] [CS-924](./items/CS-924-engine-made-draws-get-content-keys-so-their.md) Engine-made draws get content keys, so their stable IDs don't follow the order they were added. Proposed. Needs CS-815.
+- [ ] [CS-930](./items/CS-930-merge-cs-780-engine-errors-as-an-emitter.md) decision: Merge CS-780, Engine.errors as an emitter. Needs nothing. Decided by owner.
+- [ ] [CS-934](./items/CS-934-merge-cs-815-stable-identity-and-semantic-labels.md) decision: Merge CS-815, stable identity and semantic labels. Needs nothing. Decided by owner.
+- [ ] [CS-935](./items/CS-935-cs-815-q3-rename-camerarecord-to-camera-in.md) decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Needs nothing. Decided by owner.
+- [ ] [CS-936](./items/CS-936-cs-815-q4-how-does-a-bigint-stableid-reach-json.md) decision: CS-815 Q4: how does a bigint StableId reach JSON?. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -1246,7 +1251,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 16 of 20 done, 1 ready, 0 blocked, 3 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 18 of 24 done, 2 ready, 0 blocked, 4 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1273,6 +1278,10 @@ No milestone
 - [x] [CS-911](./items/CS-911-the-move-s-fix-ups-after-cs-611-an-https.md) The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Done.
 - [x] [CS-918](./items/CS-918-merge-cs-911-the-move-s-fix-ups-after-cs-611.md) decision: Merge CS-911, the move's fix-ups after CS-611. Done.
 - [x] [CS-927](./items/CS-927-merge-cs-612-the-new-build-system.md) decision: Merge CS-612, the new build system. Done.
+- [x] [CS-931](./items/CS-931-the-handbook-builds-again-on-main-its-data-step.md) The handbook builds again on main: its data step builds dist first, and workerPool.ts type-checks. Done.
+- [?] [CS-932](./items/CS-932-a-user-readme-for-the-cesium-umbrella-package.md) A user README for the cesium umbrella package, apart from the repository's developer guide. Proposed. Needs CS-616 (Packaging and package names).
+- [x] [CS-937](./items/CS-937-merge-cs-931-the-handbook-builds-again.md) decision: Merge CS-931, the handbook builds again. Done.
+- [ ] [CS-938](./items/CS-938-packed-pre-release-builds-a-host-application.md) Packed pre-release builds a host application can install, at a named commit. Needs CS-612.
 
 ### Packaging and package names
 

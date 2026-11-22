@@ -111,6 +111,7 @@ CS-609 A clean 2.0 branch and a modern build
   CS-611  The 1.x code is replaced in the branch
   CS-612  The new build system
   CS-911  The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite
+  CS-931  The handbook builds again on main: its data step builds dist first, and workerPool.ts type-checks
 
 CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
@@ -126,5 +127,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-91 merged item(s) not in a release
+92 merged item(s) not in a release
 ```

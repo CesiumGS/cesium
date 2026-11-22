@@ -567,6 +567,7 @@ graph LR
     CS_349["CS-349 A near-field bounded terrain trace, and terrain error over open"]:::proposed
     CS_673["CS-673 A sensor module"]:::open
     CS_854["CS-854 GPU rays hit Gaussian splats through an acceleration structure "]:::proposed
+    CS_933["CS-933 Ray casts are watertight at the shared edge of two draws"]:::proposed
   end
   subgraph CS_198["GPU-driven rendering and capacities"]
     CS_350["CS-350 The Slang gate and probes on Windows (D3D12)"]:::open
@@ -733,6 +734,10 @@ graph LR
     CS_922["CS-922 CS-815 Q1: keep the public names CS-815 added beyond CS-832's c"]:::decision
     CS_923["CS-923 CS-815 Q2: USD's union of inherited labels, or CS-832's nearest"]:::decision
     CS_924["CS-924 Engine-made draws get content keys, so their stable IDs don't f"]:::proposed
+    CS_930["CS-930 Merge CS-780, Engine.errors as an emitter"]:::decision
+    CS_934["CS-934 Merge CS-815, stable identity and semantic labels"]:::decision
+    CS_935["CS-935 CS-815 Q3: rename cameraRecord to camera in PickPositionResult "]:::decision
+    CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::decision
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -801,6 +806,10 @@ graph LR
     CS_911["CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale"]:::done
     CS_918["CS-918 Merge CS-911, the move's fix-ups after CS-611"]:::done
     CS_927["CS-927 Merge CS-612, the new build system"]:::done
+    CS_931["CS-931 The handbook builds again on main: its data step builds dist fi"]:::done
+    CS_932["CS-932 A user README for the cesium umbrella package, apart from the r"]:::proposed
+    CS_937["CS-937 Merge CS-931, the handbook builds again"]:::done
+    CS_938["CS-938 Packed pre-release builds a host application can install, at a "]:::open
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1716,6 +1725,8 @@ graph LR
   CS_901 --> CS_914
   CS_54 --> CS_921
   CS_815 --> CS_924
+  CS_616 --> CS_932
+  CS_612 --> CS_938
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

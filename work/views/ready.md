@@ -237,6 +237,10 @@ CS-437 The public API reviews
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
   CS-922  decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?
   CS-923  decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?
+  CS-930  decision: Merge CS-780, Engine.errors as an emitter
+  CS-934  decision: Merge CS-815, stable identity and semantic labels
+  CS-935  decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?
+  CS-936  decision: CS-815 Q4: how does a bigint StableId reach JSON?
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -250,6 +254,7 @@ CS-596 Trust and evals
 
 CS-609 A clean 2.0 branch and a modern build
   CS-613  CI/CD on the new build, with the release pipeline
+  CS-938  Packed pre-release builds a host application can install, at a named commit
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
@@ -273,5 +278,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-204 ready
+209 ready
 ```

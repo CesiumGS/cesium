@@ -867,7 +867,7 @@ No milestone
 
 ### Ray queries and path tracing
 
-CS-197, Planned, led by owner: 0 of 8 done, 0 ready, 2 blocked, 6 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
+CS-197, Planned, led by owner: 0 of 9 done, 0 ready, 2 blocked, 7 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
 
 Milestone: Rays query the scene on the GPU (CS-535, Planned)
 
@@ -882,6 +882,7 @@ No milestone
 
 - [ ] CS-673 A sensor module. Needs CS-654 (Vector drawing and the styling language) and CS-348.
 - [?] CS-854 GPU rays hit Gaussian splats through an acceleration structure over ellipsoids. Proposed. Needs nothing.
+- [?] CS-933 Ray casts are watertight at the shared edge of two draws. Proposed. Needs nothing.
 
 ### GPU-driven rendering and capacities
 
@@ -1070,7 +1071,7 @@ No milestone
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 11 of 30 done, 12 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 11 of 34 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1116,6 +1117,10 @@ No milestone
 - [ ] CS-922 decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?. Needs nothing. Decided by owner.
 - [ ] CS-923 decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?. Needs nothing. Decided by owner.
 - [?] CS-924 Engine-made draws get content keys, so their stable IDs don't follow the order they were added. Proposed. Needs CS-815.
+- [ ] CS-930 decision: Merge CS-780, Engine.errors as an emitter. Needs nothing. Decided by owner.
+- [ ] CS-934 decision: Merge CS-815, stable identity and semantic labels. Needs nothing. Decided by owner.
+- [ ] CS-935 decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Needs nothing. Decided by owner.
+- [ ] CS-936 decision: CS-815 Q4: how does a bigint StableId reach JSON?. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -1189,7 +1194,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 16 of 20 done, 1 ready, 0 blocked, 3 proposed.
+CS-609, Planned, led by owner: 18 of 24 done, 2 ready, 0 blocked, 4 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1216,6 +1221,10 @@ No milestone
 - [x] CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Done.
 - [x] CS-918 decision: Merge CS-911, the move's fix-ups after CS-611. Done.
 - [x] CS-927 decision: Merge CS-612, the new build system. Done.
+- [x] CS-931 The handbook builds again on main: its data step builds dist first, and workerPool.ts type-checks. Done.
+- [?] CS-932 A user README for the cesium umbrella package, apart from the repository's developer guide. Proposed. Needs CS-616 (Packaging and package names).
+- [x] CS-937 decision: Merge CS-931, the handbook builds again. Done.
+- [ ] CS-938 Packed pre-release builds a host application can install, at a named commit. Needs CS-612.
 
 ### Packaging and package names
 
