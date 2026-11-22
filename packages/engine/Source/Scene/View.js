@@ -417,6 +417,18 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     insertIntoBin(this, scene, commandExtents[c]);
   }
 
+  // Release commands from previous frames without discarding the active prefix.
+  for (let i = 0; i < frustumCommandsList.length; ++i) {
+    const frustumCommands = frustumCommandsList[i];
+    for (let pass = 0; pass < Pass.NUMBER_OF_PASSES; ++pass) {
+      const commands = frustumCommands.commands[pass];
+      const count = frustumCommands.indices[pass];
+      if (commands.length > count) {
+        commands.length = count;
+      }
+    }
+  }
+
   // Dereference old commands
   if (commandExtentCount < commandExtentCapacity) {
     for (let c = commandExtentCount; c < commandExtentCapacity; c++) {
