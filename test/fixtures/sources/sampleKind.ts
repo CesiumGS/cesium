@@ -47,6 +47,8 @@ interface SampleOptions {
 }
 
 export class SampleSource implements ContentSource {
+  /** Every sample source made, in order: a test finds one its kind refused. */
+  static readonly made: SampleSource[] = [];
   readonly kind = "sample";
   readonly capabilities;
   readonly ready = Promise.resolve();
@@ -61,6 +63,10 @@ export class SampleSource implements ContentSource {
   readonly loaded = new Set<string>();
   /** The server's version as last read, and when it was checked. */
   version: string | undefined;
+  /** Its next this many updates throw, after recording their tick. */
+  throwOnUpdate = 0;
+  /** Its `destroy` ran. */
+  destroyed = false;
   private lastPoll = -Infinity;
   private polling = false;
   private readonly options: SampleOptions;
@@ -69,6 +75,7 @@ export class SampleSource implements ContentSource {
     readonly asset: ResolvedAsset,
     readonly host: SourceHost,
   ) {
+    SampleSource.made.push(this);
     this.options = (asset.options ?? {}) as SampleOptions;
     const write: WriteCapabilities = this.options.writable
       ? { ...READ_ONLY, update: true, versioned: "feature" }
@@ -94,6 +101,10 @@ export class SampleSource implements ContentSource {
       views: tick.views.length,
       invalidated: tick.invalidated.length,
     });
+    if (this.throwOnUpdate > 0) {
+      this.throwOnUpdate--;
+      throw new Error("the sample's update failed");
+    }
     for (const change of tick.invalidated) {
       for (const key of change.keys ?? [...this.loaded]) {
         this.loaded.delete(key);
@@ -224,7 +235,9 @@ export class SampleSource implements ContentSource {
     }).promise;
   }
 
-  destroy(): void {}
+  destroy(): void {
+    this.destroyed = true;
+  }
 }
 
 const kind: SourceKind = {

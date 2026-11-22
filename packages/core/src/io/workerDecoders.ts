@@ -14,6 +14,37 @@ import type { Decoder, DecoderContext } from "../source/types.ts";
 /** The message that loads a decoder into a worker. */
 export const DECODER_LOAD = "decoder:load";
 
+/**
+ * The content worker's own job types (worker.ts), and its messages: no
+ * decoder takes one, so a kind can't take over another's jobs.
+ */
+export const BUILT_IN_JOB_TYPES: ReadonlySet<string> = new Set([
+  "cancel",
+  DECODER_LOAD,
+  "gltf",
+  "image",
+  "terrain",
+  "terrainDeviation",
+  "stars",
+  "glareKernel",
+  "skyPack",
+]);
+
+/**
+ * Why a decoder can't take job type `type`, or undefined when it can: a
+ * decoder's type is namespaced (`<namespace>:<name>`, as "csv:rows"), and
+ * never a built-in one (`BUILT_IN_JOB_TYPES`).
+ */
+export function decoderTypeRefusal(type: unknown): string | undefined {
+  if (typeof type !== "string" || !/^[\w.-]+:[\w./-]+$/.test(type)) {
+    return 'a decoder\'s job type is namespaced: <namespace>:<name>, as "csv:rows"';
+  }
+  if (BUILT_IN_JOB_TYPES.has(type)) {
+    return `"${type}" is one of the content worker's own job types`;
+  }
+  return undefined;
+}
+
 /** A decoder's load, as the pool sends it. */
 export interface DecoderLoadMessage {
   readonly type: typeof DECODER_LOAD;
@@ -34,13 +65,19 @@ export type PostReply = (
   transfer: Transferable[],
 ) => void;
 
+/** A decoder type's module, and its load (undefined after a failed one: the next job loads it again). */
+interface Loading {
+  readonly url: string;
+  decoder: Promise<Decoder> | undefined;
+}
+
 /**
  * The decoders loaded into one worker, and the jobs they run. `load`
  * imports a module; `fetchFor` makes a job's requests (the page's provider,
  * through workerFetch.ts; absent on a thread with no page).
  */
 export class WorkerDecoders {
-  private readonly loading = new Map<string, Promise<Decoder>>();
+  private readonly loading = new Map<string, Loading>();
   private readonly load: (url: string) => Promise<unknown>;
   private readonly fetchFor:
     ((id: number, signal: AbortSignal) => DecoderContext["fetch"]) | undefined;
@@ -55,25 +92,23 @@ export class WorkerDecoders {
     this.fetchFor = fetchFor;
   }
 
-  /** Whether `message` is a decoder's load; it starts loading if so. */
+  /**
+   * Whether `message` is a decoder's load; it starts loading if so. A
+   * load for a type a decoder can't take (`decoderTypeRefusal`) is
+   * ignored: the pool refuses it first, so only a forged message has one.
+   */
   handleLoad(message: { readonly type: string }): boolean {
     if (message.type !== DECODER_LOAD) {
       return false;
     }
     const { jobType, url } = message as DecoderLoadMessage;
-    if (!this.loading.has(jobType)) {
-      const loaded = this.load(url).then((module) => {
-        const decode = (module as { default?: unknown }).default;
-        if (typeof decode !== "function") {
-          throw new Error(
-            `decoder "${jobType}": its module's default export isn't a function.`,
-          );
-        }
-        return decode as Decoder;
-      });
-      // A failed load fails each job of its type, not the worker.
-      loaded.catch(() => {});
-      this.loading.set(jobType, loaded);
+    if (
+      decoderTypeRefusal(jobType) === undefined &&
+      !this.loading.has(jobType)
+    ) {
+      const entry: Loading = { url, decoder: undefined };
+      this.loading.set(jobType, entry);
+      this.start(jobType, entry);
     }
     return true;
   }
@@ -83,24 +118,47 @@ export class WorkerDecoders {
     return this.loading.has(type);
   }
 
-  /** Runs job `message` with its type's decoder and replies. */
+  /**
+   * Runs job `message` with its type's decoder and replies once. Aborting
+   * `signal` replies with an error at once, whether or not the decoder
+   * stops, so a decoder that never resolves frees its worker's slot
+   * (`Jobs`' CPU limit) when its job is canceled.
+   */
   async run(
     message: JobMessageIn,
     signal: AbortSignal,
     post: PostReply,
   ): Promise<void> {
     const { id, type, ...payload } = message;
+    let replied = false;
+    const reply: PostReply = (r, transfer) => {
+      if (!replied) {
+        replied = true;
+        post(r, transfer);
+      }
+    };
+    let onAbort: (() => void) | undefined;
+    const aborted = new Promise<never>((_resolve, reject) => {
+      onAbort = () => reject(new Error("canceled"));
+      if (signal.aborted) {
+        onAbort();
+      } else {
+        signal.addEventListener("abort", onAbort, { once: true });
+      }
+    });
+    aborted.catch(() => {});
     try {
-      const decode = await this.loading.get(type)!;
-      signal.throwIfAborted();
-      const request = this.fetchFor?.(id, signal);
-      const out = await decode(payload, {
-        signal,
-        ...(request ? { fetch: request } : {}),
-      });
-      post({ id, ok: true, result: out.result }, [...(out.transfer ?? [])]);
+      const entry = this.loading.get(type)!;
+      const decoder = entry.decoder ?? this.start(type, entry);
+      const decode = await Promise.race([decoder, aborted]);
+      const fetch = this.fetchFor?.(id, signal);
+      const out = await Promise.race([
+        decode(payload, { signal, ...(fetch ? { fetch } : {}) }),
+        aborted,
+      ]);
+      reply({ id, ok: true, result: out.result }, [...(out.transfer ?? [])]);
     } catch (error) {
-      post(
+      reply(
         {
           id,
           ok: false,
@@ -108,6 +166,28 @@ export class WorkerDecoders {
         },
         [],
       );
+    } finally {
+      signal.removeEventListener("abort", onAbort!);
     }
+  }
+
+  /** Loads `type`'s module; a failed load fails each job of its type, not the worker, and the next job loads it again. */
+  private start(type: string, entry: Loading): Promise<Decoder> {
+    const decoder = this.load(entry.url).then((module) => {
+      const decode = (module as { default?: unknown }).default;
+      if (typeof decode !== "function") {
+        throw new Error(
+          `decoder "${type}": its module's default export isn't a function.`,
+        );
+      }
+      return decode as Decoder;
+    });
+    decoder.catch(() => {
+      if (entry.decoder === decoder) {
+        entry.decoder = undefined;
+      }
+    });
+    entry.decoder = decoder;
+    return decoder;
   }
 }

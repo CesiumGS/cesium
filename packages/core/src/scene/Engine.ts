@@ -1308,6 +1308,9 @@ export class Engine {
    */
   get sources(): SourceRuntime {
     if (!this.sources_) {
+      if (this.sourcesClosed) {
+        throw new Error("Engine.sources: the engine is destroyed.");
+      }
       const runtime = engineSources(this, (message) =>
         this.errors_.report("frame", message),
       );
@@ -1317,6 +1320,8 @@ export class Engine {
     return this.sources_;
   }
   private sources_: SourceRuntime | undefined;
+  /** `destroy` ran: no runtime is made after it. */
+  private sourcesClosed = false;
 
   /**
    * Resolves `ref` (a plain URL through the URL resolver, or a resolver
@@ -1518,12 +1523,18 @@ export class Engine {
   }
 
   /**
-   * Removes a world with everything in it: its tilesets and the views
+   * Removes a world with everything in it: its tilesets, the content
+   * placed in it (destroyed: content belongs to one world) and the views
    * that draw it go too, then its GPU resources.
    */
   removeWorld(world: World): void {
     for (const tileset of this.tilesets.filter((t) => t.world === world)) {
       this.removeTileset(tileset);
+    }
+    for (const content of this.sources_?.contents ?? []) {
+      if (content.world === world) {
+        content.destroy();
+      }
     }
     for (const view of this.views.filter((v) => v.world === world)) {
       this.removeView(view);
@@ -2385,6 +2396,7 @@ export class Engine {
   }
 
   destroy(): void {
+    this.sourcesClosed = true;
     this.sources_?.destroy();
     this.scene.workers.jobs.destroy();
     this.stop();

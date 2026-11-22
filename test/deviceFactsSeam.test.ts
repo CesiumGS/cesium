@@ -46,6 +46,13 @@ function stripComments(source: string): string {
 /** WebGPU's limit names (`GPUSupportedLimits`), as a property read. */
 const LIMIT_NAMES = String.raw`(?:maxTextureDimension[123]D|maxTextureArrayLayers|maxBindGroups\w*|maxBindingsPerBindGroup|max\w+PerPipelineLayout|max\w+PerShaderStage|max\w+In(?:Fragment|Vertex)Stage|max(?:Uniform|Storage)BufferBindingSize|min\w+OffsetAlignment|maxVertex(?:Buffers|Attributes|BufferArrayStride)|maxBufferSize|maxInterStageShaderVariables|maxColorAttachment\w*|maxComputeWorkgroup\w*|maxComputeInvocationsPerWorkgroup|maxImmediateSize)`;
 
+/**
+ * A content source's own capabilities (`SourceCapabilities`, CS-847): what
+ * it selects, outputs and writes, not the device's. `capabilities.` before
+ * one of these isn't a device fact.
+ */
+const SOURCE_CAPABILITY_FIELDS = String.raw`(?:selection|outputs|settles|pushes|polls|write)\b`;
+
 /** The `Capabilities` fields (`GpuDevice.caps`), as a property read. */
 const CAPABILITY_FIELDS = String.raw`(?:indirectFirstInstance|timestampQuery|subgroups|shaderF16|float32Blendable|textureCompression)`;
 
@@ -64,7 +71,7 @@ const DETECTORS: readonly { reads: string; pattern: RegExp }[] = [
   {
     reads: "the capabilities",
     pattern: new RegExp(
-      String.raw`\bcapabilities\s*[?!]?\.\s*\w|\.\s*${CAPABILITY_FIELDS}\b|\bimport\b[^;]*\bCapabilities\b[^;]*from\s*"[^"]*GpuDevice`,
+      String.raw`\bcapabilities\s*[?!]?\.\s*(?!${SOURCE_CAPABILITY_FIELDS})\w|\.\s*${CAPABILITY_FIELDS}\b|\bimport\b[^;]*\bCapabilities\b[^;]*from\s*"[^"]*GpuDevice`,
       "g",
     ),
   },
@@ -138,9 +145,12 @@ describe("the device-facts seam", () => {
       "// device.features.has in a comment is not a read", // 15
       "const ok = paths(gpu.facts).starSubmission;", // 16
       "const most = world.maxDraws;", // 17
+      "if (source.capabilities.pushes) {}", // 18: a content source's: fine
+      "const w = isReadOnly(source.capabilities.write);", // 19: fine
+      "if (engine.capabilities.writeTimestamps) {}", // 20: not a source field
     ].join("\n");
     expect(factReads(planted).map((r) => r.line)).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 20,
     ]);
   });
 

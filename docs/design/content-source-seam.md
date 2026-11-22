@@ -366,6 +366,14 @@ CS-810's terrain-provider contract (quantized mesh, OGC API Coverages) is the de
 
 The Viewer builds Earth's from ion's defaults. The same layers could later drape on other receivers under the surface-projection design. How close this comes to USD's references and payloads is CS-454's brainstorm, which the owner set for before the API review together with this note. So it is raised below rather than settled.
 
+**As built (CS-847).** The core holds these rules, which the sections above leave open:
+
+- **One ID scheme per content.** Every stable ID a content gives, its rows' and its draws', is made with its content ID (`OpenOptions.id`, else its canonical source) as the item, and its item's key is that same ID: `World.add` refuses another `id`. The IDs don't change when an item is removed and the content placed again. Two open contents never share an ID: a second explicit `id` is refused, and a second content of one URL without an `id` takes an ordinal (`#2`), reported, as a second item of a tileset does. Until CS-554 makes items general, content has one item; with several, each item's IDs will need their own key again, as tilesets' do.
+- **Decoder job types are namespaced** (`<namespace>:<name>`, as "csv:rows") and never one of the content worker's own ("gltf", "terrain", "image"...): `WorkerPool.loadDecoder` refuses them, so a kind can't take over another's jobs. A canceled decode replies at once, so a decoder that never resolves frees its worker's slot; a failed decoder load is tried again by the next job.
+- **The byte budget is shared, so prefetch yields everywhere.** While a `now` or `refine` want waits for bytes, no prefetch is granted on any origin; while one waits for a slot, no prefetch is granted on its origin. A grant a source's update threw before acting on goes back, and a settle with a size that isn't a finite number from 0 is reported and counted at what its want asked.
+- **Destroyed means closed.** Destroying content cancels its source's jobs, and its sinks' writes and `jobs.submit` throw from then on (a draw sink's releases still pass, so a source's `destroy` can free what it made); its pushes are dropped. `World.add` refuses a destroyed world, and `Engine.removeWorld` destroys the content placed in it.
+- **Pushes are bounded.** Queued changes apply under the apply phase's budget; past 10 000 queued between ticks, a source's queue collapses into one invalidation of everything, reported. At most 100 000 samples wait for their times, and a sample with no finite time is dropped.
+
 ## Entry points and the bundle
 
 - **Core keeps the seam:** its types, the kind registry, `SourceHost`, the budget arbiter, the request scheduler, the sinks, the edit layer and the queries.

@@ -11,10 +11,17 @@
  *   its views, the clock, its grant and the invalidations since; then the
  *   arbiter grants this tick's wants (`BudgetArbiter`).
  * - **Push:** `host.changed` queues the change and wakes the engine; it
- *   applies in the apply phase (`Jobs.slice`). Samples carry their times: in
- *   real time they apply as they arrive; on a stepped clock (CS-816) they
+ *   applies in the apply phase (`Jobs.slice`), under the phase's budget: what
+ *   doesn't fit waits for the next tick's phase. Samples carry their times:
+ *   in real time they apply as they arrive; on a stepped clock (CS-816) they
  *   wait until the clock reaches them, so a replayed feed gives the same rows.
  *   The engine never polls a source (CS-863: a source may poll its own server).
+ * - **Bounds:** between ticks a source may queue at most `MAX_QUEUED_CHANGES`
+ *   changes; past that its queue collapses into one invalidation of
+ *   everything (it reloads, reported). At most `MAX_BUFFERED_SAMPLES` samples
+ *   wait for their times; a push past that is dropped and reported.
+ * - **Close:** destroying content cancels its source's jobs, and its sinks
+ *   and `jobs.submit` throw from then on; its pushes are dropped.
  */
 import type { FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
@@ -39,6 +46,7 @@ import type {
   AssetResolver,
   BudgetClient,
   ContentSinks,
+  ContentSource,
   PlainValue,
   SampleBatch,
   SourceChange,
@@ -48,6 +56,12 @@ import type {
   SourceJobSpec,
   SourceView,
 } from "./types.ts";
+
+/** Most changes one source may queue between apply phases. */
+export const MAX_QUEUED_CHANGES = 10_000;
+
+/** Most samples that may wait for their times, every source together. */
+export const MAX_BUFFERED_SAMPLES = 100_000;
 
 /** The worker pool, as the runtime uses it (`WorkerPool`). */
 export interface DecoderPool {
@@ -90,6 +104,10 @@ export interface OpenOptions {
 interface Opened {
   readonly content: SourceContent;
   readonly client: BudgetClient;
+  /** Its source's jobs not yet settled: canceled when it closes. */
+  readonly jobs: Set<Job<unknown>>;
+  /** Its changes in the queue now (`MAX_QUEUED_CHANGES`). */
+  queued: number;
 }
 
 interface BufferedSample {
@@ -121,7 +139,9 @@ export class SourceRuntime {
   /** @internal Use `Engine.sources`. */
   constructor(private readonly options: SourceRuntimeOptions) {
     this.kinds = new SourceKinds(options.load);
-    this.budget = new BudgetArbiter(options.budget);
+    this.budget = new BudgetArbiter(options.budget, (message) =>
+      this.reportMessage(message),
+    );
   }
 
   /**
@@ -175,23 +195,24 @@ export class SourceRuntime {
       this.options.pool.loadDecoder(decoder.type, moduleHref(decoder.module));
       types.add(decoder.type);
     }
-    const id = options.id;
-    if (id !== undefined && (typeof id !== "string" || id.length === 0)) {
-      throw new TypeError("open: an id is a non-empty string.");
-    }
     const content = new SourceContent(
-      id ?? canonicalSource(asset.url.href),
+      this.contentId(options.id, canonicalSource(asset.url.href)),
       asset,
       kind.id,
     );
     const client = this.budget.client();
-    const opened: Opened = { content, client };
-    let source;
+    const opened: Opened = { content, client, jobs: new Set(), queued: 0 };
+    let source: ContentSource | undefined;
     try {
       source = kind.open(asset, this.host(opened, types));
       content.attach(source);
     } catch (error) {
       this.budget.remove(client);
+      try {
+        source?.destroy(); // opened, then refused (`attach`)
+      } catch (destroyError) {
+        this.report(`the "${kind.id}" source's destroy`, destroyError);
+      }
       throw error;
     }
     content.onDestroy = () => this.close(opened);
@@ -216,14 +237,18 @@ export class SourceRuntime {
       if (!item || !item.show) {
         continue;
       }
+      const grant = this.budget.takeGrant(opened.client);
       try {
         content.contentSource.update({
           views: this.options.views?.(content) ?? [],
           seconds: clock.seconds,
-          grant: this.budget.takeGrant(opened.client),
+          grant,
           invalidated: content.takeInvalidated(),
         });
       } catch (error) {
+        // What it was granted and didn't settle goes back: in flight, its
+        // wants would be ignored and its origin's slots held for good.
+        this.budget.returnGrant(opened.client, grant.keys);
         this.report(`the "${content.kind}" source's update`, error);
       }
     }
@@ -250,16 +275,21 @@ export class SourceRuntime {
   }
 
   private host(opened: Opened, types: ReadonlySet<string>): SourceHost {
-    const { pool, clock } = this.options;
-    const provider = this.options.fetch;
+    const { pool, fetch, clock } = this.options;
     const jobs: SourceJobs = {
       submit<R, A = R>(spec: SourceJobSpec<R, A>): Job<A> {
+        if (opened.content.destroyed) {
+          throw new Error("SourceJobs.submit: the content is destroyed.");
+        }
         if (!types.has(spec.type)) {
           throw new Error(
             `SourceJobs.submit: "${spec.type}" isn't one of the "${opened.content.kind}" kind's decoders.`,
           );
         }
-        return pool.submit<R, A>(spec as JobSpec<R, A>);
+        const job = pool.submit<R, A>(spec as JobSpec<R, A>);
+        opened.jobs.add(job);
+        job.promise.finally(() => opened.jobs.delete(job)).catch(() => {}); // the source's own promise reports its failure
+        return job;
       },
     };
     const client = opened.client;
@@ -284,7 +314,7 @@ export class SourceRuntime {
     };
     return {
       get fetch() {
-        return provider();
+        return fetch();
       },
       jobs,
       budget,
@@ -301,8 +331,7 @@ export class SourceRuntime {
     if (this.destroyed || opened.content.destroyed) {
       return;
     }
-    const { pushes } = opened.content.capabilities;
-    if (!pushes) {
+    if (!opened.content.capabilities.pushes) {
       this.report(
         `the "${opened.content.kind}" source's push`,
         new Error("it declares pushes: false; dropped."),
@@ -313,34 +342,78 @@ export class SourceRuntime {
       return;
     }
     if (change.kind === "samples") {
-      const samples = change.samples;
-      const count = samples.times.length;
-      if (
-        samples.names.length !== count ||
-        (samples.positions && samples.positions.length !== count * 3)
-      ) {
-        this.report(
-          `the "${opened.content.kind}" source's samples`,
-          new Error(
-            "times, names and positions don't agree in length; dropped.",
-          ),
-        );
+      if (!this.bufferSamples(opened, change.samples)) {
         return;
       }
-      for (let i = 0; i < count; i++) {
-        this.samples.push({
-          opened,
-          samples,
-          index: i,
-          time: samples.times[i]!,
-          seq: this.seq++,
-        });
-      }
+    } else if (opened.queued >= MAX_QUEUED_CHANGES) {
+      // Coalesced: everything it queued becomes one reload of everything.
+      this.queue = this.queue.filter((q) => q.opened !== opened);
+      this.queue.push({ opened, change: { kind: "invalidate" } });
+      opened.queued = 1;
+      this.report(
+        `the "${opened.content.kind}" source's push`,
+        new Error(
+          `more than ${MAX_QUEUED_CHANGES} changes queued between ticks; they collapse into one invalidation of everything.`,
+        ),
+      );
     } else {
       this.queue.push({ opened, change });
+      opened.queued++;
     }
     this.scheduleApply();
     this.options.wake?.();
+  }
+
+  /**
+   * Buffers a push's samples for the apply phase. Drops the push when its
+   * arrays don't agree in length or it would pass `MAX_BUFFERED_SAMPLES`,
+   * and each sample whose time isn't finite; reports each. Returns whether
+   * any sample was buffered.
+   */
+  private bufferSamples(opened: Opened, samples: SampleBatch): boolean {
+    const where = `the "${opened.content.kind}" source's samples`;
+    const count = samples?.times?.length;
+    const lengthsAgree =
+      typeof count === "number" &&
+      samples.names?.length === count &&
+      (!samples.positions || samples.positions.length === count * 3) &&
+      Object.values(samples.values ?? {}).every(
+        (values) => values?.length === count,
+      );
+    if (!lengthsAgree) {
+      this.report(
+        where,
+        new Error(
+          "times, names, positions and values don't agree in length; dropped.",
+        ),
+      );
+      return false;
+    }
+    if (this.samples.length + count > MAX_BUFFERED_SAMPLES) {
+      this.report(
+        where,
+        new Error(
+          `more than ${MAX_BUFFERED_SAMPLES} samples would wait for their times; dropped.`,
+        ),
+      );
+      return false;
+    }
+    let dropped = 0;
+    for (let i = 0; i < count; i++) {
+      const time = samples.times[i]!;
+      if (!Number.isFinite(time)) {
+        dropped++;
+        continue;
+      }
+      this.samples.push({ opened, samples, index: i, time, seq: this.seq++ });
+    }
+    if (dropped > 0) {
+      this.report(
+        where,
+        new Error(`${dropped} of ${count} have no finite time; those dropped.`),
+      );
+    }
+    return dropped < count;
   }
 
   private scheduleApply(): void {
@@ -350,23 +423,39 @@ export class SourceRuntime {
     this.applyScheduled = true;
     this.options.pool.jobs.slice({
       type: "source-changes",
-      step: () => {
-        this.applyScheduled = false;
-        this.applyDue();
-        return { done: true };
+      step: (budgetMs) => {
+        const done = this.applyDue(budgetMs);
+        if (done) {
+          this.applyScheduled = false;
+        } else {
+          this.options.wake?.(); // the rest goes in the next tick's phase
+        }
+        return { done };
       },
     });
   }
 
-  /** The apply phase's step: queued changes in order, then due samples by time. */
-  private applyDue(): void {
-    const queue = this.queue;
-    this.queue = [];
-    if (queue.length > 0) {
+  /**
+   * The apply phase's step: queued changes in order, then due samples by
+   * time, until about `budgetMs` is spent (at least one goes). Returns
+   * whether everything due applied.
+   */
+  private applyDue(budgetMs: number): boolean {
+    const start = performance.now();
+    const spent = () =>
+      budgetMs !== Infinity && performance.now() - start >= budgetMs;
+    if (this.queue.length > 0) {
       // Its source selects again in the next tick (`SourceTick.invalidated`).
       this.options.wake?.();
     }
-    for (const { opened, change } of queue) {
+    let applied = 0;
+    while (this.queue.length > 0) {
+      if (applied > 0 && spent()) {
+        return false;
+      }
+      const { opened, change } = this.queue.shift()!;
+      opened.queued--;
+      applied++;
       if (opened.content.destroyed) {
         continue;
       }
@@ -387,16 +476,30 @@ export class SourceRuntime {
     const clock = this.options.clock();
     const due = this.dueSamples(clock);
     if (due.length === 0) {
-      return;
+      return true;
     }
-    const left = new Set(due);
-    this.samples = this.samples.filter((s) => !left.has(s));
     due.sort((a, b) => a.time - b.time || a.seq - b.seq);
+    const done = new Set<BufferedSample>();
+    let finished = true;
     for (const s of due) {
-      if (!s.opened.content.destroyed) {
+      if (applied > 0 && spent()) {
+        finished = false;
+        break;
+      }
+      done.add(s);
+      applied++;
+      if (s.opened.content.destroyed) {
+        continue;
+      }
+      try {
         s.opened.content.rows.applySamples(s.samples, s.index, s.index + 1);
+      } catch (error) {
+        // One sample's failure doesn't lose the others.
+        this.report(`the "${s.opened.content.kind}" source's sample`, error);
       }
     }
+    this.samples = this.samples.filter((s) => !done.has(s));
+    return finished;
   }
 
   private dueSamples(clock: SourceClock): BufferedSample[] {
@@ -447,13 +550,55 @@ export class SourceRuntime {
     if (at >= 0) {
       this.opened.splice(at, 1);
     }
+    // Its jobs stop: none applies into a destroyed content.
+    for (const job of [...opened.jobs]) {
+      job.cancel();
+    }
+    opened.jobs.clear();
     this.budget.remove(opened.client);
     this.queue = this.queue.filter((q) => q.opened !== opened);
     this.samples = this.samples.filter((s) => s.opened !== opened);
   }
 
+  /**
+   * Content `explicit`'s ID, or `derived` (its canonical source) when none
+   * is given. Two open contents never share one, since their rows' IDs are
+   * made from it: a second `explicit` is refused, and a second `derived`
+   * takes an ordinal (`#2`), reported, as a second item of a tileset does.
+   */
+  private contentId(explicit: string | undefined, derived: string): string {
+    const taken = new Set(this.opened.map((o) => o.content.id));
+    if (explicit !== undefined) {
+      if (typeof explicit !== "string" || explicit.length === 0) {
+        throw new TypeError("open: an id is a non-empty string.");
+      }
+      if (taken.has(explicit)) {
+        throw new Error(
+          `open: content with the id "${explicit}" is open already: each content's id is its own.`,
+        );
+      }
+      return explicit;
+    }
+    let ordinal = 1;
+    const idOf = (n: number) => (n === 1 ? derived : `${derived}#${n}`);
+    while (taken.has(idOf(ordinal))) {
+      ordinal++;
+    }
+    if (ordinal > 1) {
+      this.reportMessage(
+        `open: ${derived} is open already; without an id this content's IDs take the ordinal #${ordinal}, which depends on the order it was opened. Give each content an id (OpenOptions.id).`,
+      );
+    }
+    return idOf(ordinal);
+  }
+
   private report(where: string, error: unknown): void {
-    const message = `${where} threw: ${error instanceof Error ? error.message : String(error)}`;
+    this.reportMessage(
+      `${where} threw: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  private reportMessage(message: string): void {
     if (this.options.report) {
       this.options.report(message);
     } else {

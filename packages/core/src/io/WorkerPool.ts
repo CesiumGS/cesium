@@ -5,7 +5,11 @@ import workerUrl from "./worker.ts?worker&url";
 
 import { Jobs, type Job, type JobReply, type JobSpec } from "./Jobs.ts";
 import { isWorkerFetchMessage, WorkerFetchServer } from "./workerFetch.ts";
-import { DECODER_LOAD, type DecoderLoadMessage } from "./workerDecoders.ts";
+import {
+  DECODER_LOAD,
+  decoderTypeRefusal,
+  type DecoderLoadMessage,
+} from "./workerDecoders.ts";
 
 /**
  * A small pool of content workers, started lazily up to `size`, with the
@@ -75,9 +79,16 @@ export class WorkerPool {
    * Loads a decoder module (a source kind's, CS-847) into every worker of
    * the pool: those started now, and each one that starts later, before
    * its first job. Its jobs then run with `submit({ type: jobType })`. A
-   * job type loads once; another URL for it is refused.
+   * job type loads once; another URL for it is refused. A decoder's job
+   * type is namespaced (`<namespace>:<name>`, as "csv:rows") and never one
+   * of the worker's own (`BUILT_IN_JOB_TYPES`: "gltf", "terrain"...), so a
+   * kind can't take over the built-in jobs.
    */
   loadDecoder(jobType: string, url: string | URL): void {
+    const refusal = decoderTypeRefusal(jobType);
+    if (refusal !== undefined) {
+      throw new TypeError(`WorkerPool.loadDecoder: ${refusal}.`);
+    }
     const href = String(url);
     const known = this.decoders.find((d) => d.jobType === jobType);
     if (known) {

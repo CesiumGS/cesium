@@ -8,7 +8,9 @@
  * - **Classes first** (`now`, `refine`, `prefetch`), as I/O priority classes
  *   are: classes make sources comparable where their own priorities aren't.
  *   Prefetch is the idle class: on an origin, it is granted only when no
- *   `now` or `refine` want waits there.
+ *   `now` or `refine` want waits there for a slot; and while any `now` or
+ *   `refine` want waits for bytes, on any origin, no prefetch is granted,
+ *   since the byte budget is shared.
  * - **Then benefit per cost,** with aging: a want's score rises the longer it
  *   waits, so no source starves another inside a class.
  * - **One window per origin** (`slotsPerOrigin` loads in flight), and **one
@@ -88,9 +90,18 @@ class Client implements BudgetClient {
     if (!flight) {
       return;
     }
+    let held = bytes ?? flight.bytes;
+    if (!(held >= 0) || !Number.isFinite(held)) {
+      // Refused, not applied: NaN would stop every source's loading, and a
+      // negative value would enlarge the budget. It settles at what its
+      // grant reserved, so its slot frees.
+      this.arbiter.report(
+        `BudgetClient.settle: "${key.slice(0, 64)}" settled at ${String(bytes)} bytes; it takes a finite number from 0. Counted at the ${flight.bytes} bytes its want asked.`,
+      );
+      held = flight.bytes;
+    }
     this.inFlight.delete(key);
     this.arbiter.endFlight(flight);
-    const held = bytes ?? flight.bytes;
     this.held.set(key, held);
     this.resident_ += held;
     this.arbiter.hold(held);
@@ -139,7 +150,14 @@ export class BudgetArbiter {
   private reserved = 0;
   private readonly flights = new Map<string, number>();
 
-  constructor(options: BudgetOptions = {}) {
+  /** Where a refused value is reported (a source's mistake, not a throw). */
+  readonly report: (message: string) => void;
+
+  constructor(
+    options: BudgetOptions = {},
+    report: (message: string) => void = (message) => console.error(message),
+  ) {
+    this.report = report;
     this.bytes = positive(options.bytes ?? 1024 * 1024 * 1024, "bytes");
     this.slotsPerOrigin = Math.floor(
       positive(options.slotsPerOrigin ?? 16, "slotsPerOrigin"),
@@ -216,16 +234,19 @@ export class BudgetArbiter {
     );
     /** Origins where a `now` or `refine` want waits ungranted this tick. */
     const busy = new Set<string>();
+    /** A `now` or `refine` want waits for bytes: no prefetch goes anywhere. */
+    let bytesBusy = false;
     let granted = 0;
     for (const { client, want, rank } of entries) {
       const origin = want.origin;
       const idle = rank === CLASS_RANK.prefetch;
-      const fits =
-        this.inFlight(origin) < this.slotsPerOrigin &&
+      const slot = this.inFlight(origin) < this.slotsPerOrigin;
+      const bytes =
         this.resident_ + this.reserved + want.cost.bytes <= this.bytes;
-      if (!fits || (idle && busy.has(origin))) {
+      if (!slot || !bytes || (idle && (bytesBusy || busy.has(origin)))) {
         if (!idle) {
           busy.add(origin);
+          bytesBusy ||= !bytes;
         }
         client.ages.set(want.key, (client.ages.get(want.key) ?? 0) + 1);
         continue;
@@ -241,6 +262,20 @@ export class BudgetArbiter {
       client.wants = new Map();
     }
     return granted;
+  }
+
+  /**
+   * Gives back `keys` of a grant its source never acted on (its update
+   * threw): those still in flight are released, so the next tick's wants
+   * get them again. Keys it settled before it threw stay held.
+   */
+  returnGrant(client: BudgetClient, keys: readonly ContentKey[]): void {
+    const c = client as Client;
+    for (const key of keys) {
+      if (c.inFlight.has(key)) {
+        c.release(key);
+      }
+    }
   }
 
   /** What `client` was granted since it last asked, and clears it. */
@@ -275,7 +310,7 @@ function checkWant(want: Want): void {
   if (typeof want.key !== "string") {
     throw new TypeError("BudgetClient.want: a want's key is a string.");
   }
-  if (!(want.class in CLASS_RANK)) {
+  if (!Object.hasOwn(CLASS_RANK, want.class)) {
     throw new RangeError(
       `BudgetClient.want: class "${String(want.class)}"; it takes "now", "refine" or "prefetch".`,
     );
@@ -288,6 +323,15 @@ function checkWant(want: Want): void {
   if (!(want.cost.bytes >= 0) || !Number.isFinite(want.cost.bytes)) {
     throw new RangeError(
       `BudgetClient.want: cost.bytes is ${want.cost.bytes}; it takes a finite number from 0.`,
+    );
+  }
+  const decodeMs = want.cost.decodeMs;
+  if (
+    decodeMs !== undefined &&
+    (!(decodeMs >= 0) || !Number.isFinite(decodeMs))
+  ) {
+    throw new RangeError(
+      `BudgetClient.want: cost.decodeMs is ${decodeMs}; it takes a finite number from 0.`,
     );
   }
   if (typeof want.origin !== "string" || want.origin.length === 0) {

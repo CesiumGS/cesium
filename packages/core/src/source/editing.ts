@@ -9,7 +9,10 @@
  * The serialized form (CS-862) is JSON tagged with a format name and a 0.x
  * version, experimental until a second writer exists: `changeSetToJson` and
  * `changeSetFromJson`. Stable IDs are 64-bit, so the JSON holds them as
- * decimal strings.
+ * decimal strings. At 0.x a field it doesn't know is refused, not passed
+ * through: a writer's newer field would otherwise be lost silently. Numbers
+ * are finite and never -0, since JSON can't carry NaN or the infinities and
+ * reads "-0" back as 0's sign only by accident: what is checked round-trips.
  */
 import type { StableId } from "../scene/identity.ts";
 import type { PlainValue } from "./types.ts";
@@ -242,6 +245,20 @@ export interface ChangeSetLimits {
 const DEFAULT_OPS = 10_000;
 const DEFAULT_CHARS = 16 * 1024 * 1024;
 const MAX_ID = (1n << 64n) - 1n;
+/** How deep a property value nests before it's refused. */
+const MAX_DEPTH = 32;
+
+/** The fields each part of a change set may have (0.x: no others). */
+const ENVELOPE_FIELDS = new Set(["format", "version", "changeSet"]);
+const CHANGE_SET_FIELDS = new Set(["id", "source", "base", "ops", "meta"]);
+const META_FIELDS = new Set(["author", "time", "note"]);
+const OP_FIELDS: Readonly<Record<ChangeOp["op"], ReadonlySet<string>>> = {
+  insert: new Set(["op", "id", "feature"]),
+  update: new Set(["op", "id", "base", "patch", "before", "overwrite"]),
+  delete: new Set(["op", "id", "base", "before", "overwrite"]),
+};
+const FEATURE_FIELDS = new Set(["properties", "geometry"]);
+const GEOMETRY_FIELDS = new Set(["crs", "type", "coordinates"]);
 
 /**
  * `changes` as JSON text: `{ format, version, changeSet }`, with each stable
@@ -285,14 +302,18 @@ export function changeSetFromJson(
   }
   const version = parsed.version;
   if (typeof version !== "string" || !/^0\.\d+\.\d+$/.test(version)) {
+    // Never the value itself: the text is from outside.
     throw new TypeError(
-      `change set: version ${typeof version === "string" ? JSON.stringify(version.slice(0, 16)) : "(none)"} isn't 0.x; this reads ${CHANGE_SET_VERSION}.`,
+      `change set: its version isn't 0.x; this reads ${CHANGE_SET_VERSION}.`,
     );
   }
+  checkFields(parsed, ENVELOPE_FIELDS, "change set: the envelope");
   const raw = parsed.changeSet;
   if (!isRecord(raw) || !Array.isArray(raw.ops)) {
     throw new TypeError("change set: it has no ops.");
   }
+  // Before any op is read: a long list costs nothing to refuse.
+  checkOpCount(raw.ops.length, limits);
   const changes = {
     ...raw,
     ops: raw.ops.map((op: unknown, index: number) => {
@@ -328,23 +349,58 @@ export function checkChangeSet(
   if (changes.base !== undefined && typeof changes.base !== "string") {
     throw new TypeError("change set: its base is a string.");
   }
+  checkFields(changes, CHANGE_SET_FIELDS, "change set");
+  if (changes.meta !== undefined) {
+    if (!isRecord(changes.meta)) {
+      throw new TypeError("change set: its meta is an object.");
+    }
+    checkFields(changes.meta, META_FIELDS, "change set: its meta");
+    for (const [name, value] of Object.entries(changes.meta)) {
+      if (value !== undefined && typeof value !== "string") {
+        throw new TypeError(`change set: its meta's ${name} is a string.`);
+      }
+    }
+  }
   if (!Array.isArray(changes.ops)) {
     throw new TypeError("change set: its ops are an array.");
   }
-  if (changes.ops.length > (limits.ops ?? DEFAULT_OPS)) {
-    throw new TypeError(
-      `change set: ${changes.ops.length} ops, more than its limit.`,
-    );
-  }
+  checkOpCount(changes.ops.length, limits);
   changes.ops.forEach((op, index) => checkOp(op, index));
+}
+
+function checkOpCount(count: number, limits: ChangeSetLimits): void {
+  if (count > (limits.ops ?? DEFAULT_OPS)) {
+    throw new TypeError(`change set: ${count} ops, more than its limit.`);
+  }
+}
+
+/** Throws naming the first field of `record` not in `known` (its name only, up to 64 characters). */
+function checkFields(
+  record: object,
+  known: ReadonlySet<string>,
+  where: string,
+): void {
+  for (const name of Object.keys(record)) {
+    if (!known.has(name)) {
+      throw new TypeError(
+        `${where} has a field it doesn't know (${JSON.stringify(name.slice(0, 64))}); 0.x refuses it.`,
+      );
+    }
+  }
 }
 
 function checkOp(op: ChangeOp, index: number): void {
   const where = `change set: op ${index}`;
+  if (!isRecord(op)) {
+    throw new TypeError(`${where} isn't an object.`);
+  }
   if (typeof op.id !== "bigint" || op.id <= 0n || op.id > MAX_ID) {
     throw new TypeError(
       `${where}: its id is a stable ID (a 64-bit bigint, not 0).`,
     );
+  }
+  if (Object.hasOwn(OP_FIELDS, op.op)) {
+    checkFields(op, OP_FIELDS[op.op], where);
   }
   switch (op.op) {
     case "insert":
@@ -388,12 +444,63 @@ function checkFeature(feature: unknown, where: string): void {
   if (!isRecord(feature)) {
     throw new TypeError(`${where} is an object.`);
   }
-  if (feature.properties !== undefined && !isRecord(feature.properties)) {
-    throw new TypeError(`${where}'s properties are an object.`);
+  checkFields(feature, FEATURE_FIELDS, where);
+  if (feature.properties !== undefined) {
+    if (!isRecord(feature.properties)) {
+      throw new TypeError(`${where}'s properties are an object.`);
+    }
+    for (const [name, value] of Object.entries(feature.properties)) {
+      checkPlain(
+        value,
+        `${where}'s property ${JSON.stringify(name.slice(0, 64))}`,
+        0,
+      );
+    }
   }
   if (feature.geometry !== undefined) {
     checkGeometry(feature.geometry, where);
   }
+}
+
+/**
+ * Throws unless `value` is a `PlainValue` that round-trips through JSON:
+ * strings, finite numbers other than -0, booleans, null, and arrays and
+ * plain objects of them, nested at most `MAX_DEPTH` deep. Names no value.
+ */
+function checkPlain(value: unknown, where: string, depth: number): void {
+  if (depth > MAX_DEPTH) {
+    throw new TypeError(`${where} nests deeper than ${MAX_DEPTH}.`);
+  }
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean"
+  ) {
+    return;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || Object.is(value, -0)) {
+      throw new TypeError(
+        `${where} holds a number JSON can't carry (NaN, an infinity or -0).`,
+      );
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      checkPlain(item, where, depth + 1);
+    }
+    return;
+  }
+  if (isRecord(value) && Object.getPrototypeOf(value) === Object.prototype) {
+    for (const item of Object.values(value)) {
+      checkPlain(item, where, depth + 1);
+    }
+    return;
+  }
+  throw new TypeError(
+    `${where} isn't a plain value (a string, number, boolean, null, array or object of them).`,
+  );
 }
 
 function checkPatch(patch: unknown, where: string): void {
@@ -421,6 +528,8 @@ function checkGeometry(geometry: unknown, where: string): void {
   if (!GEOMETRY_TYPES.has(geometry.type as string)) {
     throw new TypeError(`${where}'s geometry type isn't one it takes.`);
   }
+  checkFields(geometry, GEOMETRY_FIELDS, `${where}'s geometry`);
+  checkPlain(geometry.coordinates, `${where}'s coordinates`, 0);
 }
 
 function idFrom(value: unknown, index: number): bigint {

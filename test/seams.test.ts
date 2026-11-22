@@ -943,43 +943,64 @@ describe("the ray seam", () => {
  * source sees only its `SourceHost` and writes only through sinks, so no
  * file under a source module imports `World`, `Engine`, the renderer
  * (`src/render/`) or the GPU layer (`src/gpu/`), even for a type: by a
- * relative path into the core, or by name from `@cesium/core` or the
- * umbrella. The source modules are the seam's own directory and every
- * source and loader package (CS-845's `source-*` and `loader-*`), as they
- * come. The line of each bypass is named; add to the seam, don't go around it.
+ * relative path into the core, or by name from a barrel (`@cesium/core`,
+ * the umbrella, or a relative `index.ts`). A barrel's names can't be
+ * checked through a namespace import, `export *` or a dynamic `import()`,
+ * so those are refused from a source module. The source modules are the
+ * seam's own directory and every source and loader package (CS-845's
+ * `source-*` and `loader-*`), as they come. The line of each bypass is
+ * named; add to the seam, don't go around it.
  */
 const SOURCE_REFUSED_NAMES = new Set(["World", "Engine", "RenderContext"]);
 const CORE_PACKAGES = /^(?:@cesium\/core|@cesium\/next|cesium)(?:\/|$)/;
+
+/** How a module is reached: by names, or whole (namespace, `export *`, `import()`). */
+type Reach = { readonly names: readonly string[] } | "whole";
 
 export function sourceSeamBypasses(file: string, text: string): string[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const out: string[] = [];
   const at = (node: ts.Node) =>
     source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
-  const check = (
-    node: ts.Node,
-    specifier: string,
-    names: readonly string[],
-  ) => {
+  /** A barrel's names, or the barrel whole. */
+  const checkBarrel = (node: ts.Node, specifier: string, reach: Reach) => {
+    if (reach === "whole") {
+      out.push(`${at(node)}: * from ${specifier}`);
+      return;
+    }
+    const refused = reach.names.filter((n) => SOURCE_REFUSED_NAMES.has(n));
+    if (refused.length > 0) {
+      out.push(`${at(node)}: ${refused.join(", ")} from ${specifier}`);
+    }
+  };
+  const check = (node: ts.Node, specifier: string, reach: Reach) => {
     if (specifier.startsWith(".")) {
       const to = resolve(dirname(file), specifier.replace(/\?.*$/, ""));
       const inCore = relative(src, to).replaceAll("\\", "/");
+      if (inCore.startsWith("..")) {
+        return;
+      }
       if (
-        !inCore.startsWith("..") &&
-        (inCore === "scene/World.ts" ||
-          inCore === "scene/Engine.ts" ||
-          inCore === "scene/RenderContext.ts" ||
-          inCore.startsWith("render/") ||
-          inCore.startsWith("gpu/"))
+        inCore === "scene/World.ts" ||
+        inCore === "scene/Engine.ts" ||
+        inCore === "scene/RenderContext.ts" ||
+        inCore.startsWith("render/") ||
+        inCore.startsWith("gpu/")
       ) {
         out.push(`${at(node)}: ${specifier}`);
+      } else if (
+        inCore === "" ||
+        /(?:^|\/)index(?:\.[jt]s)?$/.test(inCore) ||
+        !/\.[jt]s$/.test(inCore)
+      ) {
+        // A barrel: the core's own index, or a directory's.
+        checkBarrel(node, specifier, reach);
       }
     } else if (CORE_PACKAGES.test(specifier)) {
-      const refused = names.filter((n) => SOURCE_REFUSED_NAMES.has(n));
-      if (refused.length > 0 || /\/(?:render|gpu)(?:\/|$)/.test(specifier)) {
-        out.push(
-          `${at(node)}: ${refused.length > 0 ? `${refused.join(", ")} from ` : ""}${specifier}`,
-        );
+      if (/\/(?:render|gpu)(?:\/|$)/.test(specifier)) {
+        out.push(`${at(node)}: ${specifier}`);
+      } else {
+        checkBarrel(node, specifier, reach);
       }
     }
   };
@@ -988,13 +1009,24 @@ export function sourceSeamBypasses(file: string, text: string): string[] {
       ts.isImportDeclaration(node) &&
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
-      const bindings = node.importClause?.namedBindings;
+      const clause = node.importClause;
+      const bindings = clause?.namedBindings;
       check(
         node,
         node.moduleSpecifier.text,
-        bindings && ts.isNamedImports(bindings)
-          ? bindings.elements.map((e) => (e.propertyName ?? e.name).text)
-          : [],
+        // A side-effect import reaches no names; a default one, a
+        // namespace one or both reach the module whole.
+        clause === undefined
+          ? { names: [] }
+          : clause.name !== undefined ||
+              (bindings !== undefined && ts.isNamespaceImport(bindings))
+            ? "whole"
+            : {
+                names:
+                  bindings?.elements.map(
+                    (e) => (e.propertyName ?? e.name).text,
+                  ) ?? [],
+              },
       );
     } else if (
       ts.isExportDeclaration(node) &&
@@ -1006,8 +1038,12 @@ export function sourceSeamBypasses(file: string, text: string): string[] {
         node,
         node.moduleSpecifier.text,
         clause && ts.isNamedExports(clause)
-          ? clause.elements.map((e) => (e.propertyName ?? e.name).text)
-          : [],
+          ? {
+              names: clause.elements.map(
+                (e) => (e.propertyName ?? e.name).text,
+              ),
+            }
+          : "whole",
       );
     } else if (
       ts.isCallExpression(node) &&
@@ -1015,7 +1051,7 @@ export function sourceSeamBypasses(file: string, text: string): string[] {
       node.arguments[0] &&
       ts.isStringLiteralLike(node.arguments[0])
     ) {
-      check(node, node.arguments[0].text, []);
+      check(node, node.arguments[0].text, "whole");
     } else if (
       ts.isImportTypeNode(node) &&
       ts.isLiteralTypeNode(node.argument) &&
@@ -1025,7 +1061,11 @@ export function sourceSeamBypasses(file: string, text: string): string[] {
       while (q && ts.isQualifiedName(q)) {
         q = q.left;
       }
-      check(node, node.argument.literal.text, q ? [q.text] : []);
+      check(
+        node,
+        node.argument.literal.text,
+        q ? { names: [q.text] } : "whole",
+      );
     }
     ts.forEachChild(node, visit);
   };
@@ -1062,7 +1102,7 @@ describe("the content-source seam", () => {
     expect(found).toEqual([]);
   });
 
-  it("its detector flags each bypass by line: paths, types, dynamic imports and names from the package", () => {
+  it("its detector flags each bypass by line: paths, types, dynamic imports, names from the package and imports through a barrel", () => {
     const file = join(src, "source", "sample.ts");
     const plant = [
       'import type { StableId } from "../scene/identity.ts";',
@@ -1084,6 +1124,27 @@ describe("the content-source seam", () => {
       "6: ../render/view/viewFrame.ts",
       "7: World from @cesium/core",
       "8: Engine from @cesium/next",
+    ]);
+    // Through a barrel: a relative index's names, and any barrel whole.
+    const barrels = [
+      'import type { World } from "../index.ts";',
+      'import type { StableId, DrawSink } from "../index.ts";',
+      'import * as core from "@cesium/core";',
+      'const c = await import("@cesium/core");',
+      'export * from "../index.ts";',
+      'import core2 from "@cesium/core";',
+      'type All = typeof import("@cesium/core");',
+      'import type { Engine as E2 } from "..";',
+      'import * as identity from "../scene/identity.ts";',
+    ].join("\n");
+    expect(sourceSeamBypasses(file, barrels)).toEqual([
+      "1: World from ../index.ts",
+      "3: * from @cesium/core",
+      "4: * from @cesium/core",
+      "5: * from ../index.ts",
+      "6: * from @cesium/core",
+      "7: * from @cesium/core",
+      "8: Engine from ..",
     ]);
     // A source package's own file, by the same rules.
     const adapter = join(repo, "packages", "source-sample", "src", "kind.ts");

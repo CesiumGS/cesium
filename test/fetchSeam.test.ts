@@ -49,8 +49,10 @@ const GLOBALS = new Set(["globalThis", "self", "window"]);
  * Lines of `source` that reach the global `fetch`: a call, a reference
  * passed as a value (`{ fetch }`, `= fetch`, an argument), or
  * `globalThis.fetch` / `self.fetch` / `window.fetch`. Property names
- * (`source.fetch(...)`, `{ fetch: ... }`, a method named `fetch`) and types
- * (`typeof fetch`) are not requests.
+ * (`source.fetch(...)`, `{ fetch: ... }`, a method named `fetch`), types
+ * (`typeof fetch`) and a local named `fetch` (a variable, a parameter or a
+ * destructured binding in an enclosing scope, which shadows the global) are
+ * not requests.
  */
 function directFetches(source: string, name = "source.ts"): number[] {
   const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
@@ -70,13 +72,81 @@ function directFetches(source: string, name = "source.ts"): number[] {
       flag(node);
       return;
     }
-    if (ts.isIdentifier(node) && node.text === "fetch" && isValue(node)) {
+    if (
+      ts.isIdentifier(node) &&
+      node.text === "fetch" &&
+      isValue(node) &&
+      !shadowed(node)
+    ) {
       flag(node);
     }
     ts.forEachChild(node, visit);
   };
   visit(file);
   return lines;
+}
+
+/** Whether `name` declares `fetch`: an identifier, or a destructuring pattern holding one. */
+function bindsFetch(name: ts.BindingName): boolean {
+  if (ts.isIdentifier(name)) {
+    return name.text === "fetch";
+  }
+  return name.elements.some(
+    (element) => !ts.isOmittedExpression(element) && bindsFetch(element.name),
+  );
+}
+
+/** Whether a scope node declares `fetch` itself (not in a nested scope). */
+function declaresFetch(scope: ts.Node): boolean {
+  if (ts.isFunctionLike(scope)) {
+    return scope.parameters.some((p) => bindsFetch(p.name));
+  }
+  if (ts.isCatchClause(scope)) {
+    return (
+      scope.variableDeclaration !== undefined &&
+      bindsFetch(scope.variableDeclaration.name)
+    );
+  }
+  if (
+    ts.isForStatement(scope) ||
+    ts.isForOfStatement(scope) ||
+    ts.isForInStatement(scope)
+  ) {
+    const init = scope.initializer;
+    return (
+      init !== undefined &&
+      ts.isVariableDeclarationList(init) &&
+      init.declarations.some((d) => bindsFetch(d.name))
+    );
+  }
+  if (ts.isBlock(scope) || ts.isSourceFile(scope) || ts.isModuleBlock(scope)) {
+    return scope.statements.some(
+      (statement) =>
+        (ts.isVariableStatement(statement) &&
+          statement.declarationList.declarations.some((d) =>
+            bindsFetch(d.name),
+          )) ||
+        (ts.isFunctionDeclaration(statement) &&
+          statement.name?.text === "fetch") ||
+        (ts.isImportDeclaration(statement) &&
+          statement.importClause?.namedBindings !== undefined &&
+          ts.isNamedImports(statement.importClause.namedBindings) &&
+          statement.importClause.namedBindings.elements.some(
+            (e) => e.name.text === "fetch",
+          )),
+    );
+  }
+  return false;
+}
+
+/** Whether `fetch` here names a local that an enclosing scope declares, not the global. */
+function shadowed(node: ts.Identifier): boolean {
+  for (let scope = node.parent; scope; scope = scope.parent) {
+    if (declaresFetch(scope)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** Whether identifier `fetch` here is a read of a value, not a name. */
@@ -95,6 +165,8 @@ function isValue(node: ts.Identifier): boolean {
     (ts.isGetAccessor(parent) && parent.name === node) ||
     (ts.isVariableDeclaration(parent) && parent.name === node) ||
     (ts.isParameter(parent) && parent.name === node) ||
+    (ts.isBindingElement(parent) &&
+      (parent.name === node || parent.propertyName === node)) ||
     (ts.isFunctionDeclaration(parent) && parent.name === node) ||
     ts.isImportSpecifier(parent) ||
     ts.isExportSpecifier(parent) ||
@@ -116,8 +188,12 @@ describe("the request seam", () => {
       "const d = { fetch: (u: string) => u };", // 6: a name: fine
       "class E { fetch() {} }", // 7: a name: fine
       "run(self.fetch);", // 8
+      "function g({ fetch }: Host) { return fetch(url); }", // 9: its own: fine
+      "const { pool, fetch: f } = options;", // 10: a property: fine
+      "function h() { const fetch = make(); return { fetch }; }", // 11: fine
+      "function k() { return fetch(url); }", // 12: the global
     ].join("\n");
-    expect(directFetches(planted)).toEqual([2, 3, 4, 5, 8]);
+    expect(directFetches(planted)).toEqual([2, 3, 4, 5, 8, 12]);
   });
 
   it("no source fetches directly outside the provider", () => {

@@ -8,6 +8,16 @@
  * In this version content belongs to one world, the first it is added to,
  * and has one item there, as a tileset's first item; several items of one
  * content come with CS-554, which makes items general.
+ *
+ * One ID scheme: every stable ID a content gives, its rows' and its draws',
+ * is made with its content ID (`SourceContent.id`) as the item, and its
+ * item's key is that ID (`World.add`). So IDs don't change when an item is
+ * removed and the content placed again, and two open contents never share
+ * them (`Engine.open` refuses or numbers a second of one ID).
+ *
+ * Once destroyed, its sinks refuse writes (they throw), its source's jobs
+ * are canceled and its pushes dropped; a draw sink's releases still pass,
+ * so a source's own `destroy` can free what it made.
  */
 import {
   canonicalSource,
@@ -46,7 +56,11 @@ export interface ContentWorld extends DrawSink {
  * @experimental
  */
 export interface ContentItemOptions {
-  /** The item's key, for its stable IDs (as `SceneItemOptions.id`). */
+  /**
+   * The item's key, for its stable IDs: always its content's ID
+   * (`Engine.open`'s `id`), so another value is refused. Its rows and draws
+   * share one ID scheme.
+   */
   readonly id?: string;
   /** Labels by taxonomy for everything it draws (as `SceneItemOptions.labels`). */
   readonly labels?: Readonly<Record<string, readonly string[]>>;
@@ -60,6 +74,14 @@ const ALL_VIEWS = 0xffffffff;
 
 /** The shortest interval a source may declare for checking its server (CS-863). */
 const MIN_POLL_SECONDS = 1;
+
+/** What a draw sink still does once its content is destroyed: free what was made. */
+const RELEASES: ReadonlySet<PropertyKey> = new Set([
+  "removeMesh",
+  "removeTransform",
+  "removeDraw",
+  "freeClip",
+]);
 
 interface TrackedDraw {
   readonly handle: DrawHandle;
@@ -121,15 +143,13 @@ export class SourceContent {
 
   /** @internal Its kind opened it. */
   attach(source: ContentSource): void {
-    // Destructured: `capabilities.` alone reads as the device's to
-    // test/deviceFactsSeam.test.ts, and these are the source's.
-    const { write, polls, pushes } = source.capabilities;
-    const writable = !isReadOnly(write);
+    const writable = !isReadOnly(source.capabilities.write);
     if (writable && !source.writer) {
       throw new Error(
         `open: the "${this.kind}" source declares write capabilities but has no writer.`,
       );
     }
+    const polls = source.capabilities.polls;
     if (
       polls !== undefined &&
       !(
@@ -141,7 +161,7 @@ export class SourceContent {
         `open: the "${this.kind}" source polls every ${polls.intervalSeconds} s; a declared interval is at least ${MIN_POLL_SECONDS} s (CS-863).`,
       );
     }
-    if (polls !== undefined && !pushes) {
+    if (polls !== undefined && !source.capabilities.pushes) {
       throw new Error(
         `open: the "${this.kind}" source polls but doesn't push: what it learns reaches the engine only as pushes (CS-863).`,
       );
@@ -308,6 +328,7 @@ export class SourceContent {
       return;
     }
     this.destroyed_ = true;
+    this.rows.close();
     try {
       this.source_?.destroy();
     } finally {
@@ -319,6 +340,13 @@ export class SourceContent {
       this.drawsById.clear();
       this.item_?.remove();
       this.onDestroy?.();
+    }
+  }
+
+  /** Throws once it's destroyed: what its source writes after that goes nowhere. */
+  private checkOpen(where: string): void {
+    if (this.destroyed_) {
+      throw new Error(`${where}: the content is destroyed.`);
     }
   }
 
@@ -373,6 +401,7 @@ export class SourceContent {
       return this.world_;
     };
     const addDraw = (options: DrawOptions): DrawHandle => {
+      this.checkOpen("DrawSink.addDraw");
       if (typeof options.id !== "string" || options.id.length === 0) {
         throw new TypeError(
           "DrawSink.addDraw: a source's draw names its content (DrawOptions.id), so its stable IDs hold across reloads (CS-815).",
@@ -395,7 +424,7 @@ export class SourceContent {
         ? undefined
         : stableIdOf({
             kind: "draw",
-            item: item?.key ?? "",
+            item: this.id,
             source: this.source,
             content: options.id,
           });
@@ -427,6 +456,8 @@ export class SourceContent {
             this.drawsById.delete(tracked.id);
           }
         }
+      } else if (this.destroyed_) {
+        return; // removed with its content
       }
       world().removeDraw(handle);
     };
@@ -440,9 +471,13 @@ export class SourceContent {
         }
         const w = world() as unknown as Record<PropertyKey, unknown>;
         const value = w[property];
-        return typeof value === "function"
-          ? (value as (...args: unknown[]) => unknown).bind(w)
-          : value;
+        if (typeof value !== "function") {
+          return value;
+        }
+        if (this.destroyed_ && !RELEASES.has(property)) {
+          return () => this.checkOpen(`DrawSink.${String(property)}`);
+        }
+        return (value as (...args: unknown[]) => unknown).bind(w);
       },
       has: (_target, property) => property in world(),
     });

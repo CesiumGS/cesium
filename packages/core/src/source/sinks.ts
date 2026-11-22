@@ -67,6 +67,7 @@ export class ContentRows {
   onChange: ((ids: readonly StableId[]) => void) | undefined;
   /** Its source can write: every row must then be named (CS-831's S7). */
   writable = false;
+  private closed = false;
 
   constructor(private readonly identity: RowIdentityContext) {}
 
@@ -80,12 +81,13 @@ export class ContentRows {
     return {
       images: {
         put: (image) => {
+          this.checkOpen("RasterSink.put");
           checkRaster(image);
           this.images.set(image.key, image);
           this.changed([]);
         },
         remove: (key) => {
-          if (this.images.delete(key)) {
+          if (!this.closed && this.images.delete(key)) {
             this.changed([]);
           }
         },
@@ -106,6 +108,17 @@ export class ContentRows {
         return this.rowSink(`custom:${feature}`, map, checkCustom);
       },
     };
+  }
+
+  /** Its content was destroyed: every put throws from now on, and removes do nothing. */
+  close(): void {
+    this.closed = true;
+  }
+
+  private checkOpen(where: string): void {
+    if (this.closed) {
+      throw new Error(`${where}: the content is destroyed.`);
+    }
   }
 
   /** Where the rows with `id` are (empty: none loaded). */
@@ -255,6 +268,7 @@ export class ContentRows {
   ): RowSink<B> {
     return {
       put: (batch) => {
+        this.checkOpen(`the ${name} sink's put`);
         check(batch);
         checkNames(batch, this.writable);
         const gone: StableId[] = [];
@@ -276,7 +290,7 @@ export class ContentRows {
         this.changed([...gone, ...ids]);
       },
       remove: (key) => {
-        const held = map.get(key);
+        const held = this.closed ? undefined : map.get(key);
         if (held) {
           const gone: StableId[] = [];
           map.delete(key);
@@ -398,7 +412,19 @@ function checkFeatures(batch: FeatureBatch): void {
         `${where}: offsets has ${batch.offsets.length} entries, not count + 1.`,
       );
     }
-    vertices = batch.offsets[batch.count]!;
+    const offsets = batch.offsets;
+    if (offsets[0] !== 0) {
+      throw new RangeError(`${where}: offsets start at 0.`);
+    }
+    for (let i = 0; i < batch.count; i++) {
+      if (!(offsets[i + 1]! > offsets[i]!)) {
+        throw new RangeError(
+          `${where}: offsets increase: feature ${i} has no vertices.`,
+        );
+      }
+    }
+    vertices = offsets[batch.count]!;
+    checkHoles(batch, where);
   } else if (batch.geometry === "line" || batch.geometry === "polygon") {
     throw new TypeError(`${where}: a ${batch.geometry} batch has offsets.`);
   }
@@ -409,6 +435,35 @@ function checkFeatures(batch: FeatureBatch): void {
     );
   }
   checkColumns(batch.properties, batch.count, where);
+}
+
+/** Each feature's holes start inside it, after its first vertex, in increasing order. */
+function checkHoles(batch: FeatureBatch, where: string): void {
+  const holes = batch.holes;
+  if (holes === undefined) {
+    return;
+  }
+  if (holes.length !== batch.count) {
+    throw new RangeError(
+      `${where}: holes has ${holes.length} entries, not count (${batch.count}).`,
+    );
+  }
+  const offsets = batch.offsets!;
+  for (let i = 0; i < batch.count; i++) {
+    const starts = holes[i];
+    if (starts === undefined || starts.length === 0) {
+      continue;
+    }
+    let previous = offsets[i]!;
+    for (const start of starts) {
+      if (!(start > previous) || start >= offsets[i + 1]!) {
+        throw new RangeError(
+          `${where}: feature ${i}'s holes start inside it, after its outer ring, in increasing order.`,
+        );
+      }
+      previous = start;
+    }
+  }
 }
 
 function checkPoints(batch: PointBatch): void {

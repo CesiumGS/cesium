@@ -6,6 +6,7 @@
  * URL("./csvSource.js", import.meta.url) }`. Its module's default export
  * is the `SourceKind`, imported the first time an asset needs it.
  */
+import { canonicalSource } from "../scene/identity.ts";
 import type {
   AssetRef,
   AssetResolver,
@@ -112,9 +113,14 @@ export class SourceKinds {
   }
 }
 
-/** An asset for a message: its URL's origin and path, never its query (tokens). */
+/**
+ * An asset for a message: its canonical source (`canonicalSource`), as its
+ * IDs are made from: never its query (tokens) or user information, and a
+ * data URI's hash rather than its payload. Long ones are cut.
+ */
 function describe(asset: ResolvedAsset): string {
-  return `${asset.url.origin === "null" ? asset.url.protocol : asset.url.origin}${asset.url.pathname}`;
+  const source = canonicalSource(asset.url.href);
+  return source.length > 200 ? `${source.slice(0, 200)}…` : source;
 }
 
 function checkKind(module: unknown, id: string): SourceKind {

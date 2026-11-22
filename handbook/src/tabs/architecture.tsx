@@ -663,8 +663,8 @@ export function Architecture() {
             The budget arbiter takes every source's wants each tick (a class:
             now, refine or prefetch; a benefit; a cost in bytes; an origin) and
             grants per origin and over one byte budget, class first. So one
-            source's prefetch no longer holds an origin's requests while
-            another's visible tiles wait.
+            source's prefetch no longer holds an origin's requests, or the
+            shared bytes, while another's visible tiles wait.
           </li>
           <li>
             Sinks take images, vector features, points and rows for a render

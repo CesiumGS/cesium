@@ -947,9 +947,10 @@ export class World {
    * Places content an open source gave (`Engine.open`) in this world: its
    * source then updates each tick with this world's views, and draws here.
    * Content belongs to the first world it is added to, with one item there
-   * in this version (`ContentItem`). Throws for content of another world,
-   * a second item, destroyed content, and identity options `SceneItemOptions`
-   * refuses.
+   * in this version (`ContentItem`); its item's key is its content ID
+   * (`Engine.open`'s `id`). Throws for a destroyed world, content of another
+   * world, a second item, destroyed content, an `id` other than its content
+   * ID, and identity options `SceneItemOptions` refuses.
    * @experimental
    */
   add(content: SourceContent, options?: ContentItemOptions): ContentItem;
@@ -958,8 +959,21 @@ export class World {
     options: SceneItemOptions | ContentItemOptions = {},
   ): SceneItem | ContentItem {
     if (content instanceof SourceContent) {
+      if (this.destroyed_) {
+        throw new Error("World.add: the world is destroyed.");
+      }
       checkItemIdentity(options, "World.add");
-      const identity = makeItemIdentity(this, options, content.source);
+      if (options.id !== undefined && options.id !== content.id) {
+        throw new Error(
+          "World.add: content's item key is its content ID; give the id to Engine.open (OpenOptions.id).",
+        );
+      }
+      // Its rows' IDs and its draws' are made with its content ID: one scheme.
+      const identity = makeItemIdentity(
+        this,
+        { ...options, id: content.id },
+        content.source,
+      );
       return content.addItem(this, identity, options, () =>
         this.identities.releaseItemKey(identity.key),
       );

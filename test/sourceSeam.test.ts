@@ -7,8 +7,15 @@
 import { Worker as NodeWorker } from "node:worker_threads";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FetchProvider } from "../packages/core/src/io/fetchProvider.ts";
-import { Jobs } from "../packages/core/src/io/Jobs.ts";
+import { CPU_PER_WORKER, Jobs } from "../packages/core/src/io/Jobs.ts";
 import { WorkerPool } from "../packages/core/src/io/WorkerPool.ts";
+import {
+  BUILT_IN_JOB_TYPES,
+  DECODER_LOAD,
+  WorkerDecoders,
+  decoderTypeRefusal,
+  type DecoderLoadMessage,
+} from "../packages/core/src/io/workerDecoders.ts";
 import {
   FLAGS_WORD,
   RECORD_WORDS,
@@ -32,9 +39,15 @@ import {
   isReadOnly,
   type ChangeSet,
 } from "../packages/core/src/source/editing.ts";
-import { SourceRuntime } from "../packages/core/src/source/runtime.ts";
+import { EditLayer } from "../packages/core/src/source/editLayer.ts";
+import {
+  MAX_BUFFERED_SAMPLES,
+  MAX_QUEUED_CHANGES,
+  SourceRuntime,
+} from "../packages/core/src/source/runtime.ts";
+import { ContentRows } from "../packages/core/src/source/sinks.ts";
 import type { SourceClock } from "../packages/core/src/source/types.ts";
-import type { SampleSource } from "./fixtures/sources/sampleKind.ts";
+import { SUM, SampleSource } from "./fixtures/sources/sampleKind.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
@@ -66,7 +79,12 @@ function runtime(
     fetch?: FetchProvider;
   } = {},
 ) {
-  const jobs = new Jobs({ size: 1, post: () => {} });
+  /** What the jobs posted to the (fake) worker, in order. */
+  const posted: { id: number; type: string }[] = [];
+  const jobs = new Jobs({
+    size: 1,
+    post: (_worker, message) => posted.push(message),
+  });
   jobs.phased = options.phased ?? false;
   const reports: string[] = [];
   const rt = new SourceRuntime({
@@ -84,7 +102,7 @@ function runtime(
   const { world, visible } = stubWorld();
   const place = (content: SourceContent) =>
     content.addItem(world, { key: content.id }, {}, () => {});
-  return { rt, jobs, reports, world, visible, place };
+  return { rt, jobs, posted, reports, world, visible, place };
 }
 
 describe("kinds by module reference, and decoders on the pool's workers", () => {
@@ -185,10 +203,18 @@ describe("Engine.open and World.add", () => {
   afterEach(() => engine.destroy());
 
   it("resolves a plain URL, picks the kind by what it accepts, and places any content; the sample writes every sink on the fake device", async () => {
-    const content = await engine.open({ url: "https://data.test/city.sample" });
+    const content = await engine.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
     expect(content.kind).toBe("sample");
     expect(content.asset.url.href).toBe("https://data.test/city.sample");
+    // Its item's key is its content ID: rows and draws share one ID scheme.
+    expect(() => world.add(content, { id: "town" })).toThrow(
+      /item key is its content ID/,
+    );
     const item = world.add(content, { id: "city" });
+    expect(item.identity.key).toBe("city");
     expect(content.item).toBe(item);
     engine.sources.tick(); // it wants "a"; the budget grants it
     engine.sources.tick(); // it writes "a"
@@ -485,7 +511,7 @@ describe("push on a stepped clock", () => {
       samples: { times: Float64Array.of(1, 2), names: ["car-1"] },
     });
     expect(reports).toEqual([
-      "the \"sample\" source's samples threw: times, names and positions don't agree in length; dropped.",
+      "the \"sample\" source's samples threw: times, names, positions and values don't agree in length; dropped.",
     ]);
   });
 });
@@ -842,6 +868,538 @@ describe("CS-831's types: write capabilities and change sets", () => {
       expect.unreachable();
     } catch (error) {
       expect(String(error)).not.toContain("secret-value");
+    }
+  });
+});
+
+// The first review's fixes (CS-847's fix round).
+
+describe("decoders can't take the built-in job types, and a hung one frees its slot on cancel", () => {
+  it("refuses each built-in job type and an unnamespaced one, in the pool and in the worker", () => {
+    const pool = new WorkerPool(1, () => ({}) as Worker);
+    try {
+      for (const type of BUILT_IN_JOB_TYPES) {
+        expect(() =>
+          pool.loadDecoder(type, "https://example.test/take.js"),
+        ).toThrow(/WorkerPool\.loadDecoder: /);
+        expect(pool.hasDecoder(type)).toBe(false);
+      }
+      for (const type of ["gltf", "terrain", "image", "stars", "skyPack"]) {
+        expect(BUILT_IN_JOB_TYPES.has(type)).toBe(true);
+      }
+      expect(() =>
+        pool.loadDecoder("csv", "https://example.test/c.js"),
+      ).toThrow(/namespaced/);
+      expect(decoderTypeRefusal("csv:rows")).toBeUndefined();
+    } finally {
+      pool.destroy();
+    }
+    // A forged load in the worker takes no built-in type either.
+    const decoders = new WorkerDecoders(() => Promise.resolve({}));
+    for (const type of BUILT_IN_JOB_TYPES) {
+      decoders.handleLoad({
+        type: DECODER_LOAD,
+        jobType: type,
+        url: "https://example.test/take.js",
+      } as DecoderLoadMessage);
+      expect(decoders.has(type)).toBe(false);
+    }
+  });
+
+  it("replies at once when a job whose decoder never resolves is canceled, so the next job gets the slot", async () => {
+    const decoders = new WorkerDecoders((url) =>
+      Promise.resolve({
+        default: url.endsWith("hang.js")
+          ? () => new Promise(() => {}) // never resolves
+          : () => Promise.resolve({ result: "quick" }),
+      }),
+    );
+    for (const name of ["hang", "quick"]) {
+      decoders.handleLoad({
+        type: DECODER_LOAD,
+        jobType: `test:${name}`,
+        url: `https://example.test/${name}.js`,
+      } as DecoderLoadMessage);
+    }
+    // One worker, as worker.ts runs jobs: a controller per job, cancel aborts it.
+    const controllers = new Map<number, AbortController>();
+    const jobs: Jobs = new Jobs({
+      size: 1,
+      post: (_worker, message) => {
+        if (message.type === "cancel") {
+          controllers.get(message.id)?.abort();
+          return;
+        }
+        const controller = new AbortController();
+        controllers.set(message.id, controller);
+        void decoders.run(message, controller.signal, (reply) =>
+          queueMicrotask(() => jobs.reply(reply)),
+        );
+      },
+    });
+    const hung = Array.from({ length: CPU_PER_WORKER }, () =>
+      jobs.submit({ type: "test:hang", payload: {} }),
+    );
+    for (const job of hung) {
+      job.promise.catch(() => {});
+    }
+    const quick = jobs.submit<string>({ type: "test:quick", payload: {} });
+    const settle = async () => {
+      for (let i = 0; i < 10; i++) {
+        await Promise.resolve();
+      }
+    };
+    await settle();
+    expect(quick.state).toBe("queued"); // every CPU slot held by a hung decode
+    for (const job of hung) {
+      job.cancel();
+    }
+    await expect(quick.promise).resolves.toBe("quick");
+    expect(jobs.stats.running).toBe(0);
+  });
+
+  it("loads a decoder again after a failed load, as kinds do", async () => {
+    let attempts = 0;
+    const decoders = new WorkerDecoders(() =>
+      ++attempts === 1
+        ? Promise.reject(new Error("network blip"))
+        : Promise.resolve({ default: () => Promise.resolve({ result: 7 }) }),
+    );
+    decoders.handleLoad({
+      type: DECODER_LOAD,
+      jobType: "test:retry",
+      url: "https://example.test/retry.js",
+    } as DecoderLoadMessage);
+    const replies: { ok: boolean; result?: unknown }[] = [];
+    const post = (reply: { ok: boolean; result?: unknown }) =>
+      replies.push(reply);
+    const signal = new AbortController().signal;
+    await decoders.run({ id: 1, type: "test:retry" }, signal, post);
+    await decoders.run({ id: 2, type: "test:retry" }, signal, post);
+    expect(replies.map((r) => r.ok)).toEqual([false, true]);
+    expect(replies[1]!.result).toBe(7);
+    expect(attempts).toBe(2);
+  });
+});
+
+describe("destroyed worlds and destroyed content", () => {
+  let engine: Engine;
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+  });
+  afterEach(() => engine.destroy());
+
+  it("refuses content in a destroyed world, and removeWorld destroys the content placed in it", async () => {
+    const kept = engine.createWorld();
+    const gone = engine.createWorld();
+    const here = await engine.open({ url: "https://data.test/here.sample" });
+    const there = await engine.open({ url: "https://data.test/there.sample" });
+    const late = await engine.open({ url: "https://data.test/late.sample" });
+    kept.add(here);
+    gone.add(there);
+    engine.sources.tick();
+    engine.sources.tick();
+    expect(there.drawCount).toBe(1);
+    engine.removeWorld(gone);
+    expect(there.destroyed).toBe(true);
+    expect(there.drawCount).toBe(0);
+    expect(sourceOf(there).destroyed).toBe(true);
+    expect(here.destroyed).toBe(false);
+    expect(engine.sources.contents).not.toContain(there);
+    expect(() => gone.add(late)).toThrow(/the world is destroyed/);
+    // Nothing updates it any more.
+    const ticks = sourceOf(there).ticks.length;
+    engine.sources.tick();
+    expect(sourceOf(there).ticks.length).toBe(ticks);
+  });
+
+  it("makes no new runtime after the engine is destroyed", async () => {
+    const other = await fakeEngine();
+    other.destroy();
+    expect(() => other.sources).toThrow(/the engine is destroyed/);
+  });
+});
+
+describe("once its content is destroyed, a source's sinks, jobs and pushes go nowhere", () => {
+  it("cancels a decode job still running, so its apply never draws; and the sinks throw", async () => {
+    const { rt, jobs, posted, place, reports } = runtime();
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    place(content);
+    const host = sourceOf(content).host;
+    let applied = false;
+    const job = host.jobs.submit({
+      type: SUM,
+      payload: { values: Float64Array.of(1) },
+      apply: () => {
+        applied = true;
+        host.sinks.draws.addDraw({
+          mesh: { id: 1 } as never,
+          id: "late/box",
+          origin: Float64Array.of(0, 0, 0),
+        });
+      },
+    });
+    const canceled = job.promise.catch((error: Error) => error.name);
+    const sent = posted.find((m) => m.type === SUM)!;
+    content.destroy();
+    expect(posted.at(-1)).toEqual({ id: sent.id, type: "cancel" });
+    // The worker's answer arrives after: nothing applies.
+    jobs.reply({ id: sent.id, ok: true, result: { sum: 1 } });
+    expect(applied).toBe(false);
+    expect(await canceled).toBe("AbortError");
+    expect(content.drawCount).toBe(0);
+    // Its sinks throw, and so does submitting another job.
+    const points = {
+      key: "b",
+      crs: "EPSG:4978",
+      count: 1,
+      positions: new Float64Array(3),
+    };
+    expect(() => host.sinks.points.put(points)).toThrow(/content is destroyed/);
+    expect(() =>
+      host.sinks.draws.addDraw({
+        mesh: { id: 1 } as never,
+        id: "b/box",
+        origin: Float64Array.of(0, 0, 0),
+      }),
+    ).toThrow(/DrawSink\.addDraw: the content is destroyed/);
+    expect(() => host.sinks.draws.addMesh({} as never)).toThrow(
+      /DrawSink\.addMesh: the content is destroyed/,
+    );
+    expect(() => host.jobs.submit({ type: SUM, payload: {} })).toThrow(
+      /content is destroyed/,
+    );
+    // Releases pass, and a push is dropped without a word.
+    host.sinks.points.remove("a");
+    host.changed({ kind: "invalidate" });
+    expect(reports).toEqual([]);
+  });
+});
+
+describe("a grant is never lost when a source's update throws", () => {
+  it("releases what it was granted and didn't settle, so the next tick wants and gets it", async () => {
+    const { rt, place, reports } = runtime({ slots: 1 });
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    place(content);
+    const source = sourceOf(content);
+    rt.tick(); // it wants "a"; granted
+    source.throwOnUpdate = 1;
+    rt.tick(); // its grant arrives, and its update throws
+    expect(reports).toEqual([
+      "the \"sample\" source's update threw: the sample's update failed",
+    ]);
+    expect(rt.budget.inFlight("https://data.test")).toBe(0);
+    rt.tick(); // it wants "a" again; granted again
+    rt.tick(); // it writes "a"
+    expect(source.ticks.map((t) => t.keys)).toEqual([[], ["a"], [], ["a"]]);
+    expect(content.rows.features.has("a")).toBe(true);
+  });
+});
+
+describe("the budget refuses what it can't read", () => {
+  it("refuses a settle of NaN, a negative or an infinite size: reported, counted at its want's bytes, and loading goes on", () => {
+    const reports: string[] = [];
+    const arbiter = new BudgetArbiter({ bytes: 1000 }, (m) => reports.push(m));
+    const c = arbiter.client();
+    const origin = "https://x.test";
+    const load = (key: string, settled: number) => {
+      c.want({ key, class: "now", benefit: 1, cost: { bytes: 100 }, origin });
+      expect(arbiter.arbitrate()).toBe(1);
+      arbiter.takeGrant(c);
+      c.settle(key, settled);
+    };
+    load("nan", Number.NaN);
+    load("negative", -500);
+    load("infinite", Number.POSITIVE_INFINITY);
+    expect(arbiter.resident).toBe(300);
+    expect(c.resident).toBe(300);
+    expect(arbiter.inFlight(origin)).toBe(0);
+    expect(reports).toHaveLength(3);
+    expect(reports[0]).toMatch(
+      /settled at NaN bytes; it takes a finite number from 0/,
+    );
+    expect(reports[1]).toMatch(/settled at -500 bytes/);
+    expect(reports[2]).toMatch(/settled at Infinity bytes/);
+    load("fine", 50); // loading goes on, within the budget
+    expect(arbiter.resident).toBe(350);
+    // A class that is an Object member, and a decode time it can't read.
+    const ask = (want: object) => () =>
+      c.want({
+        key: "k",
+        class: "now",
+        benefit: 1,
+        cost: { bytes: 1 },
+        origin,
+        ...want,
+      });
+    expect(ask({ class: "toString" })).toThrow(/class "toString"/);
+    expect(ask({ cost: { bytes: 1, decodeMs: Number.NaN } })).toThrow(
+      /cost\.decodeMs is NaN/,
+    );
+  });
+
+  it("grants no prefetch on any origin while a now want waits for bytes", () => {
+    const arbiter = new BudgetArbiter({ bytes: 3000, slotsPerOrigin: 8 });
+    const a = arbiter.client();
+    const b = arbiter.client();
+    const want = (
+      key: string,
+      wantClass: "now" | "prefetch",
+      bytes: number,
+      origin: string,
+    ) => ({ key, class: wantClass, benefit: 1, cost: { bytes }, origin });
+    a.want(want("held", "now", 1000, "https://a.test"));
+    arbiter.arbitrate();
+    arbiter.takeGrant(a);
+    a.settle("held");
+    // A's 2500-byte want doesn't fit beside what's held; B's 500-byte prefetch would.
+    for (let tick = 0; tick < 3; tick++) {
+      a.want(want("big", "now", 2500, "https://a.test"));
+      b.want(want("extra", "prefetch", 500, "https://b.test"));
+      expect(arbiter.arbitrate()).toBe(0);
+      expect(arbiter.takeGrant(b).keys).toEqual([]);
+    }
+    a.release("held");
+    a.want(want("big", "now", 2500, "https://a.test"));
+    b.want(want("extra", "prefetch", 500, "https://b.test"));
+    expect(arbiter.arbitrate()).toBe(2); // 2500 + 500 fits in 3000 now
+    expect(arbiter.takeGrant(a).keys).toEqual(["big"]);
+    expect(arbiter.takeGrant(b).keys).toEqual(["extra"]);
+  });
+});
+
+describe("pushes under bounds and the apply phase's budget", () => {
+  it("applies queued changes under the phase's budget, the rest in the next phase", async () => {
+    const { rt, jobs, place } = runtime({ phased: true });
+    const content = await rt.open({
+      url: "https://data.test/city.sample",
+      options: { keys: ["a", "b", "c"] },
+    });
+    place(content);
+    rt.tick();
+    jobs.apply(Infinity);
+    rt.tick();
+    jobs.apply(Infinity);
+    expect([...content.rows.features.keys()]).toEqual(["a", "b", "c"]);
+    for (const key of ["a", "b", "c"]) {
+      sourceOf(content).push({ kind: "invalidate", keys: [key] });
+    }
+    jobs.apply(0); // a spent budget: one change, at least
+    expect([...content.rows.features.keys()]).toEqual(["b", "c"]);
+    jobs.apply(0);
+    jobs.apply(0);
+    expect([...content.rows.features.keys()]).toEqual([]);
+  });
+
+  it("collapses a source's queue past its bound into one invalidation of everything, and bounds buffered samples", async () => {
+    const { rt, jobs, place, reports } = runtime({ phased: true });
+    const content = await rt.open({ url: "https://feed.test/cars.sample" });
+    place(content);
+    rt.tick();
+    jobs.apply(Infinity);
+    rt.tick();
+    jobs.apply(Infinity);
+    const source = sourceOf(content);
+    for (let i = 0; i <= MAX_QUEUED_CHANGES; i++) {
+      source.push({ kind: "invalidate", keys: ["none"] });
+    }
+    expect(reports).toEqual([
+      expect.stringContaining(
+        `more than ${MAX_QUEUED_CHANGES} changes queued between ticks`,
+      ),
+    ]);
+    jobs.apply(Infinity);
+    expect(content.rows.points.has("a")).toBe(false); // everything reloads
+    const many = MAX_BUFFERED_SAMPLES + 1;
+    source.push({
+      kind: "samples",
+      samples: {
+        times: new Float64Array(many).fill(1e9),
+        names: Array.from({ length: many }, () => "car-0"),
+      },
+    });
+    expect(rt.bufferedSamples).toBe(0);
+    expect(reports.at(-1)).toMatch(
+      /samples would wait for their times; dropped/,
+    );
+  });
+
+  it("drops a sample with no finite time, checks values' lengths, and isolates each sample's apply", async () => {
+    const { rt, place, reports } = runtime();
+    const content = await rt.open({ url: "https://feed.test/cars.sample" });
+    place(content);
+    rt.tick();
+    rt.tick();
+    const source = sourceOf(content);
+    source.push({
+      kind: "samples",
+      samples: {
+        times: Float64Array.of(1, 2),
+        names: ["car-0", "car-1"],
+        values: { speed: Float64Array.of(5) },
+      },
+    });
+    expect(reports.at(-1)).toMatch(/don't agree in length; dropped/);
+    const apply = vi.spyOn(content.rows, "applySamples");
+    apply.mockImplementationOnce(() => {
+      throw new Error("one sample failed");
+    });
+    source.push({
+      kind: "samples",
+      samples: {
+        times: Float64Array.of(1, Number.NaN, 2),
+        names: ["car-0", "car-1", "car-2"],
+        values: { speed: Float64Array.of(10, 20, 30) },
+      },
+    });
+    expect(reports.slice(-2)).toEqual([
+      'the "sample" source\'s samples threw: 1 of 3 have no finite time; those dropped.',
+      'the "sample" source\'s sample threw: one sample failed',
+    ]);
+    // The first sample's apply threw; the third applied all the same.
+    expect([...content.rows.points.get("a")!.batch.properties!.speed!]).toEqual(
+      [0, 0, 30],
+    );
+    apply.mockRestore();
+  });
+});
+
+describe("open: cleanup, one ID per content, and messages without payloads", () => {
+  it("destroys a source its kind opened when the content refuses it", async () => {
+    const { rt } = runtime();
+    const before = SampleSource.made.length;
+    await expect(
+      rt.open({ url: "https://x.test/a.sample", options: { polls: 0.1 } }),
+    ).rejects.toThrow(/at least 1 s/);
+    expect(SampleSource.made.length).toBe(before + 1);
+    expect(SampleSource.made.at(-1)!.destroyed).toBe(true);
+  });
+
+  it("gives a second content of one URL an ordinal, reported; refuses a second explicit id", async () => {
+    const { rt, reports } = runtime();
+    const first = await rt.open({ url: "https://data.test/city.sample" });
+    const second = await rt.open({ url: "https://data.test/city.sample" });
+    expect(first.id).toBe("https://data.test/city.sample");
+    expect(second.id).toBe("https://data.test/city.sample#2");
+    expect(reports).toEqual([
+      expect.stringContaining("is open already; without an id"),
+    ]);
+    await rt.open({ url: "https://data.test/a.sample" }, { id: "mine" });
+    await expect(
+      rt.open({ url: "https://data.test/b.sample" }, { id: "mine" }),
+    ).rejects.toThrow(/the id "mine" is open already/);
+    // Their rows' IDs differ.
+    const road = (content: SourceContent) =>
+      stableIdOf({
+        kind: "named",
+        item: content.id,
+        source: content.source,
+        name: "road-0",
+      });
+    expect(road(first)).not.toBe(road(second));
+  });
+
+  it("names a data URI by its hash, never its payload, when no kind accepts it", async () => {
+    const { rt } = runtime();
+    const error = await rt
+      .open({ url: "data:text/plain,secret-payload" })
+      .catch((e: Error) => e.message);
+    expect(error).toMatch(
+      /no registered kind accepts data:text\/plain;murmur3-128=/,
+    );
+    expect(error).not.toContain("secret-payload");
+  });
+});
+
+describe("what the sinks, the edit layer and the change sets refuse", () => {
+  it("refuses offsets that don't increase from 0, and holes outside their feature", () => {
+    const { features } = new ContentRows({ item: "i", source: "s" }).sinks();
+    const lines = (offsets: number[], holes?: number[][]) => ({
+      key: "k",
+      geometry: "polygon" as const,
+      crs: "EPSG:4979",
+      count: 2,
+      positions: new Float64Array(offsets.at(-1)! * 3),
+      offsets: Uint32Array.from(offsets),
+      ...(holes ? { holes: holes.map((h) => Uint32Array.from(h)) } : {}),
+    });
+    expect(() => features.put(lines([0, 3, 3]))).toThrow(/offsets increase/);
+    expect(() => features.put(lines([1, 3, 6]))).toThrow(/start at 0/);
+    expect(() => features.put(lines([0, 4, 8], [[2], [9]]))).toThrow(
+      /holes start inside it/,
+    );
+    expect(() => features.put(lines([0, 4, 8], [[0], []]))).toThrow(
+      /holes start inside it/,
+    );
+    expect(() => features.put(lines([0, 4, 8], [[2]]))).toThrow(
+      /holes has 1 entries/,
+    );
+    features.put(lines([0, 4, 8], [[2], []]));
+  });
+
+  it("the edit layer refuses negative IDs and IDs wider than 64 bits", () => {
+    const layer = new EditLayer();
+    expect(() => layer.hide(-1n)).toThrow(/unsigned 64-bit/);
+    expect(() => layer.hide(1n << 64n)).toThrow(/unsigned 64-bit/);
+    layer.hide((1n << 64n) - 1n);
+    expect(layer.size).toBe(1);
+  });
+
+  it("checks the op count before reading ops, refuses unknown fields and bad meta, numbers JSON can't carry, and echoes no version", () => {
+    const wrap = (changeSet: unknown, extra: Record<string, unknown> = {}) =>
+      JSON.stringify({
+        format: CHANGE_SET_FORMAT,
+        version: "0.1.0",
+        changeSet,
+        ...extra,
+      });
+    const ok = { id: "x", source: "s", ops: [] };
+    // Two ops that aren't even objects: the count is refused first.
+    expect(() =>
+      changeSetFromJson(wrap({ ...ok, ops: [1, 2] }), { ops: 1 }),
+    ).toThrow(/2 ops, more than its limit/);
+    expect(() =>
+      changeSetFromJson(wrap(ok, { version: "1.0.0-secret-tag" })),
+    ).toThrow(/version isn't 0\.x/);
+    try {
+      changeSetFromJson(wrap(ok, { version: "9.secret-tag" }));
+    } catch (error) {
+      expect(String(error)).not.toContain("secret-tag");
+    }
+    expect(() => changeSetFromJson(wrap({ ...ok, extra: 1 }))).toThrow(
+      /a field it doesn't know/,
+    );
+    expect(() => changeSetFromJson(wrap(ok, { more: 1 }))).toThrow(
+      /the envelope has a field it doesn't know/,
+    );
+    expect(() =>
+      changeSetFromJson(wrap({ ...ok, meta: { author: "a", mood: "x" } })),
+    ).toThrow(/its meta has a field it doesn't know/);
+    expect(() => changeSetFromJson(wrap({ ...ok, meta: { time: 5 } }))).toThrow(
+      /meta's time is a string/,
+    );
+    expect(() =>
+      changeSetFromJson(
+        wrap({ ...ok, ops: [{ op: "delete", id: "3", why: "no" }] }),
+      ),
+    ).toThrow(/op 0 has a field it doesn't know/);
+    // -0 in the text: JSON reads it, and can't write it back.
+    const negativeZero = wrap({
+      ...ok,
+      ops: [{ op: "insert", id: "3", feature: { properties: { h: 0 } } }],
+    }).replace('"h":0', '"h":-0');
+    expect(() => changeSetFromJson(negativeZero)).toThrow(
+      /a number JSON can't carry/,
+    );
+    // NaN and the infinities in memory would serialize as null.
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        changeSetToJson({
+          ...ok,
+          ops: [{ op: "insert", id: 3n, feature: { properties: { h: bad } } }],
+        }),
+      ).toThrow(/a number JSON can't carry/);
     }
   });
 });

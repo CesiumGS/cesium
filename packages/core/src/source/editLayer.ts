@@ -17,6 +17,9 @@
 import type { StableId } from "../scene/identity.ts";
 import type { FeatureData } from "./editing.ts";
 
+/** The largest stable ID: they're unsigned 64-bit. */
+const MAX_ID = (1n << 64n) - 1n;
+
 /**
  * One override.
  * @experimental
@@ -99,8 +102,10 @@ export class EditLayer {
   }
 
   private set(id: StableId, override: Override): void {
-    if (typeof id !== "bigint" || id === 0n) {
-      throw new TypeError("EditLayer: an ID is a stable ID (a bigint, not 0).");
+    if (typeof id !== "bigint" || id <= 0n || id > MAX_ID) {
+      throw new TypeError(
+        "EditLayer: an ID is a stable ID (an unsigned 64-bit bigint, not 0).",
+      );
     }
     this.overrides.set(id, override);
     this.bump([id]);

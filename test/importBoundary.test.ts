@@ -907,8 +907,10 @@ it("refuses a content file that imports the renderer or a whole class", () => {
 // The content-source seam (CS-847, docs/design/content-source-seam.md): its
 // types and the engine's side of them are data only. No file under
 // src/source/ imports a whole class (World, Engine, RenderContext), the
-// renderer or the GPU layer, even for a type, and none names a WebGPU type.
-// test/seams.test.ts holds every source module to the same imports.
+// renderer or the GPU layer, even for a type, nor the core's barrel
+// (src/index.ts), whose names this edge check can't see; and none names a
+// WebGPU type. test/seams.test.ts holds every source module to the same
+// imports, by name through a barrel.
 const seamFiles = files.filter((f) => f.startsWith("src/source/"));
 const seamRefusal = (file: string, text: string): string[] => {
   const lines: number[] = [];
@@ -916,7 +918,9 @@ const seamRefusal = (file: string, text: string): string[] => {
   return [
     ...edges
       .map((edge, i) => ({ edge, line: lines[i]! }))
-      .filter(({ edge }) => contentRefuses(edge.to))
+      .filter(
+        ({ edge }) => contentRefuses(edge.to) || edge.to === "src/index.ts",
+      )
       .map(({ edge, line }) => `${file}:${line} → ${edge.to}`),
     ...webgpuTypeNames(file, text),
   ];
@@ -932,7 +936,7 @@ it("the content-source seam's types are data only: no GPU type, and no World, En
     ),
   ).toEqual([]);
 });
-it("refuses a seam file that imports World, Engine or the renderer, or names a GPU type, naming the line", () => {
+it("refuses a seam file that imports World, Engine, the renderer or the core's barrel, or names a GPU type, naming the line", () => {
   const plant = [
     'import type { StableId } from "../scene/identity.ts";',
     'import type { World } from "../scene/World.ts";',
@@ -940,12 +944,14 @@ it("refuses a seam file that imports World, Engine or the renderer, or names a G
     'export type Pass = import("../render/view/viewFrame.ts").ViewFrame;',
     'import type { GpuDevice } from "../gpu/GpuDevice.ts";',
     "export interface Rows { readonly buffer: GPUBuffer; }",
+    'import type { World as W } from "../index.ts";',
   ].join("\n");
   expect(seamRefusal("src/source/sample.ts", plant)).toEqual([
     "src/source/sample.ts:2 → src/scene/World.ts",
     "src/source/sample.ts:3 → src/scene/Engine.ts",
     "src/source/sample.ts:4 → src/render/view/viewFrame.ts",
     "src/source/sample.ts:5 → src/gpu/GpuDevice.ts",
+    "src/source/sample.ts:7 → src/index.ts",
     "src/source/sample.ts:6 GPUBuffer",
   ]);
 });

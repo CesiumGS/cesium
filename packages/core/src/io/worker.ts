@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { parseGltf } from "./gltfParse.ts";
 import { settleWorkerFetch, workerFetch } from "./workerFetch.ts";
-import { WorkerDecoders } from "./workerDecoders.ts";
+import { BUILT_IN_JOB_TYPES, WorkerDecoders } from "./workerDecoders.ts";
 import {
   decodeQuantizedMesh,
   flatTerrainTile,
@@ -92,8 +92,9 @@ self.onmessage = async (
   }
   const controller = new AbortController();
   controllers.set(id, controller);
-  if (decoders.has(type)) {
-    // A registered decoder's job (a source kind's, CS-847).
+  if (!BUILT_IN_JOB_TYPES.has(type) && decoders.has(type)) {
+    // A registered decoder's job (a source kind's, CS-847); never one of
+    // the built-in types, which no decoder takes (`decoderTypeRefusal`).
     void decoders
       .run(event.data, controller.signal, (reply, transfer) =>
         self.postMessage(reply, transfer),
