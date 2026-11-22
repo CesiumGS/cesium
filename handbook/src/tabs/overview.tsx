@@ -135,8 +135,9 @@ export function Overview() {
         <CodeBlock language="shell" code={QUICK_START} />
         <p>
           You only need <C>setup</C> once per machine. It fetches the tools and
-          builds this repository's 1.x if that build is missing. When the server
-          is up, open <a href="http://127.0.0.1:5190">http://127.0.0.1:5190</a>.
+          checks the pinned CesiumJS 1.x that <C>npm install</C> put in place.
+          When the server is up, open{" "}
+          <a href="http://127.0.0.1:5190">http://127.0.0.1:5190</a>.
         </p>
         <p>
           To load your own Cesium ion content, paste your token into{" "}

@@ -138,7 +138,7 @@ const backToLab = (
 function loadError(e: unknown, needs1x: boolean): string {
   const message = e instanceof Error ? e.message : String(e);
   if (needs1x && /not found/i.test(message)) {
-    return "This page needs this repository's 1.x build. Run npm run build at the repository root, then reload.";
+    return "This page needs the pinned CesiumJS 1.x (cesium-1x). Run npm ci at the repository root, then reload.";
   }
   return `${message}. Check the dev server's output, or open the page on its own to see its console.`;
 }
@@ -280,7 +280,7 @@ export function LabPage() {
           <CircularProgress size={20} />
           <Typography variant="body-sm" color="textSecondary">
             {info.cesium1x
-              ? "Loading the page and this repository's 1.x build…"
+              ? "Loading the page and the pinned CesiumJS 1.x…"
               : "Loading the page…"}
           </Typography>
         </div>

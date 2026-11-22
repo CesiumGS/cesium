@@ -9,8 +9,9 @@ npm install                                 # at the repo root
 npm run setup      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
 ```
 
-`setup` builds this repository's 1.x (`npm run build` at the root) if
-`Build/CesiumUnminified` is missing, and fetches the catalog's default
+`npm install` (or `npm ci`) installs the pinned CesiumJS 1.x (`cesium-1x`), which
+the parity harness and Dyno's default 1.x engine load; there is no 1.x build
+step. `setup` checks that pin, and fetches the catalog's default
 CesiumJS releases from npm into `~/.cesium-bench/cesium` (or
 `BENCH_CESIUM_DIR`), checked against the registry's integrity hash. The dev
 server also fetches a missing release the first time a page asks for it.
@@ -771,7 +772,7 @@ Open Licence (France), CC-BY-SA-4.0, CC0-1.0 and the Data licence Germany,
 among others. `GridCatalog.credit` reads each from the CSV.
 
 ```sh
-npm run build                               # at the repo root: 1.x build used by the parity harness
+npm ci                                      # at the repo root: installs the pinned 1.x (cesium-1x) the parity harness uses
 npm run dev        # dev server at http://127.0.0.1:5190
 npm run test       # unit + 1.x parity (L0) tests
 npm run typecheck

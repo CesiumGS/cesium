@@ -26,7 +26,7 @@ The machine is shared. A measurement taken while tests or builds run measures th
 - **The sky and the atmosphere**: `dyno lab sky`, `atmosphere`, `ibl`, `observer`.
 - **History**: `dyno suite alerts` (change points across runs, with their triage) and `dyno suite compare <old.json> [new.json]`.
 
-`dyno lab --commit <rev>` serves a commit from a snapshot worktree, so you can keep working while it runs. In a linked worktree (an executor's), the snapshot has no 1.x build: suites that load 1.x (`baseline`, the parity suites) need `CESIUM_BUILD_DIR` set to the main checkout's `Build/CesiumUnminified`.
+`dyno lab --commit <rev>` serves a commit from a snapshot worktree, so you can keep working while it runs. The snapshot finds the repository's own `node_modules`, where the pinned 1.x (`cesium-1x`) is, so a linked worktree (an executor's) needs only `npm ci` at its root; no 1.x build step and no `CESIUM_BUILD_DIR`.
 
 ## Measuring
 
