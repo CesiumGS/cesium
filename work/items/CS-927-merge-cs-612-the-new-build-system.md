@@ -2,10 +2,14 @@
 id: CS-927
 title: Merge CS-612, the new build system
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge; then CS-613, the release tooling, starts."
+answered_at: 2026-11-22T15:55:14.832Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -28,3 +32,5 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+The chief of staff answered A on 2026-11-22 under the owner's approval in advance: "you can do 612 and 613 as well … ok to merge them before i review them, since they're easy to change". The full suite ran clean on the replay. Parity, with a separate checkout per side, is identical apart from imagery noise, and the re-review has no Important findings. The owner reviews the design in the morning.
