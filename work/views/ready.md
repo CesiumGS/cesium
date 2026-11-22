@@ -212,6 +212,7 @@ CS-199 Dyno hardening, packaging and CI
   CS-583  The casterLoop slow-orbit test holds under full-suite load
   CS-851  npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport
   CS-919  dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it
+  CS-947  decision: Merge CS-919, dyno lab --commit serves the commit's own packages
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -240,6 +241,7 @@ CS-437 The public API reviews
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
   CS-939  PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
   CS-940  stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
+  CS-943  Route, RouteStep and Recordable are exported, so the library build's declaration check passes
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -253,7 +255,6 @@ CS-596 Trust and evals
 
 CS-609 A clean 2.0 branch and a modern build
   CS-613  CI/CD on the new build, with the release pipeline
-  CS-938  Packed pre-release builds a host application can install, at a named commit
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
@@ -278,5 +279,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-209 ready
+210 ready
 ```

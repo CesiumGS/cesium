@@ -56,5 +56,8 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617, CS-932
 
-16 open decision(s) for owner
+CS-199 Dyno hardening, packaging and CI
+  CS-947  Merge CS-919, dyno lab --commit serves the commit's own packages (owner)
+
+17 open decision(s) for owner
 ```

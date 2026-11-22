@@ -464,6 +464,8 @@ graph LR
     CS_913["CS-913 The subset reader's composition faults on broken assets, tested"]:::open
     CS_914["CS-914 OpenUSD in WebAssembly as a test oracle for the USD source"]:::open
     CS_917["CS-917 Merge CS-900, three USD readers compared in Dyno"]:::done
+    CS_945["CS-945 A per-feature visibility bit, so the edit layer can hide one fe"]:::proposed
+    CS_946["CS-946 One content can have several items, and World.items lists conte"]:::proposed
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -606,6 +608,7 @@ graph LR
     CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::open
     CS_926["CS-926 dyno lab exits nonzero when a row fails, not only on console er"]:::proposed
     CS_928["CS-928 importBoundary's globe-only Viewer bundle test fails in full ru"]:::proposed
+    CS_947["CS-947 Merge CS-919, dyno lab --commit serves the commit's own package"]:::decision
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -741,6 +744,8 @@ graph LR
     CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::done
     CS_939["CS-939 PickPositionResult and CorePick say camera, not cameraRecord (C"]:::open
     CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::open
+    CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::open
+    CS_944["CS-944 CS-939: CorePick already has a camera field; how is CorePick na"]:::done
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -812,7 +817,8 @@ graph LR
     CS_931["CS-931 The handbook builds again on main: its data step builds dist fi"]:::done
     CS_932["CS-932 A user README for the cesium umbrella package, apart from the r"]:::proposed
     CS_937["CS-937 Merge CS-931, the handbook builds again"]:::done
-    CS_938["CS-938 Packed pre-release builds a host application can install, at a "]:::open
+    CS_938["CS-938 Packed pre-release builds a host application can install, at a "]:::done
+    CS_942["CS-942 Merge CS-938, packed pre-release sets for a host application"]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1382,6 +1388,7 @@ graph LR
   CS_921 --> CS_530
   CS_939 --> CS_530
   CS_940 --> CS_530
+  CS_943 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1736,6 +1743,8 @@ graph LR
   CS_815 --> CS_939
   CS_815 --> CS_940
   CS_54 --> CS_941
+  CS_847 --> CS_945
+  CS_847 --> CS_946
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

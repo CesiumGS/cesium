@@ -515,6 +515,7 @@ CS-18 The work tracker
         CS-921 A compiled route's center term subtracts its highs as integers on both emitters
         CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
         CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
+        CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
