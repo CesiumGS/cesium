@@ -19,7 +19,8 @@
 // its parameters' values in the view): `ROUTE_POINTER_ROWS` rows at the
 // pointer row hold, by view id (the position of the view's bit), the first
 // row of that view's block. The eye in them is the view's, replaced in the
-// shader (`routeEyeHi`, `routeEyeLo`).
+// shader (`routeEyeHi`, `routeEyeLo`, as the center term's parts:
+// transform/centerTerm.ts `tg_splitParts`).
 import type { CompiledRoute } from "../transform/compile.ts";
 import { wgslUnit, type ShaderUnit } from "../shaders/link/unit.ts";
 
@@ -86,9 +87,9 @@ export function routeUnitWgsl(
 ): string {
   const uniformRows = compiled.uniformsLayout.floats / 4;
   const centerRows = compiled.perDrawLayout.floats / 4;
-  const { eyeHi, eyeLo } = compiled.uniformsLayout.fields;
-  if (eyeHi === undefined || eyeLo === undefined) {
-    throw new Error("routeUnitWgsl: the compiled route has no eye fields");
+  const { eye } = compiled.uniformsLayout.fields;
+  if (eye === undefined) {
+    throw new Error("routeUnitWgsl: the compiled route has no eye field");
   }
   const loads = (target: string, count: number, row: string) =>
     Array.from(
@@ -102,8 +103,12 @@ export function routeUnitWgsl(
     `  var u: RouteUniforms;`,
     ...loads("u", uniformRows, "row"),
     // The eye is the view's: the uniforms' own are for the CPU path.
-    `  u.v${eyeHi >> 2} = vec4f(routeEyeHi(), 0.0);`,
-    `  u.v${eyeLo >> 2} = vec4f(routeEyeLo(), 0.0);`,
+    `  let eyeHi = routeEyeHi();`,
+    `  let eyeLo = routeEyeLo();`,
+    ...[0, 1, 2].map(
+      (a) =>
+        `  u.v${(eye >> 2) + a} = tg_splitParts(eyeHi.${"xyz"[a]}, eyeLo.${"xyz"[a]});`,
+    ),
     `  return u;`,
     `}`,
     ``,

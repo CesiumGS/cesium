@@ -84,6 +84,14 @@ fn tg_whole(v: vec4f) -> i32 {
   return i32(v.x) * 65536 + i32(v.y);
 }
 
+// A split position's high (whole units) and low (shaders/common.slang
+// SplitPosition, math/transforms.ts splitVec3) as a value's parts.
+fn tg_splitParts(hi: f32, lo: f32) -> vec4f {
+  let w = i32(hi);
+  let k = round(lo * 16777216.0);
+  return vec4f(f32(w >> 16u), f32(w & 65535), k, lo - k * ${UNIT_LITERAL});
+}
+
 // a - b.
 fn tg_diff(a: vec4f, b: vec4f) -> TgFix {
   return TgFix(tg_whole(a) - tg_whole(b), i32(a.z) - i32(b.z), a.w - b.w);
@@ -149,6 +157,14 @@ struct TgFix {
 
 int tg_whole(vec4 v) {
   return int(v.x) * 65536 + int(v.y);
+}
+
+// A split position's high (whole units) and low (shaders/common.slang
+// SplitPosition, math/transforms.ts splitVec3) as a value's parts.
+vec4 tg_splitParts(float hi, float lo) {
+  int w = int(hi);
+  float k = round(lo * 16777216.0);
+  return vec4(float(w >> 16), float(w & 65535), k, lo - k * ${UNIT_LITERAL});
 }
 
 // a - b.

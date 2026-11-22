@@ -11,6 +11,7 @@ import {
   fixParts,
   fromFixParts,
 } from "../packages/core/src/transform/centerTerm.ts";
+import { splitVec3 } from "../packages/core/src/math/transforms.ts";
 import { routeCases } from "../packages/core/src/transforms/routeCases.ts";
 
 const f = Math.fround;
@@ -119,6 +120,29 @@ describe("the center term's parts", () => {
     expect(Array.from(out)).toEqual([0, 0, 0, f(3e9)]);
     fixParts(Number.NaN, out, 0);
     expect(out[3]).toBeNaN();
+  });
+});
+
+describe("a split position as the center term's parts (tg_splitParts)", () => {
+  it("carries splitVec3's whole-meter high and its low exactly", () => {
+    const hi = new Float32Array(1);
+    const lo = new Float32Array(1);
+    for (const v of [
+      0,
+      12.5,
+      -40.25,
+      6378137.123456789,
+      -4441151.6187,
+      2 ** 24 + 0.7,
+      -(2 ** 29) - 0.3,
+    ]) {
+      splitVec3([v, 0, 0], hi, 0, lo, 0);
+      // The WGSL, statement for statement.
+      const w = i32(hi[0]!);
+      const k = Math.round(lo[0]! * 2 ** 24);
+      const parts = [w >> 16, w & 65535, k, f(lo[0]! - f(k * UNIT))];
+      expect(fromFixParts(parts)).toBe(hi[0]! + lo[0]!);
+    }
   });
 });
 
