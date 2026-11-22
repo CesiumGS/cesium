@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-16
-needs: [CS-147]
+needs: [CS-147, CS-847]
 touches: [packages/next/src/io/ion.ts, packages/next/src/globe/ImageryProvider.ts, packages/next/src/streaming/tilesetLoad.ts, packages/next/src/scene/Engine.ts]
 ---
 

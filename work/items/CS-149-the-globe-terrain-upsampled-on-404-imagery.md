@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-16
-needs: [CS-147, CS-148]
+needs: [CS-147, CS-148, CS-847]
 touches: [packages/next/src/globe/TerrainSource.ts, packages/next/src/globe/GlobeImagery.ts, packages/next/src/io/worker.ts, packages/next/src/streaming/tileRetry.ts]
 ---
 

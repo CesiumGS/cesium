@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-16
-needs: [CS-145]
+needs: [CS-145, CS-847]
 touches: [packages/next/src/streaming/OriginHealth.ts, packages/next/src/streaming/RequestScheduler.ts, packages/next/src/io/worker.ts, packages/next/src/io/Jobs.ts]
 ---
 

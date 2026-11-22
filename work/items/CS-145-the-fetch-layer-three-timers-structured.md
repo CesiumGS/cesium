@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-16
-needs: [CS-144]
+needs: [CS-144, CS-847]
 touches: [packages/next/src/io/fetchFailure.ts, packages/next/src/io/fetchBytes.ts, packages/next/src/io/worker.ts, packages/next/src/io/gltfParse.ts, packages/next/src/io/Jobs.ts, packages/next/src/streaming/Tile.ts, packages/next/src/streaming/tilesetLoad.ts]
 ---
 
