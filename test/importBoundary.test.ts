@@ -1,107 +1,632 @@
-// The dependency rule between the entry points (spec section 7.7), checked
-// over the import graph of `src/` and `widgets/`. The widgets sit on the
-// public API only: they import the entry points by the package's name
-// (`@cesium/next/time`), as an application would, so they could move to a
-// package of their own. Layers are assigned here,
-// not by folder (plan 5a's call 2): the ERFA series and the EOP parser stay
-// in `src/time/` but count as frames. Type-only imports count too (call 4),
-// because published declarations carry them; under `verbatimModuleSyntax`
-// only a declaration-level `import type` / `export type` is type-only.
+// The dependency rule between 2.0's packages, read from their package.json
+// files (docs/design/package-map.md, "The rule that replaces layerOf";
+// CS-835), and, below, the tiers inside the core, which stay path patterns
+// rooted at packages/core/src. Type-only imports count too, because
+// published declarations carry them; under `verbatimModuleSyntax` only a
+// declaration-level `import type` / `export type` is type-only.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
-import { dirname, join, normalize, relative, sep } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
+import {
+  listTs as listRepoTs,
+  namedPackage,
+  packageInfo,
+  packageOf,
+  packages,
+  repo,
+  resolveSpecifier,
+  type PackageInfo,
+} from "./packageGraph.ts";
 
-const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
-  exports: Record<string, string>;
+/** The capability packages, in their order (a seventh is a deliberate change). */
+const CAPABILITIES = [
+  "@cesium/core",
+  "@cesium/time",
+  "@cesium/frames",
+  "@cesium/crs",
+  "@cesium/measure",
+  "@cesium/ui",
+] as const;
+
+/** The umbrella: it depends on the standard set and re-exports it. */
+const UMBRELLA = "@cesium/next";
+
+/**
+ * Where a package other than the umbrella re-exports another package's
+ * names, each with why (the package map's rule 5). A stale entry fails.
+ */
+const REEXPORTS: Readonly<Record<string, string>> = {
+  "packages/measure/src/constants.ts → @cesium/core/internal":
+    "measure's C and the constants it measures with, from the math utilities",
+  "packages/measure/src/motion.ts → @cesium/frames/internal":
+    "the motion helpers measure states its rates with",
+  "packages/crs/src/engineering/crs.ts → @cesium/frames":
+    "types: the coordinate service's CRS reference, units and area of interest",
+  "packages/crs/src/engineering/factors.ts → @cesium/frames":
+    "type: the coordinate service's grid factors",
 };
 
-/** The package's name: the entry points' specifiers, and how the widgets import them. */
-const SELF = "@cesium/next";
+/**
+ * The names a sibling may import from an internal entry (CS-883): outside
+ * the stable API, for lockstep siblings only. A name not here fails, and so
+ * does one here that the entry doesn't export.
+ */
+const INTERNAL_NAMES: Readonly<Record<string, readonly string[]>> = {
+  "@cesium/core/internal": [
+    ...["C", "EARTH_ROTATION_RATE", "GM_EARTH", "GM_MOON", "GM_SUN", "L_C"],
+    ...["CurvilinearFrameSpec", "CurvilinearMap", "CurvilinearScale"],
+    ...["CurvilinearSpec", "CurvilinearTerm", "CurvilinearTerms"],
+    ...["Edge", "EdgeAccuracy", "Mat4", "NonAffineRouteError", "PlainEdge"],
+    ...["Route", "RouteStep", "TermWeight", "TileVolume", "TilesetBodyError"],
+    ...["TransformGraph", "TransformNode", "Vec3", "ViewId", "affine"],
+    ...["congruence", "copy", "curvilinear", "curvilinearForward"],
+    ...["curvilinearInverse", "curvilinearScaleOf", "curvilinearValuesOf"],
+    ...["eastNorthUpToFixedFrame", "identity", "invertAffine", "isCentered"],
+    ...["isOnPolarAxis", "mat4", "multiply", "obbDistanceSquaredTo"],
+    ...["projectThrough", "projectToPixel", "rigidMatrixError"],
+    ...["routeForward", "routeInverse", "routeIsAffine", "routeMap"],
+    ...["sha256Hex", "sphereDistance", "switchEdge", "tilesetBody"],
+    ...["transformPoint", "vec3", "volumeObb"],
+  ],
+  "@cesium/frames/internal": [
+    ...["DE440_EARTH_MOON_METERS", "Frames", "Sampler", "derivative"],
+    ...["framesDataFormatProblem", "positionIn", "velocityIn"],
+  ],
+  "@cesium/crs/internal": ["projResolution"],
+};
 
-type Layer =
-  "utilities" | "time" | "frames" | "proj" | "measure" | "widgets" | "core";
-
-const TIME_FILES = new Set(
-  [
-    "Instant",
-    "leapSeconds",
-    "leapTable",
-    "Clock",
-    "sun",
-    "moon",
-    "celestial",
-    "format",
-    "index",
-  ]
-    .map((name) => `src/time/${name}.ts`)
-    .concat(["src/time/erfa/dtdb.ts", "src/time/erfa/dtdbTable.ts"]),
-);
-
-/** The layer of a repository path (forward slashes, from the package). */
-function layerOf(file: string): Layer {
-  if (
-    file.startsWith("src/math/") ||
-    file.startsWith("src/core/") ||
-    file === "src/io/readWithProgress.ts"
-  ) {
-    return "utilities";
-  }
-  if (TIME_FILES.has(file)) {
-    return "time";
-  }
-  if (
-    file.startsWith("src/frames/") ||
-    file.startsWith("src/time/") ||
-    file.startsWith("src/ephemeris/") ||
-    file.startsWith("src/trajectory/")
-  ) {
-    return "frames";
-  }
-  if (file.startsWith("src/engineering/") || file.startsWith("src/proj/")) {
-    return "proj";
-  }
-  if (file.startsWith("src/measure/")) {
-    return "measure";
-  }
-  if (file.startsWith("widgets/")) {
-    return "widgets";
-  }
-  return "core";
+/** One import or re-export in a package's file, from the root. */
+interface PackageEdge {
+  readonly from: string;
+  readonly line: number;
+  readonly specifier: string;
+  /** The file it loads, from the root; undefined for an outside package. */
+  readonly to: string | undefined;
+  readonly typeOnly: boolean;
+  /** An `export … from`: the file republishes what it takes. */
+  readonly reexport: boolean;
+  /** The names it takes (`*` for a namespace or `export *`). */
+  readonly names: readonly string[];
+  /** A dynamic `import("…")`: loaded when called, not with the importer. */
+  readonly dynamic: boolean;
 }
 
-/** Core modules the frames layer may import values from. */
-const FRAMES_CORE_VALUES = new Set([
-  "src/scene/Body.ts",
-  "src/camera/frameResolver.ts",
-  // Routes and curvilinear maps (docs/design/geometry-through-placement-review.md): the resolver's contract, like frameResolver.ts.
-  "src/camera/route.ts",
-  // The bulk shape (5b): neutral, it imports nothing.
-  "src/core/bulk.ts",
-  // The transform graph's nodes (docs/design/transform-graph.md): geo-free, it imports nothing.
-  "src/transform/graph.ts",
-  // Queries and accuracy along transform-graph routes (13.37, task 5): geo-free.
-  "src/transform/accuracy.ts",
-  "src/transform/queries.ts",
-]);
+/** Each import, re-export, `import()` and `import("…").T` of `text`, as `file`. */
+function packageEdgesOf(
+  file: string,
+  text: string,
+  all: readonly PackageInfo[] = packages,
+): PackageEdge[] {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const out: PackageEdge[] = [];
+  const add = (
+    node: ts.Node,
+    specifier: string,
+    typeOnly: boolean,
+    reexport: boolean,
+    names: readonly string[],
+    dynamic = false,
+  ) =>
+    out.push({
+      dynamic,
+      from: file,
+      line:
+        source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
+      specifier,
+      to: resolveSpecifier(file, specifier, all),
+      typeOnly,
+      reexport,
+      names,
+    });
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      const clause = node.importClause;
+      const bindings = clause?.namedBindings;
+      const names =
+        bindings && ts.isNamedImports(bindings)
+          ? bindings.elements.map((e) => (e.propertyName ?? e.name).text)
+          : bindings
+            ? ["*"]
+            : clause?.name
+              ? ["default"]
+              : [];
+      add(
+        node,
+        node.moduleSpecifier.text,
+        clause?.isTypeOnly === true,
+        false,
+        names,
+      );
+    } else if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      const clause = node.exportClause;
+      const names =
+        clause && ts.isNamedExports(clause)
+          ? clause.elements.map((e) => (e.propertyName ?? e.name).text)
+          : ["*"];
+      add(node, node.moduleSpecifier.text, node.isTypeOnly, true, names);
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      add(node, node.arguments[0].text, false, false, ["*"], true);
+    } else if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    ) {
+      let q = node.qualifier;
+      while (q && ts.isQualifiedName(q)) {
+        q = q.left;
+      }
+      add(node, node.argument.literal.text, true, false, [q ? q.text : "*"]);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return out;
+}
 
-/** The layers each layer may import (values and types). */
-const ALLOWED: Record<Exclude<Layer, "widgets">, readonly Layer[]> = {
-  utilities: ["utilities"],
-  core: ["core", "utilities"],
-  time: ["time", "utilities"],
-  frames: ["frames", "time", "utilities"],
-  proj: ["proj", "frames", "time", "core", "utilities"],
-  measure: ["measure", "proj", "frames", "time", "core", "utilities"],
-};
+/** The outside package a bare specifier names: `vite/client` → `vite`. */
+const outsidePackage = (specifier: string) =>
+  specifier.startsWith("@")
+    ? specifier.split("/").slice(0, 2).join("/")
+    : specifier.split("/")[0]!;
+
+/** Each sibling a package depends on, of ours. */
+const siblingsOf = (pkg: PackageInfo, all: readonly PackageInfo[]) =>
+  pkg.dependencies.filter((name) => all.some((p) => p.name === name));
+
+const isCapability = (name: string) =>
+  (CAPABILITIES as readonly string[]).includes(name);
+
+/**
+ * Every break of the package rule, as text, for packages `all` and the
+ * source files `sources` (path from the root → text): the planted graphs
+ * below and the repository's own go through the same check.
+ */
+function packageViolations(
+  all: readonly PackageInfo[],
+  sources: ReadonlyMap<string, string>,
+): string[] {
+  const out: string[] = [];
+  const byName = new Map(all.map((p) => [p.name, p]));
+  // The dependencies: each capability only on those before it (ui on any
+  // capability), none on an adapter or the umbrella; no adapter on the
+  // umbrella; no cycle.
+  for (const pkg of all) {
+    const deps = siblingsOf(pkg, all);
+    for (const dep of deps) {
+      if (dep === UMBRELLA) {
+        out.push(`${pkg.name} depends on the umbrella`);
+      } else if (isCapability(pkg.name) && !isCapability(dep)) {
+        out.push(`${pkg.name} (a capability) depends on ${dep} (an adapter)`);
+      } else if (
+        isCapability(pkg.name) &&
+        pkg.name !== "@cesium/ui" &&
+        CAPABILITIES.indexOf(dep as (typeof CAPABILITIES)[number]) >=
+          CAPABILITIES.indexOf(pkg.name as (typeof CAPABILITIES)[number])
+      ) {
+        out.push(`${pkg.name} depends on ${dep}, which comes after it`);
+      }
+    }
+  }
+  const visiting = new Set<string>();
+  const done = new Set<string>();
+  const walk = (name: string, path: string[]) => {
+    if (visiting.has(name)) {
+      out.push(
+        `a cycle: ${[...path.slice(path.indexOf(name)), name].join(" → ")}`,
+      );
+      return;
+    }
+    if (done.has(name)) {
+      return;
+    }
+    visiting.add(name);
+    const pkg = byName.get(name);
+    for (const dep of pkg ? siblingsOf(pkg, all) : []) {
+      walk(dep, [...path, name]);
+    }
+    visiting.delete(name);
+    done.add(name);
+  };
+  for (const pkg of all) {
+    walk(pkg.name, []);
+  }
+  // The imports.
+  const reexports = new Set<string>();
+  for (const [file, text] of sources) {
+    const pkg = packageOf(file, all);
+    if (!pkg) {
+      continue;
+    }
+    for (const edge of packageEdgesOf(file, text, all)) {
+      const where = `${file}:${edge.line}`;
+      if (edge.specifier.startsWith(".")) {
+        if (edge.to && !edge.to.startsWith(`${pkg.dir}/`)) {
+          out.push(`${where} reaches ${edge.to} outside ${pkg.name} by path`);
+        }
+        continue;
+      }
+      if (edge.specifier.startsWith("node:")) {
+        continue;
+      }
+      const named = namedPackage(edge.specifier, all);
+      const name = named?.pkg.name ?? outsidePackage(edge.specifier);
+      if (name !== pkg.name && !pkg.dependencies.includes(name)) {
+        out.push(
+          `${where} imports ${edge.specifier}, not in ${pkg.name}'s dependencies`,
+        );
+      }
+      if (!named || named.pkg === pkg) {
+        continue;
+      }
+      if (edge.reexport && pkg.name !== UMBRELLA) {
+        const key = `${file} → ${edge.specifier}`;
+        reexports.add(key);
+        if (!(key in REEXPORTS)) {
+          out.push(
+            `${where} re-exports ${edge.specifier}'s names outside the umbrella`,
+          );
+        }
+      }
+      const allowed = INTERNAL_NAMES[edge.specifier];
+      if (named.entry === "./internal") {
+        for (const n of edge.names) {
+          if (!allowed?.includes(n)) {
+            out.push(
+              `${where} takes ${n} from ${edge.specifier}, which doesn't list it`,
+            );
+          }
+        }
+      }
+    }
+  }
+  if (all === packages) {
+    for (const key of Object.keys(REEXPORTS)) {
+      if (!reexports.has(key)) {
+        out.push(`stale re-export exception: ${key}`);
+      }
+    }
+  }
+  return out;
+}
+
+/** The repository's own package sources. */
+const packageSources = new Map(
+  packages
+    .flatMap((p) => listRepoTs(`${p.dir}/src`))
+    .map((file) => [file, readFileSync(join(repo, file), "utf8")] as const),
+);
+
+it("the packages follow the rule their package.json files state", () =>
+  expect(packageViolations(packages, packageSources)).toEqual([]));
+
+it("the capability packages are the six, the umbrella depends on each, and nothing depends on it", () => {
+  const names = packages.map((p) => p.name);
+  for (const name of [...CAPABILITIES, UMBRELLA]) {
+    expect(names).toContain(name);
+  }
+  const umbrella = packages.find((p) => p.name === UMBRELLA)!;
+  expect([...siblingsOf(umbrella, packages)].sort()).toEqual(
+    [...CAPABILITIES].sort(),
+  );
+});
+
+it("each internal entry exports exactly the names its siblings may take", () => {
+  for (const [entry, names] of Object.entries(INTERNAL_NAMES)) {
+    const named = namedPackage(entry)!;
+    const text = readFileSync(
+      join(repo, named.pkg.entries["./internal"]!),
+      "utf8",
+    );
+    const exported = [...text.matchAll(/^export (?:type )?\{([^}]*)\} from/gm)]
+      .flatMap((m) => m[1]!.split(","))
+      .map((n) => n.trim())
+      .filter(Boolean);
+    expect([...new Set(exported)].sort(), entry).toEqual([...names].sort());
+  }
+});
+
+/** Packages and sources for a planted graph: `name` → [dependencies, files]. */
+function planted(
+  spec: Record<string, [string[], Record<string, string>]>,
+): [PackageInfo[], Map<string, string>] {
+  const all: PackageInfo[] = [];
+  const sources = new Map<string, string>();
+  for (const [name, [deps, files]] of Object.entries(spec)) {
+    const dir = `packages/${name.replace(/^@cesium\//, "")}`;
+    all.push(
+      packageInfo(dir, {
+        name,
+        dependencies: Object.fromEntries(deps.map((d) => [d, "*"])),
+        exports: {
+          ".": { "@cesium/source": "./src/index.ts" },
+          "./internal": { "@cesium/source": "./src/internal.ts" },
+        },
+      }),
+    );
+    for (const [file, text] of Object.entries(files)) {
+      sources.set(`${dir}/src/${file}`, text);
+    }
+  }
+  return [all, sources];
+}
+
+it("refuses a planted bad edge of each kind", () => {
+  const good: [string[], Record<string, string>] = [[], {}];
+  const cases: [
+    string,
+    Record<string, [string[], Record<string, string>]>,
+    RegExp,
+  ][] = [
+    [
+      "a capability on an adapter, type-only",
+      {
+        "@cesium/core": good,
+        "@cesium/frames": [
+          ["@cesium/core", "@cesium/source-x"],
+          { "a.ts": 'import type { T } from "@cesium/source-x";' },
+        ],
+        "@cesium/source-x": [["@cesium/core"], {}],
+      },
+      /@cesium\/frames \(a capability\) depends on @cesium\/source-x \(an adapter\)/,
+    ],
+    [
+      "a capability before its dependency",
+      {
+        "@cesium/time": [["@cesium/frames"], {}],
+        "@cesium/frames": [["@cesium/time"], {}],
+      },
+      /@cesium\/time depends on @cesium\/frames, which comes after it/,
+    ],
+    [
+      "a cycle",
+      {
+        "@cesium/source-a": [["@cesium/source-b"], {}],
+        "@cesium/source-b": [["@cesium/source-a"], {}],
+      },
+      /a cycle: @cesium\/source-a → @cesium\/source-b → @cesium\/source-a/,
+    ],
+    [
+      "an adapter on the umbrella",
+      { "@cesium/next": good, "@cesium/source-x": [["@cesium/next"], {}] },
+      /@cesium\/source-x depends on the umbrella/,
+    ],
+    [
+      "a relative import out of its package",
+      {
+        "@cesium/core": good,
+        "@cesium/time": [
+          ["@cesium/core"],
+          {
+            "a.ts": 'import { Emitter } from "../../core/src/core/Emitter.ts";',
+          },
+        ],
+      },
+      /packages\/time\/src\/a\.ts:1 reaches packages\/core\/src\/core\/Emitter\.ts outside @cesium\/time by path/,
+    ],
+    [
+      "a sibling it doesn't declare",
+      {
+        "@cesium/core": good,
+        "@cesium/time": [[], { "a.ts": 'const c = import("@cesium/core");' }],
+      },
+      /imports @cesium\/core, not in @cesium\/time's dependencies/,
+    ],
+    [
+      "an outside package it doesn't declare",
+      { "@cesium/core": [[], { "a.ts": 'import { read } from "ktx-parse";' }] },
+      /imports ktx-parse, not in @cesium\/core's dependencies/,
+    ],
+    [
+      "a re-export outside the umbrella",
+      {
+        "@cesium/core": good,
+        "@cesium/time": [
+          ["@cesium/core"],
+          { "a.ts": 'export { Emitter } from "@cesium/core";' },
+        ],
+      },
+      /re-exports @cesium\/core's names outside the umbrella/,
+    ],
+    [
+      "an internal name not on the list",
+      {
+        "@cesium/core": good,
+        "@cesium/time": [
+          ["@cesium/core"],
+          { "a.ts": 'import { secret } from "@cesium/core/internal";' },
+        ],
+      },
+      /takes secret from @cesium\/core\/internal, which doesn't list it/,
+    ],
+  ];
+  for (const [what, spec, expected] of cases) {
+    const [all, sources] = planted(spec);
+    const found = packageViolations(all, sources);
+    expect(
+      found.some((v) => expected.test(v)),
+      `${what}: ${found.join("; ")}`,
+    ).toBe(true);
+  }
+  // The umbrella may re-export, and a declared sibling is fine.
+  const [all, sources] = planted({
+    "@cesium/core": good,
+    "@cesium/next": [
+      ["@cesium/core"],
+      { "index.ts": 'export * from "@cesium/core";' },
+    ],
+  });
+  expect(packageViolations(all, sources)).toEqual([]);
+});
+
+/**
+ * Every file a file reaches through its imports, by path and by package
+ * name, itself included (paths from the root). With `bundled`, only what a
+ * bundler puts beside it: value imports, not type imports or dynamic ones.
+ */
+function packageClosure(start: string, { bundled = false } = {}): string[] {
+  const seen = new Set([start]);
+  const queue = [start];
+  for (let file = queue.pop(); file !== undefined; file = queue.pop()) {
+    const text =
+      packageSources.get(file) ?? readFileSync(join(repo, file), "utf8");
+    for (const edge of packageEdgesOf(file, text)) {
+      if (bundled && (edge.typeOnly || edge.dynamic)) {
+        continue;
+      }
+      if (edge.to?.endsWith(".ts") && !seen.has(edge.to)) {
+        seen.add(edge.to);
+        queue.push(edge.to);
+      }
+    }
+  }
+  return [...seen].sort();
+}
+
+it("the time controls reach time without frames", () =>
+  expect(
+    packageClosure("packages/ui/src/timeControls.ts").filter((f) =>
+      f.startsWith("packages/frames/"),
+    ),
+  ).toEqual([]));
+
+interface Published {
+  readonly entry: string;
+  readonly name: string;
+  /** Where the name is declared, from the root, resolved by the checker. */
+  readonly file: string;
+}
+
+let published: Published[] | undefined;
+
+/**
+ * Each name each package's entry points publish, with the file that
+ * declares it, through every `export … from` hop, `import { X }; export
+ * { X }` and `export *`.
+ */
+function publishedNames(): Published[] {
+  if (published) {
+    return published;
+  }
+  const entries = packages.flatMap((p) => Object.values(p.entries));
+  const program = ts.createProgram(
+    entries.map((entry) => join(repo, entry)),
+    {
+      noEmit: true,
+      skipLibCheck: true,
+      types: [],
+      allowImportingTsExtensions: true,
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      customConditions: ["@cesium/source"],
+    },
+  );
+  const checker = program.getTypeChecker();
+  const out: Published[] = [];
+  for (const entry of entries) {
+    const index = program.getSourceFile(join(repo, entry));
+    const moduleSymbol = index && checker.getSymbolAtLocation(index);
+    if (!moduleSymbol) {
+      throw new Error(`${entry}: not in the program`);
+    }
+    for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
+      const target =
+        symbol.flags & ts.SymbolFlags.Alias
+          ? checker.getAliasedSymbol(symbol)
+          : symbol;
+      for (const declaration of target.declarations ?? []) {
+        const file = relative(repo, declaration.getSourceFile().fileName)
+          .split(sep)
+          .join("/");
+        out.push({ entry, name: symbol.name, file });
+      }
+    }
+  }
+  return (published = out);
+}
+
+/**
+ * Names a package's entries publish that another package declares, by the
+ * exceptions above: measure's shared constants and motion helpers, and the
+ * coordinate service's types crs carries.
+ */
+const PUBLISHED_ELSEWHERE = new Set(
+  Object.keys(REEXPORTS).map((k) => k.split(" → ")[1]!),
+);
+
+it("each package publishes only names it declares, but for the named exceptions; the umbrella re-exports", () => {
+  const leaks = new Set<string>();
+  for (const { entry, name, file } of publishedNames()) {
+    const from = packageOf(entry)!;
+    const to = packageOf(file);
+    if (!to || to === from || from.name === UMBRELLA) {
+      continue;
+    }
+    const through = [...PUBLISHED_ELSEWHERE].some(
+      (spec) => namedPackage(spec)?.pkg === to,
+    );
+    if (!through) {
+      leaks.add(`${entry} → ${file} (${name})`);
+    }
+  }
+  expect([...leaks]).toEqual([]);
+}, 30_000);
+
+it("resolves each published name to the file that declares it", () => {
+  const where = (entry: string, name: string) =>
+    publishedNames()
+      .filter((p) => p.entry === entry && p.name === name)
+      .map((p) => p.file);
+  // Through measure/constants.ts's re-export, to the math module.
+  expect(where("packages/measure/src/index.ts", "C")).toEqual([
+    "packages/core/src/math/constants.ts",
+  ]);
+  expect(
+    where("packages/frames/src/index.ts", "earthOrientationSigma"),
+  ).toEqual(["packages/frames/src/orientationSigma.ts"]);
+  expect(where("packages/core/src/index.ts", "Engine")).toEqual([
+    "packages/core/src/scene/Engine.ts",
+  ]);
+  // Through the umbrella's re-export.
+  expect(where("packages/cesium/src/index.ts", "Engine")).toEqual([
+    "packages/core/src/scene/Engine.ts",
+  ]);
+}, 30_000);
+
+it("the umbrella exports the entry points", () =>
+  expect(
+    Object.keys(packages.find((p) => p.name === UMBRELLA)!.entries),
+  ).toEqual([".", "./time", "./frames", "./crs", "./measure", "./ui"]));
+
+// Inside the core: its files by path from packages/core (`src/scene/World.ts`).
+const root = join(repo, "packages", "core");
+
+/** The core's shared utilities (math, `core`, reading with progress) and the rest. */
+function layerOf(file: string): "utilities" | "core" {
+  return file.startsWith("src/math/") ||
+    file.startsWith("src/core/") ||
+    file === "src/io/readWithProgress.ts"
+    ? "utilities"
+    : "core";
+}
 
 interface Edge {
   readonly to: string;
   readonly typeOnly: boolean;
-  /** Imported by the package's name: `to` is the entry point's file. */
-  readonly entry?: true;
   /** A dynamic `import("…")`: loaded when called, so not bundled with the importer. */
   readonly dynamic?: true;
 }
@@ -119,10 +644,10 @@ function listTs(dir: string): string[] {
   return out;
 }
 
-const files = [...listTs("src"), ...listTs("widgets")];
+const files = listTs("src");
 const edgeCache = new Map<string, Edge[]>();
 
-/** Each relative import of a file (from the package, as `src/a/b.ts`). */
+/** Each relative import of a core file (from the package, as `src/a/b.ts`). */
 function edgesOf(file: string): Edge[] {
   const cached = edgeCache.get(file);
   if (cached) {
@@ -136,7 +661,8 @@ function edgesOf(file: string): Edge[] {
 /**
  * Each relative import in `text`, read as the file `file`: static imports
  * and re-exports, dynamic `import("…")`, and `import("…").T` type nodes.
- * `lines`, when given, gets each edge's line.
+ * Imports by name (packages) are outside the core's tiers. `lines`, when
+ * given, gets each edge's line.
  */
 function edgesOfText(file: string, text: string, lines?: number[]): Edge[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
@@ -150,21 +676,6 @@ function edgesOfText(file: string, text: string, lines?: number[]): Edge[] {
     );
   };
   const add = (specifier: string, typeOnly: boolean, dynamic = false) => {
-    if (specifier === SELF || specifier.startsWith(`${SELF}/`)) {
-      // The package's own entry point, by name: the file its `exports` names.
-      const key = specifier === SELF ? "." : `.${specifier.slice(SELF.length)}`;
-      const target = pkg.exports[key];
-      if (target === undefined) {
-        throw new Error(`${file}: ${specifier} is not an entry point`);
-      }
-      push({
-        to: target.replace(/^\.\//, ""),
-        typeOnly,
-        ...(dynamic ? { dynamic: true as const } : {}),
-        entry: true,
-      });
-      return;
-    }
     if (!specifier.startsWith(".")) {
       return; // packages are outside the rule
     }
@@ -208,145 +719,17 @@ function edgesOfText(file: string, text: string, lines?: number[]): Edge[] {
   return edges;
 }
 
-function allowed(from: Layer, edge: Edge): boolean {
-  const to = layerOf(edge.to);
-  if (from === "widgets") {
-    // Another widgets file, or an entry point by the package's name: never
-    // a module under `src/` (even an entry's file, by its path).
-    return to === "widgets" || edge.entry === true;
-  }
-  if (ALLOWED[from].includes(to)) {
-    return true;
-  }
-  return (
-    from === "frames" &&
-    to === "core" &&
-    (edge.typeOnly || FRAMES_CORE_VALUES.has(edge.to))
-  );
-}
+it("the core's shared utilities import only each other", () =>
+  expect(
+    files
+      .filter((f) => layerOf(f) === "utilities")
+      .flatMap((f) =>
+        edgesOf(f)
+          .filter((e) => layerOf(e.to) !== "utilities")
+          .map((e) => `${f} → ${e.to}`),
+      ),
+  ).toEqual([]));
 
-/** Each broken rule from a layer's files, as "<from> → <to>". */
-function violations(layer: Layer): string[] {
-  const out: string[] = [];
-  for (const file of files.filter((f) => layerOf(f) === layer)) {
-    for (const edge of edgesOf(file)) {
-      if (!allowed(layer, edge)) {
-        out.push(`${file} → ${edge.to}`);
-      }
-    }
-  }
-  return out;
-}
-
-/**
- * Every file a file reaches through its imports, itself included. With
- * `bundled`, only what a bundler puts beside it: value imports, not type
- * imports (erased) or dynamic ones (where loading stops, in a chunk of
- * their own).
- */
-function closure(start: string, { bundled = false } = {}): string[] {
-  const seen = new Set([start]);
-  const queue = [start];
-  for (let file = queue.pop(); file !== undefined; file = queue.pop()) {
-    for (const { to, typeOnly, dynamic } of edgesOf(file)) {
-      if (bundled && (typeOnly || dynamic)) {
-        continue;
-      }
-      if (to.endsWith(".ts") && !seen.has(to)) {
-        seen.add(to);
-        queue.push(to);
-      }
-    }
-  }
-  return [...seen].sort();
-}
-
-interface Published {
-  readonly entry: string;
-  readonly name: string;
-  /** Where the name is declared, resolved by the checker. */
-  readonly file: string;
-}
-
-let published: Published[] | undefined;
-
-/**
- * Each name each entry publishes, with the file that declares it. The
- * checker follows every hop to the declaration: `export … from` chains, a
- * module that imports a name and exports it again (`import { X }; export
- * { X }`), and `export *`.
- */
-function publishedNames(): Published[] {
-  if (published) {
-    return published;
-  }
-  const entries = Object.values(pkg.exports).map((path) =>
-    path.replace(/^\.\//, ""),
-  );
-  const program = ts.createProgram(
-    entries.map((entry) => join(root, entry)),
-    {
-      noEmit: true,
-      skipLibCheck: true,
-      types: [],
-      allowImportingTsExtensions: true,
-      target: ts.ScriptTarget.ESNext,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-    },
-  );
-  const checker = program.getTypeChecker();
-  const out: Published[] = [];
-  for (const entry of entries) {
-    const index = program.getSourceFile(join(root, entry));
-    const moduleSymbol = index && checker.getSymbolAtLocation(index);
-    if (!moduleSymbol) {
-      throw new Error(`${entry}: not in the program`);
-    }
-    for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
-      const target =
-        symbol.flags & ts.SymbolFlags.Alias
-          ? checker.getAliasedSymbol(symbol)
-          : symbol;
-      for (const declaration of target.declarations ?? []) {
-        const file = relative(root, declaration.getSourceFile().fileName)
-          .split(sep)
-          .join("/");
-        out.push({ entry, name: symbol.name, file });
-      }
-    }
-  }
-  return (published = out);
-}
-
-/**
- * Each name an entry publishes that is declared outside its layer and the
- * utilities, as "<entry> → <declaring file> (<name>)".
- */
-function entryLeaks(): string[] {
-  const out = new Set<string>();
-  for (const { entry, name, file } of publishedNames()) {
-    const to = layerOf(file);
-    if (!file.startsWith("..") && to !== layerOf(entry) && to !== "utilities") {
-      out.add(`${entry} → ${file} (${name})`);
-    }
-  }
-  return [...out];
-}
-
-it("the core imports nothing from time, frames, proj or measure", () => {
-  expect(violations("core")).toEqual([]);
-});
-it("the utilities import only each other", () =>
-  expect(violations("utilities")).toEqual([]));
-it("time imports only time and utilities", () =>
-  expect(violations("time")).toEqual([]));
-it("frames imports time, utilities, core types, Body and the resolver", () =>
-  expect(violations("frames")).toEqual([]));
-it("proj and measure follow their rules", () => {
-  expect(violations("proj")).toEqual([]);
-  expect(violations("measure")).toEqual([]);
-});
 // The built-in transforms (docs/design/transform-graph.md) are core modules with no geo
 // or engine knowledge beyond the transform graph, the route and curvilinear map
 // contract (`camera/route.ts`, which the live helpers implement), the
@@ -393,35 +776,7 @@ it("the transform core imports none of the built-ins", () => {
     );
   expect(found).toEqual([]);
 });
-it("the time controls reach time without frames", () =>
-  expect(
-    closure("widgets/timeControls.ts").filter((f) => layerOf(f) === "frames"),
-  ).toEqual([]));
-it("the widgets import only each other and the entry points, by the package's name", () =>
-  expect(violations("widgets")).toEqual([]));
-it("refuses an internal import from the widgets", () => {
-  const edges = edgesOfText(
-    "widgets/sample.ts",
-    [
-      'import { Emitter } from "../src/core/Emitter.ts";',
-      'import type { Frame } from "../src/frames/Frame.ts";',
-      'import { Engine } from "../src/index.ts";',
-      'import { Clock } from "@cesium/next/time";',
-      'import { Viewer } from "./Viewer.ts";',
-      'const frames = import("@cesium/next/frames");',
-    ].join("\n"),
-  );
-  expect(
-    edges.filter((edge) => !allowed("widgets", edge)).map((edge) => edge.to),
-  ).toEqual(["src/core/Emitter.ts", "src/frames/Frame.ts", "src/index.ts"]);
-  expect(edges.filter((edge) => edge.entry).map((edge) => edge.to)).toEqual([
-    "src/time/index.ts",
-    "src/frames/index.ts",
-  ]);
-  expect(() =>
-    edgesOfText("widgets/sample.ts", 'import "@cesium/next/nowhere";'),
-  ).toThrow(/not an entry point/);
-});
+
 // The file graph can't say what a bundler keeps from an entry point that
 // imports every precise provider: tree shaking decides (the package's
 // `sideEffects`, and no top-level code that a bundler can't prove pure).
@@ -434,27 +789,6 @@ it("a globe-only Viewer bundles no X, Y or s series, Earth orientation, EOP pars
   );
   expect(report).toContain("no X, Y or s series and no DAF reader");
 }, 120_000);
-it(
-  "each entry publishes only names declared in its own layer",
-  () =>
-    // Resolved through the checker, so a name re-exported by way of another
-    // module (an `export … from` chain, or `import { X }; export { X }`)
-    // counts where it is declared.
-    expect(entryLeaks()).toEqual([]),
-  30_000,
-);
-it("resolves each published name to the file that declares it", () => {
-  const where = (entry: string, name: string) =>
-    publishedNames()
-      .filter((p) => p.entry === entry && p.name === name)
-      .map((p) => p.file);
-  // Through measure/constants.ts's re-export, to the math module.
-  expect(where("src/measure/index.ts", "C")).toEqual(["src/math/constants.ts"]);
-  expect(where("src/frames/index.ts", "earthOrientationSigma")).toEqual([
-    "src/frames/orientationSigma.ts",
-  ]);
-  expect(where("src/index.ts", "Engine")).toEqual(["src/scene/Engine.ts"]);
-}, 30_000);
 
 // Layers inside the core (docs/design/layers-engine-renderer-backend.md): content, scene, renderer and
 // GPU, and a second renderer's tier, `webgl2` (docs/superpowers/plans/2026-11-13-webgl2-renderer.md,
@@ -881,23 +1215,13 @@ it("the observer's settings, a stage's definition and the sky pack's format hold
     ).toEqual([]);
   }
 });
-it("package.json exports the entry points", () =>
-  expect(Object.keys(pkg.exports)).toEqual([
-    ".",
-    "./time",
-    "./frames",
-    "./proj",
-    "./measure",
-    "./widgets",
-  ]));
+
 it("finds imports of every kind and classifies them", () => {
   // The checker is only as good as its parser: a sample of known edges.
-  expect(layerOf("src/time/erfa/xy06.ts")).toBe("frames");
-  expect(layerOf("src/time/erfa/dtdb.ts")).toBe("time");
   expect(layerOf("src/io/readWithProgress.ts")).toBe("utilities");
   expect(layerOf("src/io/ion.ts")).toBe("core");
-  expect(edgesOf("src/time/Instant.ts")).toContainEqual({
-    to: "src/time/leapSeconds.ts",
+  expect(edgesOf("src/scene/Engine.ts")).toContainEqual({
+    to: "src/gpu/GpuDevice.ts",
     typeOnly: true,
   });
   const edges = edgesOfText(

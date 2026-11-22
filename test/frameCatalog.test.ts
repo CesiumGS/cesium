@@ -2,7 +2,7 @@
 // (TDB -200 s to 200 s around J2000) and a short EOP table, served by a
 // stubbed `fetch`.
 import { readFileSync } from "node:fs";
-import { dirname, join, normalize, relative } from "node:path";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
 import {
@@ -24,6 +24,7 @@ import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { sunDirection, sunPosition } from "../packages/time/src/sun.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { pack } from "./syntheticPacks.ts";
+import { repo, resolveSpecifier } from "./packageGraph.ts";
 
 const BASE = "/frames-data/";
 const MJD_UNIX_EPOCH = 40587;
@@ -598,21 +599,20 @@ describe("the frame catalog", () => {
 });
 
 describe("the catalog's imports", () => {
-  const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
-  /** Every file reached by static (non-type) imports from `start`. */
+  /**
+   * Every file reached by static (non-type) imports from `start`, by path
+   * and by package name (paths from the root).
+   */
   const staticClosure = (start: string): string[] => {
     const seen = new Set([start]);
     const queue = [start];
     for (let file = queue.pop(); file; file = queue.pop()) {
-      const text = readFileSync(join(root, file), "utf8");
+      const text = readFileSync(join(repo, file), "utf8");
       const pattern =
-        /^(?:import|export)\s+(?!type\b)[^;]*?from\s+"(\.[^"]+)"/gms;
+        /^(?:import|export)\s+(?!type\b)[^;]*?from\s+"([^"]+)"/gms;
       for (const [, specifier] of text.matchAll(pattern)) {
-        const to = relative(
-          root,
-          join(root, dirname(file), specifier!),
-        ).replaceAll("\\", "/");
-        if (!seen.has(to)) {
+        const to = resolveSpecifier(file, specifier!);
+        if (to && !seen.has(to)) {
           seen.add(to);
           queue.push(to);
         }
@@ -622,17 +622,17 @@ describe("the catalog's imports", () => {
   };
 
   it("reach no ERFA series, ephemeris, EOP parser or provider statically", () => {
-    const reached = staticClosure("src/frames/catalog.ts");
-    expect(reached).toContain("src/frames/analytic.ts");
-    expect(reached).toContain("src/time/celestial.ts");
+    const reached = staticClosure("packages/frames/src/catalog.ts");
+    expect(reached).toContain("packages/frames/src/analytic.ts");
+    expect(reached).toContain("packages/time/src/celestial.ts");
     const heavy = reached.filter(
       (f) =>
         f.includes("/providers/") ||
-        f === "src/frames/edges.ts" ||
-        f === "src/time/erfa/xy06.ts" ||
-        f === "src/time/erfa/s06.ts" ||
-        f === "src/time/eop.ts" ||
-        f.startsWith("src/ephemeris/"),
+        f === "packages/frames/src/edges.ts" ||
+        f === "packages/frames/src/time/erfa/xy06.ts" ||
+        f === "packages/frames/src/time/erfa/s06.ts" ||
+        f === "packages/frames/src/time/eop.ts" ||
+        f.startsWith("packages/frames/src/ephemeris/"),
     );
     expect(heavy).toEqual([]);
   });

@@ -6,12 +6,12 @@
 // `export type` is erased: `import { type A } from "./a.ts"` still loads `a.ts`.
 // A dynamic `import("…")` loads when called, after evaluation, so it isn't an
 // edge here.
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
+const root = normalize(join(import.meta.dirname, ".."));
 
 /** The relative value imports of `text`, read as the file `file`. */
 export function valueImports(file: string, text: string): string[] {
@@ -110,9 +110,12 @@ function listTs(dir: string): string[] {
 /** The cycles that exist, each with its reason. Shrink this; don't grow it. */
 const KNOWN_CYCLES: readonly (readonly string[])[] = [
   // RenderContext makes a ShaderCache; ShaderCache takes constants from it.
-  ["src/scene/RenderContext.ts", "src/scene/ShaderCache.ts"],
+  [
+    "packages/core/src/scene/RenderContext.ts",
+    "packages/core/src/scene/ShaderCache.ts",
+  ],
   // sun.ts turns the sun with icrfToFixed; celestial.ts takes sun.ts's times.
-  ["src/time/celestial.ts", "src/time/sun.ts"],
+  ["packages/time/src/celestial.ts", "packages/time/src/sun.ts"],
 ];
 
 describe("the import-cycle check", () => {
@@ -187,9 +190,16 @@ describe("the import-cycle check", () => {
   });
 });
 
-describe("value imports in src/ and widgets/", () => {
+describe("value imports in the packages' src/", () => {
   it("have no cycles beyond the known ones", () => {
-    const files = [...listTs("src"), ...listTs("widgets")];
+    // Relative imports stay in their package and the packages' dependencies
+    // form no cycle (test/importBoundary.test.ts), so a cycle is in one
+    // package's files.
+    const files = readdirSync(join(root, "packages")).flatMap((name) =>
+      existsSync(join(root, "packages", name, "src"))
+        ? listTs(`packages/${name}/src`)
+        : [],
+    );
     const graph = new Map(
       files.map((file) => [
         file,
@@ -197,10 +207,10 @@ describe("value imports in src/ and widgets/", () => {
       ]),
     );
     // Every file is seen, and the graph has edges to walk.
-    expect(graph.has("src/scene/Engine.ts")).toBe(true);
-    expect(graph.has("widgets/Viewer.ts")).toBe(true);
-    expect(graph.get("src/globe/Globe.ts")).toContain(
-      "src/streaming/Tileset3D.ts",
+    expect(graph.has("packages/core/src/scene/Engine.ts")).toBe(true);
+    expect(graph.has("packages/ui/src/Viewer.ts")).toBe(true);
+    expect(graph.get("packages/core/src/globe/Globe.ts")).toContain(
+      "packages/core/src/streaming/Tileset3D.ts",
     );
     expect(importCycles(graph)).toEqual(KNOWN_CYCLES);
   });

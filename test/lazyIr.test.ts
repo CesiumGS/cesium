@@ -11,18 +11,19 @@
 // every file and line on the chain, so a new eager import is found where it was
 // written. The second block runs the seam.
 import { readFileSync } from "node:fs";
-import { dirname, join, normalize, relative } from "node:path";
+import { join } from "node:path";
 import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
 import { curvilinear } from "../packages/core/src/transform/graph.ts";
+import { packages, repo, resolveSpecifier } from "./packageGraph.ts";
 
-const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
-  exports: Record<string, string>;
-};
+// Files by path from the root; imports by package name follow its entry
+// points (test/packageGraph.ts).
+const root = repo;
+const umbrella = packages.find((p) => p.name === "@cesium/next")!;
 
 interface Import {
-  /** The imported file, from the package (`src/ir/ad.ts`). */
+  /** The imported file, from the root (`packages/core/src/ir/ad.ts`). */
   readonly to: string;
   /** 1-based line of the import in its file. */
   readonly line: number;
@@ -34,7 +35,7 @@ type Read = (file: string) => string;
 const readFromDisk: Read = (file) => readFileSync(join(root, file), "utf8");
 
 /**
- * The relative imports of `text` as the file `file`: static ones that load
+ * The imports of `text` as the file `file`, by path and by package name: static ones that load
  * the module (`import { type A } from` does too, under `verbatimModuleSyntax`;
  * only a declaration-level `import type` or `export type` is erased) and
  * dynamic `import("…")`.
@@ -43,14 +44,12 @@ function importsOf(file: string, text: string): Import[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
   const out: Import[] = [];
   const add = (node: ts.Node, specifier: string, dynamic: boolean) => {
-    if (!specifier.startsWith(".")) {
+    const to = resolveSpecifier(file, specifier);
+    if (to === undefined) {
       return;
     }
     out.push({
-      to: relative(
-        root,
-        join(root, dirname(file), specifier.replace(/\?.*$/, "")),
-      ).replaceAll("\\", "/"),
+      to,
       line:
         source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1,
       dynamic,
@@ -103,7 +102,7 @@ function irChain(
         continue;
       }
       via.set(to, `${file}:${line}`);
-      if (to.startsWith("src/ir/")) {
+      if (to.startsWith("packages/core/src/ir/")) {
         const chain = [to];
         for (let at = via.get(to); at !== undefined;) {
           chain.unshift(at);
@@ -119,15 +118,15 @@ function irChain(
 
 /** The transform modules a view with no curvilinear map starts with. */
 const LEAN = [
-  "src/transform/graph.ts",
-  "src/transform/route.ts",
-  "src/transform/accuracy.ts",
-  "src/transform/queries.ts",
-  "src/transform/lazyIr.ts",
+  "packages/core/src/transform/graph.ts",
+  "packages/core/src/transform/route.ts",
+  "packages/core/src/transform/accuracy.ts",
+  "packages/core/src/transform/queries.ts",
+  "packages/core/src/transform/lazyIr.ts",
 ];
 
 describe("a default view starts without Cesium IR", () => {
-  it.each(Object.values(pkg.exports).map((p) => p.replace(/^\.\//, "")))(
+  it.each(Object.values(umbrella.entries))(
     "%s loads no module of src/ir",
     (entry) => {
       expect(irChain(entry)).toBeUndefined();
@@ -140,9 +139,11 @@ describe("a default view starts without Cesium IR", () => {
 
   it("is not vacuous: Cesium IR is reached through the dynamic import in lazyIr.ts", () => {
     expect(
-      irChain("src/index.ts", readFromDisk, { throughDynamic: true }),
+      irChain("packages/core/src/index.ts", readFromDisk, {
+        throughDynamic: true,
+      }),
     ).toMatch(
-      /^src\/index\.ts:\d+ → .*src\/transform\/lazyIr\.ts:\d+ → src\/transform\/irPasses\.ts:\d+ → .*src\/ir\//,
+      /^packages\/core\/src\/index\.ts:\d+ → .*packages\/core\/src\/transform\/lazyIr\.ts:\d+ → packages\/core\/src\/transform\/irPasses\.ts:\d+ → .*packages\/core\/src\/ir\//,
     );
   });
 
@@ -154,40 +155,42 @@ describe("a default view starts without Cesium IR", () => {
     // Directly, in a module the queries load.
     expect(
       irChain(
-        "src/index.ts",
+        "packages/core/src/index.ts",
         planted(
-          "src/transform/accuracy.ts",
+          "packages/core/src/transform/accuracy.ts",
           'import { scalarize } from "../ir/scalarize.ts";',
         ),
       ),
-    ).toMatch(/src\/transform\/accuracy\.ts:1 → src\/ir\/scalarize\.ts$/);
+    ).toMatch(
+      /src\/transform\/accuracy\.ts:1 → packages\/core\/src\/ir\/scalarize\.ts$/,
+    );
     // Through a transform module that has it (the compiler, back as a static import of the world's routes).
     expect(
       irChain(
-        "src/index.ts",
+        "packages/core/src/index.ts",
         planted(
-          "src/scene/world/routes.ts",
+          "packages/core/src/scene/world/routes.ts",
           'import { compileRoute } from "../../transform/compile.ts";',
         ),
       ),
     ).toMatch(
-      /src\/scene\/world\/routes\.ts:1 → src\/transform\/compile\.ts:\d+ → src\/ir\//,
+      /src\/scene\/world\/routes\.ts:1 → packages\/core\/src\/transform\/compile\.ts:\d+ → packages\/core\/src\/ir\//,
     );
     // A type import is erased and a dynamic one loads when it runs: neither counts.
     expect(
       irChain(
-        "src/index.ts",
+        "packages/core/src/index.ts",
         planted(
-          "src/transform/accuracy.ts",
+          "packages/core/src/transform/accuracy.ts",
           'import type { Program } from "../ir/types.ts";',
         ),
       ),
     ).toBeUndefined();
     expect(
       irChain(
-        "src/index.ts",
+        "packages/core/src/index.ts",
         planted(
-          "src/transform/accuracy.ts",
+          "packages/core/src/transform/accuracy.ts",
           'const later = () => import("../ir/builder.ts");',
         ),
       ),

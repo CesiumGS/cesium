@@ -4,7 +4,7 @@
 // fetches nothing; at "precise" it is skyState's ephemeris sky inside the
 // data and the analytic one outside it.
 import { readFileSync } from "node:fs";
-import { dirname, join, normalize, relative } from "node:path";
+import { join } from "node:path";
 import {
   afterEach,
   beforeAll,
@@ -30,6 +30,7 @@ import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
+import { repo, resolveSpecifier } from "./packageGraph.ts";
 
 const maxDiff = (a: ArrayLike<number>, b: ArrayLike<number>): number => {
   let m = 0;
@@ -175,21 +176,20 @@ describe("the sky through the catalog's edges", () => {
 });
 
 describe("attachSky's and the resolver's imports", () => {
-  const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
-  /** Every file reached by static (non-type) imports from `start`. */
+  /**
+   * Every file reached by static (non-type) imports from `start`, by path
+   * and by package name (paths from the root).
+   */
   const staticClosure = (start: string): string[] => {
     const seen = new Set([start]);
     const queue = [start];
     for (let file = queue.pop(); file; file = queue.pop()) {
-      const text = readFileSync(join(root, file), "utf8");
+      const text = readFileSync(join(repo, file), "utf8");
       const pattern =
-        /^(?:import|export)\s+(?!type\b)[^;]*?from\s+"(\.[^"]+)"/gms;
+        /^(?:import|export)\s+(?!type\b)[^;]*?from\s+"([^"]+)"/gms;
       for (const [, specifier] of text.matchAll(pattern)) {
-        const to = relative(
-          root,
-          join(root, dirname(file), specifier!),
-        ).replaceAll("\\", "/");
-        if (!seen.has(to)) {
+        const to = resolveSpecifier(file, specifier!);
+        if (to && !seen.has(to)) {
           seen.add(to);
           queue.push(to);
         }
@@ -198,21 +198,24 @@ describe("attachSky's and the resolver's imports", () => {
     return [...seen].sort();
   };
 
-  for (const start of ["src/frames/attachSky.ts", "src/frames/resolver.ts"]) {
+  for (const start of [
+    "packages/frames/src/attachSky.ts",
+    "packages/frames/src/resolver.ts",
+  ]) {
     it(`${start} reaches no ERFA series, EOP parser, ephemeris or provider statically`, () => {
       const reached = staticClosure(start);
       // The analytic sky is reached; the series are not.
-      expect(reached).toContain("src/time/celestial.ts");
+      expect(reached).toContain("packages/time/src/celestial.ts");
       const heavy = reached.filter(
         (f) =>
           f.includes("/providers/") ||
-          f === "src/frames/edges.ts" ||
-          f === "src/frames/sky.ts" ||
-          f === "src/time/earthOrientation.ts" ||
+          f === "packages/frames/src/edges.ts" ||
+          f === "packages/frames/src/sky.ts" ||
+          f === "packages/frames/src/time/earthOrientation.ts" ||
           // The X, Y and s series and their tables, and the CIO rotation.
-          /^src\/time\/erfa\/(xy06|s06|rotation)/.test(f) ||
-          f === "src/time/eop.ts" ||
-          f.startsWith("src/ephemeris/"),
+          /^packages\/frames\/src\/time\/erfa\/(xy06|s06|rotation)/.test(f) ||
+          f === "packages/frames/src/time/eop.ts" ||
+          f.startsWith("packages/frames/src/ephemeris/"),
       );
       expect(heavy).toEqual([]);
     });

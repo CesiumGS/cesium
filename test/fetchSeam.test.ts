@@ -3,17 +3,21 @@
 // proxy, credentials mode, hooks and the 401 renewal apply to all of them.
 // Like test/seams.test.ts, this scans the sources, and the detector is first
 // shown to flag a bypass, naming its line.
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const root = fileURLToPath(new URL("../packages/next/", import.meta.url));
-const src = join(root, "src");
+const root = fileURLToPath(new URL("..", import.meta.url));
+/** Every package's src/ but the widgets' (2.0's src/ before CS-835). */
+const srcs = readdirSync(join(root, "packages"))
+  .filter((name) => name !== "ui")
+  .map((name) => join(root, "packages", name, "src"))
+  .filter((dir) => existsSync(dir));
 
 /** The provider itself: its default transport is the global `fetch`. */
-const PROVIDER = "src/io/fetchProvider.ts";
+const PROVIDER = "packages/core/src/io/fetchProvider.ts";
 
 /**
  * Files that still fetch directly, each with why. Each is another item's
@@ -23,9 +27,9 @@ const PENDING: Record<string, string> = {
   // CS-808 (outside data through a data-resource provider) owns these: the
   // frames data store, PROJ grids and sky packs move onto it, on top of
   // this provider.
-  "src/ephemeris/frameRoles.ts": "CS-808",
-  "src/engineering/proj.ts": "CS-808",
-  "src/atmosphere/skyPack.ts":
+  "packages/frames/src/ephemeris/frameRoles.ts": "CS-808",
+  "packages/crs/src/engineering/proj.ts": "CS-808",
+  "packages/core/src/atmosphere/skyPack.ts":
     "CS-808 (its default fetcher; the engine passes the provider's)",
 };
 
@@ -118,7 +122,7 @@ describe("the request seam", () => {
 
   it("no source fetches directly outside the provider", () => {
     const found: string[] = [];
-    for (const path of files(src)) {
+    for (const path of srcs.flatMap(files)) {
       const file = relative(root, path).split("\\").join("/");
       if (file === PROVIDER || file in PENDING) {
         continue;
