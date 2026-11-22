@@ -2,10 +2,11 @@
 id: CS-835
 title: "2.0's folders become its packages: the move to the package map, with the layer rule read from package.json"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-615
 needs: [CS-834, CS-809, CS-814, CS-552, CS-610, CS-611, CS-887]
+claimed_by: orch-11-CS-835
 touches: [packages/next/src/**, packages/next/package.json, packages/next/test/importBoundary.test.ts, packages/next/tsconfig*.json, packages/next/scripts/**, package.json]
 ---
 
