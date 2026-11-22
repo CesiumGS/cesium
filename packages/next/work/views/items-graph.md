@@ -759,6 +759,7 @@ graph LR
     CS_611["CS-611 The 1.x code is replaced in the branch"]:::open
     CS_612["CS-612 The new build system"]:::open
     CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
+    CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::decision
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision

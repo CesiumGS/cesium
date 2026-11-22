@@ -58,5 +58,8 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-17 open decision(s) for owner
+CS-609 A clean 2.0 branch and a modern build
+  CS-886  Merge CS-610, the 2.0 repository's design: layout, build, tests and releases (owner)
+
+18 open decision(s) for owner
 ```

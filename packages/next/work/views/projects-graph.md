@@ -33,7 +33,7 @@ graph LR
   CS_579["Editing<br/>8 of 22 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
-  CS_609["A clean 2.0 branch and a modern build<br/>0 of 4 done"]
+  CS_609["A clean 2.0 branch and a modern build<br/>0 of 5 done"]
   CS_615["Packaging and package names<br/>5 of 11 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
   CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]

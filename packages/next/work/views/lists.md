@@ -384,14 +384,14 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 43 of 52 done, 1 in progress, 2 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 43 of 52 done, 3 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
 - [x] CS-388 decision: Do frames and Earth to Moon, the sky, B-reps and the capabilities want initiatives of their own?. Done.
 - [x] CS-455 decision: Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?. Done.
 - [ ] CS-679 Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal. Needs nothing.
-- [~] CS-680 Triage the open items that fit no release. Needs CS-686. Claimed by orch-11-CS-680.
+- [ ] CS-680 Triage the open items that fit no release. Needs CS-686.
 
 Milestone: The tracker runs on human-in-the-lead (CS-524, Done)
 
@@ -1163,7 +1163,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 0 of 4 done, 1 ready, 3 blocked.
+CS-609, Planned, led by owner: 0 of 5 done, 2 ready, 3 blocked.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1171,6 +1171,10 @@ Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 - [ ] CS-611 The 1.x code is replaced in the branch. Needs CS-610 and CS-835 (Packaging and package names).
 - [ ] CS-612 The new build system. Needs CS-610.
 - [ ] CS-613 CI/CD on the new build, with the release pipeline. Needs CS-612.
+
+No milestone
+
+- [ ] CS-886 decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Needs nothing. Decided by owner.
 
 ### Packaging and package names
 

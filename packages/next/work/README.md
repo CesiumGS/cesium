@@ -441,14 +441,14 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 43 of 52 done, 1 in progress, 2 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 43 of 52 done, 3 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
 - [x] [CS-388](./items/CS-388-do-frames-and-earth-to-moon-the-sky-b-reps-and.md) decision: Do frames and Earth to Moon, the sky, B-reps and the capabilities want initiatives of their own?. Done.
 - [x] [CS-455](./items/CS-455-which-release-milestones-should-the-tracker.md) decision: Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?. Done.
 - [ ] [CS-679](./items/CS-679-stale-records-the-api-map-s-entity-and-labels.md) Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal. Needs nothing.
-- [~] [CS-680](./items/CS-680-triage-the-open-items-that-fit-no-release.md) Triage the open items that fit no release. Needs CS-686. Claimed by orch-11-CS-680.
+- [ ] [CS-680](./items/CS-680-triage-the-open-items-that-fit-no-release.md) Triage the open items that fit no release. Needs CS-686.
 
 Milestone: The tracker runs on human-in-the-lead ([CS-524](./milestones/CS-524-the-tracker-runs-on-human-in-the-lead.md), Done)
 
@@ -1220,7 +1220,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 0 of 4 done, 1 ready, 3 blocked.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 0 of 5 done, 2 ready, 3 blocked.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1228,6 +1228,10 @@ Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614
 - [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610 and CS-835 (Packaging and package names).
 - [ ] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Needs CS-610.
 - [ ] [CS-613](./items/CS-613-ci-cd-on-the-new-build-with-the-release-pipeline.md) CI/CD on the new build, with the release pipeline. Needs CS-612.
+
+No milestone
+
+- [ ] [CS-886](./items/CS-886-merge-cs-610-the-2-0-repository-s-design-layout.md) decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Needs nothing. Decided by owner.
 
 ### Packaging and package names
 
