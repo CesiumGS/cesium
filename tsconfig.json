@@ -7,6 +7,7 @@
     "bench",
     "lab",
     "test",
+    "handbook/viewer",
     "vite.config.ts",
     "scripts/build/basisTranscoderEsm.ts",
     "scripts/build/browserFrames.ts",

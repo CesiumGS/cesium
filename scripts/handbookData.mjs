@@ -9,7 +9,8 @@
 //   layers    test/importBoundary.test.ts's layer table and rules, run over
 //             today's import graph
 //   bundles   scripts/checkBundle.mjs's chunks for a globe-only Viewer (built
-//             against the packages' dist/, so after `npm run build`), and
+//             against the packages' dist/, which this step builds first,
+//             `scripts/build.mjs --no-checks`), and
 //             the umbrella's browser build (scripts/build/browser.mjs), into
 //             a temporary directory
 //   runtime   files the engine fetches at run time, measured in the setup
@@ -28,7 +29,7 @@
 // loads nothing from the network.
 //
 // `--no-bundles` keeps the bundle section of the last run, for quick
-// iteration on the site (each build takes a few seconds).
+// iteration on the site (without it, the step builds the packages first).
 import { execFileSync } from "node:child_process";
 import {
   copyFileSync,
@@ -608,8 +609,18 @@ async function buildLibrary(root) {
   }
 }
 
-/** Both bundle measurements. */
+/**
+ * Both bundle measurements. The bundle check builds its pages against the
+ * packages' dist/, so this builds that first (`npm run build`, without its
+ * packed checks): a fresh checkout has no dist/, and an old one would give
+ * figures for yesterday's code. So `npm run handbook` stays the one command.
+ */
 async function readBundles(root) {
+  execFileSync(
+    process.execPath,
+    [join(root, "scripts/build.mjs"), "--no-checks"],
+    { cwd: root, stdio: ["ignore", "inherit", "inherit"] },
+  );
   const stdout = execFileSync(
     process.execPath,
     [join(root, "scripts/checkBundle.mjs")],

@@ -1,5 +1,6 @@
 import { parseGltf } from "../../packages/core/src/io/gltfParse.ts";
-import type { TextureFormatSupport } from "../../packages/core/src/io/decoders.ts";
+import { engineFetch } from "../../packages/core/src/io/fetchProvider.ts";
+import type { TextureTranscodePath } from "../../packages/core/src/profile/paths.ts";
 import {
   decodeQuantizedMesh,
   flatTerrainTile,
@@ -66,10 +67,14 @@ export class WorkerPool {
       return { bitmap, bytes: blob.size } as T;
     }
     if (type === "gltf") {
+      // The page's provider makes every request (as the worker's bridge does),
+      // with the source's headers, which the job's payload carries here.
+      const headers = payload.headers as Record<string, string> | undefined;
       const { asset } = await parseGltf(
         payload.url as string,
-        payload.textureSupport as TextureFormatSupport,
-        payload.headers as Record<string, string> | undefined,
+        payload.textureTarget as TextureTranscodePath,
+        (url, abort) =>
+          engineFetch(url, { kind: "content", headers, signal: abort }),
         signal,
       );
       return asset as T;
