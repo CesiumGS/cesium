@@ -76,6 +76,7 @@ CS-389 Dyno as the development harness
   CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
   CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
+  CS-775  The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go
   CS-784  The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
 
 CS-437 The public API reviews
@@ -93,5 +94,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-66 merged item(s) not in a release
+67 merged item(s) not in a release
 ```

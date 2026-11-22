@@ -949,7 +949,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 51 of 88 done, 14 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 52 of 88 done, 13 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1048,7 +1048,7 @@ No milestone
 - [?] [CS-772](./items/CS-772-dyno-s-views-and-docs-name-the-dyno-commands.md) Dyno's views and docs name the dyno commands, the old wrappers retire, and coldstart takes a free port. Proposed. Needs CS-721.
 - [?] [CS-773](./items/CS-773-dyno-analysis-compare-and-trend-give-verdicts.md) dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
 - [x] [CS-774](./items/CS-774-npx-dyno-works-the-dyno-bin-lives-in-a-private.md) npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Done.
-- [ ] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go. Needs CS-746, CS-748 and CS-749.
+- [x] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go. Done.
 - [x] [CS-778](./items/CS-778-merge-cs-747-the-what-changed-view-since-you.md) decision: Merge CS-747, the What changed view (since you last looked). Done.
 - [?] [CS-781](./items/CS-781-what-changed-takes-a-since-url-field-so-a.md) What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
 - [x] [CS-782](./items/CS-782-merge-cs-774-npx-dyno-works-through-a-private.md) decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Done.

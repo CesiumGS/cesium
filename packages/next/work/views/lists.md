@@ -892,7 +892,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 51 of 88 done, 14 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 52 of 88 done, 13 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -991,7 +991,7 @@ No milestone
 - [?] CS-772 Dyno's views and docs name the dyno commands, the old wrappers retire, and coldstart takes a free port. Proposed. Needs CS-721.
 - [?] CS-773 dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
 - [x] CS-774 npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Done.
-- [ ] CS-775 The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go. Needs CS-746, CS-748 and CS-749.
+- [x] CS-775 The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go. Done.
 - [x] CS-778 decision: Merge CS-747, the What changed view (since you last looked). Done.
 - [?] CS-781 What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
 - [x] CS-782 decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Done.

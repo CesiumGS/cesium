@@ -214,7 +214,6 @@ CS-389 Dyno as the development harness
   CS-733  Each run records its device, configuration and state
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
-  CS-775  The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -260,5 +259,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-191 ready
+190 ready
 ```

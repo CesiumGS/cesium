@@ -631,7 +631,7 @@ graph LR
     CS_772["CS-772 Dyno's views and docs name the dyno commands, the old wrappers "]:::proposed
     CS_773["CS-773 dyno analysis compare and trend give verdicts with noise estima"]:::proposed
     CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::done
-    CS_775["CS-775 The Work page's older views retire: the Older views menu, the D"]:::open
+    CS_775["CS-775 The Work page's older views retire: the Older views menu, the D"]:::done
     CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::done
     CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
     CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::done
