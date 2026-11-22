@@ -23,6 +23,7 @@ CS-10 Cesium IR
   CS-53  Transforms move onto Cesium IR, as pure moves
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
   CS-777  The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
+  CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
   CS-837  Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates
 
 CS-12 The job system's ports
@@ -108,5 +109,5 @@ CS-192 Sky, light and atmosphere
 CS-579 Editing
   CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
 
-77 merged item(s) not in a release
+78 merged item(s) not in a release
 ```

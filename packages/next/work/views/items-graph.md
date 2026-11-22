@@ -91,7 +91,7 @@ graph LR
     CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::done
     CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
-    CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::open
+    CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::done
     CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::done
     CS_807["CS-807 Merge CS-794, the transform passes load Cesium IR lazily, once "]:::done
     CS_836["CS-836 Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0"]:::done

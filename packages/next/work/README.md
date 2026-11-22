@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 22 of 48 done, 11 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 23 of 48 done, 10 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -149,7 +149,7 @@ Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestone
 - [ ] [CS-55](./items/CS-55-styles-move-onto-cesium-ir-literals-as-uniforms.md) Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
 - [ ] [CS-56](./items/CS-56-tables-and-the-bounded-search-the-first.md) Tables and the bounded search, the first extensions, with the residual's row window. Needs CS-53 and CS-54.
 - [ ] [CS-371](./items/CS-371-math-ops-the-transform-graph-needs-atanh-asinh.md) Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`. Needs CS-48.
-- [ ] [CS-794](./items/CS-794-the-transform-passes-load-cesium-ir-lazily-so-a.md) The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
+- [x] [CS-794](./items/CS-794-the-transform-passes-load-cesium-ir-lazily-so-a.md) The transform passes load Cesium IR lazily, so a default view starts without it. Done.
 - [x] [CS-837](./items/CS-837-cesium-ir-s-json-format-is-experimental-at.md) Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates. Done.
 
 Milestone: Any shader language reaches both renderers ([CS-418](./milestones/CS-418-any-shader-language-reaches-both-renderers.md), Planned)
