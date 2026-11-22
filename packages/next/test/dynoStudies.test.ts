@@ -443,6 +443,16 @@ describe("a study from the CLI, start to verdict", () => {
     expect(sections.Verdict).toMatch(
       /`2026-11-21T10-00-00-000Z-mac-apple`: CPU per tick 6% lower/,
     );
+    // Each list in the Verdict follows a blank line (markdownlint's MD032).
+    const lines = sections.Verdict!.split("\n");
+    lines.forEach((line, i) => {
+      if (line.startsWith("- ") && i > 0) {
+        expect(
+          lines[i - 1] === "" || lines[i - 1]!.startsWith("- "),
+          line,
+        ).toBe(true);
+      }
+    });
     // No milliseconds or bytes in the file: relative changes only.
     expect(sections.Verdict).not.toMatch(/\d\s?ms\b|MB\b/);
     const back = await json("study", "show", ID);

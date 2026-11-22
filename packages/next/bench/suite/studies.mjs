@@ -1362,7 +1362,7 @@ export function concludeStudy(
         : []),
       "",
       `Computed from the pre-stated criteria: ${computed}${holdsFor.length ? ` (holds for ${holdsFor.join(", ")})` : ""}.`,
-      ...readout.map((line) => `- ${line}`),
+      ...(readout.length ? ["", ...readout.map((line) => `- ${line}`)] : []),
       ...(cites.length
         ? ["", ...cites.map((c) => `- \`${c.run}\`: ${c.showed}`)]
         : []),
