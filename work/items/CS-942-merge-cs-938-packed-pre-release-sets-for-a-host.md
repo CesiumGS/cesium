@@ -2,10 +2,14 @@
 id: CS-942
 title: Merge CS-938, packed pre-release sets for a host application
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge; a set can then be made at main's tip for the host."
+answered_at: 2026-11-22T18:41:28.371Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
