@@ -14,3 +14,7 @@ project: CS-199
 - The failure's message is captured under load: for example, run the full suite with the machine loaded, keeping the test's output.
 - The cause is found and fixed, or shown to be the machine's, with evidence. `checkBundle.mjs` takes about 1 s at low load against a 120 s limit, so a timeout alone is unlikely.
 - A full run under load passes.
+
+## Note (2026-11-22)
+
+The message, captured in CS-613's first full run: `checkBundle: no <worktree>/packages/ui/dist/index.js; run npm run build first`. So the test fails when the packages haven't been built. CS-612's gate chain ran the suite before building. The merge gates and CI now build first. What's left: the test should skip with a clear message, or fail with one, when `dist/` is missing.
