@@ -2,10 +2,11 @@
 id: CS-395
 title: Reference images and the sweep view
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-389
 needs: [CS-393, CS-394]
+claimed_by: orch-11-CS-395
 ---
 
 Captures per point. Pixel difference and FLIP against the reference point, over the whole image and crops. The noise floor from reference repetitions. The sweep view as a component (axes as lines and panels, hollow unsettled points, noise band, table twins, the image grid), shown in a sweep run's report and, until CS-405, in Analysis's Sweeps tab. Images' compare modes for any two images.
