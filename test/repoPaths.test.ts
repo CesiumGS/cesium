@@ -4,12 +4,28 @@
 // areas' paths. A move that leaves one behind fails only when someone runs
 // that script, or quietly selects no scenes, which can be months later
 // (CS-835 left several).
+import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { expect, it } from "vitest";
 
 const repo = join(import.meta.dirname, "..");
 const scripts = join(repo, "scripts");
+
+/**
+ * True when git ignores `path`. Generated outputs, such as
+ * handbook/generated/ (written by `npm run handbook`), are ignored and absent
+ * from a fresh checkout, so a script naming one is not a stale path.
+ */
+function isGitIgnored(path: string): boolean {
+  try {
+    execFileSync("git", ["check-ignore", "-q", "--", path], { cwd: repo });
+    return true;
+  } catch {
+    // Exit 1 means "not ignored".
+    return false;
+  }
+}
 
 function listMjs(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -114,7 +130,7 @@ it("finds the paths a script names, and only those it can resolve", () => {
 it("every path a script names from the repository root exists", () => {
   const missing = listMjs(scripts).flatMap((file) =>
     literalPaths(file, readFileSync(file, "utf8"))
-      .filter(([, , path]) => !existsSync(path))
+      .filter(([, , path]) => !existsSync(path) && !isGitIgnored(path))
       .map(([line, wrote]) => `${relative(repo, file)}:${line}: ${wrote}`),
   );
   expect(missing).toEqual([]);
