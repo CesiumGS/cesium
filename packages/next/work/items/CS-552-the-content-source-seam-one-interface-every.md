@@ -15,6 +15,11 @@ Start from what's written: `docs/design/modular-renderer.md` (the tiers, the `@c
 
 ## Done when
 
+- It also covers, from the owner's review of 2.0's seams on 2026-11-21:
+  - push updates, so live feeds (SensorThings, digital-twin telemetry) don't have to be polled;
+  - render passes registered by modules, so splats and other new content can draw;
+  - superseding `docs/design/modular-renderer.md`, whose "don't introduce a module system… yet" no longer holds;
+  - room for CS-806's outside tiling engine and CS-818's catalog seam.
 - A design note in `docs/design/` names the interface: what a source provides (selection, requests, decode, what it hands the renderer), how styling binds to it, how it runs on Jobs and in worker mode, and how ion and other hosts supply content through it.
 - It says how each named source fits, the globe's terrain and imagery included, and what each needs that 3D Tiles doesn't.
 - It settles, or raises as decisions for the owner, the questions it leaves open: whether renderer passes register, how it relates to scene items and "the globe as an item" (CS-454), and ion's interface (CS-269).

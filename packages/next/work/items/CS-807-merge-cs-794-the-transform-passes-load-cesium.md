@@ -2,10 +2,14 @@
 id: CS-807
 title: Merge CS-794, the transform passes load Cesium IR lazily, once a quiet plain cold start passes
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge it once a quiet plain check passes: When the waiting run passes the 1,400 ms budget on a quiet machine, the orchestrator replays CS-794 onto main's tip, reruns the type checks, work check and the lazy-IR and golden tests, fast-forwards main, runs the plain check on main, and then merges CS-35 the same way. If the quiet run fails too, it comes back to you with the numbers."
+answered_at: 2026-11-22T03:22:53.033Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

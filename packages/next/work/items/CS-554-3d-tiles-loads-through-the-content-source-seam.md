@@ -15,6 +15,7 @@ Proposed under the owner's call to load every kind of source through one module 
 
 ## Done when
 
+- `Engine.loadTileset`, `addTileset` and `addTerrain` move out of `Engine` (`src/scene/Engine.ts:1054-1180`), and `Globe` stops extending `Tileset3D`. 3D Tiles and terrain then become sources behind the seam, not the core's structure. Added 2026-11-21, from the owner's review of 2.0's seams.
 - Set by CS-552's plan.
 
 Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).
