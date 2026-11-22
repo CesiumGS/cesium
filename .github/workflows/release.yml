@@ -161,10 +161,10 @@ jobs:
   # allows `npm stage publish` only. scripts/release/stageTarballs.mjs
   # refuses unless the `npm` environment, as the REST API returns it, has a
   # required reviewer and custom branch policies that are the 2.0 branch
-  # alone, its CESIUM_RELEASE_GATE is set, and no earlier run staged this
-  # version or is staging it; checks release.json against the sum `verify`
-  # reported and each tarball against release.json, then stages each in
-  # order.
+  # alone, its CESIUM_RELEASE_GATE is set, and no earlier run of this file
+  # (scripts/release/earlierRuns.mjs) staged this version or is staging
+  # it; checks release.json against the sum `verify` reported and each
+  # tarball against release.json, then stages each in order.
   publish:
     needs: [record, verify]
     runs-on: ubuntu-24.04
@@ -213,23 +213,18 @@ jobs:
         run: |
           gh api "repos/$GITHUB_REPOSITORY/environments/npm" > "$RUNNER_TEMP/environment.json" || rm -f "$RUNNER_TEMP/environment.json"
           gh api "repos/$GITHUB_REPOSITORY/environments/npm/deployment-branch-policies" > "$RUNNER_TEMP/branch-policies.json" || rm -f "$RUNNER_TEMP/branch-policies.json"
-      # Every other run that packed this version, and its publish job's
-      # state (GETs only), so a second run for one record refuses before it
-      # stages. Artifacts last 30 days; past that, npm refuses a version
+      # Every other run of this workflow file, on the 2.0 branch, from a push
+      # in this repository, that packed this version, and its publish jobs'
+      # states (GETs only, every page read), so a second run for one record
+      # refuses before it stages. No other workflow and no fork can name an
+      # artifact that counts. A failed read fails this step, and nothing is
+      # staged. Artifacts last 30 days; past that, npm refuses a version
       # already staged.
       - name: Earlier runs for this version
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.record.outputs.version }}
-        run: |
-          set -euo pipefail
-          out="$RUNNER_TEMP/earlier.json"
-          rm -f "$out"
-          runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=npm-tarballs-$VERSION&per_page=100" --jq ".artifacts[].workflow_run.id | select(. != $GITHUB_RUN_ID)" | sort -u)
-          for run in $runs; do
-            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs?per_page=100" --jq "[.jobs[] | select(.name == \"publish\") | {run: $run, status, conclusion}]"
-          done | jq -s 'add // []' > "$out.part"
-          mv "$out.part" "$out"
+        run: node scripts/release/earlierRuns.mjs --version "$VERSION" --out "$RUNNER_TEMP/earlier.json"
       - name: Stage every package
         env:
           # A second guard only: `vars.` falls back to a repository's or an

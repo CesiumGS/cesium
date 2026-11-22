@@ -49,10 +49,12 @@ import {
   gitTree,
   manifestChanges,
   pushIsRelease,
+  quoted,
   releaseRecordProblems,
   withCommandsStopped,
   type Tree,
 } from "../scripts/release/record.mjs";
+import { earlierRuns, listAll } from "../scripts/release/earlierRuns.mjs";
 import { publishOrder } from "../scripts/release/stage.mjs";
 import {
   earlierStagingProblem,
@@ -556,7 +558,7 @@ describe("the changeset rule's check", () => {
     );
     expect(result.ok).toBe(false);
     expect(result.problem).toMatch(
-      /broken\.md: a changeset starts with front matter/,
+      /broken\.md": a changeset starts with front matter/,
     );
   });
 
@@ -584,7 +586,7 @@ describe("the changeset rule's check", () => {
     expect(result).toMatchObject({ ok: false, release: false });
     expect(result.recordProblems).toEqual(
       expect.arrayContaining([
-        "it leaves .changeset/fox.md unconsumed",
+        'it leaves ".changeset/fox.md" unconsumed',
         expect.stringMatching(
           /@x\/core's package\.json changes exports, dependencies;/,
         ),
@@ -612,7 +614,7 @@ describe("the changeset rule's check", () => {
     );
     expect(result).toMatchObject({ ok: false, release: false });
     expect(result.recordProblems).toEqual([
-      "it leaves .changeset/fox.md unconsumed",
+      'it leaves ".changeset/fox.md" unconsumed',
     ]);
   });
   it("passes a full consumption with every version where the lines put it", () => {
@@ -792,14 +794,20 @@ describe("a release record as release:version writes it", () => {
       pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
     ).toEqual({ release: true, version: "2.1.0", sha: head });
 
-    // Not a release: a missing, all-zeros or malformed before, a push of no
-    // commits, a version already tagged, and a version npm already has.
+    // Not a release: a malformed before, a push of no commits, a version
+    // already tagged, and a version npm already has.
     const no = (before: string, published = () => false) =>
       pushIsRelease(before, head, { cwd: root, log: () => {}, published })
         .release;
-    expect(no("")).toBe(false);
-    expect(no("0".repeat(40))).toBe(false);
     expect(no("--output=x")).toBe(false);
+    // A new branch's first push (no before, or all zeros): it can't tell
+    // what the push adds, so it fails unless the head's version is out.
+    for (const before of ["", "0".repeat(40)]) {
+      expect(() => no(before)).toThrow(
+        /has no before commit \(a new branch\), so this can't tell whether it holds a release record, and the head's version 2\.1\.0 has no tag/,
+      );
+      expect(no(before, () => true)).toBe(false);
+    }
     // A before missing from the clone: it can't tell, so it fails unless
     // the head's version is already out.
     expect(() => no("1".repeat(40))).toThrow(
@@ -825,7 +833,7 @@ describe("a release record as release:version writes it", () => {
         gitTree(base, root),
         gitTree(head, root),
       ),
-    ).toEqual(["it leaves .changeset/lab-fox.md unconsumed"]);
+    ).toEqual(['it leaves ".changeset/lab-fox.md" unconsumed']);
   });
   it("fails the bypass: one changeset deleted and a package's exports changed", () => {
     const { root, base } = workspace("2.0.0", changesets);
@@ -980,7 +988,7 @@ describe("a push of several commits (a bundle from another machine)", () => {
     git(root, "checkout", "HEAD", "--", ".changeset/quick-cats.md");
     const head = commitAll(root, "a stale record");
     expect(() => pushIsRelease(base, head, { cwd: root, ...quiet })).toThrow(
-      /moves the umbrella's version up to 2\.1\.0 but isn't a release record: it leaves \.changeset\/quick-cats\.md unconsumed/,
+      /moves the umbrella's version up to 2\.1\.0 but isn't a release record: it leaves "\.changeset\/quick-cats\.md" unconsumed/,
     );
   });
   it("judges a batch's runs of commits together, and fails a run without its changeset", () => {
@@ -1105,6 +1113,82 @@ describe("a push of several commits (a bundle from another machine)", () => {
       }).release,
     ).toBe(false);
   });
+  it("skips a stale record a merged side branch carries, alone and beside a real one", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    // R (2.1.0) is written locally, and a side branch forks from it.
+    git(root, "checkout", "-q", "-b", "local", base);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const stale = commitAll(root, "the record, before the rebase");
+    git(root, "checkout", "-q", "-b", "side", stale);
+    put(root, "notes.md", "on the side branch\n");
+    commitAll(root, "a side change");
+    // The push is rejected, so `pull --rebase` rewrites R to R′, which
+    // lands on main and releases.
+    git(root, "checkout", "-q", "main");
+    // `-x` notes the original in the message, so R′ is another commit
+    // even in the same second.
+    git(root, "cherry-pick", "-x", stale);
+    const rewritten = git(root, "rev-parse", "HEAD").trim();
+    expect(rewritten).not.toBe(stale);
+    // Main reaches 2.1.1 with a real record.
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    commitAll(root, "a changeset");
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the 2.1.1 record");
+    // Later, the side branch, still carrying R, merges.
+    git(root, "merge", "-q", "--no-edit", "-X", "ours", "side");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    expect(
+      gitTree(head, root).packages.map((p) => p.manifest.version),
+    ).toContain("2.1.1");
+    // Alone: the merge comes after the 2.1.1 record has landed.
+    const log: string[] = [];
+    expect(
+      pushIsRelease(record, head, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: false, version: "2.1.1", sha: "" });
+    expect(log).toContainEqual(
+      expect.stringMatching(
+        new RegExp(
+          `${stale}: a release record for 2\\.1\\.0, at or below the before commit's 2\\.1\\.1 .*skipped`,
+        ),
+      ),
+    );
+    // Beside a real record in the same push: R is at R′'s 2.1.0, the
+    // before commit's version, so only the 2.1.1 record counts.
+    expect(pushIsRelease(rewritten, head, { cwd: root, ...quiet })).toEqual({
+      release: true,
+      version: "2.1.1",
+      sha: record,
+    });
+    // Once R′'s 2.1.0 is tagged, R and R′ are out even above the before
+    // commit's version.
+    git(root, "tag", "v2.1.0", rewritten);
+    expect(pushIsRelease(base, head, { cwd: root, ...quiet })).toEqual({
+      release: true,
+      version: "2.1.1",
+      sha: record,
+    });
+    // A force push keeps today's check, and says to leave a released
+    // record as it is, not to revert it.
+    git(root, "checkout", "-q", "-b", "dropped", base);
+    put(root, "notes.md", "dropped by the force push\n");
+    const dropped = commitAll(root, "a commit the force push drops");
+    let message = "";
+    try {
+      pushIsRelease(dropped, head, { cwd: root, ...quiet });
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toMatch(/holds 3 release records/);
+    expect(message).toMatch(
+      new RegExp(
+        `${rewritten} \\(2\\.1\\.0\\) and ${stale} \\(2\\.1\\.0\\) are already tagged or on npm: leave them as they are`,
+      ),
+    );
+    expect(message).toMatch(/none can release: revert the other, then/);
+    expect(message).not.toMatch(/revert both/);
+  });
   it("splits a push's runs at merge commits, so one branch can't pass on another's changeset", () => {
     const { root, base } = workspace("2.0.0", pending);
     roots.push(root);
@@ -1166,6 +1250,210 @@ describe("workflow commands in the release scripts' logs", () => {
       (l) => local.push(l),
     );
     expect(local).toEqual([]);
+  });
+});
+
+describe("the release scripts' output in GitHub Actions", () => {
+  // Each run fails before it reads the network: the empty tree has no
+  // umbrella, and a base that isn't a ref has no merge base.
+  const run = (script: string, args: string[]) => {
+    const env: NodeJS.ProcessEnv = { ...process.env, GITHUB_ACTIONS: "true" };
+    delete env.GITHUB_OUTPUT;
+    try {
+      execFileSync("node", [join(repo, "scripts/release", script), ...args], {
+        cwd: repo,
+        env,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      return { status: 0, stdout: "", stderr: "" };
+    } catch (error) {
+      const e = error as { status: number; stdout: string; stderr: string };
+      return { status: e.status, stdout: e.stdout, stderr: e.stderr };
+    }
+  };
+  const emptyTree = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+  it.each([
+    [
+      "record.mjs",
+      ["--before", "1".repeat(40), "--head", emptyTree],
+      /record: the umbrella's version/,
+    ],
+    [
+      "changesetCheck.mjs",
+      ["--base", "refs/heads/no-such-branch-here"],
+      /changesetCheck: .*merge-base/,
+    ],
+  ])(
+    "%s writes its error to stdout, between the markers",
+    (script, args, error) => {
+      const { status, stdout, stderr } = run(script, args);
+      expect(status).toBe(1);
+      expect(stderr).toBe("");
+      const lines = stdout.trimEnd().split("\n");
+      const token = /^::stop-commands::([0-9a-f-]{36})$/.exec(lines[0]!)?.[1];
+      expect(token).toBeDefined();
+      expect(lines.at(-1)).toBe(`::${token}::`);
+      expect(lines.slice(1, -1).join("\n")).toMatch(error);
+    },
+  );
+  it("quotes paths in messages, so a newline can't start a line", () => {
+    expect(quoted([".changeset/a.md", "packages/x/\n::error::y"])).toBe(
+      '".changeset/a.md", "packages/x/\\n::error::y"',
+    );
+  });
+});
+
+describe("the earlier runs that packed a version", () => {
+  const repository = "CesiumGS/cesium";
+  const branch = "cesium-2.0-webgpu-poc";
+  type Run = {
+    id: number;
+    workflow: string;
+    head_repository: { full_name: string };
+    head_branch: string;
+    event: string;
+    status: string;
+    artifacts: { name: string; workflow_run: { id: number } | null }[];
+    jobs: { name: string; status: string; conclusion: string | null }[];
+  };
+  const runOf = (id: number, fields: Partial<Run> = {}): Run => ({
+    id,
+    workflow: "release.yml",
+    head_repository: { full_name: repository },
+    head_branch: branch,
+    event: "push",
+    status: "completed",
+    artifacts: [],
+    jobs: [{ name: "publish", status: "completed", conclusion: "skipped" }],
+    ...fields,
+  });
+  // A fake REST API: runs filtered by workflow file, branch and event as
+  // GitHub filters them, every list paginated.
+  const api = (runs: Run[], options: { failOn?: RegExp } = {}) => {
+    const paths: string[] = [];
+    const get = async (path: string) => {
+      paths.push(path);
+      if (options.failOn?.test(path)) {
+        throw new Error(`GET ${path}: HTTP 502`);
+      }
+      const url = new URL(path, "https://api.invalid/");
+      const per = Number(url.searchParams.get("per_page"));
+      const page = Number(url.searchParams.get("page"));
+      const slice = <T>(list: T[]) => list.slice((page - 1) * per, page * per);
+      let m = /\/actions\/workflows\/([^/]+)\/runs$/.exec(url.pathname);
+      if (m) {
+        const list = runs.filter(
+          (r) =>
+            r.workflow === decodeURIComponent(m![1]!) &&
+            r.head_branch === url.searchParams.get("branch") &&
+            r.event === url.searchParams.get("event"),
+        );
+        return { total_count: list.length, workflow_runs: slice(list) };
+      }
+      m = /\/actions\/runs\/(\d+)\/(artifacts|jobs)$/.exec(url.pathname);
+      const run = runs.find((r) => r.id === Number(m?.[1]));
+      if (m && run && m[2] === "artifacts") {
+        const name = url.searchParams.get("name");
+        const list = run.artifacts.filter((a) => a.name === name);
+        return { total_count: list.length, artifacts: slice(list) };
+      }
+      if (m && run) {
+        return { total_count: run.jobs.length, jobs: slice(run.jobs) };
+      }
+      throw new Error(`GET ${path}: HTTP 404`);
+    };
+    return { get, paths };
+  };
+  const packed = (id: number | null) => [
+    { name: "npm-tarballs-2.1.0", workflow_run: id === null ? null : { id } },
+  ];
+  const read = (runs: Run[], runId = 999) =>
+    earlierRuns({ get: api(runs).get, repository, version: "2.1.0", runId });
+
+  it("ignores another workflow's artifact and a fork's run, so neither blocks a genuine publish", async () => {
+    const staged = [
+      { name: "publish", status: "completed", conclusion: "success" },
+    ];
+    const runs = [
+      runOf(1, { workflow: "evil.yml", artifacts: packed(1), jobs: staged }),
+      runOf(2, {
+        head_repository: { full_name: "someone/fork" },
+        artifacts: packed(2),
+        jobs: staged,
+      }),
+      runOf(3, {
+        artifacts: [{ name: "npm-tarballs-2.1.0-x", workflow_run: { id: 3 } }],
+        jobs: staged,
+      }),
+      runOf(999, { artifacts: packed(999), status: "in_progress" }),
+    ];
+    expect(await read(runs)).toEqual([]);
+    expect(earlierStagingProblem(await read(runs))).toBeUndefined();
+  });
+  it("finds a genuine earlier run on a second page, with an artifact whose workflow_run is null", async () => {
+    const runs = Array.from({ length: 150 }, (_, i) => runOf(i + 1));
+    runs[120] = runOf(121, {
+      artifacts: packed(null),
+      jobs: [{ name: "publish", status: "completed", conclusion: "success" }],
+    });
+    const { get, paths } = api(runs);
+    const earlier = await earlierRuns({
+      get,
+      repository,
+      version: "2.1.0",
+      runId: 999,
+    });
+    expect(earlier).toEqual([
+      { run: 121, status: "completed", conclusion: "success" },
+    ]);
+    expect(
+      paths.filter((p) => p.includes("/workflows/release.yml/runs")),
+    ).toEqual([
+      `repos/${repository}/actions/workflows/release.yml/runs?branch=${branch}&event=push&exclude_pull_requests=true&per_page=100&page=1`,
+      `repos/${repository}/actions/workflows/release.yml/runs?branch=${branch}&event=push&exclude_pull_requests=true&per_page=100&page=2`,
+    ]);
+    expect(earlierStagingProblem(earlier)).toMatch(/run 121 \(staged\)/);
+  });
+  it("counts a run still packing, reads every attempt's jobs, and URL-encodes the version", async () => {
+    const runs = [
+      runOf(5, {
+        status: "in_progress",
+        artifacts: [{ name: "npm-tarballs-2.1.0+b", workflow_run: { id: 5 } }],
+        jobs: [],
+      }),
+    ];
+    const { get, paths } = api(runs);
+    const earlier = await earlierRuns({
+      get,
+      repository,
+      version: "2.1.0+b",
+      runId: 999,
+    });
+    expect(earlier).toEqual([
+      { run: 5, status: "in_progress", conclusion: null },
+    ]);
+    expect(paths).toContain(
+      `repos/${repository}/actions/runs/5/artifacts?name=npm-tarballs-2.1.0%2Bb&per_page=100&page=1`,
+    );
+    expect(paths).toContain(
+      `repos/${repository}/actions/runs/5/jobs?filter=all&per_page=100&page=1`,
+    );
+    expect(earlierStagingProblem(earlier)).toMatch(/run 5 \(in_progress\)/);
+  });
+  it("fails closed on a page it can't read", async () => {
+    const runs = Array.from({ length: 150 }, (_, i) => runOf(i + 1));
+    const { get } = api(runs, { failOn: /page=2/ });
+    await expect(
+      earlierRuns({ get, repository, version: "2.1.0", runId: 999 }),
+    ).rejects.toThrow(/HTTP 502/);
+    await expect(
+      listAll(
+        async () => ({ message: "Bad credentials" }),
+        "repos/x/y/actions/runs/1/jobs",
+        "jobs",
+      ),
+    ).rejects.toThrow(/has no jobs list/);
   });
 });
 

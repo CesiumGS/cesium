@@ -28,9 +28,10 @@
 //    package.json names that package and version, and it isn't private;
 // 5. the versions and the dist-tag agree with scripts/release/lines.mjs;
 // 6. no earlier run of release.yml staged this version, or is staging it
-//    (`--earlier`: the publish job of each other run that uploaded
-//    `npm-tarballs-<version>`), so a record removed by a force push and
-//    pushed again refuses here, not at npm.
+//    (`--earlier`, from scripts/release/earlierRuns.mjs: the publish jobs
+//    of each other run of release.yml on the 2.0 branch, from a push in
+//    this repository, that uploaded `npm-tarballs-<version>`), so a record
+//    removed by a force push and pushed again refuses here, not at npm.
 // `--dry-run` skips checks 1, 2 and 6, passes `--dry-run` to npm and reports a
 // private package instead of refusing it, so the path can be tried on a
 // machine. A failure partway leaves the packages before it staged; the

@@ -23,8 +23,9 @@
 // `--split-merges` (ci.yml passes it on a push and in the merge queue),
 // each merge commit on that line is a part by itself too, so one branch's
 // change can't pass on another branch's changeset. Exits 1 with the reason
-// when a part fails the rule. In GitHub Actions its output runs with
-// workflow commands stopped, so a path can't inject one.
+// when a part fails the rule. In GitHub Actions its output, errors
+// included, goes to stdout with workflow commands stopped, and each path
+// in a message is a JSON string, so a path can't inject one.
 import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -34,6 +35,7 @@ import {
   isChangeset,
   judgeCommits,
   parseNameStatus,
+  quoted,
   releaseRecordProblems,
   withCommandsStopped,
 } from "./record.mjs";
@@ -108,7 +110,7 @@ export function checkChangesets(changed, base, head) {
     try {
       named.push(...namedPackages(head.changesets[path] ?? ""));
     } catch (error) {
-      return result({ ok: false, problem: `${path}: ${error.message}` });
+      return result({ ok: false, problem: `${JSON.stringify(path)}: ${error.message}` });
     }
   }
   const sortedNamed = [...new Set(named)].sort();
@@ -116,7 +118,7 @@ export function checkChangesets(changed, base, head) {
   // Why it isn't a release record, for a change that looks like one.
   const asRecord =
     deleted.length > 0
-      ? `; it consumes ${deleted.join(", ")} but isn't a release record: ${recordProblems.join("; ")}`
+      ? `; it consumes ${quoted(deleted)} but isn't a release record: ${recordProblems.join("; ")}`
       : "";
   if (touched.length === 0) {
     return result({ ok: true, named: sortedNamed });
@@ -205,38 +207,51 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error("changesetCheck: --base <ref> is required");
     process.exit(2);
   }
+  // Everything goes to stdout, the markers' stream, inside them: an error
+  // too, so a line on stderr can't land after the end marker.
+  const say = (line) => process.stdout.write(`changesetCheck: ${line}\n`);
   const failed = withCommandsStopped(() => {
+    try {
+      return checkAll();
+    } catch (error) {
+      say(`${error instanceof Error ? (error.stack ?? error.message) : error}`);
+      return true;
+    }
+  });
+  function checkAll() {
     const mergeBase = execFileSync("git", ["merge-base", base, head], {
       cwd: repo,
       encoding: "utf8",
+      // git's own message goes into the error, printed inside the markers.
+      stdio: ["ignore", "pipe", "pipe"],
     }).trim();
     const parts = checkParts(mergeBase, head, repo, { splitMerges: args.includes("--split-merges") });
     let failed = false;
     for (const { from, to, commits, record, merge, result } of parts) {
       const range = `${from.slice(0, 10)}..${to.slice(0, 10)}${record ? " (a release record)" : merge ? " (a merge)" : commits > 1 ? ` (${commits} commits)` : ""}`;
       if (!result.ok) {
-        console.error(`changesetCheck: ${range}: ${result.problem}`);
+        say(`${range}: ${result.problem}`);
         failed = true;
       } else if (result.touched.length === 0) {
-        console.log(`changesetCheck: ${range}: no published package changed`);
+        say(`${range}: no published package changed`);
       } else if (result.release) {
-        console.log(`changesetCheck: ${range}: a release record for ${result.touched.join(", ")}`);
+        say(`${range}: a release record for ${result.touched.join(", ")}`);
       } else {
-        console.log(
-          `changesetCheck: ${range}: ${result.added.length} changeset(s) for a change to ${result.touched.join(", ")}; they name ${result.named.join(", ")}`,
+        say(
+          `${range}: ${result.added.length} changeset(s) for a change to ${result.touched.join(", ")}; they name ${result.named.join(", ")}`,
         );
       }
       if (result.ok && !result.release && result.deleted.length > 0) {
-        console.log(
-          `changesetCheck: ${range}: note: it deletes ${result.deleted.join(", ")} outside a release record; the merge review checks that's right (a revert, say)`,
+        say(
+          `${range}: note: it deletes ${quoted(result.deleted)} outside a release record; the merge review checks that's right (a revert, say)`,
         );
       }
     }
     if (parts.length === 0) {
-      console.log("changesetCheck: no commits to check");
+      say("no commits to check");
     }
     return failed;
-  });
+  }
   if (failed) {
     process.exit(1);
   }

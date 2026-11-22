@@ -87,6 +87,15 @@ export function manifestChanges(before, after, siblings, options = {}) {
   return changes;
 }
 
+/**
+ * Paths as JSON strings, joined: a path is the push author's text, and in
+ * JSON a newline is `\n`, so no path can start a line of the log (a line
+ * like `::error::` is a workflow command).
+ */
+export function quoted(paths) {
+  return paths.map((path) => JSON.stringify(path)).join(", ");
+}
+
 function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -115,11 +124,11 @@ export function releaseRecordProblems(changed, base, head) {
   }
   const unconsumed = pending.filter((path) => left.includes(path));
   if (unconsumed.length > 0) {
-    problems.push(`it leaves ${unconsumed.join(", ")} unconsumed`);
+    problems.push(`it leaves ${quoted(unconsumed)} unconsumed`);
   }
   const added = left.filter((path) => !pending.includes(path));
   if (added.length > 0) {
-    problems.push(`it adds ${added.join(", ")}; a release record adds no changeset`);
+    problems.push(`it adds ${quoted(added)}; a release record adds no changeset`);
   }
   const outside = changed
     .map(({ path }) => path)
@@ -134,7 +143,7 @@ export function releaseRecordProblems(changed, base, head) {
     });
   if (outside.length > 0) {
     problems.push(
-      `it changes ${outside.join(", ")}; under packages/ and .changeset/, a release record changes only manifests, changelogs and changesets`,
+      `it changes ${quoted(outside)}; under packages/ and .changeset/, a release record changes only manifests, changelogs and changesets`,
     );
   }
   const before = new Map(base.packages.map((p) => [p.folder, p.manifest]));
@@ -145,7 +154,7 @@ export function releaseRecordProblems(changed, base, head) {
     const b = after.get(folder);
     if (!a || !b) {
       problems.push(
-        `it ${a ? "removes" : "adds"} the package in packages/${folder}; a release record adds or removes none`,
+        `it ${a ? "removes" : "adds"} the package in ${JSON.stringify(`packages/${folder}`)}; a release record adds or removes none`,
       );
       continue;
     }
@@ -425,8 +434,19 @@ export function pushIsRelease(before, head, options = {}) {
     return { release: false, version: headVersion, sha: "" };
   };
   const recovery = `Find the release record's commit (\`git log --first-parent -- packages/cesium/package.json\`). If it is a record, rerun this workflow with "Re-run all jobs" once the cause is fixed, or revert it and write the record again from the tip with \`npm run release:version\`, then push that commit by itself`;
+  // A new branch's first push: GitHub sends no before commit, so what the
+  // push adds can't be told apart from what other branches hold. Judging
+  // only the commits on no other remote branch would miss a record pushed
+  // to another branch first, so it fails unless the head's version is out.
   if (!before || /^0+$/.test(before)) {
-    return no("the push has no before commit (a new branch), so there is nothing to compare");
+    if (released(headVersion)) {
+      return no(
+        `the push has no before commit (a new branch), and the head's version ${headVersion} is already tagged or on npm`,
+      );
+    }
+    throw new Error(
+      `the push has no before commit (a new branch), so this can't tell whether it holds a release record, and the head's version ${headVersion} has no tag and isn't on npm. ${recovery}. If no record was pushed, nothing is lost`,
+    );
   }
   if (!/^[0-9a-f]{40}([0-9a-f]{24})?$/.test(before)) {
     return no(`the before commit ${JSON.stringify(before)} isn't a commit id`);
@@ -471,11 +491,51 @@ export function pushIsRelease(before, head, options = {}) {
   if (judged.length === 0) {
     return notRelease(`the push holds no commits${ancestor ? "" : " of its own"}`);
   }
-  const records = judged.filter((c) => !c.carried && c.problems.length === 0);
-  const strays = judged.filter((c) => !c.carried && c.problems.length > 0 && c.raises);
+  // When the before commit is an ancestor, a record or a stray at or below
+  // its version, or at a version already out, is a stale copy a merged side
+  // branch carries (a record rewritten by `pull --rebase`, say, whose
+  // rewrite released): the push can't release it, and it can't hide a
+  // version the head raises, since notRelease still checks the head.
+  const stale = (c) =>
+    ancestor &&
+    parseVersion(`${beforeVersion}`) !== undefined &&
+    parseVersion(`${c.version}`) !== undefined &&
+    (compareVersions(c.version, beforeVersion) <= 0 || released(c.version));
+  const candidates = judged.filter((c) => !c.carried && (c.problems.length === 0 || c.raises));
+  for (const c of candidates.filter(stale)) {
+    log(
+      `record: ${c.commit}: ${c.problems.length === 0 ? "a release record" : "a commit that moves the umbrella's version up"} for ${c.version}, at or below the before commit's ${beforeVersion} or already released; a stale copy from a merged side branch, skipped`,
+    );
+  }
+  const live = candidates.filter((c) => !stale(c));
+  const records = live.filter((c) => c.problems.length === 0);
+  const strays = live.filter((c) => c.problems.length > 0);
+  // Only a force push gets here with a version already out (stale skips
+  // them otherwise). Such a commit is left as it is, never reverted.
+  const named = (list) => list.map((c) => `${c.commit} (${c.version})`).join(" and ");
+  const leave = (list) => {
+    const kept = list.filter((c) => released(c.version));
+    return {
+      kept,
+      rest: list.length - kept.length,
+      note:
+        kept.length === 0
+          ? ""
+          : ` ${named(kept)} ${kept.length === 1 ? "is" : "are"} already tagged or on npm: leave ${kept.length === 1 ? "it" : "them"} as ${kept.length === 1 ? "it is" : "they are"}.`,
+    };
+  };
   if (records.length > 1) {
+    const { kept, rest, note } = leave(records);
+    const revert =
+      kept.length === 0
+        ? rest === 2
+          ? "revert both"
+          : `revert all ${rest}`
+        : rest === 1
+          ? "revert the other"
+          : `revert the other ${rest}`;
     throw new Error(
-      `the push holds ${records.length} release records, ${records.map((c) => `${c.commit} (${c.version})`).join(" and ")}; a push holds at most one, so none is staged. Push each record by itself (up to the first, then the rest). Once they have landed together, neither can release: revert both, then write one record from the tip with \`npm run release:version\``,
+      `the push holds ${records.length} release records, ${named(records)}; a push holds at most one, so none is staged. Push each record by itself (up to the first, then the rest).${note} ${rest === 0 ? "Nothing is lost: the next push judges them as stale" : `Once they have landed together, none can release: ${revert}, then write one record from the tip with \`npm run release:version\``}`,
     );
   }
   if (strays.length > 0) {
@@ -483,8 +543,17 @@ export function pushIsRelease(before, head, options = {}) {
       (c) =>
         `${c.commit} moves the umbrella's version up to ${c.version} but isn't a release record: ${c.problems.join("; ")}`,
     );
+    const { kept, rest, note } = leave(strays);
+    const revert =
+      kept.length === 0
+        ? strays.length === 1
+          ? "the commit"
+          : "each commit"
+        : rest === 1
+          ? "the other"
+          : "the others";
     throw new Error(
-      `${lines.join("\n")}\nThat version would never release. Revert the commit, then write the record again from the tip with \`npm run release:version\``,
+      `${lines.join("\n")}\n${rest === 0 ? `${note.trim()} Nothing is lost: the next push judges ${strays.length === 1 ? "it" : "them"} as stale` : `That version would never release.${note} Revert ${revert}, then write the record again from the tip with \`npm run release:version\``}`,
     );
   }
   if (records.length === 0) {
@@ -524,7 +593,10 @@ export function pushIsRelease(before, head, options = {}) {
  * Runs `fn` with GitHub's workflow commands stopped, in GitHub Actions
  * only, so a path or a message that holds a line like `::error::` or
  * `::stop-commands::` is printed, not obeyed. The token is random for each
- * run, as GitHub's workflow-commands page asks.
+ * run, as GitHub's workflow-commands page asks. The markers go to stdout,
+ * so `fn` writes everything there too, errors included: a line on stderr
+ * can land after the end marker. Paths in messages are JSON strings as
+ * well (quoted), so a newline in one can't start a line.
  */
 export function withCommandsStopped(fn, env = process.env, write = (line) => process.stdout.write(line)) {
   if (env.GITHUB_ACTIONS !== "true") {
@@ -559,7 +631,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       }
       return 0;
     } catch (error) {
-      console.error(`record: ${error instanceof Error ? error.message : error}`);
+      // stdout, as the log is, so the message lands inside the markers.
+      process.stdout.write(`record: ${error instanceof Error ? error.message : error}\n`);
       return 1;
     }
   });

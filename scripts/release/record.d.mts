@@ -27,6 +27,9 @@ export function manifestChanges(
 /** Why a change isn't a release record; an empty list when it is one. */
 export function releaseRecordProblems(changed: readonly Changed[], base: Tree, head: Tree): string[];
 
+/** Paths as JSON strings, joined, so a newline in one can't start a line of the log. */
+export function quoted(paths: readonly string[]): string;
+
 /** The tree at a git revision. */
 export function gitTree(rev: string, cwd?: string): Tree;
 
