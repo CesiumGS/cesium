@@ -27,6 +27,7 @@ import { workApi } from "./scripts/vitePluginWork.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
 import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { isRunFile } from "./bench/suite/identity.mjs";
+import { pinned1x } from "./bench/suite/pinned1x.mjs";
 import { studiesEndpoint } from "./bench/suite/studiesEndpoint.mjs";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
@@ -35,14 +36,13 @@ import { smlibDirectory } from "./scripts/smlibTools.mjs";
 import { occtDirectory } from "./scripts/occtTools.mjs";
 import { stepSamplesDirectory } from "./scripts/stepSamples.mjs";
 
-// CesiumJS 1.x core math, used only as a test oracle for parity checks.
-const oracle = fileURLToPath(new URL("../core/Source", import.meta.url));
-// Built CesiumJS 1.x (`npm run build` at the repo root), for the parity
-// harness. CESIUM_BUILD_DIR overrides it (benchmark snapshots of a commit
-// use the main checkout's build).
-const cesium1x =
-  process.env.CESIUM_BUILD_DIR ??
-  fileURLToPath(new URL("../../Build/CesiumUnminified", import.meta.url));
+// CesiumJS 1.x, pinned: the workspace root's cesium-1x dev dependency
+// (bench/suite/pinned1x.mjs). Its unminified build is the parity harness's
+// 1.x at /cesium1x/, and its core and engine modules are test oracles for
+// parity checks (`cesium-oracle`, `cesium-engine-oracle`), resolved from
+// its own dependencies.
+const pinned = pinned1x();
+const cesium1x = pinned.build;
 
 const contentTypes: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -379,8 +379,9 @@ const occt = occtDirectory();
 // NIST's STEP test models (the b-rep example's "STEP file" scene): the store
 // `npm run setup` fills, or STEP_SAMPLES_DIR (scripts/stepSamples.mjs), looked
 // up per request. Public domain, served at /step-samples/.
-// Sample models and tilesets checked into the 1.x repo, for parity tests.
-const specsData = fileURLToPath(new URL("../../Specs/Data", import.meta.url));
+// 1.x's sample models and tilesets that 2.0 uses, moved from its Specs/Data
+// (CS-611), served at /specs-data/ for parity tests, Dyno and the examples.
+const specsData = fileURLToPath(new URL("test/fixtures/1x", import.meta.url));
 
 // The frames data `npm run setup` fills (scripts/frameData.mjs), served at
 // /frames-data/. The data-store tests (test/data) read it, so they only run
@@ -477,11 +478,6 @@ export default defineConfig({
     serveBenchResults("/bench-results", benchResults),
     serveDirectory("/bench-results", benchResults),
     serveReleases("/cesium-release", cesiumReleases),
-    // 1.x built at git refs, in snapshot worktrees (<repo>/.bench/<sha>).
-    serveDirectory(
-      "/cesium-ref",
-      fileURLToPath(new URL("../../.bench", import.meta.url)),
-    ),
     ...(framesData
       ? [
           serveDirectory("/frames-data", framesData, {
@@ -533,11 +529,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "cesium-oracle": oracle,
+      "cesium-oracle": pinned.core.dir,
       // 1.x scene code (tile bounding volumes), also only for parity tests.
-      "cesium-engine-oracle": fileURLToPath(
-        new URL("../engine/Source", import.meta.url),
-      ),
+      "cesium-engine-oracle": pinned.engine.dir,
     },
   },
   test: {

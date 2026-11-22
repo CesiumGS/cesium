@@ -10,18 +10,16 @@
 // (BENCH_URL=<origin> or --url uses an existing server instead).
 // BENCH_COMMIT=<rev> or --commit <rev> (e.g. HEAD) serves that commit from a
 // snapshot worktree under .bench/ instead of the working tree, so
-// development continues while benchmarks run (see snapshot.mjs). The
-// snapshot serves the 1.x build from CESIUM_BUILD_DIR, by default
-// <repository>/Build/CesiumUnminified. In a linked worktree (an executor's)
-// that folder doesn't exist: the 1.x build is the main checkout's. Suites
-// that load 1.x (baseline, and the parity suites) then need
-// CESIUM_BUILD_DIR set to the main checkout's Build/CesiumUnminified.
+// development continues while benchmarks run (see snapshot.mjs). Every
+// commit's 1.x is the pinned one (cesium-1x, in the repository's
+// node_modules): a commit from before CS-611 reads it from
+// CESIUM_BUILD_DIR, which this sets.
 // The Slang suite needs SLANG_WASM_DIR, as for the dev server.
 //
 // Chromium flags: WebGPU developer features (unquantized timestamp queries)
 // and the high-performance GPU on dual-GPU machines. Results record the
 // adapter so numbers from different GPUs are never mixed up.
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -252,15 +250,12 @@ export async function main(names = [], { env = process.env } = {}) {
       const snap = snapshot(env.BENCH_COMMIT, here);
       root = snap.root;
       commit = snap.sha;
-      // The repository's 1.x build (in a linked worktree, the main
-      // checkout's, through CESIUM_BUILD_DIR), and its node_modules
-      // (resolved by walking up from .bench/<sha>), served without links.
-      env.CESIUM_BUILD_DIR ??= join(snap.repo, "Build", "CesiumUnminified");
-      if (!existsSync(env.CESIUM_BUILD_DIR)) {
-        console.warn(
-          `warning: no 1.x build at ${env.CESIUM_BUILD_DIR}; suites that load 1.x (baseline, parity) need CESIUM_BUILD_DIR set to the main checkout's Build/CesiumUnminified`,
-        );
-      }
+      // The repository's node_modules (resolved by walking up from
+      // .bench/<sha>), served without links, with the pinned 1.x in it.
+      // Commits from before CS-611 read their 1.x build from
+      // CESIUM_BUILD_DIR.
+      const { pinned1x } = await import("../pinned1x.mjs");
+      env.CESIUM_BUILD_DIR ??= pinned1x().build;
       allow = [snap.repo];
       console.log(`commit ${commit.slice(0, 12)} (${root})`);
     }

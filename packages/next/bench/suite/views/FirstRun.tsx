@@ -11,7 +11,7 @@ import { Page, toast, useRuns } from "./common.tsx";
 
 /**
  * The guided first run (DESIGN.md, Help): what Dyno is for, the setup
- * checked live (WebGPU, the 1.x builds, the results directory), one
+ * checked live (WebGPU, the pinned 1.x, the results directory), one
  * command for a first measured run, and where to look afterwards. Shown
  * at /start, and wherever a view needs runs and there are none.
  */
@@ -61,11 +61,11 @@ function useNewestRelease(): { version?: string; installed: boolean } {
   return { version, installed: !!version && installed.includes(version) };
 }
 
-function useChecks(): Record<"webgpu" | "repo", Check> {
+function useChecks(): Record<"webgpu" | "pinned", Check> {
   const checking: Check = { state: "checking", detail: "Checking…" };
   const [checks, setChecks] = useState({
     webgpu: checking,
-    repo: checking,
+    pinned: checking,
   });
   useEffect(() => {
     let canceled = false;
@@ -101,16 +101,18 @@ function useChecks(): Record<"webgpu" | "repo", Check> {
         .catch(() => false);
     void exists("/cesium1x/Cesium.js").then((ok) =>
       set(
-        "repo",
+        "pinned",
         ok
-          ? { state: "ready", detail: "This repository's 1.x build is there." }
+          ? {
+              state: "ready",
+              detail: "The pinned 1.x (cesium-1x) is installed.",
+            }
           : {
-              state: "optional",
+              state: "missing",
               detail: (
                 <>
-                  To measure this repository's 1.x (configuration{" "}
-                  <code>1.x</code>), run <code>npm run build</code> at the
-                  repository root.
+                  The parity pages load the pinned 1.x (<code>cesium-1x</code>):
+                  run <code>npm ci</code> at the repository root.
                 </>
               ),
             },
@@ -209,7 +211,7 @@ export function FirstRun() {
           <div className="first-run-checks" role="list">
             <CheckRow label="WebGPU" check={checks.webgpu} />
             <CheckRow label="Released 1.x" check={release} />
-            <CheckRow label="Repository 1.x" check={checks.repo} />
+            <CheckRow label="Pinned 1.x" check={checks.pinned} />
             <CheckRow
               label="Results"
               check={{

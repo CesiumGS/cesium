@@ -1,8 +1,8 @@
 /**
  * CesiumJS 1.x in Dyno: a page global, so a page holds one build. The
- * explorer may want a released build ("1.146.0"), Lab pages this
- * repository's ("repo"); asking for another than the one loaded means
- * loading the page again.
+ * explorer may want a released build ("1.146.0"), Lab pages the pinned one
+ * ("pinned": the workspace root's cesium-1x, served at /cesium1x/); asking
+ * for another than the one loaded means loading the page again.
  */
 
 /** The 1.x build in this page, if any (a global: one per page). */
@@ -12,7 +12,7 @@ let cesiumBuild: { build: string; loaded: Promise<void> } | undefined;
 export async function ensureCesium(build: string): Promise<boolean> {
   if (!cesiumBuild) {
     const base =
-      build === "repo"
+      build === "pinned"
         ? "/cesium1x/"
         : `/cesium-release/${build}/package/Build/Cesium/`;
     (globalThis as { CESIUM_BASE_URL?: string }).CESIUM_BASE_URL = base;

@@ -48,6 +48,7 @@ import { gzipSync } from "node:zlib";
 import ts from "typescript";
 import { verifiedDownload } from "./verifiedDownload.mjs";
 import { describeReference, writeReference } from "./apiReference.mjs";
+import { pinned1x } from "../bench/suite/pinned1x.mjs";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -82,15 +83,15 @@ export function readSurface(root = packageRoot) {
 }
 
 /**
- * 1.x's public names, read from its source: every file `packages/engine`
- * and `packages/widgets` export, except those whose doc comment says
- * `@private`. A file in `Core/Deprecated` re-exports `packages/core`, where
- * its doc comment is. A file with no doc comment on its export isn't in the
- * reference docs, so it isn't counted.
+ * 1.x's public names, read from the source of the pinned release (cesium-1x,
+ * bench/suite/pinned1x.mjs): every file `@cesium/engine` and `@cesium/widgets`
+ * export, except those whose doc comment says `@private`. A file in
+ * `Core/Deprecated` re-exports `@cesium/core`, where its doc comment is. A
+ * file with no doc comment on its export isn't in the reference docs, so it
+ * isn't counted.
  */
-export function readOneX(root = packageRoot) {
-  const packages = dirname(root);
-  const json = (path) => JSON.parse(readFileSync(path, "utf8"));
+export function readOneX() {
+  const pinned = pinned1x();
   const files = {};
   const skip = new Set(["ThirdParty", "Workers", "Shaders", "Assets"]);
   const isPublic = (text, name) => {
@@ -112,7 +113,7 @@ export function readOneX(root = packageRoot) {
         }
       } else if (entry.name.endsWith(".js") && !entry.name.startsWith("_")) {
         const name = entry.name.slice(0, -3);
-        const core = join(packages, "core/Source", entry.name);
+        const core = join(pinned.core.dir, entry.name);
         const source =
           rel === join("Core", "Deprecated") && existsSync(core) ? core : path;
         const text = readFileSync(source, "utf8");
@@ -123,11 +124,11 @@ export function readOneX(root = packageRoot) {
       }
     }
   };
-  walk(join(packages, "engine/Source"), "");
-  walk(join(packages, "widgets/Source"), "");
+  walk(pinned.engine.dir, "");
+  walk(pinned.widgets.dir, "");
   const names = Object.keys(files).sort();
   return {
-    version: json(join(dirname(packages), "package.json")).version,
+    version: pinned.version,
     total: names.length,
     names,
     files,
@@ -1094,7 +1095,7 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
     },
     surface: readSurface(root),
     oneX: (({ version, total, names }) => ({ version, total, names }))(
-      readOneX(root),
+      readOneX(),
     ),
     layers: readLayers(root),
     bundles: bundles ? await readBundles(root) : previous?.bundles,

@@ -1,7 +1,7 @@
 // The benchmark content store (docs/design/benchmark-suite.md, "Manifests and storage"): datasets pinned by checksum.
 // A dataset's checksum is the SHA-256 of its sorted file list (path and
 // each file's SHA-256), so any changed, added or removed file changes it.
-// Local datasets (Specs data) are hashed in place; mirrored datasets are
+// Local datasets (1.x's test data, test/fixtures/1x) are hashed in place; mirrored datasets are
 // downloaded into a content-addressed store outside the repository
 // (BENCH_STORE, default ~/.cesium-bench/store) and verified the same way.
 import { createHash } from "node:crypto";
@@ -19,8 +19,11 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-/** This repository's Specs/Data, served as /specs-data. */
-export const SPECS_DATA = join(here, "..", "..", "..", "..", "Specs", "Data");
+/**
+ * The 1.x test data 2.0 uses, moved from 1.x's Specs/Data (CS-611) and
+ * served as /specs-data.
+ */
+export const SPECS_DATA = join(here, "..", "..", "test", "fixtures", "1x");
 
 export function storeDirectory() {
   return process.env.BENCH_STORE ?? join(homedir(), ".cesium-bench", "store");

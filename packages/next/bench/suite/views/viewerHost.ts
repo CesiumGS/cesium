@@ -50,7 +50,7 @@ export type Source =
   | { kind: "imodel"; id: string }
   | { kind: "city" };
 
-/** Khronos and Cesium sample models in Specs/Data/Models/glTF-2.0. */
+/** Khronos and Cesium sample models in test/fixtures/1x/Models/glTF-2.0. */
 export const MODELS = [
   "CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf",
   "BoomBox/glTF/BoomBox.gltf",
@@ -66,7 +66,7 @@ export const MODELS = [
   "Box/glTF/Box.gltf",
 ];
 
-/** Public tilesets in Specs/Data/Cesium3DTiles. */
+/** Public tilesets in test/fixtures/1x/Cesium3DTiles. */
 export const TILESETS = [
   "Batched/BatchedWithBatchTable/tileset.json",
   "Batched/BatchedWithBatchTableBinary/tileset.json",

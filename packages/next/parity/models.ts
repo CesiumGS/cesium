@@ -21,7 +21,7 @@ declare const Cesium: any;
 const TEMPLATE = `
 <h1>Model parity: CesiumJS 1.x Model vs 2.0 glTF path (unlit)</h1>
 <p>
-  Khronos sample models from Specs/Data, rendered unlit in both engines
+  Khronos sample models from 1.x's test data, rendered unlit in both engines
   (1.x: CustomShader with LightingModel.UNLIT) from the same camera, so the
   comparison isolates geometry, node transforms, axis conventions, UVs,
   vertex colors, textures and filtering. PBR lighting parity follows in the
@@ -58,7 +58,7 @@ const deg = Math.PI / 180;
 const ellipsoid = Ellipsoid.WGS84;
 const SITE = fromDegrees(-75.1652, 39.9526, 50);
 
-/** Khronos sample models in Specs/Data/Models/glTF-2.0. */
+/** Khronos sample models in test/fixtures/1x/Models/glTF-2.0. */
 const MODELS = [
   "Box/glTF/Box.gltf",
   "BoxTextured/glTF-Binary/BoxTextured.glb",

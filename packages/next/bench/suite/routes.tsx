@@ -225,7 +225,7 @@ export interface SceneLiveSearch {
   right?: string;
   /** Place on the camera path, 0 to 1. */
   t?: number;
-  /** The 1.x build this page loaded ("repo" or a version). */
+  /** The 1.x build this page loaded ("pinned" or a version). */
   cesium?: string;
 }
 const liveSearch = (s: Record<string, unknown>): SceneLiveSearch =>

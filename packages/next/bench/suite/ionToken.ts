@@ -1,4 +1,4 @@
-import ionSource from "../../../engine/Source/Core/Ion.js?raw";
+import ionSource from "cesium-engine-oracle/Core/Ion.js?raw";
 
 /**
  * The Cesium ion token every Dyno view, example, Lab page and benchmark

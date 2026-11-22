@@ -19,7 +19,7 @@ export type DatasetSource =
       token?: "default" | "env";
       google?: boolean;
     }
-  /** Served from this repository's Specs data (`/specs-data/...`). */
+  /** Served from 1.x's test data in test/fixtures/1x (`/specs-data/...`). */
   | { kind: "specs"; path: string }
   /** A URL (public data, or a private share). */
   | { kind: "url"; url: string }

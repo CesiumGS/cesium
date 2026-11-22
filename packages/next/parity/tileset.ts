@@ -80,7 +80,7 @@ interface Source {
   blend?: { mode: "replace" | "mix"; amount?: number };
 }
 
-/** Public tilesets from Specs/Data. */
+/** Public tilesets from 1.x's test data (test/fixtures/1x). */
 const PUBLIC: Source[] = [
   {
     label: "BatchedWithBatchTable (b3dm, RTC_CENTER, JSON batch table)",

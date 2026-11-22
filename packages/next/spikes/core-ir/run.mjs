@@ -8,12 +8,13 @@
 import { build } from "esbuild";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { pinned1x } from "../../bench/suite/pinned1x.mjs";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const engine = fileURLToPath(
-  new URL("../../../engine/Source", import.meta.url),
-);
-const core = fileURLToPath(new URL("../../../core/Source", import.meta.url));
+// The 1.x styling oracle comes from the pinned release (cesium-1x).
+const pinned = pinned1x();
+const engine = pinned.engine.dir;
+const core = pinned.core.dir;
 mkdirSync(`${here}out`, { recursive: true });
 
 await build({

@@ -36,7 +36,7 @@ export interface HarnessInfo {
   page: string;
   /** The global the runner calls (`runModels`). */
   entry: string;
-  /** Needs this repository's 1.x build (`/cesium1x/`) as a page global. */
+  /** Needs the pinned 1.x's build (`/cesium1x/`, cesium-1x) as a page global. */
   cesium1x?: boolean;
   /** The module, loaded when opened. */
   load: () => Promise<Harness>;

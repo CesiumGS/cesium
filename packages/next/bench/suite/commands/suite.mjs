@@ -104,7 +104,8 @@ import {
   sceneDatasets,
   unsupportedReason,
 } from "../manifest.mjs";
-import { fetchDatasets, verify } from "../store.mjs";
+import { SPECS_DATA, fetchDatasets, verify } from "../store.mjs";
+import { pinned1x } from "../pinned1x.mjs";
 import { releaseList } from "../release.mjs";
 import { describeBuild, resolveEngine, treeRef } from "../engineBuilds.mjs";
 import { parseEngine } from "../engines.mjs";
@@ -1016,17 +1017,13 @@ async function run() {
       `frozen ${frozen.dirty ? "working tree" : "HEAD"} at ${frozen.sha.slice(0, 12)}: edits from now on don't reach this run`,
     );
   }
-  const repoRoot = join(root, "..", "..");
   // Served beside production builds (the dev server's own middleware).
   const directories = {
-    "/cesium1x":
-      process.env.CESIUM_BUILD_DIR ??
-      join(repoRoot, "Build", "CesiumUnminified"),
-    "/specs-data": join(repoRoot, "Specs", "Data"),
+    "/cesium1x": pinned1x().build,
+    "/specs-data": SPECS_DATA,
     "/cesium-release":
       process.env.BENCH_CESIUM_DIR ??
       join(homedir(), ".cesium-bench", "cesium"),
-    "/cesium-ref": join(repoRoot, ".bench"),
   };
   const log = (line) => console.log(line);
   // Snapshot servers for 2.0 at other refs, one per worktree. Pages from

@@ -34,6 +34,12 @@ packages/engine/Source/ThirdParty/**
 
 packages/widgets/Source/ThirdParty/**
 
+# 2.0's pinned copy of a third-party build, kept byte for byte.
+packages/next/src/io/ThirdParty/**
+
+# 1.x's test data, moved as it was (CS-611).
+packages/next/test/fixtures/1x/**
+
 packages/sandcastle/node_modules/**
 packages/sandcastle/templates/Sandcastle.d.ts
 packages/sandcastle/templates/Sandcastle.js

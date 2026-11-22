@@ -1,6 +1,6 @@
 // One-time setup of a machine for @cesium/next (README "Setup"):
-//  - the repository's 1.x build (`npm run build` at the repo root), which the
-//    parity harness and Dyno's "this repository's 1.x" engine load;
+//  - a check that the pinned 1.x (cesium-1x, installed by `npm ci` at the
+//    repository root) is there: the parity harness and Dyno load it;
 //  - the CesiumJS releases the benchmark catalog runs by default, fetched
 //    from npm into the store outside the repo (~/.cesium-bench/cesium, or
 //    BENCH_CESIUM_DIR; bench/suite/release.mjs), which Dyno's 1.x engines
@@ -28,13 +28,13 @@
 // reports whether the local one is current.
 // Nothing here is committed: all of it lives outside version control.
 // A machine also gets its name in benchmark runs (BENCH_MACHINE).
-// Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+// Usage: npm run setup --workspace @cesium/next [-- --frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { machineAlias } from "../bench/suite/identity.mjs";
+import { pinned1x } from "../bench/suite/pinned1x.mjs";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
 import { ensureFrameData, parseGrids, parseSpan } from "./frameData.mjs";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
@@ -69,8 +69,6 @@ const gridSets = parseGrids(
 );
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repo = join(here, "..", "..", "..");
-
 // This machine's name in benchmark runs: their ids end with it
 // (bench/suite/identity.mjs). By default the operating system and the GPU's
 // vendor, never the host name; BENCH_MACHINE=<alias> picks another, which a
@@ -79,22 +77,10 @@ console.log(
   `benchmark machine: ${machineAlias()} (BENCH_MACHINE=<alias> names it otherwise)`,
 );
 
-if (!process.argv.includes("--skip-build")) {
-  if (existsSync(join(repo, "Build", "CesiumUnminified", "Cesium.js"))) {
-    console.log("1.x build: present (Build/CesiumUnminified)");
-  } else {
-    console.log("1.x build: building (npm run build at the repo root)…");
-    execFileSync(
-      process.platform === "win32" ? "npm.cmd" : "npm",
-      ["run", "build"],
-      {
-        cwd: repo,
-        stdio: "inherit",
-        shell: process.platform === "win32",
-      },
-    );
-  }
-}
+// The pinned 1.x (cesium-1x, a dev dependency of the workspace root), which
+// the parity harness and Dyno's default 1.x engine load: `npm ci` installs it.
+const pinned = pinned1x();
+console.log(`1.x: cesium@${pinned.version}, pinned (node_modules/cesium-1x)`);
 
 const catalog = JSON.parse(
   readFileSync(

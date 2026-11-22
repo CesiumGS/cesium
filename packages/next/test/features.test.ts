@@ -10,7 +10,7 @@ import {
   NULL_FEATURE,
 } from "../src/io/features.ts";
 
-const data = new URL("../../../Specs/Data/", import.meta.url);
+const data = new URL("fixtures/1x/", import.meta.url);
 const bytes = (path: string) =>
   new Uint8Array(readFileSync(new URL(path, data)));
 const glbMagic = (glb: Uint8Array) =>

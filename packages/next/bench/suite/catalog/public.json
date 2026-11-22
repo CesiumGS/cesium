@@ -337,7 +337,7 @@
         "name": "CC BY 4.0 (© 2017 Cesium; the Cesium logo is a trademark)",
         "status": "redistributable",
         "source": "https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/Models/CesiumMilkTruck/README.md",
-        "notes": "Already in this repository's Specs data."
+        "notes": "Already in this repository, in 1.x's test data (test/fixtures/1x)."
       }
     }
   ],

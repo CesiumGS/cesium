@@ -665,9 +665,8 @@ export const TABLE = {
       "With no suite, runs every one. Pages read some settings from the environment",
       "(GROUP, MODELS_ONLY, ION_ASSET, AT, SCENARIOS, POLICIES, THROTTLE, ALLOC_GLARE, …;",
       "see suite/commands/lab.mjs).",
-      "--commit serves a snapshot worktree under .bench/. In a linked worktree (an",
-      "executor's) suites that load 1.x (baseline, parity) need CESIUM_BUILD_DIR set",
-      "to the main checkout's Build/CesiumUnminified: the snapshot has no 1.x build.",
+      "--commit serves a snapshot worktree under .bench/. Suites that load 1.x",
+      "(baseline, parity) load the pinned one, cesium-1x, at every commit.",
     ],
     async run({ args, opts, env }) {
       const { LAB_SUITES, LabUsage, main } = await import("./lab.mjs");

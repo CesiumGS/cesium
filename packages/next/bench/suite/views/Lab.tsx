@@ -162,7 +162,7 @@ export function LabPage() {
     setError(undefined);
     void (async () => {
       try {
-        if (info.cesium1x && !(await ensureCesium("repo"))) {
+        if (info.cesium1x && !(await ensureCesium("pinned"))) {
           // A released 1.x is loaded (the explorer's): a page holds one.
           location.reload();
           return;

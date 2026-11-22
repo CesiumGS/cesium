@@ -5,9 +5,10 @@
 //
 // The commit is checked out once into a git worktree at <repo>/.bench/<sha>
 // (gitignored). It contains no links of any kind: Node's resolution walks up
-// from there to the repo's own node_modules, the 1.x build is passed to the
-// Vite config through CESIUM_BUILD_DIR, and the local secrets file is
-// copied as a plain file. This module never deletes anything; remove old
+// from there to the repo's own node_modules (where the pinned 1.x,
+// cesium-1x, is), and the local secrets file is copied as a plain file.
+// Commits from before CS-611 read their 1.x build from CESIUM_BUILD_DIR,
+// which the Lab sets to the pinned one (suite/commands/lab.mjs). This module never deletes anything; remove old
 // worktrees by hand with `git worktree remove .bench/<sha>` (no --force).
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync } from "node:fs";

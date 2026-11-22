@@ -42,7 +42,7 @@ import {
   installGpuGlobals,
 } from "./fakeGpu.ts";
 
-const data = new URL("../../../Specs/Data/Cesium3DTiles/", import.meta.url);
+const data = new URL("fixtures/1x/Cesium3DTiles/", import.meta.url);
 const specs = (path: string) =>
   new Uint8Array(readFileSync(new URL(path, data)));
 
