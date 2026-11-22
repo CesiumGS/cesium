@@ -13,13 +13,20 @@
     "full_suite": [
       "cd packages/next && npm test"
     ],
-    "mode": "queue",
+    "mode": "owner",
     "owner_paths": [
       "packages/next/api/surface.txt",
       "packages/next/src/index.ts",
       "packages/next/src/ir/FORMAT.md",
       "packages/next/package.json",
-      "package.json"
+      "package.json",
+      ".human-in-the-lead/",
+      "AGENTS.md",
+      "packages/next/AGENTS.md",
+      ".husky/",
+      ".github/",
+      ".claude/",
+      "packages/next/.claude/"
     ]
   },
   "dispatch": {
