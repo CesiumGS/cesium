@@ -34,8 +34,6 @@ CS-190 Vector drawing and the styling language
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
-  CS-901  Which USD reader does CS-559 use, from CS-900's comparison? (owner)
-      waited on by CS-902, CS-907, CS-908, CS-913, CS-914
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -53,19 +51,10 @@ CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
-  CS-922  CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist? (owner)
-  CS-923  CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule? (owner)
-  CS-930  Merge CS-780, Engine.errors as an emitter (owner)
-  CS-934  Merge CS-815, stable identity and semantic labels (owner)
-  CS-935  CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1? (owner)
-  CS-936  CS-815 Q4: how does a bigint StableId reach JSON? (owner)
 
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617, CS-932
 
-CS-10 Cesium IR
-  CS-920  Do a route's residual statements go through Cesium IR's emitters now, or with CS-56? (owner)
-
-24 open decision(s) for owner
+16 open decision(s) for owner
 ```

@@ -99,9 +99,10 @@ graph LR
     CS_838["CS-838 Merge CS-809, one fetch and credential provider for every reque"]:::done
     CS_839["CS-839 Merge CS-814, camera records with intrinsics, an off-center pri"]:::done
     CS_860["CS-860 Merge CS-837, Cesium IR's JSON format is experimental at cesium"]:::done
-    CS_920["CS-920 Do a route's residual statements go through Cesium IR's emitter"]:::decision
-    CS_921["CS-921 A compiled route's center term subtracts its highs as integers "]:::proposed
+    CS_920["CS-920 Do a route's residual statements go through Cesium IR's emitter"]:::done
+    CS_921["CS-921 A compiled route's center term subtracts its highs as integers "]:::open
     CS_925["CS-925 Merge CS-54, routes on both emitters"]:::done
+    CS_941["CS-941 A compiled route's residual statements go through Cesium IR's e"]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -453,15 +454,15 @@ graph LR
     CS_853["CS-853 Merge CS-832, the design for semantic metadata and picking"]:::done
     CS_898["CS-898 64-bit integer properties keep their exact value"]:::done
     CS_900["CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD"]:::done
-    CS_901["CS-901 Which USD reader does CS-559 use, from CS-900's comparison?"]:::decision
+    CS_901["CS-901 Which USD reader does CS-559 use, from CS-900's comparison?"]:::done
     CS_902["CS-902 CS-559's scope, from the chosen reader and CS-833's study"]:::open
     CS_903["CS-903 Label precedence: the bound material, taxonomy aliases and Geom"]:::open
     CS_904["CS-904 Source-declared axis and scale, corrected through placement"]:::open
     CS_906["CS-906 Variant selections and payload policy as open options, and thei"]:::open
     CS_908["CS-908 Gaussian splats from USD's ParticleField into the splat render "]:::proposed
     CS_909["CS-909 Merge CS-898, 64-bit integer properties keep their exact value"]:::done
-    CS_913["CS-913 The subset reader's composition faults on broken assets, tested"]:::proposed
-    CS_914["CS-914 OpenUSD in WebAssembly as a test oracle for the USD source"]:::proposed
+    CS_913["CS-913 The subset reader's composition faults on broken assets, tested"]:::open
+    CS_914["CS-914 OpenUSD in WebAssembly as a test oracle for the USD source"]:::open
     CS_917["CS-917 Merge CS-900, three USD readers compared in Dyno"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
@@ -602,7 +603,7 @@ graph LR
     CS_851["CS-851 npm run handbook type-checks again: handbook/viewer/workerPool."]:::open
     CS_852["CS-852 Merge CS-850, eslint passes on main again (the unused PostStage"]:::done
     CS_912["CS-912 Dyno's rough edges found by CS-611: a hang after a throwing sui"]:::proposed
-    CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::proposed
+    CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::open
     CS_926["CS-926 dyno lab exits nonzero when a row fails, not only on console er"]:::proposed
     CS_928["CS-928 importBoundary's globe-only Viewer bundle test fails in full ru"]:::proposed
   end
@@ -722,22 +723,24 @@ graph LR
     CS_763["CS-763 Engine.create takes a signal: an aborted create releases its de"]:::open
     CS_769["CS-769 Merge CS-430, the WebGPU seams audited"]:::done
     CS_771["CS-771 The seam bypass tests catch the five plants CS-430's audit foun"]:::proposed
-    CS_780["CS-780 Engine.errors becomes an emitter: errors.on('support', …) reach"]:::open
+    CS_780["CS-780 Engine.errors becomes an emitter: errors.on('support', …) reach"]:::done
     CS_813["CS-813 A view hands out render products: depth, normals, motion vector"]:::open
     CS_814["CS-814 A camera record carries intrinsics, an off-center principal poi"]:::done
-    CS_815["CS-815 Scene content has stable identity and semantic labels that don'"]:::open
+    CS_815["CS-815 Scene content has stable identity and semantic labels that don'"]:::done
     CS_816["CS-816 The host steps the engine: advance to a time, wait until settle"]:::open
     CS_817["CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomiz"]:::proposed
     CS_832["CS-832 A design for semantic metadata and picking: how metadata reache"]:::done
     CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::done
     CS_899["CS-899 Merge CS-833, the SimReady scoping study and its USD subset rea"]:::done
-    CS_922["CS-922 CS-815 Q1: keep the public names CS-815 added beyond CS-832's c"]:::decision
-    CS_923["CS-923 CS-815 Q2: USD's union of inherited labels, or CS-832's nearest"]:::decision
+    CS_922["CS-922 CS-815 Q1: keep the public names CS-815 added beyond CS-832's c"]:::done
+    CS_923["CS-923 CS-815 Q2: USD's union of inherited labels, or CS-832's nearest"]:::done
     CS_924["CS-924 Engine-made draws get content keys, so their stable IDs don't f"]:::proposed
-    CS_930["CS-930 Merge CS-780, Engine.errors as an emitter"]:::decision
-    CS_934["CS-934 Merge CS-815, stable identity and semantic labels"]:::decision
-    CS_935["CS-935 CS-815 Q3: rename cameraRecord to camera in PickPositionResult "]:::decision
-    CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::decision
+    CS_930["CS-930 Merge CS-780, Engine.errors as an emitter"]:::done
+    CS_934["CS-934 Merge CS-815, stable identity and semantic labels"]:::done
+    CS_935["CS-935 CS-815 Q3: rename cameraRecord to camera in PickPositionResult "]:::done
+    CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::done
+    CS_939["CS-939 PickPositionResult and CorePick say camera, not cameraRecord (C"]:::open
+    CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::open
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -1376,6 +1379,9 @@ graph LR
   CS_903 --> CS_530
   CS_904 --> CS_530
   CS_906 --> CS_530
+  CS_921 --> CS_530
+  CS_939 --> CS_530
+  CS_940 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1727,6 +1733,9 @@ graph LR
   CS_815 --> CS_924
   CS_616 --> CS_932
   CS_612 --> CS_938
+  CS_815 --> CS_939
+  CS_815 --> CS_940
+  CS_54 --> CS_941
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

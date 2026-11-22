@@ -115,8 +115,8 @@ CS-456 Refinement, profiles and streaming work in worker mode [Planned], under C
 
 CS-457 The approved API changes are made [Planned], under CS-437 The public API reviews
   outcome: The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point.
-  constraints: 1 of 5 done
-  unmet: not linked to a clause yet (open: CS-434, CS-435, CS-763, CS-780; check not passed)
+  constraints: 2 of 5 done
+  unmet: not linked to a clause yet (open: CS-434, CS-435, CS-763; check not passed)
   to shape: done_when; check; link CS-434, CS-435, CS-708, CS-763, CS-780 to a clause
 
 CS-458 Every fetch has a deadline and retries within its origin's budget [Planned], under CS-16 Streaming robustness
@@ -604,8 +604,8 @@ CS-751 The owner's views answer what needs me, what's on track and what's wrong 
 
 CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping [Planned], under CS-437 The public API reviews
   outcome: A simulator, a synthetic-data pipeline or a world model drives the engine step by step and reads back depth, normals, motion and IDs, with each frame's camera record and stable, labeled identity.
-  constraints: 3 of 6 done
-  unmet: not linked to a clause yet (open: CS-813, CS-815, CS-816; check not passed)
+  constraints: 4 of 6 done
+  unmet: not linked to a clause yet (open: CS-813, CS-816; check not passed)
   to shape: done_when; check; link CS-813, CS-814, CS-815, CS-816, CS-832, CS-833 to a clause
 
 CS-830 2.0's examples show its seams in use [Planned], under CS-628 Sandcastle as 2.0's gallery

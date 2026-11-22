@@ -29,7 +29,8 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
-  CS-920  decision: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?
+  CS-921  A compiled route's center term subtracts its highs as integers on both emitters
+  CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -143,7 +144,10 @@ CS-191 Content sources and formats
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
   CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
   CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
-  CS-901  decision: Which USD reader does CS-559 use, from CS-900's comparison?
+  CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-902  CS-559's scope, from the chosen reader and CS-833's study
+  CS-913  The subset reader's composition faults on broken assets, tested against OpenUSD
+  CS-914  OpenUSD in WebAssembly as a test oracle for the USD source
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -207,6 +211,7 @@ CS-199 Dyno hardening, packaging and CI
   CS-544  The handbook's reel runs in the served handbook as well as the static file
   CS-583  The casterLoop slow-orbit test holds under full-suite load
   CS-851  npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport
+  CS-919  dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -231,16 +236,10 @@ CS-437 The public API reviews
   CS-572  The full version of scene items, designed before the first public API review
   CS-670  Bounding volumes and their tests on the public API
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
-  CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
-  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-922  decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?
-  CS-923  decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?
-  CS-930  decision: Merge CS-780, Engine.errors as an emitter
-  CS-934  decision: Merge CS-815, stable identity and semantic labels
-  CS-935  decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?
-  CS-936  decision: CS-815 Q4: how does a bigint StableId reach JSON?
+  CS-939  PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
+  CS-940  stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -265,6 +264,7 @@ CS-622 The agent-first migration kit
 CS-628 Sandcastle as 2.0's gallery
   CS-629  external: The 1.x team agrees on Sandcastle and on the @cesium/core and @cesium/gltf names
   CS-827  Example: a calibrated camera from an OpenCV calibration, overlaid on its reference photo
+  CS-828  Example: what is this? Stable IDs and semantic labels on a city, with a segmentation view
 
 CS-637 The particle system
   CS-638  The particle system's design

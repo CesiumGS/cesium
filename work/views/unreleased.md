@@ -91,7 +91,9 @@ CS-389 Dyno as the development harness
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
   CS-708  2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything
+  CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
   CS-814  A camera record carries intrinsics, an off-center principal point and a named distortion model
+  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
   CS-832  A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
   CS-833  A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
 
@@ -127,5 +129,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-92 merged item(s) not in a release
+94 merged item(s) not in a release
 ```

@@ -392,14 +392,10 @@ CS-191 Content sources and formats
       ← CS-654 The surface-projection design: classification, draping and decals
   CS-811  2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
-  CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-      ← CS-815 Scene content has stable identity and semantic labels that don't depend on load order
   CS-848  Render features: content modules register passes in named slots, declared for picks, rays and shadows
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-849  Streams for push sources: connect on the fetch and credential provider
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-902  CS-559's scope, from the chosen reader and CS-833's study
-      ← CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
   CS-903  Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-904  Source-declared axis and scale, corrected through placement
@@ -429,7 +425,6 @@ CS-193 B-reps and geometry queries
       ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
   CS-907  UsdPhysics read into CS-672's physics seam
       ← CS-672 Physics representations across the geometry kinds: the design
-        CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
 
 CS-195 Benchmarks, parity and image regression
   CS-324  Benchmark suite v2: nightly and per-merge runs, a results store and a dashboard
@@ -517,6 +512,9 @@ CS-18 The work tracker
         CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
         CS-904 Source-declared axis and scale, corrected through placement
         CS-906 Variant selections and payload policy as open options, and their change as invalidation
+        CS-921 A compiled route's center term subtracts its highs as integers on both emitters
+        CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
+        CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -700,8 +698,6 @@ CS-628 Sandcastle as 2.0's gallery
   CS-826  Example: synthetic data capture, stepping a scene and exporting color, depth and IDs with each camera record
       ← CS-813 A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
         CS-816 The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-828  Example: what is this? Stable IDs and semantic labels on a city, with a segmentation view
-      ← CS-815 Scene content has stable identity and semantic labels that don't depend on load order
   CS-829  Example: simulator in the loop, a small rigid-body sim writing timed poses and replaying identically
       ← CS-816 The host steps the engine: advance to a time, wait until settled, render, read back
 
@@ -727,5 +723,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-231 blocked
+228 blocked
 ```

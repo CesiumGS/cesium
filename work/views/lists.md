@@ -78,7 +78,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 25 of 51 done, 11 ready, 10 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 26 of 52 done, 12 ready, 10 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -139,9 +139,10 @@ No milestone
 - [x] CS-838 decision: Merge CS-809, one fetch and credential provider for every request. Done.
 - [x] CS-839 decision: Merge CS-814, camera records with intrinsics, an off-center principal point and a named distortion. Done.
 - [x] CS-860 decision: Merge CS-837, Cesium IR's JSON format is experimental at cesium-ir/0.1. Done.
-- [ ] CS-920 decision: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?. Needs nothing. Decided by owner.
-- [?] CS-921 A compiled route's center term subtracts its highs as integers on both emitters. Proposed. Needs CS-54.
+- [x] CS-920 decision: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?. Done.
+- [ ] CS-921 A compiled route's center term subtracts its highs as integers on both emitters. Needs CS-54.
 - [x] CS-925 decision: Merge CS-54, routes on both emitters. Done.
+- [ ] CS-941 A compiled route's residual statements go through Cesium IR's emitters (CS-920 B). Needs CS-54.
 
 ### Live MaterialX graph editing
 
@@ -436,7 +437,7 @@ No milestone
 - [x] CS-527 decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] CS-528 decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] CS-529 decision: Which milestones does 2.0.0 need?. Done.
-- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats) and CS-906 (Content sources and formats).
+- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats), CS-906 (Content sources and formats), CS-921 (Cesium IR), CS-939 (public API reviews) and CS-940 (public API reviews).
 - [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory) and CS-830 (Sandcastle as 2.0's gallery).
 - [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] CS-533 Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
@@ -621,7 +622,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 19 of 63 done, 17 ready, 21 blocked, 6 proposed.
+CS-191, Planned, led by owner: 20 of 63 done, 20 ready, 19 blocked, 4 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -693,15 +694,15 @@ No milestone
 - [x] CS-853 decision: Merge CS-832, the design for semantic metadata and picking. Done.
 - [x] CS-898 64-bit integer properties keep their exact value. Done.
 - [x] CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Done.
-- [ ] CS-901 decision: Which USD reader does CS-559 use, from CS-900's comparison?. Needs CS-900. Decided by owner.
+- [x] CS-901 decision: Which USD reader does CS-559 use, from CS-900's comparison?. Done.
 - [ ] CS-902 CS-559's scope, from the chosen reader and CS-833's study. Needs CS-901.
 - [ ] CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs CS-835 (Packaging and package names) and CS-847.
 - [ ] CS-904 Source-declared axis and scale, corrected through placement. Needs CS-835 (Packaging and package names) and CS-847.
 - [ ] CS-906 Variant selections and payload policy as open options, and their change as invalidation. Needs CS-835 (Packaging and package names) and CS-847.
 - [?] CS-908 Gaussian splats from USD's ParticleField into the splat render feature. Proposed. Needs CS-277 and CS-901.
 - [x] CS-909 decision: Merge CS-898, 64-bit integer properties keep their exact value. Done.
-- [?] CS-913 The subset reader's composition faults on broken assets, tested against OpenUSD. Proposed. Needs CS-901.
-- [?] CS-914 OpenUSD in WebAssembly as a test oracle for the USD source. Proposed. Needs CS-901.
+- [ ] CS-913 The subset reader's composition faults on broken assets, tested against OpenUSD. Needs CS-901.
+- [ ] CS-914 OpenUSD in WebAssembly as a test oracle for the USD source. Needs CS-901.
 - [x] CS-917 decision: Merge CS-900, three USD readers compared in Dyno. Done.
 
 ### Sky, light and atmosphere
@@ -908,7 +909,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 5 of 24 done, 14 ready, 0 blocked, 5 proposed.
+CS-199, Planned, led by owner: 5 of 24 done, 15 ready, 0 blocked, 4 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -939,7 +940,7 @@ No milestone
 - [x] CS-796 decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
 - [x] CS-852 decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
 - [?] CS-912 Dyno's rough edges found by CS-611: a hang after a throwing suite, baseline IDs in studies, a port for suite run. Proposed. Needs nothing.
-- [?] CS-919 dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it. Proposed. Needs nothing.
+- [ ] CS-919 dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it. Needs nothing.
 - [?] CS-926 dyno lab exits nonzero when a row fails, not only on console errors. Proposed. Needs nothing.
 - [?] CS-928 importBoundary's globe-only Viewer bundle test fails in full runs under load, and passes alone. Proposed. Needs nothing.
 
@@ -1071,7 +1072,7 @@ No milestone
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 11 of 34 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 19 of 36 done, 10 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1090,7 +1091,7 @@ Milestone: The approved API changes are made (CS-457, Planned)
 - [ ] CS-435 The measurement module's seam and entry point. Needs CS-438.
 - [x] CS-708 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Done.
 - [ ] CS-763 Engine.create takes a signal: an aborted create releases its device and pipelines. Needs nothing.
-- [ ] CS-780 Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it. Needs CS-23 (Engine profiles).
+- [x] CS-780 Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it. Done.
 
 Milestone: 1.x's smaller tools have 2.0 homes (CS-675, Planned)
 
@@ -1100,7 +1101,7 @@ Milestone: Machines can read the engine: render products, camera records, stable
 
 - [ ] CS-813 A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color. Needs nothing.
 - [x] CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model. Done.
-- [ ] CS-815 Scene content has stable identity and semantic labels that don't depend on load order. Needs CS-832.
+- [x] CS-815 Scene content has stable identity and semantic labels that don't depend on load order. Done.
 - [ ] CS-816 The host steps the engine: advance to a time, wait until settled, render, read back. Needs nothing.
 - [x] CS-832 A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds. Done.
 - [x] CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802. Done.
@@ -1114,13 +1115,15 @@ No milestone
 - [?] CS-771 The seam bypass tests catch the five plants CS-430's audit found passing. Proposed. Needs CS-430.
 - [?] CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomizers, lidar returns, world-model exporters and an agent interface. Proposed. Needs CS-813, CS-814, CS-815 and CS-816.
 - [x] CS-899 decision: Merge CS-833, the SimReady scoping study and its USD subset reader spike. Done.
-- [ ] CS-922 decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?. Needs nothing. Decided by owner.
-- [ ] CS-923 decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?. Needs nothing. Decided by owner.
+- [x] CS-922 decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?. Done.
+- [x] CS-923 decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?. Done.
 - [?] CS-924 Engine-made draws get content keys, so their stable IDs don't follow the order they were added. Proposed. Needs CS-815.
-- [ ] CS-930 decision: Merge CS-780, Engine.errors as an emitter. Needs nothing. Decided by owner.
-- [ ] CS-934 decision: Merge CS-815, stable identity and semantic labels. Needs nothing. Decided by owner.
-- [ ] CS-935 decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Needs nothing. Decided by owner.
-- [ ] CS-936 decision: CS-815 Q4: how does a bigint StableId reach JSON?. Needs nothing. Decided by owner.
+- [x] CS-930 decision: Merge CS-780, Engine.errors as an emitter. Done.
+- [x] CS-934 decision: Merge CS-815, stable identity and semantic labels. Done.
+- [x] CS-935 decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Done.
+- [x] CS-936 decision: CS-815 Q4: how does a bigint StableId reach JSON?. Done.
+- [ ] CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Needs CS-815.
+- [ ] CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
 
 ### Editing
 
@@ -1264,7 +1267,7 @@ Milestone: A 1.x app moves to 2.0 with the kit and is shown to match (CS-627, Pl
 
 ### Sandcastle as 2.0's gallery
 
-CS-628, Planned, led by owner: 0 of 16 done, 2 ready, 14 blocked.
+CS-628, Planned, led by owner: 0 of 16 done, 3 ready, 13 blocked.
 
 Milestone: Sandcastle hosts 2.0's examples (CS-635, Planned)
 
