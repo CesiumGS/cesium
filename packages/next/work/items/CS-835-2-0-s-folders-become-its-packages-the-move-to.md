@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-21
 project: CS-615
-needs: [CS-834, CS-809, CS-814, CS-552, CS-610]
+needs: [CS-834, CS-809, CS-814, CS-552, CS-610, CS-611, CS-887]
 touches: [packages/next/src/**, packages/next/package.json, packages/next/test/importBoundary.test.ts, packages/next/tsconfig*.json, packages/next/scripts/**, package.json]
 ---
 

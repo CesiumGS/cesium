@@ -2,10 +2,14 @@
 id: CS-886
 title: "Merge CS-610, the 2.0 repository's design: layout, build, tests and releases"
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge. The main session files D1 to D7 and the follow-ups; CS-835 and CS-611 wait on D1."
+answered_at: 2026-11-22T07:22:20.384Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
