@@ -16,9 +16,9 @@
     "mode": "owner",
     "owner_paths": [
       "api/surface.txt",
-      "packages/next/src/index.ts",
-      "packages/next/src/ir/FORMAT.md",
-      "packages/next/package.json",
+      "packages/core/src/index.ts",
+      "packages/core/src/ir/FORMAT.md",
+      "packages/cesium/package.json",
       "package.json",
       ".human-in-the-lead/",
       "AGENTS.md",

@@ -68,7 +68,7 @@
     "dyno:serve": "vite --host 127.0.0.1 --port 5190 --strictPort",
     "dyno:cli": "node bench/dyno.mjs",
     "build": "vite build",
-    "typecheck": "tsc --build && tsc -p packages/next --noEmit",
+    "typecheck": "tsc --build && tsc -p packages/cesium --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:data": "FRAMES_DATA=1 vitest run test/data",

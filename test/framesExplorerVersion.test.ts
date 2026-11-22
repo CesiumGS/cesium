@@ -8,7 +8,7 @@ describe("the report's package", () => {
   it("is package.json's name and version", () => {
     const pkg = JSON.parse(
       readFileSync(
-        new URL("../packages/next/package.json", import.meta.url),
+        new URL("../packages/cesium/package.json", import.meta.url),
         "utf8",
       ),
     ) as { name: string; version: string };

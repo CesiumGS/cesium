@@ -15,9 +15,9 @@
     ".": "./src/index.ts",
     "./time": "./src/time.ts",
     "./frames": "./src/frames.ts",
-    "./proj": "./src/proj.ts",
+    "./proj": "./src/crs.ts",
     "./measure": "./src/measure.ts",
-    "./widgets": "./src/widgets.ts"
+    "./widgets": "./src/ui.ts"
   },
   "scripts": {
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node ../../scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts"
