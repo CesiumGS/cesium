@@ -948,7 +948,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 49 of 87 done, 13 ready, 17 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 50 of 87 done, 13 ready, 16 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -987,7 +987,7 @@ Milestone: Dyno switches between the engine and the work ([CS-519](./milestones/
 Milestone: Benchmark results are shared across machines, and dyno is one command ([CS-722](./milestones/CS-722-benchmark-results-are-shared-across-machines.md), Planned)
 
 - [x] [CS-390](./items/CS-390-run-identity-and-the-machine-wide-run-lock.md) Run identity and the machine-wide run lock. Done.
-- [ ] [CS-393](./items/CS-393-the-settings-registry-and-multi-axis-sweeps.md) The settings registry and multi-axis sweeps. Needs CS-390.
+- [x] [CS-393](./items/CS-393-the-settings-registry-and-multi-axis-sweeps.md) The settings registry and multi-axis sweeps. Done.
 - [ ] [CS-394](./items/CS-394-example-scenes-and-the-development-metrics.md) Example scenes and the development metrics. Needs CS-393.
 - [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [x] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.

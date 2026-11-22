@@ -204,7 +204,7 @@ CS-199 Dyno hardening, packaging and CI
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
   CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
-  CS-393  The settings registry and multi-axis sweeps
+  CS-394  Example scenes and the development metrics
   CS-398  Recordings as runs
   CS-399  Test results in Dyno: the vitest reporter and the Tests view
   CS-400  Archives: export and import (the manual fallback)

@@ -28,7 +28,7 @@ graph LR
   CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>3 of 17 done"]
-  CS_389["Dyno as the development harness<br/>49 of 87 done"]
+  CS_389["Dyno as the development harness<br/>50 of 87 done"]
   CS_437["public API reviews<br/>6 of 19 done"]
   CS_579["Editing<br/>0 of 2 done"]
   CS_584["widgets library<br/>0 of 9 done"]

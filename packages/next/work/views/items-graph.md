@@ -559,7 +559,7 @@ graph LR
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
     CS_391["CS-391 Purpose, branch, item and study in Trends, Runs, Compare and Al"]:::open
     CS_392["CS-392 Finding runs from the terminal ('runs', 'show', 'pin')"]:::open
-    CS_393["CS-393 The settings registry and multi-axis sweeps"]:::open
+    CS_393["CS-393 The settings registry and multi-axis sweeps"]:::done
     CS_394["CS-394 Example scenes and the development metrics"]:::open
     CS_395["CS-395 Reference images and the sweep view"]:::open
     CS_396["CS-396 The α study through Dyno (acceptance A)"]:::open

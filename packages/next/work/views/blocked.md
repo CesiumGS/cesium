@@ -460,11 +460,8 @@ CS-197 Ray queries and path tracing
         CS-348 A GPU viewshed
 
 CS-389 Dyno as the development harness
-  CS-394  Example scenes and the development metrics
-      ← CS-393 The settings registry and multi-axis sweeps
   CS-395  Reference images and the sweep view
-      ← CS-393 The settings registry and multi-axis sweeps
-        CS-394 Example scenes and the development metrics
+      ← CS-394 Example scenes and the development metrics
   CS-396  The α study through Dyno (acceptance A)
       ← CS-395 Reference images and the sweep view
         CS-405 The Studies page
@@ -703,5 +700,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-230 blocked
+229 blocked
 ```
