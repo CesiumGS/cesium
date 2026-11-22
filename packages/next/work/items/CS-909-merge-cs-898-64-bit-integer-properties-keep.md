@@ -2,10 +2,14 @@
 id: CS-909
 title: Merge CS-898, 64-bit integer properties keep their exact value
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-191
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge. CS-530 can then build on exact 64-bit IDs."
+answered_at: 2026-11-22T08:34:35.247Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -28,3 +32,5 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+The chief of staff answered A on 2026-11-22, under the owner's overnight approval of the same night ("i give you approval to merge safe PRs on your own while I'm sleeping"). It meets all four points of the safe-merge bar: every check passes on the replay 466752c512, the third review has no Important findings, it touches no owner path and adds no dependency, and its GPU upload is unchanged, so no parity run applies. The chief of staff checked the replay's file list.
