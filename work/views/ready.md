@@ -19,8 +19,8 @@ CS-9 The WebGL 2 renderer
   CS-47  Probe runs on the test devices
 
 CS-10 Cesium IR
-  CS-54  Routes on both emitters, with the residual and df64 forms
   CS-55  Styles move onto Cesium IR, literals as uniforms
+  CS-56  Tables and the bounded search, the first extensions, with the residual's row window
   CS-57  Our naga crate (Rust in development and CI only)
   CS-59  The writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`)
   CS-64  Noise, first among the gaps
@@ -29,6 +29,7 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
+  CS-920  decision: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -234,6 +235,8 @@ CS-437 The public API reviews
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-815  Scene content has stable identity and semantic labels that don't depend on load order
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
+  CS-922  decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?
+  CS-923  decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -270,5 +273,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-201 ready
+204 ready
 ```

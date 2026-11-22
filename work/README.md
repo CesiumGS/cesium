@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 23 of 48 done, 10 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 25 of 51 done, 11 ready, 10 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -145,7 +145,7 @@ Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestone
 - [x] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Done.
 - [x] [CS-52](./items/CS-52-the-glsl-es-3-00-emitter.md) The GLSL ES 3.00 emitter. Done.
 - [x] [CS-53](./items/CS-53-transforms-move-onto-cesium-ir-as-pure-moves.md) Transforms move onto Cesium IR, as pure moves. Done.
-- [ ] [CS-54](./items/CS-54-routes-on-both-emitters-with-the-residual-and.md) Routes on both emitters, with the residual and df64 forms. Needs CS-52 and CS-53.
+- [x] [CS-54](./items/CS-54-routes-on-both-emitters-with-the-residual-and.md) Routes on both emitters, with the residual and df64 forms. Done.
 - [ ] [CS-55](./items/CS-55-styles-move-onto-cesium-ir-literals-as-uniforms.md) Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
 - [ ] [CS-56](./items/CS-56-tables-and-the-bounded-search-the-first.md) Tables and the bounded search, the first extensions, with the residual's row window. Needs CS-53 and CS-54.
 - [ ] [CS-371](./items/CS-371-math-ops-the-transform-graph-needs-atanh-asinh.md) Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`. Needs CS-48.
@@ -196,6 +196,9 @@ No milestone
 - [x] [CS-838](./items/CS-838-merge-cs-809-one-fetch-and-credential-provider.md) decision: Merge CS-809, one fetch and credential provider for every request. Done.
 - [x] [CS-839](./items/CS-839-merge-cs-814-camera-records-with-intrinsics-an.md) decision: Merge CS-814, camera records with intrinsics, an off-center principal point and a named distortion. Done.
 - [x] [CS-860](./items/CS-860-merge-cs-837-cesium-ir-s-json-format-is.md) decision: Merge CS-837, Cesium IR's JSON format is experimental at cesium-ir/0.1. Done.
+- [ ] [CS-920](./items/CS-920-do-a-route-s-residual-statements-go-through.md) decision: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?. Needs nothing. Decided by owner.
+- [?] [CS-921](./items/CS-921-a-compiled-route-s-center-term-subtracts-its.md) A compiled route's center term subtracts its highs as integers on both emitters. Proposed. Needs CS-54.
+- [x] [CS-925](./items/CS-925-merge-cs-54-routes-on-both-emitters.md) decision: Merge CS-54, routes on both emitters. Done.
 
 ### Live MaterialX graph editing
 
@@ -961,7 +964,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 21 done, 14 ready, 0 blocked, 2 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 23 done, 14 ready, 0 blocked, 4 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -992,6 +995,8 @@ No milestone
 - [x] [CS-796](./items/CS-796-merge-cs-580-naga-wasm-30-2-0-is-a-dev.md) decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
 - [x] [CS-852](./items/CS-852-merge-cs-850-eslint-passes-on-main-again-the.md) decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
 - [?] [CS-912](./items/CS-912-dyno-s-rough-edges-found-by-cs-611-a-hang-after.md) Dyno's rough edges found by CS-611: a hang after a throwing suite, baseline IDs in studies, a port for suite run. Proposed. Needs nothing.
+- [?] [CS-919](./items/CS-919-dyno-lab-commit-runs-the-worktree-s-packages.md) dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it. Proposed. Needs nothing.
+- [?] [CS-926](./items/CS-926-dyno-lab-exits-nonzero-when-a-row-fails-not.md) dyno lab exits nonzero when a row fails, not only on console errors. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1120,7 +1125,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 11 of 27 done, 10 ready, 4 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 11 of 30 done, 12 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1163,6 +1168,9 @@ No milestone
 - [?] [CS-771](./items/CS-771-the-seam-bypass-tests-catch-the-five-plants-cs.md) The seam bypass tests catch the five plants CS-430's audit found passing. Proposed. Needs CS-430.
 - [?] [CS-817](./items/CS-817-physical-ai-modules-on-the-four-seams-ros-2-and.md) Physical-AI modules on the four seams: ROS 2 and MCAP, randomizers, lidar returns, world-model exporters and an agent interface. Proposed. Needs CS-813, CS-814, CS-815 and CS-816.
 - [x] [CS-899](./items/CS-899-merge-cs-833-the-simready-scoping-study-and-its.md) decision: Merge CS-833, the SimReady scoping study and its USD subset reader spike. Done.
+- [ ] [CS-922](./items/CS-922-cs-815-q1-keep-the-public-names-cs-815-added.md) decision: CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?. Needs nothing. Decided by owner.
+- [ ] [CS-923](./items/CS-923-cs-815-q2-usd-s-union-of-inherited-labels-or-cs.md) decision: CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?. Needs nothing. Decided by owner.
+- [?] [CS-924](./items/CS-924-engine-made-draws-get-content-keys-so-their.md) Engine-made draws get content keys, so their stable IDs don't follow the order they were added. Proposed. Needs CS-815.
 
 ### Editing
 

@@ -22,6 +22,7 @@ CS-10 Cesium IR
   CS-51  The WGSL emitter
   CS-52  The GLSL ES 3.00 emitter
   CS-53  Transforms move onto Cesium IR, as pure moves
+  CS-54  Routes on both emitters, with the residual and df64 forms
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
   CS-777  The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
@@ -123,5 +124,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-88 merged item(s) not in a release
+89 merged item(s) not in a release
 ```

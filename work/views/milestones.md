@@ -25,8 +25,8 @@ CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 rend
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 8 of 13 done
-  unmet: not linked to a clause yet (open: CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
+  constraints: 9 of 13 done
+  unmet: not linked to a clause yet (open: CS-55, CS-56, CS-371, CS-39; check not passed)
   to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39, CS-837, CS-794 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR

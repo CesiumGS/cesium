@@ -57,7 +57,7 @@ graph LR
     CS_51["CS-51 The WGSL emitter"]:::done
     CS_52["CS-52 The GLSL ES 3.00 emitter"]:::done
     CS_53["CS-53 Transforms move onto Cesium IR, as pure moves"]:::done
-    CS_54["CS-54 Routes on both emitters, with the residual and df64 forms"]:::open
+    CS_54["CS-54 Routes on both emitters, with the residual and df64 forms"]:::done
     CS_55["CS-55 Styles move onto Cesium IR, literals as uniforms"]:::open
     CS_56["CS-56 Tables and the bounded search, the first extensions, with the re"]:::open
     CS_57["CS-57 Our naga crate (Rust in development and CI only)"]:::open
@@ -99,6 +99,9 @@ graph LR
     CS_838["CS-838 Merge CS-809, one fetch and credential provider for every reque"]:::done
     CS_839["CS-839 Merge CS-814, camera records with intrinsics, an off-center pri"]:::done
     CS_860["CS-860 Merge CS-837, Cesium IR's JSON format is experimental at cesium"]:::done
+    CS_920["CS-920 Do a route's residual statements go through Cesium IR's emitter"]:::decision
+    CS_921["CS-921 A compiled route's center term subtracts its highs as integers "]:::proposed
+    CS_925["CS-925 Merge CS-54, routes on both emitters"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -598,6 +601,8 @@ graph LR
     CS_851["CS-851 npm run handbook type-checks again: handbook/viewer/workerPool."]:::open
     CS_852["CS-852 Merge CS-850, eslint passes on main again (the unused PostStage"]:::done
     CS_912["CS-912 Dyno's rough edges found by CS-611: a hang after a throwing sui"]:::proposed
+    CS_919["CS-919 dyno lab --commit runs the worktree's packages, not the commit'"]:::proposed
+    CS_926["CS-926 dyno lab exits nonzero when a row fails, not only on console er"]:::proposed
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -723,6 +728,9 @@ graph LR
     CS_832["CS-832 A design for semantic metadata and picking: how metadata reache"]:::done
     CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::done
     CS_899["CS-899 Merge CS-833, the SimReady scoping study and its USD subset rea"]:::done
+    CS_922["CS-922 CS-815 Q1: keep the public names CS-815 added beyond CS-832's c"]:::decision
+    CS_923["CS-923 CS-815 Q2: USD's union of inherited labels, or CS-832's nearest"]:::decision
+    CS_924["CS-924 Engine-made draws get content keys, so their stable IDs don't f"]:::proposed
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -1703,6 +1711,8 @@ graph LR
   CS_901 --> CS_908
   CS_901 --> CS_913
   CS_901 --> CS_914
+  CS_54 --> CS_921
+  CS_815 --> CS_924
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
