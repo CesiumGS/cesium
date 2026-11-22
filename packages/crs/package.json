@@ -4,6 +4,11 @@
   "private": true,
   "description": "Cesium 2.0's coordinate reference systems: CRS definitions and WKT2, georeferencing, engineering frames, placement and snapping, with PROJ.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git",
+    "directory": "packages/crs"
+  },
   "type": "module",
   "sideEffects": false,
   "engines": {
@@ -25,7 +30,8 @@
   "files": [
     "dist",
     "LICENSE.md",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",

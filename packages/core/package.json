@@ -4,6 +4,11 @@
   "private": true,
   "description": "Cesium 2.0's core: the engine, worlds, views and the camera, the renderer and the GPU layer, streaming, the globe, queries, the transform graph, styling and Cesium IR, and the shared utilities.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "sideEffects": [
     "./dist/core/disposeShim.js",
@@ -30,7 +35,8 @@
   "files": [
     "dist",
     "LICENSE.md",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "draco3d": "1.5.7",

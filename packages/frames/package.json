@@ -4,6 +4,11 @@
   "private": true,
   "description": "Cesium 2.0's reference frames: the frame catalog, Earth orientation, ephemerides, trajectories and the frames resolver.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git",
+    "directory": "packages/frames"
+  },
   "type": "module",
   "sideEffects": false,
   "engines": {
@@ -25,7 +30,8 @@
   "files": [
     "dist",
     "LICENSE.md",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",

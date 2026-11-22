@@ -4,6 +4,11 @@
   "private": true,
   "description": "Cesium 2.0's measurements and their stated accuracy.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git",
+    "directory": "packages/measure"
+  },
   "type": "module",
   "sideEffects": false,
   "engines": {
@@ -20,7 +25,8 @@
   "files": [
     "dist",
     "LICENSE.md",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",

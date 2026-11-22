@@ -31,6 +31,12 @@
 // literals a minifier keeps; and the IR passes' installer
 // (transform/irPasses.js) must be in some chunk, found as a call whose
 // argument is the passes object (its keys, which a minifier keeps).
+// That marker covers only the lazy path, `loadIr()`'s `import()`. The one
+// static `import "./irPasses.ts"`, in the aggregate transform/index.ts, is
+// out of an application's reach: core's `exports` offer only `.` and
+// `./internal`, and neither reaches that aggregate, so no page can import
+// it, and a dropped static import there shows only in the tests that use it
+// (test/packedChecks.test.ts lists every module with effects of its own).
 //
 // Every page is built against the packages as they publish (CS-612): their
 // `exports` without the `@cesium/source` condition, so the packages' dist/,

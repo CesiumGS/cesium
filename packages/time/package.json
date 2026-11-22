@@ -4,6 +4,11 @@
   "private": true,
   "description": "Cesium 2.0's time library: instants, leap seconds, the clock, the Sun and the Moon, formatting, and TDB from TT.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git",
+    "directory": "packages/time"
+  },
   "type": "module",
   "sideEffects": false,
   "engines": {
@@ -20,7 +25,8 @@
   "files": [
     "dist",
     "LICENSE.md",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0"

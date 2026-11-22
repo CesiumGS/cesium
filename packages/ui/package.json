@@ -4,6 +4,11 @@
   "private": true,
   "description": "Cesium 2.0's widgets and the Viewer composed from them.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git",
+    "directory": "packages/ui"
+  },
   "type": "module",
   "sideEffects": false,
   "engines": {
@@ -20,7 +25,8 @@
   "files": [
     "dist",
     "LICENSE.md",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",

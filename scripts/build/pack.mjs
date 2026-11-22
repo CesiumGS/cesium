@@ -5,7 +5,9 @@
 // tarball (CS-892).
 //
 //   checkPacked(packageDirs)   throws, listing every problem, when a check fails;
-//                              returns the private packages' listed-but-missing files
+//                              returns the private packages' listed-but-missing files,
+//                              and with `keep`, the scratch folder and each package
+//                              unpacked as it publishes (scripts/release/stage.mjs)
 import { execFileSync } from "node:child_process";
 import {
   mkdirSync,
@@ -94,6 +96,24 @@ export function missingFiles(listed, packed) {
   });
 }
 
+/**
+ * What a package's listed-but-missing files mean (CS-612's review): nothing
+ * when none are missing; a report, not a failure, while the package is
+ * `private`, since it can't publish; and a failure once it isn't.
+ * @param {{ name: string, private?: boolean }} manifest
+ * @param {string[]} missing
+ * @returns {{ verdict: "none" } | { verdict: "report" | "fail", line: string }}
+ */
+export function missingFilesVerdict(manifest, missing) {
+  if (missing.length === 0) {
+    return { verdict: "none" };
+  }
+  const line = `${manifest.name}: \`files\` lists ${missing.join(", ")}, not in the package folder, so not in the tarball`;
+  return manifest.private
+    ? { verdict: "report", line: `${line} (private, so reported, not failed)` }
+    : { verdict: "fail", line };
+}
+
 /** The attw problems' kinds, as its command line names them, in one line each. */
 function attw(tarball) {
   try {
@@ -120,9 +140,10 @@ export async function checkPacked(packageDirs, options = {}) {
   const problems = [];
   /** Private packages' listed-but-missing files: `{ name, missing }`. */
   const lacking = [];
+  /** Each package unpacked as it publishes, and its repacked tarball. */
+  const folders = [];
   try {
     const tarballs = pack(packageDirs, work);
-    const folders = [];
     for (const { folder, name, files, tarball } of tarballs) {
       // What a published tarball must and mustn't hold.
       const sources = files.filter((f) => f.startsWith("src/"));
@@ -135,17 +156,15 @@ export async function checkPacked(packageDirs, options = {}) {
       mkdirSync(dir);
       execFileSync("tar", ["-xzf", tarball, "-C", dir, "--strip-components=1"]);
       const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
-      // What `files` lists but the tarball lacks. A private package (none
-      // publishes before CS-613) is reported, not failed; a public one fails.
+      // What `files` lists but the tarball lacks: reported while the
+      // package is private, failed once it isn't (missingFilesVerdict).
       const missing = missingFiles(manifest.files ?? [], files);
-      if (missing.length > 0) {
-        const line = `${name}: \`files\` lists ${missing.join(", ")}, not in the package folder, so not in the tarball`;
-        if (manifest.private) {
-          lacking.push({ name, missing });
-          log(`  ${line} (private, so reported, not failed)`);
-        } else {
-          problems.push(line);
-        }
+      const verdict = missingFilesVerdict(manifest, missing);
+      if (verdict.verdict === "report") {
+        lacking.push({ name, missing });
+        log(`  ${verdict.line}`);
+      } else if (verdict.verdict === "fail") {
+        problems.push(verdict.line);
       }
       writeFileSync(
         join(dir, "package.json"),
@@ -209,5 +228,11 @@ export async function checkPacked(packageDirs, options = {}) {
       `the packed packages fail ${problems.length} check(s):\n  ${problems.join("\n  ")}`,
     );
   }
-  return { lacking };
+  return options.keep
+    ? {
+        lacking,
+        work,
+        packed: folders.map(({ name, dir, published }) => ({ name, dir, tarball: published })),
+      }
+    : { lacking };
 }
