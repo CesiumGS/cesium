@@ -17,7 +17,7 @@
 import {
   type Frame,
   frameTransform,
-} from "../../../packages/next/src/frames/Frame.ts";
+} from "../../../packages/frames/src/Frame.ts";
 import { properTimeRate } from "../../../packages/next/src/measure/doppler.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import references from "../references.json";

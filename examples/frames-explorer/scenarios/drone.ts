@@ -24,9 +24,9 @@ import {
   EngineeringFrame,
   type SiteTransform,
 } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { frameTransform } from "../../../packages/next/src/frames/Frame.ts";
-import { framePoint } from "../../../packages/next/src/frames/local.ts";
-import { pointAccuracy } from "../../../packages/next/src/frames/pointAccuracy.ts";
+import { frameTransform } from "../../../packages/frames/src/Frame.ts";
+import { framePoint } from "../../../packages/frames/src/local.ts";
+import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { EARTH } from "../../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";

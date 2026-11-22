@@ -8,7 +8,7 @@ import type {
   AreaOfInterest,
   CoordinateOperation,
   ResolvedCoordinates,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 import {
   type CurvilinearScale,
   cartographic,

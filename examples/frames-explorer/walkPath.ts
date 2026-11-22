@@ -3,7 +3,7 @@
 // the common ancestor to the frame, joined by a dotted 1 px line, revealed
 // one edge at a time with the walk's 90 ms stagger (at once under reduced
 // motion), and redrawn as the clock moves the origins.
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
 import { familyRgba } from "./globe.ts";
 import { overlayMesh } from "./overlays.ts";
 import type { PageCore } from "./page.ts";

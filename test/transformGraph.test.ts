@@ -3,10 +3,10 @@
 // nodes inverted by declaration or by Newton, switches chosen per view, and
 // the frames catalog as affine nodes.
 import { describe, expect, it } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { graphOfFrames } from "../packages/next/src/frames/graphOfFrames.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { frameTransform } from "../packages/frames/src/Frame.ts";
+import { graphOfFrames } from "../packages/frames/src/graphOfFrames.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   affine,
   routeBetween,

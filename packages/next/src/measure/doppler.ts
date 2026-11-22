@@ -1,5 +1,5 @@
-import type { Frames } from "../frames/frames.ts";
-import type { FramePoint } from "../frames/local.ts";
+import type { Frames } from "../../../frames/src/frames.ts";
+import type { FramePoint } from "../../../frames/src/local.ts";
 import { Instant } from "@cesium/time";
 import { C, GM_EARTH, GM_MOON, GM_SUN } from "./constants.ts";
 import {

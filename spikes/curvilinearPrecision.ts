@@ -21,7 +21,7 @@ import {
   createFrameCatalog,
   createFramesResolver,
   curvilinearFrame,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import {
   EARTH,
   Engine,

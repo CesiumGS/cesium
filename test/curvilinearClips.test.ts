@@ -7,10 +7,10 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { FrameKey } from "../packages/core/src/camera/frameResolver.ts";
 import { routeForward } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import type { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import type { Frame } from "../packages/frames/src/Frame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import {
   CLIP_SET_CURVILINEAR,
   CLIP_TABLE_ROWS,

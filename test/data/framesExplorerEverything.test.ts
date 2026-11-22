@@ -68,19 +68,16 @@ import {
   gridSource,
   loadProj,
 } from "../../packages/next/src/engineering/proj.ts";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import { framePoint } from "../../packages/next/src/frames/local.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
+import { framePoint } from "../../packages/frames/src/local.ts";
 import { solveLightTime } from "../../packages/next/src/measure/lightTime.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
-import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 
 const dir = framesDataDirectory();
 /** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */

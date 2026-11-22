@@ -4,7 +4,7 @@
 // child-to-parent matrix for an instant. ITRF's edge, which pulls the IAU
 // 2006/2000A series, lives in `itrfEdge.ts`. It is not re-exported here: a
 // re-export would put the series in the ephemeris provider's chunk too.
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
+import type { FrameData } from "./ephemeris/loadFrameData.ts";
 import { C, GM_MOON, GM_SUN, L_C, type Mat4 } from "@cesium/core/internal";
 import type { Instant } from "@cesium/time";
 import type { FrameAccuracy } from "./frameAccuracy.ts";

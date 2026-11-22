@@ -5,7 +5,7 @@
 // Everything else a measurement reports is true (`measure`, `drawnThrough`).
 import { routeForward, type Route } from "@cesium/core/internal";
 import type { FrameKey, AnchorHandle } from "@cesium/core";
-import { drawnThrough, type DrawnThrough } from "../frames/drawn.ts";
+import { drawnThrough, type DrawnThrough } from "../../../frames/src/drawn.ts";
 
 /** What yields the route that draws an anchor's content: a `View`. */
 export interface DrawnView {

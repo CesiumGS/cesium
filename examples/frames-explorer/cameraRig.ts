@@ -3,7 +3,7 @@
 // and an orbit off it, the hand-over when a flight lands or the user takes
 // the camera, the interrupt-widened wheel limits, and the orbit carried
 // with its subject as the clock runs. cameraViews.ts says where to look.
-import type { Frame } from "../../packages/next/src/frames/Frame.ts";
+import type { Frame } from "../../packages/frames/src/Frame.ts";
 import type { CameraView, CameraViews } from "./cameraViews.ts";
 import type { Framing } from "./globe.ts";
 import {

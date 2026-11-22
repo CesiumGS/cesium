@@ -1,11 +1,11 @@
 // Paths and accuracy over spans (frames 5b, Task 9) on synthetic frames.
 import { describe, expect, it } from "vitest";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import type { FrameAccuracy } from "../packages/next/src/frames/frameAccuracy.ts";
-import { accuracySpan, samplePath } from "../packages/next/src/frames/bulk.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
-import { piecewiseFrame } from "../packages/next/src/frames/piecewise.ts";
-import { pointAccuracy } from "../packages/next/src/frames/pointAccuracy.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import type { FrameAccuracy } from "../packages/frames/src/frameAccuracy.ts";
+import { accuracySpan, samplePath } from "../packages/frames/src/bulk.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
+import { piecewiseFrame } from "../packages/frames/src/piecewise.ts";
+import { pointAccuracy } from "../packages/frames/src/pointAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 

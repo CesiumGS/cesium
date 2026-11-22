@@ -2,7 +2,7 @@
 // an instant, from the EOP table's measured or predicted rows. Here so the
 // built-in frame tree states it on its ITRF edge (frames.ts) and
 // `accuracyOf` scales it to meters (measure/accuracy.ts) from one source.
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
+import type { FrameData } from "./ephemeris/loadFrameData.ts";
 import type { Instant } from "@cesium/time";
 
 const ARCSEC_TO_RAD = Math.PI / (180 * 3600);

@@ -2,7 +2,7 @@
 // sight line from below the surface (mining and tunneling).
 import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
-import { framePoint } from "../../../../packages/next/src/frames/local.ts";
+import { framePoint } from "../../../../packages/frames/src/local.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { DEGREE, ellipsoidOf, onEarth } from "../references.ts";

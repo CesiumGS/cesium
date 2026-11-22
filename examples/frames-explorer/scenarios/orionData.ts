@@ -2,9 +2,9 @@
 // node in the tree at the instant, whose edge carries the OEM's covariance
 // there, so one-path, the dish and the capstone give one accuracy for the
 // same data at the same instant (DESIGN.md "One accuracy per thing").
-import type { Frames } from "../../../packages/next/src/frames/frames.ts";
+import type { Frames } from "../../../packages/frames/src/frames.ts";
 import type { Instant } from "../../../packages/time/src/Instant.ts";
-import type { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import { buildTree, type TreeNode } from "../tree.ts";
 
 /** Orion's node, as the tree has it under its reference at `instant` (plain data). */

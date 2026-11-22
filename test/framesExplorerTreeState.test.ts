@@ -13,12 +13,12 @@ import type {
   TreeNode,
 } from "../examples/frames-explorer/tree.ts";
 import { createTreeState } from "../examples/frames-explorer/treeState.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import type {
   EarthOrientationParameters,
   EopSample,
-} from "../packages/next/src/time/eop.ts";
+} from "../packages/frames/src/time/eop.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 
 vi.mock("../examples/frames-explorer/tree.ts", async (importOriginal) => {

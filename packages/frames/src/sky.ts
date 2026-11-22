@@ -1,5 +1,5 @@
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import { celestialToTerrestrial } from "../time/earthOrientation.ts";
+import type { FrameData } from "./ephemeris/loadFrameData.ts";
+import { celestialToTerrestrial } from "./time/earthOrientation.ts";
 import { Instant } from "@cesium/time";
 import { analyticSky, turnSky, type SkyState } from "./skyAnalytic.ts";
 

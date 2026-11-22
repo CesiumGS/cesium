@@ -8,9 +8,9 @@
 // serves tileset.json and `engine.loadGltf` answers with one triangle, as
 // in test/earthAnchor.test.ts.
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { attachSky } from "../packages/next/src/frames/attachSky.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { attachSky } from "../packages/frames/src/attachSky.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import * as m4 from "../packages/core/src/math/mat4.ts";
 import { ViewLayout } from "../packages/core/src/render/generated/layouts.ts";

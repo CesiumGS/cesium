@@ -1,8 +1,8 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import * as m4 from "../packages/core/src/math/mat4.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";

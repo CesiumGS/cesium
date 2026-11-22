@@ -5,9 +5,9 @@ import {
   resolveOperation,
 } from "../../../packages/next/src/engineering/crs.ts";
 import type { ProjApi } from "../../../packages/next/src/engineering/proj.ts";
-import type { Frames } from "../../../packages/next/src/frames/frames.ts";
+import type { Frames } from "../../../packages/frames/src/frames.ts";
 import type { AccuracyStatement } from "../../../packages/next/src/measure/accuracy.ts";
-import { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import {
   type Citation,
   type GroupInfo,

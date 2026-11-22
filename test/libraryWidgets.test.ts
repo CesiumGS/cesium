@@ -9,8 +9,8 @@ import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "vite";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { sp } from "../packages/next/src/time/erfa/s06Table.ts";
-import { xyp } from "../packages/next/src/time/erfa/xy06Table.ts";
+import { sp } from "../packages/frames/src/time/erfa/s06Table.ts";
+import { xyp } from "../packages/frames/src/time/erfa/xy06Table.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
 const root = join(import.meta.dirname, "..", "packages", "next");

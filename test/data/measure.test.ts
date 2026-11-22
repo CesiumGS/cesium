@@ -2,25 +2,25 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
 import {
   eastNorthUpFrame,
   framePoint,
   type FramePoint,
-} from "../../packages/next/src/frames/local.ts";
+} from "../../packages/frames/src/local.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import {
   measure,
   measureSpan,
 } from "../../packages/next/src/measure/measure.ts";
 import { MOON } from "../../packages/core/src/scene/Body.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
-import { parseOem } from "../../packages/next/src/trajectory/oem.ts";
-import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import { parseOem } from "../../packages/frames/src/trajectory/oem.ts";
+import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import fixture from "../fixtures/frames/dsnnow.json";
 

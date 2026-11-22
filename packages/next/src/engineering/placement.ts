@@ -1,7 +1,7 @@
 import type {
   CoordinateOperation,
   ResolvedCoordinates,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 import {
   cartographic,
   EARTH,

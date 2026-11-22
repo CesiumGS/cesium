@@ -12,7 +12,7 @@ import {
   createFrameCatalog,
   type Route,
   type CurvilinearMap,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import { curvilinearScaleOf } from "../packages/core/src/camera/route.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/index.ts";
 import { fromFunction } from "../packages/core/src/transforms/fromFunction.ts";

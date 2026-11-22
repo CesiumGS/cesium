@@ -11,17 +11,17 @@ import {
   curvilinearScaleOf,
   type Route,
 } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { truePick } from "../packages/next/src/frames/pickTruth.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { truePick } from "../packages/frames/src/pickTruth.ts";
 import {
   verticalExaggeration,
   type VerticalExaggeration,
 } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   curvilinearFrame,
   type CurvilinearFrame,
-} from "../packages/next/src/frames/curvilinearFrame.ts";
+} from "../packages/frames/src/curvilinearFrame.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import * as v3 from "../packages/core/src/math/vec3.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";

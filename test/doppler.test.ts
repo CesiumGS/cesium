@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
-import { toParentMatrix } from "../packages/next/src/frames/matrix.ts";
+import type { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
+import { toParentMatrix } from "../packages/frames/src/matrix.ts";
 import {
   C,
   GM_EARTH,

@@ -2,25 +2,22 @@
 // (Task 7b): every figure 1σ, rotation errors scaled by the lever arm,
 // root-sum-square, and an unstated edge named, never dropped.
 import { describe, expect, it } from "vitest";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
 import {
   MOON_ME_ORIENTATION_RADIANS,
   NOT_STATED,
-} from "../packages/next/src/frames/frameAccuracy.ts";
+} from "../packages/frames/src/frameAccuracy.ts";
 import {
   BUILT_IN_ACCURACY,
   DE440_EARTH_MOON_METERS,
-} from "../packages/next/src/frames/frames.ts";
-import {
-  eastNorthUpFrame,
-  framePoint,
-} from "../packages/next/src/frames/local.ts";
+} from "../packages/frames/src/frames.ts";
+import { eastNorthUpFrame, framePoint } from "../packages/frames/src/local.ts";
 import {
   dominantTerm,
   pointAccuracy,
-} from "../packages/next/src/frames/pointAccuracy.ts";
+} from "../packages/frames/src/pointAccuracy.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
-import { itrfAccuracy } from "../packages/next/src/frames/itrfEdge.ts";
+import { itrfAccuracy } from "../packages/frames/src/itrfEdge.ts";
 import { EARTH_ROTATION_RATE } from "../packages/core/src/math/constants.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";

@@ -11,13 +11,13 @@
 // wrist, tool: defined by the app) and NAD83(2011) under ITRF (the PROJ
 // operation). The station's position is data, pinned in NAD83(2011); its
 // route runs up through PROJ to ITRF and down the arm to the tool.
-import { frameTransform } from "../../../packages/next/src/frames/Frame.ts";
-import { framePoint } from "../../../packages/next/src/frames/local.ts";
+import { frameTransform } from "../../../packages/frames/src/Frame.ts";
+import { framePoint } from "../../../packages/frames/src/local.ts";
 import {
   dominantTerm,
   pointAccuracy,
   type PointAccuracyTerm,
-} from "../../../packages/next/src/frames/pointAccuracy.ts";
+} from "../../../packages/frames/src/pointAccuracy.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import references from "../references.json";
 import {

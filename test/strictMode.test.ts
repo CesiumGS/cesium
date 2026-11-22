@@ -5,11 +5,11 @@
 // leaves; a canvas passes from a disposed engine to a new one. On the fake
 // device of test/fakeGpu.ts and the stubbed store of test/frameStore.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import { Clock } from "../packages/time/src/Clock.ts";
 import type { ViewerOptions } from "../packages/next/widgets/Viewer.ts";
 import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
-import { sharedLoadCount } from "../packages/next/src/frames/sharedLoads.ts";
+import { sharedLoadCount } from "../packages/frames/src/sharedLoads.ts";
 import {
   DATA_FILES,
   STORE,

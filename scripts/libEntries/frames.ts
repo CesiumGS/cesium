@@ -9,4 +9,4 @@
 // with the analytic catalog and loaded with the page. Behind this file the
 // index is a re-export module only, and the widgets link to the modules that
 // declare what they use. This entry still exports exactly the index's names.
-export * from "../../packages/next/src/frames/index.ts";
+export * from "../../packages/frames/src/index.ts";

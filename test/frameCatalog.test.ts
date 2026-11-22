@@ -8,15 +8,15 @@ import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver
 import {
   ANALYTIC_ACCURACY,
   analyticUtcMs,
-} from "../packages/next/src/frames/analytic.ts";
+} from "../packages/frames/src/analytic.ts";
 import {
   createFrameCatalog,
   type FrameCatalog,
-} from "../packages/next/src/frames/catalog.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { createSkyState, skyState } from "../packages/next/src/frames/sky.ts";
-import type { FrameDataWarning } from "../packages/next/src/ephemeris/loadFrameData.ts";
+} from "../packages/frames/src/catalog.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { createSkyState, skyState } from "../packages/frames/src/sky.ts";
+import type { FrameDataWarning } from "../packages/frames/src/ephemeris/loadFrameData.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { icrfToFixed } from "../packages/time/src/celestial.ts";
 import { Instant } from "../packages/time/src/Instant.ts";

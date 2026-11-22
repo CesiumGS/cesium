@@ -1,8 +1,8 @@
-import type { Ephemeris } from "../ephemeris/Ephemeris.ts";
-import { frameTransform } from "../frames/Frame.ts";
-import type { Frames } from "../frames/frames.ts";
-import type { FramePoint } from "../frames/local.ts";
-import { rotationPart } from "../frames/matrix.ts";
+import type { Ephemeris } from "../../../frames/src/ephemeris/Ephemeris.ts";
+import { frameTransform } from "../../../frames/src/Frame.ts";
+import type { Frames } from "../../../frames/src/frames.ts";
+import type { FramePoint } from "../../../frames/src/local.ts";
+import { rotationPart } from "../../../frames/src/matrix.ts";
 import { Ellipsoid } from "@cesium/core";
 import { Instant } from "@cesium/time";
 import { C, GM_EARTH, GM_MOON, GM_SUN } from "./constants.ts";

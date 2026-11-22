@@ -37,9 +37,9 @@ import {
   PROJ_DATA_CATALOG,
   PROJ_FILE_SHA256,
 } from "../packages/next/src/engineering/projPins.ts";
-import { readDaf } from "../packages/next/src/ephemeris/spk.ts";
-import { writePack } from "../packages/next/src/ephemeris/pack.ts";
-import { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
+import { readDaf } from "../packages/frames/src/ephemeris/spk.ts";
+import { writePack } from "../packages/frames/src/ephemeris/pack.ts";
+import { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { GRID_SETS } from "./gridSets.mjs";

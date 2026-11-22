@@ -6,18 +6,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { attachSky } from "../../packages/next/src/frames/attachSky.ts";
-import { createFrameCatalog } from "../../packages/next/src/frames/catalog.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { attachSky } from "../../packages/frames/src/attachSky.ts";
+import { createFrameCatalog } from "../../packages/frames/src/catalog.ts";
 import {
   createSkyState,
   skyState,
   type SkyState,
-} from "../../packages/next/src/frames/sky.ts";
+} from "../../packages/frames/src/sky.ts";
 import type { Engine } from "../../packages/core/src/scene/Engine.ts";
 import { Clock } from "../../packages/time/src/Clock.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { fakeEngine } from "../fakeGpu.ts";
 

@@ -1,18 +1,18 @@
 // Two-vector reference frames (frames 5b, Task 2) on synthetic frames.
 import { describe, expect, it } from "vitest";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
 import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
 import {
   angularVelocity,
   frameVelocity,
-} from "../packages/next/src/frames/motion.ts";
+} from "../packages/frames/src/motion.ts";
 import {
   TwoVectorDegenerateError,
   axesAt,
   twoVectorFrame,
   type Axis,
   type VectorDefinition,
-} from "../packages/next/src/frames/twoVector.ts";
+} from "../packages/frames/src/twoVector.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 

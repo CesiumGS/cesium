@@ -1,11 +1,11 @@
 // A FrameData over synthetic packs for the frame tree's unit tests. Positions
 // and angles are meaningless; the span is TDB [INIT, INIT + COUNT * LEN].
-import { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../packages/next/src/ephemeris/loadFrameData.ts";
+import { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../packages/frames/src/ephemeris/loadFrameData.ts";
 import type {
   EarthOrientationParameters,
   EopSample,
-} from "../packages/next/src/time/eop.ts";
+} from "../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { pack } from "./syntheticPacks.ts";
 

@@ -17,7 +17,7 @@ import type {
   CrsRef,
   CrsUnits,
   ResolvedCoordinates,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 import {
   MOON_GEOGRAPHIC_CRS,
   compoundParts,

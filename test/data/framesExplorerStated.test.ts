@@ -21,8 +21,8 @@ import {
   type TreeNode,
 } from "../../examples/frames-explorer/tree.ts";
 
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import { isUnstated } from "../../packages/next/src/frames/frameAccuracy.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
+import { isUnstated } from "../../packages/frames/src/frameAccuracy.ts";
 
 import { Instant } from "../../packages/time/src/Instant.ts";
 

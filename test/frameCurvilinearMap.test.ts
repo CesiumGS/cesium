@@ -12,9 +12,9 @@ import {
   routeIsAffine,
 } from "../packages/core/src/camera/route.ts";
 import { tableResolver } from "../packages/core/src/camera/tableResolver.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   isCurvilinearFrame,
   isSwitchFrame,
@@ -22,7 +22,7 @@ import {
   switchFrame,
   type CurvilinearFrameSpec,
   type SwitchChoice,
-} from "../packages/next/src/frames/curvilinearFrame.ts";
+} from "../packages/frames/src/curvilinearFrame.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

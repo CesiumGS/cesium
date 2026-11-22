@@ -3,14 +3,14 @@ import { icrfToFixed } from "../packages/time/src/celestial.ts";
 import {
   celestialToTerrestrial,
   interpolatedXys,
-} from "../packages/next/src/time/earthOrientation.ts";
+} from "../packages/frames/src/time/earthOrientation.ts";
 import {
   EarthOrientationParameters,
   type EopSample,
-} from "../packages/next/src/time/eop.ts";
-import { era00 } from "../packages/next/src/time/erfa/rotation.ts";
-import { s06 } from "../packages/next/src/time/erfa/s06.ts";
-import { xy06 } from "../packages/next/src/time/erfa/xy06.ts";
+} from "../packages/frames/src/time/eop.ts";
+import { era00 } from "../packages/frames/src/time/erfa/rotation.ts";
+import { s06 } from "../packages/frames/src/time/erfa/s06.ts";
+import { xy06 } from "../packages/frames/src/time/erfa/xy06.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import earth from "./fixtures/frames/earth.json";

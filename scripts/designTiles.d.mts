@@ -4,7 +4,7 @@ import type {
 } from "../packages/next/src/engineering/EngineeringFrame.ts";
 import type { GridSource } from "../packages/next/src/engineering/proj.ts";
 import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
-import type { Frames } from "../packages/next/src/frames/frames.ts";
+import type { Frames } from "../packages/frames/src/frames.ts";
 
 /** Where in the store the generator writes. */
 export const DESIGN_TILES_DIRECTORY: string;

@@ -1,6 +1,6 @@
 // Synthetic packs with the segment names Ephemeris.fromPacks looks up, for tests.
-import { writePack } from "../packages/next/src/ephemeris/pack.ts";
-import { readDaf } from "../packages/next/src/ephemeris/spk.ts";
+import { writePack } from "../packages/frames/src/ephemeris/pack.ts";
+import { readDaf } from "../packages/frames/src/ephemeris/spk.ts";
 import { writeSpk } from "./spkWriter.ts";
 
 export const INIT = -200;

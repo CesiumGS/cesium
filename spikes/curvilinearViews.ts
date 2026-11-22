@@ -27,7 +27,7 @@ import {
   createFramesResolver,
   switchFrame,
   type SwitchChoice,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import {
   heightOffset,
   verticalExaggeration,

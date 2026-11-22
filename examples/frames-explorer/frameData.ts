@@ -4,7 +4,7 @@
 // frames store's manifest for the report. Its progress is the catalog's
 // `progress` events, shown as the loading model's "frame data" (the worker's
 // own fetch shows only when it fails).
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { LoadingModel } from "./loading.ts";
 import { messageOf } from "./page.ts";

@@ -31,7 +31,7 @@ import type {
   CrsRef,
   CrsUnits,
   ResolvedCoordinates,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 import type { RecordedOperation } from "./crs.ts";
 import type { Pipeline } from "./pipeline.ts";
 import type { GridSource } from "./proj.ts";

@@ -1,9 +1,9 @@
 import { readSpk, type StateSegment } from "../ephemeris/spk.ts";
-import { Frame } from "../frames/Frame.ts";
-import { eigenSymmetric } from "../frames/covariance.ts";
-import type { FrameAccuracy } from "../frames/frameAccuracy.ts";
-import type { Frames } from "../frames/frames.ts";
-import { toParentMatrix } from "../frames/matrix.ts";
+import { Frame } from "../Frame.ts";
+import { eigenSymmetric } from "../covariance.ts";
+import type { FrameAccuracy } from "../frameAccuracy.ts";
+import type { Frames } from "../frames.ts";
+import { toParentMatrix } from "../matrix.ts";
 import { Instant, type LeapSeconds } from "@cesium/time";
 import {
   interpolateState,

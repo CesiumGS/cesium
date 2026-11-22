@@ -8,13 +8,13 @@ import {
   routeForward,
   type CurvilinearFrameSpec,
 } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import {
   heightOffset,
   verticalExaggeration,
 } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { scaleAbout } from "../packages/core/src/transforms/scaleAbout.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import * as m4 from "../packages/core/src/math/mat4.ts";

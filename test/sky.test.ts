@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { createSkyState, skyState } from "../packages/next/src/frames/sky.ts";
+import { frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { createSkyState, skyState } from "../packages/frames/src/sky.ts";
 import { icrfToFixed } from "../packages/time/src/celestial.ts";
-import { celestialToTerrestrial } from "../packages/next/src/time/earthOrientation.ts";
+import { celestialToTerrestrial } from "../packages/frames/src/time/earthOrientation.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { moonAxes, moonPosition } from "../packages/time/src/moon.ts";
 import { sunDirection } from "../packages/time/src/sun.ts";

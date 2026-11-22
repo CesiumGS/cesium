@@ -68,7 +68,7 @@ import {
   STANDOFF_SEMANTIC,
   spacedPoints,
 } from "../examples/design-globe/dualPosition.ts";
-import { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
+import { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
 import {
   EngineeringFrame,
   designPoint,
@@ -82,9 +82,9 @@ import {
 import { formatPipeline, parsePipeline } from "../packages/next/src/engineering/pipeline.ts";
 import { placeRigid } from "../packages/next/src/engineering/placement.ts";
 import { gridSource, loadProj } from "../packages/next/src/engineering/proj.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { measure } from "../packages/next/src/measure/measure.ts";
-import { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import {

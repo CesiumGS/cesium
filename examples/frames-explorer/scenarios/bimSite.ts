@@ -24,7 +24,7 @@ import {
   designPoint,
   type SiteTransform,
 } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { framePoint } from "../../../packages/next/src/frames/local.ts";
+import { framePoint } from "../../../packages/frames/src/local.ts";
 import { gridFactors } from "../../../packages/next/src/engineering/factors.ts";
 import {
   Ellipsoid,

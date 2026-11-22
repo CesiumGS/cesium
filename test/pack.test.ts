@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { chebyshev } from "../packages/next/src/ephemeris/chebyshev.ts";
-import { readPack, writePack } from "../packages/next/src/ephemeris/pack.ts";
-import { readDaf } from "../packages/next/src/ephemeris/spk.ts";
+import { chebyshev } from "../packages/frames/src/ephemeris/chebyshev.ts";
+import { readPack, writePack } from "../packages/frames/src/ephemeris/pack.ts";
+import { readDaf } from "../packages/frames/src/ephemeris/spk.ts";
 import { writeSpk } from "./spkWriter.ts";
 
 const INIT = -200;

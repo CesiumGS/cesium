@@ -1,8 +1,8 @@
 // A revision per reference frame: it goes up on invalidate() and on a new
 // published accuracy, never with time; a route's revision sums its frames.
 import { describe, expect, it } from "vitest";
-import { Frame, routeRevision } from "../packages/next/src/frames/Frame.ts";
-import type { FrameAccuracy } from "../packages/next/src/frames/frameAccuracy.ts";
+import { Frame, routeRevision } from "../packages/frames/src/Frame.ts";
+import type { FrameAccuracy } from "../packages/frames/src/frameAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 

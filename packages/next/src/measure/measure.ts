@@ -1,7 +1,11 @@
-import { frameTransform, type Frame } from "../frames/Frame.ts";
-import type { Frames } from "../frames/frames.ts";
-import { convertPoint, framePoint, type FramePoint } from "../frames/local.ts";
-import { rotationPart } from "../frames/matrix.ts";
+import { frameTransform, type Frame } from "../../../frames/src/Frame.ts";
+import type { Frames } from "../../../frames/src/frames.ts";
+import {
+  convertPoint,
+  framePoint,
+  type FramePoint,
+} from "../../../frames/src/local.ts";
+import { rotationPart } from "../../../frames/src/matrix.ts";
 import {
   type DesignPoint,
   type EngineeringFrame,
@@ -13,7 +17,7 @@ import {
   type Body,
 } from "@cesium/core";
 import { gridFactors } from "../engineering/factors.ts";
-import type { CoordinateOperation } from "../frames/coordinates.ts";
+import type { CoordinateOperation } from "../../../frames/src/coordinates.ts";
 import { mat4, vec3 } from "@cesium/core/internal";
 import { Instant } from "@cesium/time";
 import type { StationOffset } from "../engineering/alignment.ts";
@@ -23,7 +27,7 @@ import {
   type WarningCode,
 } from "./accuracy.ts";
 import { downlinkWithSolution, uplink, type Leg } from "./doppler.ts";
-import { type DrawnThrough } from "../frames/drawn.ts";
+import { type DrawnThrough } from "../../../frames/src/drawn.ts";
 import { lineOfSight } from "./lineOfSight.ts";
 import type { ShapiroBody } from "./lightTime.ts";
 import { surfaceDistance } from "./surface.ts";

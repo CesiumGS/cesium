@@ -22,7 +22,7 @@
 import type {
   FrameDataLoadOptions,
   FrameManifest,
-} from "../ephemeris/frameRoles.ts";
+} from "./ephemeris/frameRoles.ts";
 import type { LoadProgress } from "@cesium/core";
 
 interface SharedLoad {
@@ -58,7 +58,7 @@ function useManifest(
     const abort = new AbortController();
     const entry: StoreManifest = {
       // By dynamic import, as the providers that read it are loaded.
-      promise: import("../ephemeris/frameRoles.ts").then((m) =>
+      promise: import("./ephemeris/frameRoles.ts").then((m) =>
         m.loadFrameManifest(base, abort.signal),
       ),
       abort,

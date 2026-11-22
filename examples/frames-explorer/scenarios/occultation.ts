@@ -24,15 +24,15 @@
 import {
   type Frame,
   frameTransform,
-} from "../../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../../packages/next/src/frames/frames.ts";
+} from "../../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../../packages/frames/src/frames.ts";
 import {
   C,
   EARTH_ROTATION_RATE,
 } from "../../../packages/next/src/measure/constants.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
-import type { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import { type HorizonMask, belowMask, maskAt } from "./horizonMask.ts";
 import { aberrate, angleBetween, azimuthElevation } from "./pointing.ts";
 

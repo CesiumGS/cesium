@@ -4,9 +4,9 @@
 // meanwhile, and the next tick compiles the route and draws by it. This file
 // loads nothing of Cesium IR itself, so what it finds installed is the world's.
 import { beforeAll, describe, expect, it } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { createBox } from "../packages/core/src/scene/meshes.ts";

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   loadFrameData,
   loadFrameRoles,
-} from "../packages/next/src/ephemeris/loadFrameData.ts";
+} from "../packages/frames/src/ephemeris/loadFrameData.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { COUNT, INIT, LEN, pack } from "./syntheticPacks.ts";
 

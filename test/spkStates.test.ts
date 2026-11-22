@@ -3,11 +3,11 @@ import {
   readDaf,
   readSpk,
   type StateSegment,
-} from "../packages/next/src/ephemeris/spk.ts";
+} from "../packages/frames/src/ephemeris/spk.ts";
 import {
   interpolateState,
   windowStart,
-} from "../packages/next/src/trajectory/interpolate.ts";
+} from "../packages/frames/src/trajectory/interpolate.ts";
 import {
   writeSpk,
   type SpkStateWriterSegment,

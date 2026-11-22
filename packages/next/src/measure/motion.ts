@@ -5,4 +5,4 @@ export {
   positionIn,
   velocityIn,
   type Sampler,
-} from "../frames/motion.ts";
+} from "../../../frames/src/motion.ts";

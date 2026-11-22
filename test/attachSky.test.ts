@@ -17,13 +17,13 @@ import {
 import {
   attachSky,
   skyThroughFrames,
-} from "../packages/next/src/frames/attachSky.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
+} from "../packages/frames/src/attachSky.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import {
   createSkyState,
   skyState,
   type SkyState,
-} from "../packages/next/src/frames/sky.ts";
+} from "../packages/frames/src/sky.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { Clock } from "../packages/time/src/Clock.ts";
 import { Instant } from "../packages/time/src/Instant.ts";

@@ -14,7 +14,7 @@ import {
   createFrameCatalog,
   createFramesResolver,
   curvilinearFrame,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import { EARTH, Engine, OffscreenTarget } from "../packages/core/src/index.ts";
 import { placeWithTerms } from "../packages/core/src/scene/curvilinearEvaluate.ts";
 import { drawTerms } from "../packages/core/src/scene/world/placements.ts";

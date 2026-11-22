@@ -10,9 +10,9 @@ import {
   drawnHeightRange,
   liftedPart,
 } from "../packages/core/src/camera/heightProfile.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import {
   verticalExaggerationDescriptor,

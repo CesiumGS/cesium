@@ -19,13 +19,13 @@ import {
   type SnapResult,
 } from "../packages/next/src/engineering/snap.ts";
 import type { PickView } from "../packages/next/src/engineering/pick.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
-import { createFramesPickInterpreter } from "../packages/next/src/frames/pickInterpreter.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFramesPickInterpreter } from "../packages/frames/src/pickInterpreter.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { fromFunction } from "../packages/core/src/transforms/fromFunction.ts";
 import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 import { accuracyOf } from "../packages/next/src/measure/accuracy.ts";
@@ -34,13 +34,10 @@ import {
   sampleSegment,
 } from "../packages/next/src/measure/curve.ts";
 import { drawnDistance } from "../packages/next/src/measure/drawn.ts";
-import {
-  drawnThrough,
-  AFFINE_ONLY,
-} from "../packages/next/src/frames/drawn.ts";
-import { routeStretch } from "../packages/next/src/frames/routeStretch.ts";
+import { drawnThrough, AFFINE_ONLY } from "../packages/frames/src/drawn.ts";
+import { routeStretch } from "../packages/frames/src/routeStretch.ts";
 import { measure } from "../packages/next/src/measure/measure.ts";
-import { truePick } from "../packages/next/src/frames/pickTruth.ts";
+import { truePick } from "../packages/frames/src/pickTruth.ts";
 import { routeSingularRange } from "../packages/core/src/scene/curvilinearBounds.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import {

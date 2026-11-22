@@ -3,9 +3,9 @@
 // it, and selection views on the anchor's body. The fake engine of
 // test/fakeGpu.ts; a stubbed `fetch` serves tileset.json.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { EARTH, MOON, type Body } from "../packages/core/src/scene/Body.ts";

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
-import { toParentMatrix } from "../packages/next/src/frames/matrix.ts";
+import type { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
+import { toParentMatrix } from "../packages/frames/src/matrix.ts";
 import { C, GM_SUN } from "../packages/next/src/measure/constants.ts";
 import {
   apparentDirection,
@@ -11,7 +11,7 @@ import {
 } from "../packages/next/src/measure/lightTime.ts";
 import { positionIn, velocityIn } from "../packages/next/src/measure/motion.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
-import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { writeSpk } from "./spkWriter.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

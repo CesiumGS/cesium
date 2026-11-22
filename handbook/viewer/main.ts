@@ -26,7 +26,7 @@ import {
   attachSky,
   createFrameCatalog,
   type FrameData,
-} from "../../packages/next/src/frames/index.ts";
+} from "../../packages/frames/src/index.ts";
 import { Clock, LeapSeconds } from "../../packages/time/src/index.ts";
 import px from "../../packages/next/widgets/assets/skybox/tycho2t3_80_px.jpg?inline";
 import mx from "../../packages/next/widgets/assets/skybox/tycho2t3_80_mx.jpg?inline";

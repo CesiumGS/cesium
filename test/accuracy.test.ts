@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
 import { accuracyOf } from "../packages/next/src/measure/accuracy.ts";
 import { EARTH_ROTATION_RATE } from "../packages/next/src/measure/constants.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import type {
   EarthOrientationParameters,
   EopSample,
-} from "../packages/next/src/time/eop.ts";
+} from "../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
-import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
-import { parseOem } from "../packages/next/src/trajectory/oem.ts";
+import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
+import { parseOem } from "../packages/frames/src/trajectory/oem.ts";
 import { writeSpk } from "./spkWriter.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 

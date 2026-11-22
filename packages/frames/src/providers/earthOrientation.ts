@@ -3,7 +3,7 @@
 // reaches this module only by dynamic `import()`, so its IAU 2006/2000A
 // series and the EOP parser load only when someone asks for ITRF at
 // "precise".
-import type { FrameData } from "../../ephemeris/loadFrameData.ts";
+import type { FrameData } from "../ephemeris/loadFrameData.ts";
 import {
   leapSecondsFrom,
   loadFrameRoles,
@@ -12,8 +12,8 @@ import {
   type FrameDataLoadOptions,
   type FrameManifest,
   type FrameDataWarning,
-} from "../../ephemeris/frameRoles.ts";
-import { EarthOrientationParameters } from "../../time/eop.ts";
+} from "../ephemeris/frameRoles.ts";
+import { EarthOrientationParameters } from "../time/eop.ts";
 import type { LeapSeconds } from "@cesium/time";
 import type { PreciseEdge } from "../edges.ts";
 import { itrfAccuracy, itrfEdge } from "../itrfEdge.ts";

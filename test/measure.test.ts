@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import type { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import {
   eastNorthUpFrame,
   framePoint,
   type FramePoint,
-} from "../packages/next/src/frames/local.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
+} from "../packages/frames/src/local.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { C } from "../packages/next/src/measure/constants.ts";
 import { downlink, uplink } from "../packages/next/src/measure/doppler.ts";
@@ -14,8 +14,8 @@ import { measure, measureSpan } from "../packages/next/src/measure/measure.ts";
 import { surfaceDistance } from "../packages/next/src/measure/surface.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
-import type { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
-import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
+import type { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";
+import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { writeSpk } from "./spkWriter.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 

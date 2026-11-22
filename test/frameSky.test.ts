@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { FrameSky } from "../packages/next/src/frames/frameSky.ts";
-import { createSkyState, skyState } from "../packages/next/src/frames/sky.ts";
+import { FrameSky } from "../packages/frames/src/frameSky.ts";
+import { createSkyState, skyState } from "../packages/frames/src/sky.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
-import type { FrameData } from "../packages/next/src/ephemeris/loadFrameData.ts";
+import type { FrameData } from "../packages/frames/src/ephemeris/loadFrameData.ts";
 
 const MS = Date.UTC(2026, 3, 6, 23);
 const analytic = (ms: number) => skyState(ms, undefined, createSkyState());

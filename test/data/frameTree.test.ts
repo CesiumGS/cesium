@@ -2,14 +2,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
 import type {
   EarthOrientationParameters,
   EopSample,
-} from "../../packages/next/src/time/eop.ts";
+} from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { SAMPLE } from "../syntheticFrames.ts";

@@ -1,4 +1,4 @@
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
+import type { FrameData } from "./ephemeris/loadFrameData.ts";
 import { createSkyState, skyState, type SkyState } from "./sky.ts";
 
 /**

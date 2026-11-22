@@ -3,10 +3,7 @@
 // family's color, with their labels. Every other part's labels (the
 // overlays', the walk's, the callouts') come in through the label board and
 // go to the globe with the triads', in one set.
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
 import { SECONDARY, type LabelSpec, type TriadSpec } from "./globe.ts";
 import { EARTH_MEAN_RADIUS, WGS84, isFrame, type PageCore } from "./page.ts";
 import { familyMap, type Family } from "./panel/families.ts";

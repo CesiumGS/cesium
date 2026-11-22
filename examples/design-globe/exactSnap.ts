@@ -46,7 +46,7 @@ import {
   engineeringPlacement,
   type TilesetPlacement,
 } from "../../packages/next/src/engineering/placement.ts";
-import type { CoordinateOperation } from "../../packages/next/src/frames/coordinates.ts";
+import type { CoordinateOperation } from "../../packages/frames/src/coordinates.ts";
 import { projectToPixel } from "../../packages/core/src/scene/Camera.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import { CROSS_SECTION, TICKS, sectionSurface } from "./corridor.ts";

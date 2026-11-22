@@ -2,25 +2,25 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
 import {
   framePoint,
   type FramePoint,
-} from "../../packages/next/src/frames/local.ts";
-import { rotationPart } from "../../packages/next/src/frames/matrix.ts";
+} from "../../packages/frames/src/local.ts";
+import { rotationPart } from "../../packages/frames/src/matrix.ts";
 import { C } from "../../packages/next/src/measure/constants.ts";
 import { downlink } from "../../packages/next/src/measure/doppler.ts";
 import {
   apparentDirection,
   solveLightTime,
 } from "../../packages/next/src/measure/lightTime.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
-import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import fixture from "../fixtures/frames/signal.json";
 

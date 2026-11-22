@@ -2,14 +2,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import {
-  createSkyState,
-  skyState,
-} from "../../packages/next/src/frames/sky.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { createSkyState, skyState } from "../../packages/frames/src/sky.ts";
 import { icrfToFixed } from "../../packages/time/src/celestial.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { moonAxes, moonPosition } from "../../packages/time/src/moon.ts";
 import { sunDirection } from "../../packages/time/src/sun.ts";

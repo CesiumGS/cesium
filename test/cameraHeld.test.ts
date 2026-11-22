@@ -9,11 +9,11 @@ import type {
   ClockChange,
   SceneClock,
 } from "../packages/core/src/core/sceneClock.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { rigPreset } from "../packages/next/src/frames/presets.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { rigPreset } from "../packages/frames/src/presets.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
@@ -22,7 +22,7 @@ import type { View } from "../packages/core/src/scene/View.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
-import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { writeSpk } from "./spkWriter.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";

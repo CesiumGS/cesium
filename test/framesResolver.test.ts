@@ -6,11 +6,11 @@
 // draws on its stand-in while measurement still throws).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
-import { ANALYTIC_ACCURACY } from "../packages/next/src/frames/analytic.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import type { FrameData } from "../packages/next/src/ephemeris/loadFrameData.ts";
+import { ANALYTIC_ACCURACY } from "../packages/frames/src/analytic.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import type { FrameData } from "../packages/frames/src/ephemeris/loadFrameData.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { type View } from "../packages/core/src/scene/View.ts";
@@ -18,7 +18,7 @@ import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
 import { icrfToFixed } from "../packages/time/src/celestial.ts";
 import { Clock } from "../packages/time/src/Clock.ts";
-import type { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
+import type { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { fakeEngine } from "./fakeGpu.ts";

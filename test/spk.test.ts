@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { chebyshev } from "../packages/next/src/ephemeris/chebyshev.ts";
-import { parseDaf } from "../packages/next/src/ephemeris/daf.ts";
-import { readDaf } from "../packages/next/src/ephemeris/spk.ts";
+import { chebyshev } from "../packages/frames/src/ephemeris/chebyshev.ts";
+import { parseDaf } from "../packages/frames/src/ephemeris/daf.ts";
+import { readDaf } from "../packages/frames/src/ephemeris/spk.ts";
 import { writeSpk, type SpkWriterSegment } from "./spkWriter.ts";
 
 // Four records of 100 s; each axis is a known cubic in absolute time,

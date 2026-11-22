@@ -11,15 +11,12 @@
 // about the point itself; off that frame's origin the walk adds the
 // rotation's stated error times the point's distance from it (the owner's
 // follow-up, 2026-11-07: MOON_ME at the lunar site), and says so.
-import {
-  convertPoint,
-  framePoint,
-} from "../../packages/next/src/frames/local.ts";
+import { convertPoint, framePoint } from "../../packages/frames/src/local.ts";
 import {
   pointAccuracy,
   type PointAccuracyTerm,
-} from "../../packages/next/src/frames/pointAccuracy.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+} from "../../packages/frames/src/pointAccuracy.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import type {
   AccuracyStatement,
   AccuracyTerm,

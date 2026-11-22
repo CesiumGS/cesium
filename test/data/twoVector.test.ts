@@ -6,20 +6,17 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { Frame, frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import { rotationPart } from "../../packages/next/src/frames/matrix.ts";
-import { angularVelocity } from "../../packages/next/src/frames/motion.ts";
-import {
-  axesAt,
-  twoVectorFrame,
-} from "../../packages/next/src/frames/twoVector.ts";
-import type { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { Frame, frameTransform } from "../../packages/frames/src/Frame.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
+import { rotationPart } from "../../packages/frames/src/matrix.ts";
+import { angularVelocity } from "../../packages/frames/src/motion.ts";
+import { axesAt, twoVectorFrame } from "../../packages/frames/src/twoVector.ts";
+import type { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
-import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import { SAMPLE } from "../syntheticFrames.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import fixture from "../fixtures/frames/twoVector.json";

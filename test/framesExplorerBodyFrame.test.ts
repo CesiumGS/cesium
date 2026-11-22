@@ -22,7 +22,7 @@ import {
   shipFrames,
   shipTrack,
 } from "../examples/frames-explorer/scenarios/vehicles.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
 import { terrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
 import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
 import { Instant } from "../packages/time/src/Instant.ts";

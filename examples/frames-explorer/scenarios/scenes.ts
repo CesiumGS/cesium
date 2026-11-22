@@ -8,10 +8,10 @@
 //
 // Light imports only: the worker's evaluators import the lunar site from
 // here, and the page never bundles the catalog (protocol.ts's rule).
-import type { Frame } from "../../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../../packages/next/src/frames/frames.ts";
+import type { Frame } from "../../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../../packages/frames/src/frames.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
-import { eastNorthUpFrame } from "../../../packages/next/src/frames/local.ts";
+import { eastNorthUpFrame } from "../../../packages/frames/src/local.ts";
 import {
   Ellipsoid,
   fromDegrees,

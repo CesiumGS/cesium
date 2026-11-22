@@ -393,7 +393,7 @@ async function runRerooting(): Promise<RerootingResult> {
     checks.push(await coreOnly(engine, lost));
 
     const { attachSky, createFrameCatalog, createFramesResolver } =
-      await import("../packages/next/src/frames/index.ts");
+      await import("../packages/frames/src/index.ts");
     const { Clock } = await import("../packages/time/src/index.ts");
     const catalog = createFrameCatalog();
     const clock = new Clock({ time: T0 });

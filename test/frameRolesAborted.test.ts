@@ -8,9 +8,9 @@ import {
   loadFrameManifest,
   loadFrameRoles,
   loadFrameRolesWith,
-} from "../packages/next/src/ephemeris/frameRoles.ts";
-import { loadFrameData } from "../packages/next/src/ephemeris/loadFrameData.ts";
-import { sharedProviderLoad } from "../packages/next/src/frames/sharedLoads.ts";
+} from "../packages/frames/src/ephemeris/frameRoles.ts";
+import { loadFrameData } from "../packages/frames/src/ephemeris/loadFrameData.ts";
+import { sharedProviderLoad } from "../packages/frames/src/sharedLoads.ts";
 import { nextTask } from "./frameStore.ts";
 
 /** Unhandled rejections reported while `run` and the tasks after it settle. */

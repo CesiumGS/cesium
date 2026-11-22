@@ -6,7 +6,7 @@ import {
   EMRAT,
   Ephemeris,
   MOON_PA_TO_ME,
-} from "../../packages/next/src/ephemeris/Ephemeris.ts";
+} from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { moonAxes } from "../../packages/time/src/moon.ts";

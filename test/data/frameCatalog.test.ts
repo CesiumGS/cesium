@@ -8,24 +8,21 @@ import {
   ANALYTIC_ACCURACY,
   MEEUS_MOON_METERS,
   MEEUS_MOON_RADIANS,
-} from "../../packages/next/src/frames/analytic.ts";
+} from "../../packages/frames/src/analytic.ts";
 import {
   createFrameCatalog,
   type CatalogFrameName,
   type FrameCatalog,
-} from "../../packages/next/src/frames/catalog.ts";
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import {
-  createFrames,
-  type Frames,
-} from "../../packages/next/src/frames/frames.ts";
+} from "../../packages/frames/src/catalog.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
+import { createFrames, type Frames } from "../../packages/frames/src/frames.ts";
 import {
   loadFrameData,
   type FrameData,
-} from "../../packages/next/src/ephemeris/loadFrameData.ts";
+} from "../../packages/frames/src/ephemeris/loadFrameData.ts";
 import { icrfToFixed } from "../../packages/time/src/celestial.ts";
-import { celestialToTerrestrial } from "../../packages/next/src/time/earthOrientation.ts";
-import type { EopSample } from "../../packages/next/src/time/eop.ts";
+import { celestialToTerrestrial } from "../../packages/frames/src/time/earthOrientation.ts";
+import type { EopSample } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 
 const BASE = "/frames-data/";

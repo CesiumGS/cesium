@@ -27,11 +27,8 @@
 //
 // The verdicts are the trace's, which trails the clock (on demand,
 // sightLines.ts); the lines' places are this frame's.
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
 import { overlayMesh, polyline } from "./overlays.ts";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
-import type { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
+import type { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
 import {
   C,
   GM_MOON,
@@ -8,9 +8,9 @@ import {
   L_C,
 } from "../packages/next/src/measure/constants.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
-import { frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { frameBias } from "../packages/next/src/time/erfa/bias.ts";
+import { frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { frameBias } from "../packages/frames/src/time/erfa/bias.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import bias from "./fixtures/frames/bias.json";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";

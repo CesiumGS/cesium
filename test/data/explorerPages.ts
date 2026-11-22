@@ -45,21 +45,21 @@ import {
   gridSource,
   loadProj,
 } from "../../packages/next/src/engineering/proj.ts";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { type Frame } from "../../packages/next/src/frames/Frame.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { type Frame } from "../../packages/frames/src/Frame.ts";
 
 import { composedAccuracy } from "../../examples/frames-explorer/composed.ts";
-import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import {
   eastNorthUpFrame,
   framePoint,
-} from "../../packages/next/src/frames/local.ts";
+} from "../../packages/frames/src/local.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../packages/next/src/measure/measure.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 export const dir = framesDataDirectory();

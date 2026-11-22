@@ -6,8 +6,8 @@
 // from the same OEM (orionTrack.ts, Task 4c): it never waits for the worker.
 // The overlay's state is overlayControl.ts's, passed in as the shared object
 // it is.
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { familyRgba } from "./globe.ts";
 import { defaultAccuracy, type OverlayState } from "./overlayConfig.ts";

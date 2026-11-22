@@ -13,15 +13,15 @@
 import {
   type Frame,
   frameTransform,
-} from "../../../packages/next/src/frames/Frame.ts";
+} from "../../../packages/frames/src/Frame.ts";
 import {
   convertPoint,
   framePoint,
-} from "../../../packages/next/src/frames/local.ts";
+} from "../../../packages/frames/src/local.ts";
 import { EARTH_ROTATION_RATE } from "../../../packages/next/src/measure/constants.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
-import type { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import {
   fmt,
   plainAccuracy,

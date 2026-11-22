@@ -12,8 +12,8 @@ import {
   type CurvilinearFrameSpec,
   type CurvilinearMap,
 } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   verticalExaggeration,
   heightOffset,
@@ -22,11 +22,11 @@ import { blend } from "../packages/core/src/transforms/blend.ts";
 import { fromFunction } from "../packages/core/src/transforms/fromFunction.ts";
 import { liveCurvilinearMap } from "../packages/core/src/transforms/liveCurvilinearMap.ts";
 import { scaleAbout } from "../packages/core/src/transforms/scaleAbout.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
 import { reprojectionCurvilinearMap } from "../packages/next/src/proj/reprojectionCurvilinearMap.ts";
-import type { CoordinateOperation } from "../packages/next/src/frames/coordinates.ts";
+import type { CoordinateOperation } from "../packages/frames/src/coordinates.ts";
 import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { loadIr } from "../packages/core/src/transform/lazyIr.ts";

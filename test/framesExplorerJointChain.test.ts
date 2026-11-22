@@ -4,12 +4,12 @@
 // (R11), and their stated accuracy composed by the library against the
 // lever-arm rule worked by hand.
 import { describe, expect, it } from "vitest";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { convertPoint, framePoint } from "../packages/next/src/frames/local.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { convertPoint, framePoint } from "../packages/frames/src/local.ts";
 import {
   dominantTerm,
   pointAccuracy,
-} from "../packages/next/src/frames/pointAccuracy.ts";
+} from "../packages/frames/src/pointAccuracy.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import {
   ARM,

@@ -2,14 +2,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { FrameSky } from "../../packages/next/src/frames/frameSky.ts";
-import {
-  createSkyState,
-  skyState,
-} from "../../packages/next/src/frames/sky.ts";
-import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { FrameSky } from "../../packages/frames/src/frameSky.ts";
+import { createSkyState, skyState } from "../../packages/frames/src/sky.ts";
+import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 

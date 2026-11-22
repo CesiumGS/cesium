@@ -16,9 +16,9 @@
 // live at the scenario's time, and the pointing is worked out by hand from
 // the tree's vectors against `measure`'s (R11).
 import { ARCSECOND } from "../units.ts";
-import { frameTransform } from "../../../packages/next/src/frames/Frame.ts";
-import { framePoint } from "../../../packages/next/src/frames/local.ts";
-import { pointAccuracy } from "../../../packages/next/src/frames/pointAccuracy.ts";
+import { frameTransform } from "../../../packages/frames/src/Frame.ts";
+import { framePoint } from "../../../packages/frames/src/local.ts";
+import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import references from "../references.json";

@@ -2,7 +2,7 @@ import {
   MOON_PA_TO_ME,
   frameRotation,
   multiply3 as multiply,
-} from "../frames/lunarConstants.ts";
+} from "../lunarConstants.ts";
 import { Instant } from "@cesium/time";
 import { chebyshev } from "./chebyshev.ts";
 import { readPack, type PackSegment } from "./pack.ts";

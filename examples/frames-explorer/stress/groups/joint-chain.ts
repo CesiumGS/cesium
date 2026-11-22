@@ -8,9 +8,9 @@
 import {
   frameTransform,
   type Frame,
-} from "../../../../packages/next/src/frames/Frame.ts";
-import { framePoint } from "../../../../packages/next/src/frames/local.ts";
-import { pointAccuracy } from "../../../../packages/next/src/frames/pointAccuracy.ts";
+} from "../../../../packages/frames/src/Frame.ts";
+import { framePoint } from "../../../../packages/frames/src/local.ts";
+import { pointAccuracy } from "../../../../packages/frames/src/pointAccuracy.ts";
 import { Instant } from "../../../../packages/time/src/Instant.ts";
 import {
   armFrames,

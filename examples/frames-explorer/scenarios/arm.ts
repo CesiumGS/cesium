@@ -12,9 +12,9 @@
 // (a fixed placement, its survey stated) → Base yaw → Shoulder → Elbow →
 // Wrist → Tool.
 import { RAD_PER_DEG } from "../units.ts";
-import { Frame } from "../../../packages/next/src/frames/Frame.ts";
-import type { FrameAccuracy } from "../../../packages/next/src/frames/frameAccuracy.ts";
-import { eastNorthUpFrame } from "../../../packages/next/src/frames/local.ts";
+import { Frame } from "../../../packages/frames/src/Frame.ts";
+import type { FrameAccuracy } from "../../../packages/frames/src/frameAccuracy.ts";
+import { eastNorthUpFrame } from "../../../packages/frames/src/local.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import type { KnobState } from "./spec.ts";
 import { jointChain, type Joint } from "./jointChain.ts";

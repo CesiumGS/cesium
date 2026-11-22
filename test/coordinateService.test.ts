@@ -12,10 +12,10 @@ import type {
   CoordinateRequest,
   CoordinateService,
   ResolvedCoordinates,
-} from "../packages/next/src/frames/coordinates.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesPickInterpreter } from "../packages/next/src/frames/pickInterpreter.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+} from "../packages/frames/src/coordinates.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesPickInterpreter } from "../packages/frames/src/pickInterpreter.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   EngineeringFrame,
   type EngineeringFrameDefinition,

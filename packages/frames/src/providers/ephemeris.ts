@@ -2,13 +2,13 @@
 // MOON_ICRF (plan 5a, ruling 1) and MOON_ME, from DE440 and the lunar PCK.
 // `Ephemeris.fromPacks` takes both packs, so they load together (plan 5a's
 // call 10). The catalog reaches this module only by dynamic `import()`.
-import { Ephemeris } from "../../ephemeris/Ephemeris.ts";
+import { Ephemeris } from "../ephemeris/Ephemeris.ts";
 import {
   loadFrameRoles,
   loadFrameRolesWith,
   type FrameDataLoadOptions,
   type FrameManifest,
-} from "../../ephemeris/frameRoles.ts";
+} from "../ephemeris/frameRoles.ts";
 import type { Instant } from "@cesium/time";
 import { bodyEdge, gcrfEdge, moonMeEdge, type PreciseEdge } from "../edges.ts";
 import { BUILT_IN_ACCURACY } from "../frameAccuracy.ts";

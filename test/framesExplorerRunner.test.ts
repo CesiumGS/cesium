@@ -20,7 +20,7 @@ import {
   type StressContext,
   type StressResult,
 } from "../examples/frames-explorer/tests.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import type { ProjApi } from "../packages/next/src/engineering/proj.ts";
 import {
   fmt,

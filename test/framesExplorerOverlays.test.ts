@@ -20,16 +20,13 @@ import {
   trueNorthLines,
   type DesignFrameLike,
 } from "../examples/frames-explorer/overlays.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import {
-  rotationPart,
-  toParentMatrix,
-} from "../packages/next/src/frames/matrix.ts";
-import { frameBias } from "../packages/next/src/time/erfa/bias.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { rotationPart, toParentMatrix } from "../packages/frames/src/matrix.ts";
+import { frameBias } from "../packages/frames/src/time/erfa/bias.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
-import type { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 
 const frames = createFrames(syntheticFrameData(SAMPLE));

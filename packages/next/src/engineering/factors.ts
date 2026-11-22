@@ -16,13 +16,13 @@ import type {
   CoordinateOperation,
   CrsRef,
   GridFactors,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 import { crsObject, normalizeExisting, unbound } from "./crs.ts";
 import type { EngineeringFrame } from "./EngineeringFrame.ts";
 import { exists, type PJ, type ProjApi } from "./projApi.ts";
 
 // The data type lives with the coordinate service (the plan's call 36).
-export type { GridFactors } from "../frames/coordinates.ts";
+export type { GridFactors } from "../../../frames/src/coordinates.ts";
 
 interface Projection {
   /** The horizontal projected CRS, for proj_factors. */

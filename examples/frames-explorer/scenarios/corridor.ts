@@ -19,7 +19,7 @@ import {
   EngineeringFrame,
   designPoint,
 } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { framePoint } from "../../../packages/next/src/frames/local.ts";
+import { framePoint } from "../../../packages/frames/src/local.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { EARTH } from "../../../packages/core/src/scene/Body.ts";

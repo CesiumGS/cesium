@@ -2,11 +2,11 @@
 // through the shared loads (CS-708) for a catalog with a signal, or once per
 // catalog without one. On the stubbed store of test/frameStore.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import {
   sharedLoadCount,
   sharedManifestCount,
-} from "../packages/next/src/frames/sharedLoads.ts";
+} from "../packages/frames/src/sharedLoads.ts";
 import {
   DATA_FILES,
   STORE,

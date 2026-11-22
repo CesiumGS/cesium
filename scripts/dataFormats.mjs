@@ -26,7 +26,7 @@
 // so setup leaves every store recording its format.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { FRAMES_DATA_FORMAT } from "../packages/next/src/ephemeris/framesDataFormat.ts";
+import { FRAMES_DATA_FORMAT } from "../packages/frames/src/ephemeris/framesDataFormat.ts";
 import {
   SKY_PACK_BUILD_COMMAND,
   SKY_PACK_FORMAT,

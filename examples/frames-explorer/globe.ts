@@ -5,10 +5,7 @@
 // under an engineering subject. Everything is added through `scope` and
 // removed with the example.
 import { EARTH_POLAR_RADIUS } from "./units.ts";
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import type { MeshData } from "../../packages/core/src/scene/meshes.ts";
 import type {

@@ -2,7 +2,7 @@
 import {
   type Frame,
   frameTransform,
-} from "../../../../packages/next/src/frames/Frame.ts";
+} from "../../../../packages/frames/src/Frame.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import { bodyFrameCase } from "./body-frames.ts";
 import { jointChainCase } from "./joint-chain.ts";

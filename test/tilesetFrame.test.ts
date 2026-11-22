@@ -7,10 +7,10 @@
 // tilesets, and the fake engine of test/fakeGpu.ts.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { routeForward } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { placementOf } from "../packages/next/src/frames/placementQuery.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { placementOf } from "../packages/frames/src/placementQuery.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import {
   geographicToGeocentric,
   utmToGeographic,

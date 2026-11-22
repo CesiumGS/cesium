@@ -16,7 +16,7 @@ import {
   type OrionTrack,
 } from "../examples/frames-explorer/orionTrack.ts";
 import type { OverlayGeometry } from "../examples/frames-explorer/protocol.ts";
-import type { Frames } from "../packages/next/src/frames/frames.ts";
+import type { Frames } from "../packages/frames/src/frames.ts";
 
 afterEach(() => {
   vi.restoreAllMocks();

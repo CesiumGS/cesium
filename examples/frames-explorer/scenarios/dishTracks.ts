@@ -22,13 +22,13 @@ import { ARCSECOND } from "../units.ts";
 import {
   framePoint,
   eastNorthUpFrame,
-} from "../../../packages/next/src/frames/local.ts";
-import type { Frames } from "../../../packages/next/src/frames/frames.ts";
-import { frameTransform } from "../../../packages/next/src/frames/Frame.ts";
+} from "../../../packages/frames/src/local.ts";
+import type { Frames } from "../../../packages/frames/src/frames.ts";
+import { frameTransform } from "../../../packages/frames/src/Frame.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
-import { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import {
   fmt,
   messageOf,
@@ -66,7 +66,7 @@ import { maskAt } from "./horizonMask.ts";
 import { DSN_STATIONS, type StationId, stationOf } from "./scenes.ts";
 import { DSN_STATION_ACCURACY } from "./stated.ts";
 import { length } from "../panel/format.ts";
-import { pointAccuracy } from "../../../packages/next/src/frames/pointAccuracy.ts";
+import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";
 import type { KnobState } from "./spec.ts";
 import { SCENARIOS } from "./specs.ts";
 

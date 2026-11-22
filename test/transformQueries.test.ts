@@ -8,22 +8,16 @@ import {
   routeForward,
   type Route as CameraRoute,
 } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { frameTransform } from "../packages/next/src/frames/Frame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { frameTransform } from "../packages/frames/src/Frame.ts";
 import { verticalExaggeration as frameExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
-import { graphOfFrames } from "../packages/next/src/frames/graphOfFrames.ts";
-import {
-  eastNorthUpFrame,
-  framePoint,
-} from "../packages/next/src/frames/local.ts";
-import {
-  pickIn,
-  graphOfCameraRoute,
-} from "../packages/next/src/frames/pickIn.ts";
-import { pointAccuracy } from "../packages/next/src/frames/pointAccuracy.ts";
-import { locatePick, truePick } from "../packages/next/src/frames/pickTruth.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { graphOfFrames } from "../packages/frames/src/graphOfFrames.ts";
+import { eastNorthUpFrame, framePoint } from "../packages/frames/src/local.ts";
+import { pickIn, graphOfCameraRoute } from "../packages/frames/src/pickIn.ts";
+import { pointAccuracy } from "../packages/frames/src/pointAccuracy.ts";
+import { locatePick, truePick } from "../packages/frames/src/pickTruth.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import {
   geocentricToGeographic,
   utm,

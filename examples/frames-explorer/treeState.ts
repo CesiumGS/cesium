@@ -12,7 +12,7 @@
 // only a node whose value changed is new, with its path to the root, and
 // every other node keeps its identity, so the diagram's unchanged pills
 // and edges don't render again.
-import type { Frame } from "../../packages/next/src/frames/Frame.ts";
+import type { Frame } from "../../packages/frames/src/Frame.ts";
 import { composedAccuracy, type PlacedNode } from "./composed.ts";
 import type { PageCore } from "./page.ts";
 import type { ComposedAccuracy, Reference } from "./panel/model.ts";

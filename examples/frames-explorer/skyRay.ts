@@ -17,11 +17,8 @@
 // signal is lost (the answer's verdict is the worker's `lineOfSight`; this
 // is the same sphere, placed at the frame's instant, for the picture).
 // Labels follow the lines; their text is set again only when it changes.
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
 import type { OrionTrack } from "./orionTrack.ts";

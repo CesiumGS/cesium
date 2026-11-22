@@ -4,18 +4,18 @@ import {
   rotateCovariance,
   eigenSymmetric,
   symmetricSqrt,
-} from "../packages/next/src/frames/covariance.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
+} from "../packages/frames/src/covariance.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
 import {
   checkedAccuracy,
   type FrameAccuracy,
-} from "../packages/next/src/frames/frameAccuracy.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
+} from "../packages/frames/src/frameAccuracy.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
 import {
   pointAccuracy,
   routeLegs,
   separationAccuracy,
-} from "../packages/next/src/frames/pointAccuracy.ts";
+} from "../packages/frames/src/pointAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 

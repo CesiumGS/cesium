@@ -3,10 +3,7 @@
 // the Earth's surface the orbit its flight hands over to (orbit.ts), its rig
 // in a frame's own coordinates, placed Earth-fixed at the clock's instant.
 // cameraRig.ts flies to them.
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
 import { fromDegrees } from "../../packages/core/src/math/ellipsoid.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Framing } from "./globe.ts";

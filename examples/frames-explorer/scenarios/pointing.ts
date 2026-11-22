@@ -9,9 +9,9 @@ import { DEG_PER_RAD, EARTH_MEAN_RADIUS } from "../units.ts";
 import {
   type Frame,
   frameTransform,
-} from "../../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../../packages/next/src/frames/frames.ts";
-import { rotationPart } from "../../../packages/next/src/frames/matrix.ts";
+} from "../../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../../packages/frames/src/frames.ts";
+import { rotationPart } from "../../../packages/frames/src/matrix.ts";
 import {
   C,
   EARTH_ROTATION_RATE,

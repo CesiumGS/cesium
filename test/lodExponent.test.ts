@@ -3,9 +3,9 @@
 // profile, gives the direction-aware slopeMax (= its multiplier).
 import { fakeEngine } from "./fakeGpu.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";

@@ -2,7 +2,7 @@
 // while stand-on-moon shows or the site is selected, and Orion at the
 // instant the globe shows while its path is drawn, with the frame it's
 // drawn in. They go to the globe through the label board, with the triads'.
-import type { Frame } from "../../packages/next/src/frames/Frame.ts";
+import type { Frame } from "../../packages/frames/src/Frame.ts";
 import type { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import type { LabelSpec } from "./globe.ts";
 import type { OverlayState } from "./overlayConfig.ts";

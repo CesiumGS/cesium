@@ -10,17 +10,17 @@ import {
   type AddedFrameSpec,
   type TreeNode,
 } from "../examples/frames-explorer/tree.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import type {
   EarthOrientationParameters,
   EopSample,
-} from "../packages/next/src/time/eop.ts";
-import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
-import { parseOem } from "../packages/next/src/trajectory/oem.ts";
+} from "../packages/frames/src/time/eop.ts";
+import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
+import { parseOem } from "../packages/frames/src/trajectory/oem.ts";
 import type { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
 import { EARTH_ROTATION_RATE } from "../packages/next/src/measure/constants.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";

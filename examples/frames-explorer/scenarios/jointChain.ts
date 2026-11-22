@@ -9,8 +9,8 @@
 // frames are uncached (`cache: false`): a new angle moves them at the same
 // instant. Each joint states its own accuracy (an encoder's angle, a link's
 // length tolerance), and the library composes it (`pointAccuracy`).
-import { Frame } from "../../../packages/next/src/frames/Frame.ts";
-import type { FrameAccuracy } from "../../../packages/next/src/frames/frameAccuracy.ts";
+import { Frame } from "../../../packages/frames/src/Frame.ts";
+import type { FrameAccuracy } from "../../../packages/frames/src/frameAccuracy.ts";
 
 /** One joint of the chain. */
 export interface Joint {

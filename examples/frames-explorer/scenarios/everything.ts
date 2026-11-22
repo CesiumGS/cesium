@@ -25,15 +25,15 @@ import { DEG_PER_RAD } from "../units.ts";
 import {
   frameTransform,
   type Frame,
-} from "../../../packages/next/src/frames/Frame.ts";
+} from "../../../packages/frames/src/Frame.ts";
 import {
   convertPoint,
   framePoint,
-} from "../../../packages/next/src/frames/local.ts";
+} from "../../../packages/frames/src/local.ts";
 import {
   pointAccuracy,
   type PointAccuracy,
-} from "../../../packages/next/src/frames/pointAccuracy.ts";
+} from "../../../packages/frames/src/pointAccuracy.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { C } from "../../../packages/next/src/measure/constants.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";

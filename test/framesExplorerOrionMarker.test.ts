@@ -21,8 +21,8 @@ import type {
   TrajectoryInfo,
 } from "../examples/frames-explorer/protocol.ts";
 import type { LabelBoard } from "../examples/frames-explorer/triadLayer.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

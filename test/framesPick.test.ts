@@ -3,10 +3,10 @@
 // its body, its body-fixed position, design coordinates where the content
 // has a placement, and the composed accuracy. Closes plan 3's R8.
 import { beforeAll, describe, expect, it } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFramesPickInterpreter } from "../packages/next/src/frames/pickInterpreter.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFramesPickInterpreter } from "../packages/frames/src/pickInterpreter.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   FrameUnavailableError,
   type FrameKey,
@@ -21,9 +21,9 @@ import {
 } from "../packages/core/src/scene/pick.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { routeForward } from "../packages/core/src/camera/route.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
-import { pickIn } from "../packages/next/src/frames/pickIn.ts";
+import { pickIn } from "../packages/frames/src/pickIn.ts";
 import {
   Camera,
   centeredIntrinsics,

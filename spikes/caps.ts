@@ -21,7 +21,7 @@ import type { Harness } from "../lab/harness.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import {
   BrepCaps,
   CapScheduler,

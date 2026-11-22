@@ -6,7 +6,7 @@
 import {
   frameTransform,
   type Frame,
-} from "../../../../packages/next/src/frames/Frame.ts";
+} from "../../../../packages/frames/src/Frame.ts";
 import { Ellipsoid } from "../../../../packages/core/src/math/ellipsoid.ts";
 import { terrainLineOfSight } from "../../../../packages/next/src/measure/terrainLineOfSight.ts";
 import { terrainQueries } from "../../../../packages/core/src/query/terrainBackend.ts";

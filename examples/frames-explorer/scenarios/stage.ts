@@ -3,7 +3,7 @@
 // lunar site, Sacramento), turns on what it draws (Orion's path) and flies
 // to its view; its knobs move them; leaving undoes all of it. The scenario
 // host (scenarioHost.ts) calls these as it switches.
-import type { Frame } from "../../../packages/next/src/frames/Frame.ts";
+import type { Frame } from "../../../packages/frames/src/Frame.ts";
 import type { CameraView } from "../cameraViews.ts";
 import { NARROW_VIEW } from "../content.ts";
 import {

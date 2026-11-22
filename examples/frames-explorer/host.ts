@@ -25,18 +25,15 @@ import { CATALOG_GRID_SETS } from "./stress/groups/global-geoids.ts";
 import {
   FRAME_DATA_ROLES,
   loadFrameData,
-} from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import {
-  createFrames,
-  type Frames,
-} from "../../packages/next/src/frames/frames.ts";
+} from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { createFrames, type Frames } from "../../packages/frames/src/frames.ts";
 import {
   readWithProgress,
   type LoadProgress,
 } from "../../packages/core/src/io/readWithProgress.ts";
 import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
-import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import {
   RIGID_VS_EXACT_COLORS,
   dashedLine,
@@ -77,7 +74,7 @@ import {
 } from "./stress/runner.ts";
 import { FrameCache } from "./frameCache.ts";
 import { buildTree, type TreeNode } from "./tree.ts";
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
 import {
   ORION_OEM,
   STATIONS_SPK,

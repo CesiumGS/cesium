@@ -7,8 +7,8 @@
 // feature ID, then the reverse-Z depth), and choose when it maps, as
 // test/onDemandIdle.test.ts answers the meter's.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { Camera } from "../packages/core/src/scene/Camera.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";

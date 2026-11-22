@@ -3,12 +3,12 @@
 // except the optional `frame`, `engineering` and `trajectory` references to
 // the library objects a node stands for (a worker that builds part of the tree
 // leaves them out, and a structured clone carries no class instances).
-import type { Frame } from "../../packages/next/src/frames/Frame.ts";
-import type { FrameAccuracy } from "../../packages/next/src/frames/frameAccuracy.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+import type { Frame } from "../../packages/frames/src/Frame.ts";
+import type { FrameAccuracy } from "../../packages/frames/src/frameAccuracy.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import type { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
-import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import { MOON_ME_ACCURACY } from "./scenarios/stated.ts";
 
 /** How a frame is joined to its parent. */

@@ -12,11 +12,11 @@ import {
   type Route,
   type CurvilinearFrameSpec,
 } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { placementOf } from "../packages/next/src/frames/placementQuery.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { placementOf } from "../packages/frames/src/placementQuery.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import * as m4 from "../packages/core/src/math/mat4.ts";
 import {

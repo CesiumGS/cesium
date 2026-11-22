@@ -2,16 +2,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import {
-  convertPoint,
-  framePoint,
-} from "../../packages/next/src/frames/local.ts";
-import { parseOem } from "../../packages/next/src/trajectory/oem.ts";
-import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
-import type { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
+import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
+import { createFrames } from "../../packages/frames/src/frames.ts";
+import { convertPoint, framePoint } from "../../packages/frames/src/local.ts";
+import { parseOem } from "../../packages/frames/src/trajectory/oem.ts";
+import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
+import type { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { SAMPLE } from "../syntheticFrames.ts";

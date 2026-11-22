@@ -5,9 +5,9 @@
 // browser (spikes/placement.html).
 import { readFileSync } from "node:fs";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { placementOf } from "../packages/next/src/frames/placementQuery.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { placementOf } from "../packages/frames/src/placementQuery.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   CENTER_WORD,
   MAX_DIRECTORY_ENTRIES,

@@ -10,9 +10,9 @@ import {
 import { buildTree, type TreeNode } from "../examples/frames-explorer/tree.ts";
 import { cautionOf } from "../examples/frames-explorer/warnings.ts";
 import { addsNothingText } from "../examples/frames-explorer/panel/walkWords.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
 import { measure } from "../packages/next/src/measure/measure.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";

@@ -23,7 +23,7 @@ import {
   createFrameCatalog,
   createFramesResolver,
   curvilinearFrame,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import { verticalExaggeration } from "../packages/core/src/georeference/index.ts";
 import { HEIGHT_NORMAL_ATTRIBUTE } from "../packages/core/src/globe/heightNormal.ts";
 import {

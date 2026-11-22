@@ -20,8 +20,8 @@
 // the terrain's heights last changed as tiles load. A running scan
 // finishes; heights that change meanwhile queue one more. Never on every
 // tick.
-import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
+import { frameTransform } from "../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
 import {
   terrainLineOfSight,
   type TerrainLineOfSight,

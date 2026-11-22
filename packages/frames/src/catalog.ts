@@ -19,8 +19,8 @@ import type {
   FrameData,
   FrameDataLoadOptions,
   FrameDataWarning,
-} from "../ephemeris/loadFrameData.ts";
-import type { FrameManifest } from "../ephemeris/frameRoles.ts";
+} from "./ephemeris/loadFrameData.ts";
+import type { FrameManifest } from "./ephemeris/frameRoles.ts";
 import { LeapSeconds, type Instant } from "@cesium/time";
 import {
   ANALYTIC_ACCURACY,
@@ -663,8 +663,8 @@ class Catalog implements FrameCatalog {
             load(
               base,
               options,
-              (this.manifest ??= import("../ephemeris/frameRoles.ts").then(
-                (m) => m.loadFrameManifest(base),
+              (this.manifest ??= import("./ephemeris/frameRoles.ts").then((m) =>
+                m.loadFrameManifest(base),
               )),
             );
     if (provider === "earthOrientation") {

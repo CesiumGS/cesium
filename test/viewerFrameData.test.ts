@@ -10,14 +10,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   loadFrameData,
   type FrameData,
-} from "../packages/next/src/ephemeris/loadFrameData.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+} from "../packages/frames/src/ephemeris/loadFrameData.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   createSkyState,
   skyState,
   type SkyState,
-} from "../packages/next/src/frames/sky.ts";
+} from "../packages/frames/src/sky.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { Clock } from "../packages/time/src/Clock.ts";

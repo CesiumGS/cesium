@@ -7,7 +7,7 @@ import type {
 } from "../../../packages/next/src/engineering/crs.ts";
 import type { ProjApi } from "../../../packages/next/src/engineering/proj.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
-import { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
+import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import { takeCitations } from "./references.ts";
 import type {
   Fingerprint,

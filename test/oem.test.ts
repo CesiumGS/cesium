@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseOem } from "../packages/next/src/trajectory/oem.ts";
+import { parseOem } from "../packages/frames/src/trajectory/oem.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 

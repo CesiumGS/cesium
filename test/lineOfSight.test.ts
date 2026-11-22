@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { frameTransform } from "../packages/frames/src/Frame.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { C } from "../packages/next/src/measure/constants.ts";
 import type { LightTimeSolution } from "../packages/next/src/measure/lightTime.ts";
 import {

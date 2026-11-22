@@ -1,9 +1,9 @@
 // Trajectory: Orion's gaps (R7) and its state in MOON_ME at the flyby.
-import { frameTransform } from "../../../../packages/next/src/frames/Frame.ts";
+import { frameTransform } from "../../../../packages/frames/src/Frame.ts";
 import {
   convertPoint,
   framePoint,
-} from "../../../../packages/next/src/frames/local.ts";
+} from "../../../../packages/frames/src/local.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
 import { type StressCase, expectThrow, fmt, plainAccuracy } from "../runner.ts";
 import {

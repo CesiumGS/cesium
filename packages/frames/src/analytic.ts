@@ -13,7 +13,7 @@ import {
   moonPosition,
   sunPosition,
 } from "@cesium/time";
-import { frameBias } from "../time/erfa/bias.ts";
+import { frameBias } from "./time/erfa/bias.ts";
 import type { FrameEdge } from "./edges.ts";
 import { deepFreeze, type FrameAccuracy } from "./frameAccuracy.ts";
 import { MOON_PA_TO_ME } from "./lunarConstants.ts";

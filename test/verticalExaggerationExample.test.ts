@@ -30,11 +30,11 @@ import {
 import {
   createFrameCatalog,
   type FrameCatalog,
-} from "../packages/next/src/frames/catalog.ts";
-import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { truePick } from "../packages/next/src/frames/pickTruth.ts";
-import { isCurvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
+} from "../packages/frames/src/catalog.ts";
+import { Frame } from "../packages/frames/src/Frame.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
+import { truePick } from "../packages/frames/src/pickTruth.ts";
+import { isCurvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { heightNormalInfo } from "../packages/core/src/globe/heightNormal.ts";
 import { upsampleTerrainTile } from "../packages/core/src/globe/quantizedMesh.ts";
 import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";

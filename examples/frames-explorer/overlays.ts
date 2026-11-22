@@ -17,12 +17,9 @@ import {
   type EngineeringFrame,
 } from "../../packages/next/src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
-import {
-  frameTransform,
-  type Frame,
-} from "../../packages/next/src/frames/Frame.ts";
-import type { Frames } from "../../packages/next/src/frames/frames.ts";
-import { rotationPart } from "../../packages/next/src/frames/matrix.ts";
+import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
+import type { Frames } from "../../packages/frames/src/frames.ts";
+import { rotationPart } from "../../packages/frames/src/matrix.ts";
 import type { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import type { MeshData } from "../../packages/core/src/scene/meshes.ts";
 import type { World } from "../../packages/core/src/scene/World.ts";
@@ -32,7 +29,7 @@ import type {
   TransformHandle,
 } from "../../packages/core/src/scene/world/types.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
-import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
+import type { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 
 /** Straight sRGB bytes: red, green, blue, alpha. */
 export type Rgba = readonly [number, number, number, number];

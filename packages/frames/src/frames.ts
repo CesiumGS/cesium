@@ -1,4 +1,4 @@
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
+import type { FrameData } from "./ephemeris/loadFrameData.ts";
 import { EARTH, MOON, type Body } from "@cesium/core";
 import { EME2000_TO_PARENT, MOON_PA_TO_PARENT } from "./analytic.ts";
 import { bodyEdge, gcrfEdge, moonMeEdge } from "./edges.ts";

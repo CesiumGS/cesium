@@ -8,7 +8,7 @@ import { Root } from "@stratakit/mui";
 import { describe, expect, it } from "vitest";
 import { TreeDiagram } from "../examples/frames-explorer/panel/TreeDiagram.tsx";
 import { buildTree } from "../examples/frames-explorer/tree.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import {

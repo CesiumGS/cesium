@@ -16,7 +16,7 @@ import {
   STORE_FORMAT,
   storeFormatProblem,
 } from "../examples/frames-explorer/host.ts";
-import { loadFrameData } from "../packages/next/src/ephemeris/loadFrameData.ts";
+import { loadFrameData } from "../packages/frames/src/ephemeris/loadFrameData.ts";
 import {
   parseManifest,
   SKY_PACK_BUILD_COMMAND,
@@ -25,7 +25,7 @@ import {
 import {
   FRAMES_DATA_FORMAT,
   framesDataFormatProblem,
-} from "../packages/next/src/ephemeris/framesDataFormat.ts";
+} from "../packages/frames/src/ephemeris/framesDataFormat.ts";
 import {
   DATASETS,
   FORMAT_FILE,

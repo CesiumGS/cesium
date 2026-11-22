@@ -30,7 +30,7 @@ import { BrepBuilder } from "../packages/core/src/brep/index.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import {
   CustomShader,
   EARTH,

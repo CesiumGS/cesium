@@ -49,14 +49,14 @@ import type {
   CoordinateOperation,
   CrsRef,
   CrsUnits,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 
 // The CRS data types live with the coordinate service (the plan's call 36).
 export type {
   AreaOfInterest,
   CrsRef,
   CrsUnits,
-} from "../frames/coordinates.ts";
+} from "../../../frames/src/coordinates.ts";
 
 /**
  * The string PROJ accepts for a reference: "EPSG:2227", "EPSG:6420+6360",

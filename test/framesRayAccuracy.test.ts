@@ -1,8 +1,8 @@
 // A ray's accuracy through the frames module (frames 5b, Task 7): the route
 // from a lunar site to the Earth carries MOON_ME's estimated term.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import { MOON } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import type { World } from "../packages/core/src/scene/World.ts";

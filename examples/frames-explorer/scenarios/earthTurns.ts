@@ -12,10 +12,10 @@
 import {
   type Frame,
   frameTransform,
-} from "../../../packages/next/src/frames/Frame.ts";
-import { framePoint } from "../../../packages/next/src/frames/local.ts";
-import { pointAccuracy } from "../../../packages/next/src/frames/pointAccuracy.ts";
-import { earthOrientationSigma } from "../../../packages/next/src/frames/orientationSigma.ts";
+} from "../../../packages/frames/src/Frame.ts";
+import { framePoint } from "../../../packages/frames/src/local.ts";
+import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";
+import { earthOrientationSigma } from "../../../packages/frames/src/orientationSigma.ts";
 import { EARTH_ROTATION_RATE } from "../../../packages/next/src/measure/constants.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import { length, radians } from "../panel/format.ts";

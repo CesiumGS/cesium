@@ -15,11 +15,11 @@ import {
   volumeObb,
   type TileVolume,
 } from "@cesium/core/internal";
-import type { CoordinateOperation } from "../frames/coordinates.ts";
+import type { CoordinateOperation } from "../../../frames/src/coordinates.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
 import { DESIGN_NOT_INVERTED, engineeringPlacement } from "./placement.ts";
-import type { DrawnThrough } from "../frames/drawn.ts";
-import { truePick, type TruePick } from "../frames/pickTruth.ts";
+import type { DrawnThrough } from "../../../frames/src/drawn.ts";
+import { truePick, type TruePick } from "../../../frames/src/pickTruth.ts";
 
 /**
  * The camera a pick's position and feature were read with, for projecting

@@ -2,7 +2,7 @@
 // plan 5a Task 21): its `Frames` are the catalog's tree, and its progress
 // is the catalog's `progress` events, over a stubbed store.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import { createFrameData } from "../examples/frames-explorer/frameData.ts";
 import { LoadingModel } from "../examples/frames-explorer/loading.ts";
 import { pack } from "./syntheticPacks.ts";

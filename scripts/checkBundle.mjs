@@ -29,8 +29,8 @@ import { gzipSync } from "node:zlib";
 import { build, defaultClientConditions } from "vite";
 import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
 import { skyPackGuard } from "./vitePluginSkyPack.ts";
-import { sp } from "../packages/next/src/time/erfa/s06Table.ts";
-import { xyp } from "../packages/next/src/time/erfa/xy06Table.ts";
+import { sp } from "../packages/frames/src/time/erfa/s06Table.ts";
+import { xyp } from "../packages/frames/src/time/erfa/xy06Table.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const keep = process.argv.includes("--keep");

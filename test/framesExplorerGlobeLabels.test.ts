@@ -7,7 +7,7 @@
 // the next frame's placement. Before the loop runs, it is placed at once.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Globe, type LabelSpec } from "../examples/frames-explorer/globe.ts";
-import type { Frame } from "../packages/next/src/frames/Frame.ts";
+import type { Frame } from "../packages/frames/src/Frame.ts";
 import type { Instant } from "../packages/time/src/Instant.ts";
 import type { Viewer } from "../packages/next/widgets/index.ts";
 

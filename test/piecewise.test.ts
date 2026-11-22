@@ -2,15 +2,15 @@
 // moving at 1 m/s along X, a stage offset 10 m in it, and the stage's own path.
 import { describe, expect, it } from "vitest";
 import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { frameVelocity } from "../packages/next/src/frames/motion.ts";
-import { framePoint } from "../packages/next/src/frames/local.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { Frame, frameTransform } from "../packages/frames/src/Frame.ts";
+import { frameVelocity } from "../packages/frames/src/motion.ts";
+import { framePoint } from "../packages/frames/src/local.ts";
 import {
   PiecewiseJumpError,
   piecewiseFrame,
-} from "../packages/next/src/frames/piecewise.ts";
-import { pointAccuracy } from "../packages/next/src/frames/pointAccuracy.ts";
+} from "../packages/frames/src/piecewise.ts";
+import { pointAccuracy } from "../packages/frames/src/pointAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 

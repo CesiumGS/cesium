@@ -11,7 +11,7 @@
 // the reported heights (the drone's, the sea's) into them through GEOID18
 // or not, as the datum knob says, and the page builds the same track from
 // them. Light imports only: the page never bundles PROJ.
-import { Frame } from "../../../packages/next/src/frames/Frame.ts";
+import { Frame } from "../../../packages/frames/src/Frame.ts";
 import {
   Ellipsoid,
   fromDegrees,

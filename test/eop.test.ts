@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
+import { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 

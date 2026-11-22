@@ -35,7 +35,7 @@ import {
   createFrameCatalog,
   createFramesResolver,
   eastNorthUpFrame,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 import type { TerrainRegion } from "../packages/core/src/globe/Globe.ts";
 import { NEEDS_TOKEN, userToken } from "../bench/suite/ionToken.ts";
 

@@ -1,9 +1,9 @@
 // ITRF's precise edge from GCRF and its accuracy: IAU 2006/2000A and the
 // EOP. Apart from `edges.ts` because it pulls the X, Y and s series: only
 // the Earth orientation provider and `createFrames` load it.
-import type { FrameData } from "../ephemeris/loadFrameData.ts";
+import type { FrameData } from "./ephemeris/loadFrameData.ts";
 import { EARTH_ROTATION_RATE } from "@cesium/core/internal";
-import { celestialToTerrestrial } from "../time/earthOrientation.ts";
+import { celestialToTerrestrial } from "./time/earthOrientation.ts";
 import type { Instant } from "@cesium/time";
 import type { FrameEdge } from "./edges.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";

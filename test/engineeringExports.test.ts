@@ -31,7 +31,7 @@ import type {
   CrsRef,
   CrsUnits,
   GridFactors,
-} from "../packages/next/src/frames/index.ts";
+} from "../packages/frames/src/index.ts";
 
 /**
  * Compile-time only: each type is exported from the entry, among them the

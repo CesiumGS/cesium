@@ -32,7 +32,7 @@ import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
 import { buildTree, type TreeNode } from "../examples/frames-explorer/tree.ts";
 import { equalOn } from "../examples/frames-explorer/panel/memo.ts";
 import { share } from "../examples/frames-explorer/share.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

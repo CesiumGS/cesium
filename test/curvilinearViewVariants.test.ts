@@ -6,12 +6,12 @@
 // is spikes/curvilinearViews.ts.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { routeForward, type Route } from "../packages/core/src/camera/route.ts";
-import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
+import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
+import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   switchFrame,
   type SwitchChoice,
-} from "../packages/next/src/frames/curvilinearFrame.ts";
+} from "../packages/frames/src/curvilinearFrame.ts";
 import {
   heightOffset,
   verticalExaggeration,

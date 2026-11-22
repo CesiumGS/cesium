@@ -2,12 +2,12 @@
 import {
   type Frame,
   frameTransform,
-} from "../../../../packages/next/src/frames/Frame.ts";
+} from "../../../../packages/frames/src/Frame.ts";
 import {
   convertPoint,
   eastNorthUpFrame,
   framePoint,
-} from "../../../../packages/next/src/frames/local.ts";
+} from "../../../../packages/frames/src/local.ts";
 import {
   Ellipsoid,
   fromDegrees,

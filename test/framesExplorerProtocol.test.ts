@@ -60,7 +60,7 @@ import {
 import type { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../packages/next/src/engineering/proj.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
-import { createFrames } from "../packages/next/src/frames/frames.ts";
+import { createFrames } from "../packages/frames/src/frames.ts";
 import type { AccuracyStatement } from "../packages/next/src/measure/accuracy.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
