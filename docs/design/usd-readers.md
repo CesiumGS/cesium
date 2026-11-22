@@ -22,13 +22,13 @@ So CS-901's options, from this evidence:
 
 ## The three readers side by side
 
-| Reader                        | Size, Brotli (raw)         | Start, median per sample                 | Agrees with OpenUSD (105 checks) | Page must allow                                         | License                     | Upkeep                                              |
-| ----------------------------- | -------------------------- | ---------------------------------------- | -------------------------------- | ------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
-| Subset reader (TypeScript)    | 9,152 B (27,633 B)         | 14.7 to 27.6 ms                          | 102: all but 3, on the pallet    | Nothing                                                 | This repository's           | Ours; no build                                      |
-| LightUSD 1.0.0 (wasm, `next`) | 817,081 B (2,855,836 B)    | 42.2 to 70.1 ms; doesn't open the pallet | 84: all but the pallet's 21      | `wasm-unsafe-eval`                                      | Apache 2.0                  | Light Transport; C++ and emscripten                 |
-| OpenUSD 26.11.1 (wasm32)      | 1,718,550 B (10,122,668 B) | 138.2 to 153.2 ms                        | The reference                    | Cross-origin isolation (COOP, COEP); `wasm-unsafe-eval` | TOST 1.0 (Apache 2.0 based) | Pixar and AOUSD; C++, oneTBB, emscripten, a harness |
+| Reader                        | Size, Brotli (raw)         | Start, median per sample                 | Agrees with OpenUSD (82 non-empty checks of 126) | Page must allow                                         | License                     | Upkeep                                              |
+| ----------------------------- | -------------------------- | ---------------------------------------- | ------------------------------------------------ | ------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
+| Subset reader (TypeScript)    | 9,152 B (27,633 B)         | 14.7 to 27.6 ms                          | 79 of 82: all but 3, on the pallet               | Nothing                                                 | This repository's           | Ours; no build                                      |
+| LightUSD 1.0.0 (wasm, `next`) | 817,081 B (2,855,836 B)    | 42.2 to 70.1 ms; doesn't open the pallet | 67 of 82: all but 15 on the pallet               | `wasm-unsafe-eval`                                      | Apache 2.0                  | Light Transport; C++ and emscripten                 |
+| OpenUSD 26.11.1 (wasm32)      | 1,718,550 B (10,122,668 B) | 138.2 to 153.2 ms                        | The reference                                    | Cross-origin isolation (COOP, COEP); `wasm-unsafe-eval` | TOST 1.0 (Apache 2.0 based) | Pixar and AOUSD; C++, oneTBB, emscripten, a harness |
 
-None of them needs `unsafe-eval`. All three times are from run `2026-11-22T10-56-32-200Z-apple-metal-3`, on the Mac test machine (Apple M2), five runs each.
+None of them needs `unsafe-eval`. OpenUSD's time includes copying every layer into its in-memory file system, which the other two readers don't do (see Start time). All three times are from run `2026-11-22T10-56-32-200Z-apple-metal-3`, on the Mac test machine (Apple M2), five runs each.
 
 ## Size
 
@@ -63,6 +63,9 @@ Where the time goes, from each worker's own split (medians):
 - **Composing:** subset 3 to 16 ms, growing with the sample; LightUSD 17 to 45 ms; OpenUSD 95 to 110 ms. OpenUSD's composition is nearly flat across samples, from one prim (the cone) to 55 (the lamp): most of it is its first `UsdStage::Open` in a fresh module, which sets up the plugin and schema registries. A long-lived worker would pay that once; a new worker pays it every time.
 - **The rest,** about 10 ms for every reader, is creating the worker and loading its own module from the dev server, the same for all three.
 
+- **OpenUSD's compose time includes a copy the others don't pay.** Before `UsdStage::Open`, the worker writes every layer of the sample into OpenUSD's in-memory file system (`FS.writeFile`), inside the span counted as composing. The subset reader and LightUSD read the layers' bytes directly. That copy was not timed apart in run `2026-11-22T10-56-32-200Z-apple-metal-3`, so its share of OpenUSD's 95 to 110 ms isn't known; read OpenUSD's compose and start numbers as an upper bound on its composition alone. The conclusion doesn't depend on it: OpenUSD's module load alone (34 to 41 ms) and its isolation requirement stay.
+- **The first subset run on a cold Vite server also pays the worker's on-demand transform,** which raises its first-run figure (`firstMs`) but not its median. The subset reader's first runs (up to 35.8 ms against a 17 to 18 ms median) include that.
+
 The first run is slower for every reader, by up to 85 ms for OpenUSD. The machine was quiet by Dyno's measure when the run started (load below 0.3 per core); five runs give medians, not intervals, so read differences of a few milliseconds as no difference.
 
 ## Coverage of CS-802 B's features
@@ -71,11 +74,24 @@ Each reader's composed stage becomes plain prim records (path, type, applied sch
 
 | Feature (its checks)                                                                                     | Subset reader | LightUSD | OpenUSD (reference) |
 | -------------------------------------------------------------------------------------------------------- | ------------- | -------- | ------------------- |
-| FET001: up axis, meters per unit, default prim, prims, meshes, triangles, meshes with normals and extent | 47 of 48      | 40 of 48 | 48 of 48            |
-| FET006: materials, UsdPreviewSurface shaders, textures with a file, meshes with UVs                      | 23 of 24      | 20 of 24 | 24 of 24            |
-| FET009: meshes bound to a material that exists                                                           | 6 of 6        | 5 of 6   | 6 of 6              |
-| FET011: prims with `SemanticsLabelsAPI`, their labels, prims with Isaac's older `SemanticsAPI`           | 18 of 18      | 15 of 18 | 18 of 18            |
-| UsdPhysics: rigid bodies, colliders, mass, joints, physics materials                                     | 29 of 30      | 25 of 30 | 30 of 30            |
+| FET001: up axis, meters per unit, default prim, prims, meshes, triangles, meshes with normals and extent | 37 of 38      | 30 of 38 | 38 of 38            |
+| FET006: materials, UsdPreviewSurface shaders, textures with a file, meshes with UVs                      | 14 of 15      | 13 of 15 | 15 of 15            |
+| FET009: meshes bound to a material that exists                                                           | 4 of 4        | 3 of 4   | 4 of 4              |
+| FET011: prims with `SemanticsLabelsAPI`, their labels, prims with Isaac's older `SemanticsAPI`           | 9 of 9        | 8 of 9   | 9 of 9              |
+| UsdPhysics: rigid bodies, colliders, mass, joints, physics materials                                     | 15 of 16      | 13 of 16 | 16 of 16            |
+| **All five**                                                                                             | 79 of 82      | 67 of 82 | 82 of 82            |
+
+**These count only the non-empty checks:** those where OpenUSD's value isn't empty, zero or null. A reader that ignored a feature would still agree on a sample that has none of it (zero rigid bodies, no labels), so those checks can't tell readers apart. 44 of the 126 checks (21 facts over six samples) are of that kind. They are listed apart, as agreements out of the empty checks: the subset reader 44 of 44, LightUSD 38 of 44, OpenUSD 44 of 44. Per feature, empty checks only:
+
+| Feature    | Empty checks | Subset reader | LightUSD |
+| ---------- | ------------ | ------------- | -------- |
+| FET001     | 10           | 10            | 10       |
+| FET006     | 9            | 9             | 7        |
+| FET009     | 2            | 2             | 2        |
+| FET011     | 9            | 9             | 7        |
+| UsdPhysics | 14           | 14            | 12       |
+
+The figures are recomputed under this rule from run `2026-11-22T10-56-32-200Z-apple-metal-3`'s saved per-check values, not from a new run. They were first counted over all 126 checks (123 for the subset reader and 105 for LightUSD, which the side-by-side table had misstated as 102 and 84 of 105); the empty checks made that look better than it is. The instrument now reports both counts, and "n/a" when OpenUSD opens no sample, so the reference's own row can't claim agreement it didn't earn.
 
 **On five of the six samples, all three readers agree on every check.** Every disagreement is on one sample, the pallet (`industrialplasticpallet_a01`), the one whose layers reference two files outside its folder that the sample doesn't include (a thumbnail rig and a shared physics material). That is a broken asset, as NP.008 would report it, and it shows how each reader fails:
 
@@ -115,6 +131,7 @@ Read from the files themselves (`host.ts`), and confirmed by running each in the
 
 - **The instrument:** one Lab harness, `usdReaders`, registered in `bench/suite/commands/lab.mjs` and listed in Dyno's instrument catalog as `usdReaders` (run kind `lab`, with its metrics: bytes raw, gzip and Brotli, start time, coverage). Lab runs aren't recorded in the results store until CS-401; until then a Lab run's results file name is its run id, which `dyno measure` now keeps in its completion record. That is the one change to Dyno's commands.
 - **Tests:** `test/usdReaders.test.ts` checks the instrument's own logic in Node on fixtures (facts, coverage, both adapters, sizes, the page's requirements). It loads no sample and no build.
+- **The outcome rule:** a run opened a sample only if it composed a stage and delivered its records; a run that composed and then failed is reported as that, not as "not opened". Timings count only runs that opened; records and coverage come from the first run that opened; a sample is opened (every run opened), mixed (some did) or failed (none did). The page and the results file say so, and `test/usdReaders.test.ts` tests the rule.
 - **The page:** on its own dev server (`serve.mjs`, port 4102), Chrome's Edge channel headless through Playwright, the Mac test machine (Apple M2, 8 cores). Five runs per reader and sample, interleaved. Each run creates a new module worker; the reader's module is fetched with `no-store`, so each run fetches and compiles it as a first visit would.
 
 ## Follow-ups

@@ -127,6 +127,9 @@ function sampleFiles(root) {
     root.slice(0, root.indexOf("simready_usd") + "simready_usd".length),
   );
   const out = [];
+  if (!existsSync(top)) {
+    return out;
+  }
   const walk = (d) => {
     for (const e of readdirSync(d, { withFileTypes: true })) {
       const p = join(d, e.name);
@@ -178,12 +181,18 @@ function manifest(bundle) {
       published[f] = new Uint8Array(readFileSync(p));
     }
   }
+  // A SimReady folder that isn't there is missing samples, which the page
+  // reports, not a server error.
+  const samples = SAMPLES.map(([id, root]) => ({
+    id,
+    root,
+    files: sampleFiles(root),
+  }));
   return {
-    samples: SAMPLES.map(([id, root]) => ({
-      id,
-      root,
-      files: sampleFiles(root),
-    })),
+    samples: samples.filter((s) => s.files.length > 0),
+    missingSamples: samples
+      .filter((s) => s.files.length === 0)
+      .map((s) => s.id),
     readers,
     publishedLightUsd: shippedSizes(published),
   };

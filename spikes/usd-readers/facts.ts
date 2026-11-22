@@ -193,16 +193,34 @@ export interface Mismatch {
   readonly want: unknown;
 }
 
-/** How many of a feature's checks a reader got right, over every sample. */
+/**
+ * How many of a feature's checks a reader got right, over every sample.
+ * A check where the reference's value is empty (null, 0, "" or no entries)
+ * is "vacuous": a reader that ignores the feature agrees on it. `agree` and
+ * `total` count every check; the `nonEmpty` pair counts only the checks that
+ * can tell a reader that reads the feature from one that doesn't.
+ */
 export interface FeatureCoverage {
   readonly feature: string;
   readonly agree: number;
   readonly total: number;
+  /** Checks where the reference's value isn't empty. */
+  readonly nonEmpty: number;
+  /** Of those, the ones the reader got right. */
+  readonly nonEmptyAgree: number;
   readonly mismatches: readonly Mismatch[];
 }
 
 const same = (a: unknown, b: unknown): boolean =>
   JSON.stringify(a) === JSON.stringify(b);
+
+/** Whether a fact's value says "none": null, 0, an empty string or list. */
+export const isEmptyFact = (v: unknown): boolean =>
+  v === null ||
+  v === undefined ||
+  v === 0 ||
+  v === "" ||
+  (Array.isArray(v) && v.length === 0);
 
 /**
  * A reader's facts against the reference's, sample by sample. A sample the
@@ -216,6 +234,8 @@ export function coverage(
   return Object.entries(FEATURES).map(([feature, facts]) => {
     let agree = 0;
     let total = 0;
+    let nonEmpty = 0;
+    let nonEmptyAgree = 0;
     const mismatches: Mismatch[] = [];
     for (const [sample, want] of Object.entries(reference)) {
       if (!want) {
@@ -224,8 +244,15 @@ export function coverage(
       const got = candidate[sample];
       for (const fact of facts) {
         total++;
+        const informative = !isEmptyFact(want[fact]);
+        if (informative) {
+          nonEmpty++;
+        }
         if (got && same(got[fact], want[fact])) {
           agree++;
+          if (informative) {
+            nonEmptyAgree++;
+          }
         } else {
           mismatches.push({
             sample,
@@ -236,6 +263,26 @@ export function coverage(
         }
       }
     }
-    return { feature, agree, total, mismatches };
+    return { feature, agree, total, nonEmpty, nonEmptyAgree, mismatches };
   });
+}
+
+/**
+ * One feature's coverage as text: agreements out of the non-empty checks
+ * first, then the vacuous ones apart ("11/12 non-empty; 18/18 empty"). "n/a"
+ * when there is no reference to compare with (no checks at all).
+ */
+export function describeCoverage(c: FeatureCoverage): string {
+  if (c.total === 0) {
+    return "n/a";
+  }
+  const empty = c.total - c.nonEmpty;
+  const emptyAgree = c.agree - c.nonEmptyAgree;
+  const lead =
+    c.nonEmpty === 0
+      ? "n/a (no non-empty checks)"
+      : `${c.nonEmptyAgree}/${c.nonEmpty} non-empty`;
+  return empty === 0
+    ? lead
+    : `${lead}; ${emptyAgree}/${empty} empty (agree trivially)`;
 }

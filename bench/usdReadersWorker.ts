@@ -6,6 +6,7 @@
 
 import type { StageRecord } from "../spikes/usd-readers/facts.ts";
 import { lightusdRecords } from "../spikes/usd-readers/lightusdRecords.ts";
+import { isRequest } from "../spikes/usd-readers/request.ts";
 
 export interface OpenRequest {
   reader: "subset" | "lightusd" | "openusd";
@@ -265,16 +266,7 @@ self.addEventListener(
     const started = performance.now();
     // Only the page that made this worker can message it (no origin to
     // check); refuse anything that isn't a request from it.
-    const request = event.data as Partial<OpenRequest> | undefined;
-    if (
-      typeof request !== "object" ||
-      request === null ||
-      !["subset", "lightusd", "openusd"].includes(String(request.reader)) ||
-      typeof request.module !== "string" ||
-      !request.module.startsWith("/usd-readers/build/") ||
-      typeof request.root !== "string" ||
-      typeof request.files !== "object"
-    ) {
+    if (!isRequest(event.data)) {
       post({ kind: "failed", error: "not a request from the harness page" });
       return;
     }

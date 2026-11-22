@@ -9,12 +9,20 @@
 
 import {
   coverage,
+  describeCoverage,
   FEATURES,
   stageFacts,
   type FeatureCoverage,
   type StageFacts,
   type StageRecord,
 } from "../spikes/usd-readers/facts.ts";
+import {
+  describeOutcome,
+  settle,
+  type Opened,
+  type Outcome,
+  type Run,
+} from "../spikes/usd-readers/outcome.ts";
 import type { Harness } from "../lab/harness.ts";
 import type { OpenRequest, WorkerAnswer } from "./usdReadersWorker.ts";
 
@@ -28,6 +36,8 @@ interface Sizes {
 
 interface Manifest {
   samples: { id: string; root: string; files: string[] }[];
+  /** Samples whose files aren't in the SimReady folder. */
+  missingSamples?: string[];
   readers: Record<
     ReaderId,
     {
@@ -52,18 +62,6 @@ const RUNS = 5;
 const TIMEOUT_MS = 120_000;
 const READERS: ReaderId[] = ["subset", "lightusd", "openusd"];
 const REFERENCE: ReaderId = "openusd";
-
-interface Run {
-  startMs: number;
-  loadMs: number;
-  composeMs: number;
-}
-
-interface Opened {
-  run?: Run;
-  records?: StageRecord;
-  error?: string;
-}
 
 /** One worker, created, sent the sample and timed to its composed stage. */
 function openOnce(
@@ -171,6 +169,11 @@ async function runUsdReaders(status: (text: string) => void) {
   const manifest = (await (
     await fetch("/usd-readers/manifest.json")
   ).json()) as Manifest;
+  if (manifest.samples.length === 0 || (manifest.missingSamples ?? []).length) {
+    throw new Error(
+      `SimReady samples missing: ${(manifest.missingSamples ?? ["all"]).join(", ")} (set SIMREADY_DIR for serve.mjs)`,
+    );
+  }
   status("Fetching the samples…");
   const layers = new Map<string, Map<string, ArrayBuffer>>();
   for (const s of manifest.samples) {
@@ -182,13 +185,12 @@ async function runUsdReaders(status: (text: string) => void) {
     layers.set(s.id, m);
   }
   const readers = READERS.filter((r) => manifest.readers[r].built);
-  const runs: Record<string, Record<string, Run[]>> = {};
-  const records: Record<string, Record<string, StageRecord | undefined>> = {};
-  const errors: Record<string, Record<string, string[]>> = {};
+  const opens: Record<string, Record<string, Opened[]>> = {};
   for (const r of readers) {
-    runs[r] = {};
-    records[r] = {};
-    errors[r] = {};
+    opens[r] = {};
+    for (const s of manifest.samples) {
+      opens[r]![s.id] = [];
+    }
   }
   // Interleaved, so drift on the machine spreads over every reader alike.
   for (let i = 0; i < RUNS; i++) {
@@ -201,32 +203,40 @@ async function runUsdReaders(status: (text: string) => void) {
           s.root,
           layers.get(s.id)!,
         );
-        if (o.run) {
-          (runs[r]![s.id] ??= []).push(o.run);
-        }
-        if (i === 0) {
-          records[r]![s.id] = o.records;
-          errors[r]![s.id] = [
-            ...(o.error ? [o.error] : []),
-            ...(o.records?.errors ?? []),
-          ];
-        }
+        opens[r]![s.id]!.push(o);
       }
+    }
+  }
+  // Every run of a reader on a sample settles into one outcome (see
+  // spikes/usd-readers/outcome.ts for the rule).
+  const outcomes: Record<string, Record<string, Outcome>> = {};
+  for (const r of readers) {
+    outcomes[r] = {};
+    for (const s of manifest.samples) {
+      outcomes[r]![s.id] = settle(opens[r]![s.id]!);
     }
   }
   const facts: Record<string, Record<string, StageFacts | undefined>> = {};
   for (const r of readers) {
     facts[r] = {};
     for (const s of manifest.samples) {
-      const rec = records[r]![s.id];
+      const rec = outcomes[r]![s.id]!.records;
       facts[r]![s.id] = rec ? stageFacts(rec) : undefined;
     }
   }
-  const reference = facts[REFERENCE];
+  // A reference is a reader that opened at least one sample; without one
+  // there is nothing to agree with, and coverage is n/a for every reader.
+  const reference = Object.values(facts[REFERENCE] ?? {}).some(Boolean)
+    ? facts[REFERENCE]
+    : undefined;
   const out = {
     settings: {
       runs: RUNS,
       reference: reference ? REFERENCE : null,
+      outcomeRule:
+        "A run opened a sample only if it composed a stage and delivered its records; a run that composed and then failed is reported as such. Timings count only runs that opened; records and coverage come from the first run that opened. A sample is opened (every run opened), mixed (some did) or failed (none did).",
+      startNote:
+        "The first subset run on a cold Vite server also pays the worker's on-demand transform, which affects firstMs but not the median. OpenUSD's compose time includes copying every layer into its in-memory file system, which the other readers don't do.",
       crossOriginIsolated: globalThis.crossOriginIsolated,
       hardwareConcurrency: navigator.hardwareConcurrency,
       features: FEATURES,
@@ -252,19 +262,40 @@ async function runUsdReaders(status: (text: string) => void) {
             start: Object.fromEntries(
               manifest.samples.map((s) => [
                 s.id,
-                summary(runs[r]![s.id] ?? []),
+                summary(outcomes[r]![s.id]!.timed),
               ]),
+            ),
+            outcomes: Object.fromEntries(
+              manifest.samples.map((s) => {
+                const o = outcomes[r]![s.id]!;
+                return [
+                  s.id,
+                  {
+                    status: o.status,
+                    runs: o.runs,
+                    opened: o.opened,
+                    composedThenFailed: o.composedThenFailed,
+                    failed: o.failed,
+                    text: describeOutcome(o),
+                  },
+                ];
+              }),
             ),
             facts: facts[r],
             primDiff: reference
               ? Object.fromEntries(
                   manifest.samples.map((s) => [
                     s.id,
-                    primDiff(records[r]![s.id], records[REFERENCE]![s.id]),
+                    primDiff(
+                      outcomes[r]![s.id]!.records,
+                      outcomes[REFERENCE]?.[s.id]?.records,
+                    ),
                   ]),
                 )
               : null,
-            errors: errors[r],
+            errors: Object.fromEntries(
+              manifest.samples.map((s) => [s.id, outcomes[r]![s.id]!.errors]),
+            ),
             coverage: cov,
           },
         ];
@@ -310,6 +341,7 @@ function render(table: HTMLTableElement, result: Result): void {
       title: string;
       sizes?: { total: Sizes };
       start?: Record<string, { medianMs: number | null }>;
+      outcomes?: Record<string, { status: string; text: string }>;
       coverage?: FeatureCoverage[] | null;
     };
     const starts = Object.values(x.start ?? {})
@@ -321,12 +353,20 @@ function render(table: HTMLTableElement, result: Result): void {
           x.title,
           kib(x.sizes?.total.raw),
           kib(x.sizes?.total.brotli),
-          starts.length
+          (starts.length
             ? `${Math.min(...starts).toFixed(1)} to ${Math.max(...starts).toFixed(1)} ms`
-            : "–",
-          x.coverage
-            ?.map((c) => `${c.feature.split(" ")[0]} ${c.agree}/${c.total}`)
-            .join(", ") ?? "–",
+            : "–") +
+            Object.entries(x.outcomes ?? {})
+              .filter(([, o]) => o.status !== "opened")
+              .map(([id, o]) => `; ${id} ${o.text}`)
+              .join(""),
+          r === REFERENCE && x.coverage
+            ? "the reference"
+            : (x.coverage
+                ?.map(
+                  (c) => `${c.feature.split(" ")[0]} ${describeCoverage(c)}`,
+                )
+                .join(" | ") ?? "n/a (no reference opened a sample)"),
         ],
         false,
       ),
@@ -341,7 +381,7 @@ export const harness: Harness = {
     title.textContent = "Three USD readers over six SimReady samples";
     const note = document.createElement("p");
     note.textContent =
-      "Size, start time from a new worker to a composed stage, and agreement with OpenUSD on CS-802 B's features. Served by spikes/usd-readers/serve.mjs.";
+      "Size, start time from a new worker to a composed stage, and agreement with OpenUSD on CS-802 B's features, counted over the checks where OpenUSD's value isn't empty, zero or null (the empty ones are listed apart). Timings count only runs that opened a sample; a run that composed and then failed is reported as that. The first subset run on a cold Vite also pays the worker's on-demand transform (firstMs, not the median), and OpenUSD's compose time includes copying every layer into its in-memory file system. Served by spikes/usd-readers/serve.mjs.";
     const statusLine = document.createElement("p");
     statusLine.className = "status";
     statusLine.setAttribute("role", "status");

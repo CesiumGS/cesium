@@ -7,11 +7,18 @@ import { loadLayers, Stage } from "../spikes/usd-subset/compose.ts";
 import { FIXTURE } from "../spikes/usd-subset/fixture.ts";
 import {
   coverage,
+  describeCoverage,
   FEATURES,
   stageFacts,
   type PrimRecord,
   type StageRecord,
 } from "../spikes/usd-readers/facts.ts";
+import {
+  describeOutcome,
+  settle,
+  type Opened,
+} from "../spikes/usd-readers/outcome.ts";
+import { isRequest } from "../spikes/usd-readers/request.ts";
 import {
   hostRequirements,
   shippedSizes,
@@ -159,6 +166,137 @@ describe("coverage", () => {
       expect(c.agree).toBe(0);
       expect(c.mismatches.every((m) => m.got === "(not opened)")).toBe(true);
     }
+  });
+});
+
+describe("coverage, vacuous agreement", () => {
+  const withPhysics = stageFacts(STAGE);
+  const noPhysics = {
+    ...withPhysics,
+    rigidBodies: 0,
+    colliders: 0,
+    massApis: 0,
+    joints: 0,
+    physicsMaterials: 0,
+  };
+  // A reader that ignores physics: every physics fact is 0.
+  const blind = noPhysics;
+  const physics = (
+    out: ReturnType<typeof coverage>,
+  ): ReturnType<typeof coverage>[number] =>
+    out.find((c) => c.feature === "UsdPhysics")!;
+
+  it("a reader that ignores physics doesn't score full marks where the samples have physics", () => {
+    // Sample a has physics, sample b has none (like most SimReady props).
+    const out = physics(
+      coverage({ a: blind, b: blind }, { a: withPhysics, b: noPhysics }),
+    );
+    // The plain count still reads 5 of 10 here, and 10 of 10 on b alone...
+    expect(out.total).toBe(10);
+    expect(out.agree).toBe(5);
+    // ...but the informative checks say it read none of the five facts.
+    expect(out.nonEmpty).toBe(5);
+    expect(out.nonEmptyAgree).toBe(0);
+    expect(describeCoverage(out)).toBe(
+      "0/5 non-empty; 5/5 empty (agree trivially)",
+    );
+  });
+
+  it("on samples with no physics, agreement is all vacuous", () => {
+    const out = physics(coverage({ b: blind }, { b: noPhysics }));
+    expect(out.agree).toBe(out.total);
+    expect(out.nonEmpty).toBe(0);
+    expect(describeCoverage(out)).toBe(
+      "n/a (no non-empty checks); 5/5 empty (agree trivially)",
+    );
+  });
+
+  it("a reader that reads physics scores on the non-empty checks", () => {
+    const out = physics(
+      coverage(
+        { a: withPhysics, b: noPhysics },
+        { a: withPhysics, b: noPhysics },
+      ),
+    );
+    expect([out.nonEmpty, out.nonEmptyAgree]).toEqual([5, 5]);
+    expect(describeCoverage(out)).toBe(
+      "5/5 non-empty; 5/5 empty (agree trivially)",
+    );
+  });
+
+  it("with no reference, there are no checks and the text is n/a", () => {
+    const out = coverage({ a: withPhysics }, { a: undefined });
+    for (const c of out) {
+      expect(c.total).toBe(0);
+      expect(describeCoverage(c)).toBe("n/a");
+    }
+  });
+});
+
+describe("outcome of a reader's runs on one sample", () => {
+  const run = { startMs: 10, loadMs: 2, composeMs: 5 };
+  const opened = (): Opened => ({ run, records: STAGE });
+  const composedThenFailed: Opened = { run, error: "describe failed" };
+  const failed: Opened = { error: "UsdStage::Open failed" };
+
+  it("opened: every run composed and delivered records; all are timed", () => {
+    const o = settle([opened(), opened()]);
+    expect(o.status).toBe("opened");
+    expect(o.timed).toHaveLength(2);
+    expect(o.records).toBe(STAGE);
+    expect(describeOutcome(o)).toBe("opened");
+  });
+
+  it("a run that composed and then failed is named, and not timed", () => {
+    const o = settle([composedThenFailed, opened(), opened()]);
+    expect(o.status).toBe("mixed");
+    expect(o.composedThenFailed).toBe(1);
+    expect(o.timed).toHaveLength(2);
+    expect(o.records).toBe(STAGE);
+    expect(o.errors).toEqual(["describe failed"]);
+    expect(describeOutcome(o)).toBe(
+      "opened in 2 of 3 runs (1 composed, then failed)",
+    );
+  });
+
+  it("failed in every run is not opened and has no timings, but keeps every distinct error", () => {
+    const o = settle([failed, composedThenFailed, failed]);
+    expect(o.status).toBe("failed");
+    expect(o.timed).toEqual([]);
+    expect(o.records).toBeUndefined();
+    expect(o.errors).toEqual(["UsdStage::Open failed", "describe failed"]);
+    expect(describeOutcome(o)).toBe(
+      "did not open in any of 3 runs (1 composed, then failed, 2 failed before composing)",
+    );
+  });
+
+  it("takes records and errors from every run, not run 0 only", () => {
+    const later = { ...STAGE, errors: ["missing layer x"] };
+    const o = settle([failed, { run, records: later }]);
+    expect(o.records).toBe(later);
+    expect(o.errors).toEqual(["UsdStage::Open failed", "missing layer x"]);
+  });
+});
+
+describe("the worker's request check", () => {
+  const good = {
+    reader: "subset",
+    module: "/usd-readers/build/subset/reader.js",
+    root: "a/b.usd",
+    files: { "a/b.usd": new ArrayBuffer(4) },
+  };
+  it("accepts a request from the harness", () => {
+    expect(isRequest(good)).toBe(true);
+  });
+  it("refuses a null or missing files, and anything that isn't a request", () => {
+    expect(isRequest({ ...good, files: null })).toBe(false);
+    expect(isRequest({ ...good, files: undefined })).toBe(false);
+    expect(isRequest({ ...good, files: [] })).toBe(false);
+    expect(isRequest({ ...good, files: { x: "not a buffer" } })).toBe(false);
+    expect(isRequest(null)).toBe(false);
+    expect(isRequest("hello")).toBe(false);
+    expect(isRequest({ ...good, reader: "other" })).toBe(false);
+    expect(isRequest({ ...good, module: "/elsewhere.js" })).toBe(false);
   });
 });
 
