@@ -67,6 +67,13 @@ export interface RouteCase {
   readonly center: Bound;
   /** The Jacobian's entries: their scale is the largest entry of J there. */
   readonly jacobian: Bound;
+  /**
+   * The drawn position: what the kernel writes as the position (the center
+   * term plus the change, relative to the eye, in `units`), against the
+   * float64 map less the eye. Its scale is |F(c)|. Only the corridor cases
+   * set it: it holds CS-54's 0.1 mm baseline on the GPU's own answer.
+   */
+  readonly drawn?: Bound;
 }
 
 /** Floats a kernel writes per row for one route: the position, the center term, then J's columns. */
@@ -80,6 +87,22 @@ export const ROUTE_OUT_FLOATS = 15;
  * alignment, draws 120 m across.
  */
 export const CORRIDOR_CHANGE_M = 1e-4;
+
+/**
+ * The corridor's drawn position (center term plus change) keeps a tenth of a
+ * millimeter too, in meters, on both backends: the 0.1 mm the baseline means
+ * is where the vertex lands.
+ */
+export const CORRIDOR_DRAWN_M = 1e-4;
+
+/**
+ * The corridor's center term, in meters, absolute. `CENTER` would allow
+ * 2 × 10⁻⁷ of |F(c)|, about 3 × 10⁻⁴ m at a station 1.5 km out, more than
+ * the baseline. Measured on an Apple M2 (2026-11-22): at most 3.9 × 10⁻⁵ m on
+ * WebGL 2 (GLSL's plain `(hi - eyeHi) + (lo - eyeLo)`), less on WebGPU, so
+ * 10⁻⁴ m holds with room.
+ */
+export const CORRIDOR_CENTER: Bound = { abs: 1e-4, rel: 0 };
 
 /**
  * float32 on changes: a few hundred ulps of the vertex's own movement, for
@@ -101,7 +124,8 @@ export const POSITION: Bound = { abs: 0, rel: 4e-5 };
  * every route (also the plain `(hi - eyeHi) + (lo - eyeLo)`: 3.9 × 10⁻⁵ m on the
  * corridor 1.5 km from the origin). The worst is 7.8 × 10⁻⁸ of |F(c)|
  * (velocityModel); the bound is 2 × 10⁻⁷ of it. The change from the center, which the
- * draws' offsets ride on, is held apart (`POSITION`).
+ * draws' offsets ride on, is held apart (`POSITION`). The corridor cases take
+ * `CORRIDOR_CENTER` instead, in meters.
  */
 export const CENTER: Bound = { abs: 0, rel: 2e-7 };
 /** float32 on J's entries, against the largest: measured at most 3.5 × 10⁻⁷ of it. */
@@ -294,6 +318,8 @@ export interface RouteReadbackRow {
   position: BoundResult;
   center: BoundResult;
   jacobian: BoundResult;
+  /** The drawn position's result, for a case that sets `drawn`; else null. */
+  drawn: BoundResult | null;
   pass: boolean;
 }
 
@@ -318,6 +344,7 @@ export function newRouteRow(c: RouteCase): RouteReadbackRow {
     position: bound(c.position),
     center: bound(c.center),
     jacobian: bound(c.jacobian),
+    drawn: c.drawn ? bound(c.drawn) : null,
     pass: false,
   };
 }
@@ -327,6 +354,12 @@ export function expectedRoute(c: RouteCase): Float64Array {
   const stride = routeOutStride(c);
   const out = new Float64Array(stride * c.rows.length);
   c.routes.forEach((u, k) => {
+    // The kernels and the expected J are one curvilinear step's.
+    if (u.compiled.steps.length !== 1) {
+      throw new Error(
+        `${c.name}: ${u.compiled.steps.length} curvilinear steps; the route readback compares one`,
+      );
+    }
     const step = u.compiled.steps[0]!;
     const values = u.compiled.paramValues(u.route);
     const local: Record<string, number> = {};
@@ -404,6 +437,10 @@ export function compareRoute(
           // The change: the position less the GPU's own center term.
           const change = gpu[at + e]! - gpu[at + 3 + e]!;
           record(row.position, i, lane, change, cpu, moved * jmax);
+          if (row.drawn) {
+            // The drawn position: the GPU's position as written.
+            record(row.drawn, i, lane, gpu[at + e]!, cpu, size);
+          }
         } else if (e < 6) {
           record(row.center, i, lane, gpu[at + e]!, cpu, size);
         } else {
@@ -413,6 +450,9 @@ export function compareRoute(
     });
   });
   const bounds = [row.position, row.center, row.jacobian];
+  if (row.drawn) {
+    bounds.push(row.drawn);
+  }
   row.compared = bounds.reduce((n, b) => n + b.compared, 0);
   row.maxAbs = Math.max(...bounds.map((b) => b.maxAbs));
   row.worstRatio = Math.max(...bounds.map((b) => b.worstRatio));

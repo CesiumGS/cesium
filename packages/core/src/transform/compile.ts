@@ -567,9 +567,11 @@ function bind(core: Core, route: Route): CompiledRoute {
         out?: Float32Array,
       ) => core.centerConstants(c, values, other ?? route, out),
     },
+    // Not enumerable: spreading, `toEqual` or a structured clone of a
+    // compiled route doesn't run the GLSL emitter.
     {
-      glsl: { get: () => glslText(false), enumerable: true },
-      positionGlsl: { get: () => glslText(true), enumerable: true },
+      glsl: { get: () => glslText(false), enumerable: false },
+      positionGlsl: { get: () => glslText(true), enumerable: false },
     },
   ) as CompiledRoute;
 }

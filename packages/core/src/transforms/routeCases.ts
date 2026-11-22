@@ -41,7 +41,9 @@ import { affine, TransformGraph, type Params } from "../transform/graph.ts";
 import { routeBetween, type Route } from "../transform/route.ts";
 import {
   CENTER,
+  CORRIDOR_CENTER,
   CORRIDOR_CHANGE_M,
+  CORRIDOR_DRAWN_M,
   JACOBIAN,
   offsetsOf,
   POSITION,
@@ -84,6 +86,7 @@ interface Builtin {
   readonly position?: Bound;
   readonly center?: Bound;
   readonly jacobian?: Bound;
+  readonly drawn?: Bound;
 }
 
 function latticeParams(degree: Vec3): Params {
@@ -302,6 +305,8 @@ const BUILTINS: readonly Builtin[] = [
     ],
     half: [60, 60, 1],
     position: { abs: CORRIDOR_CHANGE_M, rel: 0 },
+    center: CORRIDOR_CENTER,
+    drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   },
   {
     name: "corridorUnroll, a polyline",
@@ -314,6 +319,8 @@ const BUILTINS: readonly Builtin[] = [
     ],
     half: [2, 1, 1],
     position: { abs: CORRIDOR_CHANGE_M, rel: 0 },
+    center: CORRIDOR_CENTER,
+    drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   },
   {
     name: "verticalExaggeration",
@@ -470,6 +477,7 @@ export function routeCases(): RouteCase[] {
         position: b.position ?? POSITION,
         center: b.center ?? CENTER,
         jacobian: b.jacobian ?? JACOBIAN,
+        ...(b.drawn ? { drawn: b.drawn } : {}),
       });
     });
   }
@@ -487,8 +495,11 @@ export function routeCases(): RouteCase[] {
     // The corridor's offsets; the twist's box is inside them.
     rows: offsetsOf([3, 3, 1]),
     position: { abs: CORRIDOR_CHANGE_M, rel: POSITION.rel },
-    center: CENTER,
+    // The corridor's center and drawn bounds, in meters, for both routes: the
+    // twist's center term is meters near the origin, well inside them.
+    center: CORRIDOR_CENTER,
     jacobian: JACOBIAN,
+    drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   });
   return out;
 }

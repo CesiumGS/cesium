@@ -9,7 +9,9 @@
 // the Jacobian program within 10⁻⁹ of the analytic one. The GPU half (the
 // readback of every route on both backends, the float32 change from the draw
 // center under 0.1 mm, and two prefixed routes linked into one program) runs
-// in the browser suites, `dyno lab irWgsl irGlsl`.
+// in the browser suites, `dyno lab irWgsl irGlsl`: the corridor rows' `drawn`
+// bound holds the drawn position to 0.1 mm there, and the last test here
+// checks that bound fails a GPU answer that misses it.
 import { describe, expect, it } from "vitest";
 import { ROAD } from "../examples/transform-graph/data/road.ts";
 import {
@@ -30,9 +32,15 @@ import {
   TransformGraph,
 } from "../packages/core/src/transform/index.ts";
 import {
+  compareRoute,
   CORRIDOR_CHANGE_M,
+  CORRIDOR_DRAWN_M,
+  expectedRoute,
+  newRouteRow,
   routeKernelGlsl,
   routeKernelWgsl,
+  routeOutStride,
+  ROUTE_OUT_FLOATS,
 } from "../packages/core/src/transform/routeReadback.ts";
 import { routeCases } from "../packages/core/src/transforms/routeCases.ts";
 import {
@@ -46,6 +54,7 @@ import { defaultParams } from "../packages/core/src/transforms/descriptor.ts";
 interface Naga {
   parseWgsl(source: string): unknown;
   validate(module: unknown): unknown;
+  writeWgsl(module: unknown, info: unknown): string;
 }
 
 // naga-wasm is a devDependency; a missing package skips the naga cases (as in irWgsl.test.ts).
@@ -122,6 +131,17 @@ function corridorRoute(options: CorridorOptions, prefix = "") {
   }
   return { route, compiled };
 }
+
+describe("the route cases", () => {
+  it("are there, one curvilinear step to a route (what the readback's expected J reads)", () => {
+    expect(cases.length).toBeGreaterThan(0);
+    for (const c of cases) {
+      for (const u of c.routes) {
+        expect(u.compiled.steps, c.name).toHaveLength(1);
+      }
+    }
+  });
+});
 
 describe("every built-in's route in both languages", () => {
   const MODES = [
@@ -228,6 +248,21 @@ describe("the name-prefix option", () => {
     expect(a.centerConstantsWgsl).toBe(plain.centerConstantsWgsl);
   });
 
+  it("makes the GLSL on first read, and spreading a route doesn't", () => {
+    clearCompileCache();
+    const { compiled } = corridorRoute({
+      polyline: [
+        [0, 0],
+        [100, 10],
+      ],
+    });
+    expect(Object.keys(compiled)).not.toContain("glsl");
+    expect(Object.keys(compiled)).not.toContain("positionGlsl");
+    const spread = { ...compiled } as Partial<CompiledRoute>;
+    expect(spread.glsl).toBeUndefined();
+    expect(compiled.glsl).toContain("tgRoute(");
+  });
+
   it("refuses a prefix that can't start a name in both languages", () => {
     const graph = new TransformGraph();
     const world = graph.root("world");
@@ -266,6 +301,33 @@ describe("the name-prefix option", () => {
       expect(k.code).toContain("a_tgRoute(p, rc0, ru0, &j0)");
       expect(k.code).toContain("b_tgRoute(p, rc1, ru1, &j1)");
       naga!.validate(naga!.parseWgsl(k.code));
+    },
+  );
+
+  it.skipIf(!naga)(
+    "naga's own list of module-scope names in two prefixed routes: each carries its prefix",
+    () => {
+      // Independent of the prefix pass's declaration pattern: naga parses the
+      // two modules and writes them back, with every module-scope name it
+      // holds (functions, structs, constants, globals, aliases).
+      const two = cases.find((c) => c.routes.length === 2)!;
+      const module = naga!.parseWgsl(
+        two.routes.map((u) => u.compiled.wgsl).join("\n"),
+      );
+      const written = naga!.writeWgsl(module, naga!.validate(module));
+      const names = [
+        ...written.matchAll(
+          /^(?:fn|struct|const|override|alias|var(?:<[^>]*>)?) ([A-Za-z_]\w*)/gm,
+        ),
+      ].map((m) => m[1]!);
+      expect(names.length).toBeGreaterThan(20);
+      expect(names.filter((n) => !/^(?:a_|b_)/.test(n))).toEqual([]);
+      expect(names.filter((n) => n.startsWith("a_")).length).toBeGreaterThan(
+        10,
+      );
+      expect(names.filter((n) => n.startsWith("b_")).length).toBeGreaterThan(
+        10,
+      );
     },
   );
 
@@ -401,15 +463,47 @@ describe("the WebGL 2 corridor baseline, its float64 half", () => {
     });
   }
 
-  it("the GPU half holds the float32 change from the draw center to 0.1 mm, in meters", () => {
-    const corridor = cases.filter((c) =>
-      c.name.startsWith("route: corridorUnroll"),
+  it("the GPU half holds the drawn position, and the change from the draw center, to 0.1 mm, in meters", () => {
+    const corridor = cases.filter(
+      (c) =>
+        c.name.startsWith("route: corridorUnroll") || c.routes.length === 2,
     );
     expect(corridor.length).toBeGreaterThan(0);
+    expect(CORRIDOR_CHANGE_M).toBe(1e-4);
+    expect(CORRIDOR_DRAWN_M).toBe(1e-4);
     for (const c of corridor) {
       expect(c.units).toBe("m");
-      expect(c.position).toEqual({ abs: CORRIDOR_CHANGE_M, rel: 0 });
+      expect(c.position.abs).toBe(CORRIDOR_CHANGE_M);
+      expect(c.drawn, c.name).toEqual({ abs: CORRIDOR_DRAWN_M, rel: 0 });
+      // The center term may not take the rest: it is held in meters too.
+      expect(c.center, c.name).toEqual({ abs: 1e-4, rel: 0 });
     }
-    expect(CORRIDOR_CHANGE_M).toBe(1e-4);
+    // The readback's comparison, on GPU answers made from the float64 ones:
+    // exact, then off by 0.07 mm in the center term and 0.07 mm in the change,
+    // which each bound alone passes and the drawn position (0.14 mm) fails.
+    const c = corridor[0]!;
+    const want = expectedRoute(c);
+    const exact = Float32Array.from(want);
+    const exactRow = newRouteRow(c);
+    compareRoute(exactRow, c, exact);
+    expect(exactRow.pass, "exact answers pass").toBe(true);
+    expect(exactRow.drawn!.compared).toBe(3 * c.rows.length);
+    const off = Float32Array.from(want);
+    const stride = routeOutStride(c);
+    const miss = 0.7e-4;
+    for (let i = 0; i < c.rows.length; i++) {
+      off[stride * i] = want[stride * i]! + 2 * miss;
+      off[stride * i + 3] = want[stride * i + 3]! + miss;
+    }
+    const row = newRouteRow(c);
+    compareRoute(row, c, off);
+    expect(row.center.worstRatio).toBeLessThan(1);
+    expect(row.position.worstRatio).toBeLessThan(1);
+    expect(
+      row.drawn!.maxAbs,
+      `the drawn position is ${row.drawn!.maxAbs} m off; ${CORRIDOR_DRAWN_M} m allowed`,
+    ).toBeGreaterThan(CORRIDOR_DRAWN_M);
+    expect(row.pass).toBe(false);
+    expect(ROUTE_OUT_FLOATS).toBe(15);
   });
 });
