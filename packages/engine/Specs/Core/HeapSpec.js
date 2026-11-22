@@ -114,6 +114,61 @@ describe("Core/Heap", function () {
     expectTrailingReferenceToBeRemoved(heap);
   });
 
+  [1, -1].forEach(function (direction) {
+    const order = direction === 1 ? "ascending" : "descending";
+    const compare = function (a, b) {
+      return direction * (a - b);
+    };
+
+    it(`pops in ${order} order after removing a node whose replacement moves up`, function () {
+      const heap = new Heap({ comparator: compare });
+      const values = [2, 6, 1, 3, 4, 5, 0];
+      values.forEach(function (value) {
+        heap.insert(direction * value);
+      });
+
+      expect(heap.pop(3)).toBe(direction * 6);
+      expect(checkHeap(heap, compare)).toBe(true);
+      expectTrailingReferenceToBeRemoved(heap);
+
+      const actual = [];
+      while (heap.length > 0) {
+        actual.push(heap.pop());
+      }
+      expect(actual).toEqual(
+        [0, 1, 2, 3, 4, 5].map((value) => direction * value),
+      );
+    });
+
+    it(`preserves ${order} order after removing any index`, function () {
+      const inputs = [
+        [0],
+        [0, 1],
+        [0, 10, 1, 11, 12, 2, 3, 13, 14, 15, 16, 4, 5, 6, 7],
+        [3, 1, 3, 0, 2, 0, 2, 1],
+      ];
+      inputs.forEach(function (input) {
+        const values = input.map((value) => direction * value);
+        for (let index = 0; index < values.length; ++index) {
+          const heap = new Heap({ comparator: compare });
+          values.forEach((value) => heap.insert(value));
+          const expected = heap.internalArray.slice(0, heap.length);
+          const removed = expected.splice(index, 1)[0];
+
+          expect(heap.pop(index)).toBe(removed);
+          expect(checkHeap(heap, compare)).toBe(true);
+          expectTrailingReferenceToBeRemoved(heap);
+
+          const actual = [];
+          while (heap.length > 0) {
+            actual.push(heap.pop());
+          }
+          expect(actual).toEqual(expected.sort(compare));
+        }
+      });
+    });
+  });
+
   it("setting maximum length less than current length removes trailing references", function () {
     const heap = new Heap({
       comparator: comparator,
