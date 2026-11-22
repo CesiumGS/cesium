@@ -443,19 +443,13 @@ CS-519 Dyno switches between the engine and the work [Planned], under CS-389 Dyn
   unmet: not linked to a clause yet (open: CS-517, CS-518; check not passed)
   to shape: done_when; check; link CS-517, CS-518 to a clause
 
-CS-524 The tracker runs on human-in-the-lead [Planned], under CS-18 The work tracker
-  outcome: Cesium's work is tracked in human-in-the-lead's format with its hitld commands, installed from a release tag, and Dyno's board reads it through human-in-the-lead's read API.
-  constraints: 4 of 4 done
-  check due: every constraint is done; the check has not passed
-  to shape: done_when; check; link CS-520, CS-521, CS-522, CS-523 to a clause
-
-CS-534 Infrastructure and geoscience data shows in 2.0 [Proposed], under CS-196 Infrastructure and geoscience capabilities
+CS-534 Infrastructure and geoscience data shows in 2.0 [Planned], under CS-196 Infrastructure and geoscience capabilities
   outcome: Scalar fields, volumes and per-element overrides draw at scale, models print to scale and align with their site in WebXR, and gallery examples show each.
   constraints: 0 of 5 done
   unmet: not linked to a clause yet (open: CS-337, CS-338, CS-340, CS-342, CS-343; check not passed)
   to shape: done_when; check; link CS-337, CS-338, CS-340, CS-342, CS-343 to a clause
 
-CS-535 Rays query the scene on the GPU [Proposed], under CS-197 Ray queries and path tracing
+CS-535 Rays query the scene on the GPU [Planned], under CS-197 Ray queries and path tracing
   outcome: Rays query the scene on the GPU, from user code too, for a viewshed, a near-field terrain trace and a progressive path-traced view.
   constraints: 0 of 6 done
   unmet: not linked to a clause yet (open: CS-344, CS-345, CS-346, CS-347, CS-348, CS-349; check not passed)
@@ -467,7 +461,7 @@ CS-560 Content from any source loads through one module seam [Planned], under CS
   unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553; check not passed)
   to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553 to a clause
 
-CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
+CS-561 Dyno's Work page shows the live system and the release plan [Planned], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
   constraints: 14 of 14 done
   check due: every constraint is done; the check has not passed
@@ -615,7 +609,8 @@ CS-5 Warps and the transform graph [Dropped]
 CS-6 Development harness [Dropped]
 CS-7 Upstream follow-ups [Dropped]
 CS-436 The public API [Dropped]
+CS-524 The tracker runs on human-in-the-lead [Done]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-96 open milestone(s)
+95 open milestone(s)
 ```

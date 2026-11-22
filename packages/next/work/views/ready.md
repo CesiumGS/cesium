@@ -28,9 +28,7 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
-  CS-777  The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
-  CS-800  decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -138,6 +136,7 @@ CS-191 Content sources and formats
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
   CS-666  GPM metadata feeds measurement accuracy
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
+  CS-802  decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -215,6 +214,7 @@ CS-389 Dyno as the development harness
   CS-733  Each run records its device, configuration and state
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
+  CS-775  The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know

@@ -518,6 +518,10 @@ CS-18 The work tracker
         CS-635 Sandcastle hosts 2.0's examples
         CS-606 The evals are designed and running in CI
         CS-722 Benchmark results are shared across machines, and dyno is one command
+        CS-506 Initiatives and release gates are settled
+        CS-519 Dyno switches between the engine and the work
+        CS-561 Dyno's Work page shows the live system and the release plan
+        CS-751 The owner's views answer what needs me, what's on track and what's wrong
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -560,6 +564,16 @@ CS-18 The work tracker
         CS-675 1.x's smaller tools have 2.0 homes
         CS-463 Main-thread work fits the tick's slices
         CS-461 A headed run shows whether worker mode ticks smoother
+        CS-505 Issues found for other teams are filed and answered
+        CS-493 Planets show as points, then disks
+        CS-471 Nothing pops when level of detail changes
+        CS-423 Measurements set the default thread
+        CS-465 Jobs share one tick budget and decode can't hang
+        CS-474 Steep warps draw without artifacts
+        CS-495 USD B-reps stream as 3D Tiles
+        CS-467 Fidelity adapts without silent fallbacks
+        CS-534 Infrastructure and geoscience data shows in 2.0
+        CS-504 Tiles are chosen by benefit per byte across views
   CS-532  Release 2.0.0-rc.1
       ← CS-531 Release 2.0.0-beta.1
         CS-416 WebGL 2 reaches parity with WebGPU
@@ -593,6 +607,13 @@ CS-18 The work tracker
       ← CS-532 Release 2.0.0-rc.1
         CS-608 Extension users have validated 2.0 with their own data
         CS-678 The final release is ready to publish
+        CS-428 Artemis II replays from pad to splashdown
+        CS-429 Launch and re-entry fill in the replay
+        CS-477 A MaterialX graph is edited live on the stage
+        CS-496 The CSG sample edits with local operations
+        CS-674 Panoramas, sensors and legacy glTF ship as experimental modules
+        CS-676 Geometry has physics representations
+        CS-535 Rays query the scene on the GPU
 
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel

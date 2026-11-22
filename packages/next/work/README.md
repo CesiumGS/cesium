@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 13 of 42 done, 13 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 15 of 42 done, 11 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -184,12 +184,12 @@ No milestone
 - [x] [CS-575](./items/CS-575-adding-cs-51-s-irwgsl-browser-suite-to-the.md) decision: Adding CS-51's irWgsl browser suite to the browser-suite gate. Done.
 - [x] [CS-759](./items/CS-759-merge-cs-50-cesium-ir-s-passes-ad-intervals.md) decision: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks). Done.
 - [x] [CS-776](./items/CS-776-merge-cs-52-the-glsl-es-3-00-emitter-with-its.md) decision: Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-check left open. Done.
-- [ ] [CS-777](./items/CS-777-the-glsl-es-emitter-s-output-is-cross-checked.md) The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Needs CS-52 and CS-580 (Dyno hardening, packaging and CI).
+- [x] [CS-777](./items/CS-777-the-glsl-es-emitter-s-output-is-cross-checked.md) The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Done.
 - [x] [CS-788](./items/CS-788-merge-cs-53-transforms-move-onto-cesium-ir-with.md) decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today. Done.
 - [?] [CS-790](./items/CS-790-a-lab-parity-page-draws-through-a-compiled.md) A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] [CS-791](./items/CS-791-per-draw-center-constants-on-cesium-ir-s.md) Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
 - [ ] [CS-794](./items/CS-794-the-transform-passes-load-cesium-ir-lazily-so-a.md) The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
-- [ ] [CS-800](./items/CS-800-merge-cs-777-the-glsl-es-emitter-s-output-is.md) decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's. Needs nothing. Decided by owner.
+- [x] [CS-800](./items/CS-800-merge-cs-777-the-glsl-es-emitter-s-output-is.md) decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's. Done.
 
 ### Live MaterialX graph editing
 
@@ -444,14 +444,14 @@ Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-5
 - [ ] [CS-679](./items/CS-679-stale-records-the-api-map-s-entity-and-labels.md) Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal. Needs nothing.
 - [ ] [CS-680](./items/CS-680-triage-the-open-items-that-fit-no-release.md) Triage the open items that fit no release. Needs CS-686.
 
-Milestone: The tracker runs on human-in-the-lead ([CS-524](./milestones/CS-524-the-tracker-runs-on-human-in-the-lead.md), Planned)
+Milestone: The tracker runs on human-in-the-lead ([CS-524](./milestones/CS-524-the-tracker-runs-on-human-in-the-lead.md), Done)
 
 - [x] [CS-520](./items/CS-520-install-human-in-the-lead-v0-1-0-rc-1-pinned.md) Install human-in-the-lead v0.1.0-rc.1, pinned, with its first-run setup. Done.
 - [x] [CS-521](./items/CS-521-the-tracker-s-files-in-human-in-the-lead-s.md) The tracker's files in human-in-the-lead's format. Done.
 - [x] [CS-522](./items/CS-522-hitld-s-commands-replace-scripts-work.md) hitld's commands replace scripts/work. Done.
 - [x] [CS-523](./items/CS-523-dyno-s-board-reads-human-in-the-lead-s-read-api.md) Dyno's board reads human-in-the-lead's read API. Done.
 
-Milestone: Dyno's Work page shows the live system and the release plan ([CS-561](./milestones/CS-561-dyno-s-work-page-shows-the-live-system-and-the.md), Proposed)
+Milestone: Dyno's Work page shows the live system and the release plan ([CS-561](./milestones/CS-561-dyno-s-work-page-shows-the-live-system-and-the.md), Planned)
 
 - [x] [CS-545](./items/CS-545-dyno-s-roadmap-shows-each-release-as-a-flag.md) Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Done.
 - [x] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Done.
@@ -483,10 +483,10 @@ No milestone
 - [x] [CS-527](./items/CS-527-which-milestones-does-2-0-0-beta-1-need.md) decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] [CS-528](./items/CS-528-which-milestones-does-2-0-0-rc-1-need.md) decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] [CS-529](./items/CS-529-which-milestones-does-2-0-0-need.md) decision: Which milestones does 2.0.0 need?. Done.
-- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals) and CS-722 (Dyno as the development harness).
-- [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports) and CS-461 (job system's ports).
+- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561 and CS-751 (Dyno as the development harness).
+- [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities) and CS-504 (Budgeted selection and memory).
 - [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
-- [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals) and CS-678.
+- [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
 - [x] [CS-536](./items/CS-536-approve-a-store-device.md) decision: Approve a store device. Done.
 - [x] [CS-564](./items/CS-564-how-cs-545-s-branch-reaches-main-without-a.md) decision: How CS-545's branch reaches main without a hitld dispatch. Done.
 - [x] [CS-565](./items/CS-565-fast-forward-main-to-cs-545-s-checked-branch.md) decision: Fast-forward main to CS-545's checked branch. Done.
@@ -667,7 +667,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 3 of 33 done, 9 ready, 20 blocked, 1 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 3 of 34 done, 10 ready, 20 blocked, 1 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -719,6 +719,7 @@ No milestone
 - [?] [CS-280](./items/CS-280-thin-wrappers-for-ion-s-rest-api-including.md) Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] [CS-452](./items/CS-452-how-should-semantic-metadata-reach-the-engine.md) decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
 - [x] [CS-551](./items/CS-551-does-content-from-every-kind-of-source-the.md) decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
+- [ ] [CS-802](./items/CS-802-is-nvidia-simready-a-target-for-2-0-at-which.md) decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?. Needs nothing. Decided by owner.
 
 ### Sky, light and atmosphere
 
@@ -864,7 +865,7 @@ No milestone
 
 [CS-196](./projects/CS-196-infrastructure-and-geoscience-capabilities.md), Planned, led by owner: 0 of 7 done, 1 ready, 1 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](../../../docs/design/infrastructure-and-geoscience-capabilities.md).
 
-Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestones/CS-534-infrastructure-and-geoscience-data-shows-in-2-0.md), Proposed)
+Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestones/CS-534-infrastructure-and-geoscience-data-shows-in-2-0.md), Planned)
 
 - [?] [CS-337](./items/CS-337-scalar-fields-on-any-geometry-values-colour.md) Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-265 (Vector drawing and the styling language).
 - [?] [CS-338](./items/CS-338-per-element-overrides-at-scale-through-the.md) Per-element overrides at scale, through the styling language. Proposed. Needs CS-266 (Vector drawing and the styling language).
@@ -881,7 +882,7 @@ No milestone
 
 [CS-197](./projects/CS-197-ray-queries-and-path-tracing.md), Planned, led by owner: 0 of 7 done, 0 ready, 2 blocked, 5 proposed. Plan: [ray-queries-where-they-run.md](../../../docs/design/ray-queries-where-they-run.md).
 
-Milestone: Rays query the scene on the GPU ([CS-535](./milestones/CS-535-rays-query-the-scene-on-the-gpu.md), Proposed)
+Milestone: Rays query the scene on the GPU ([CS-535](./milestones/CS-535-rays-query-the-scene-on-the-gpu.md), Planned)
 
 - [?] [CS-344](./items/CS-344-the-ray-query-design-when-acceleration.md) The ray-query design: when acceleration structures are built, which level of detail a ray sees. Proposed. Needs nothing.
 - [?] [CS-345](./items/CS-345-acceleration-structures-behind-acceleration-ts.md) Acceleration structures behind `acceleration.ts`. Proposed. Needs CS-344.
@@ -948,7 +949,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 50 of 87 done, 13 ready, 16 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 51 of 88 done, 14 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1047,7 +1048,7 @@ No milestone
 - [?] [CS-772](./items/CS-772-dyno-s-views-and-docs-name-the-dyno-commands.md) Dyno's views and docs name the dyno commands, the old wrappers retire, and coldstart takes a free port. Proposed. Needs CS-721.
 - [?] [CS-773](./items/CS-773-dyno-analysis-compare-and-trend-give-verdicts.md) dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
 - [x] [CS-774](./items/CS-774-npx-dyno-works-the-dyno-bin-lives-in-a-private.md) npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Done.
-- [?] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
+- [ ] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go. Needs CS-746, CS-748 and CS-749.
 - [x] [CS-778](./items/CS-778-merge-cs-747-the-what-changed-view-since-you.md) decision: Merge CS-747, the What changed view (since you last looked). Done.
 - [?] [CS-781](./items/CS-781-what-changed-takes-a-since-url-field-so-a.md) What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
 - [x] [CS-782](./items/CS-782-merge-cs-774-npx-dyno-works-through-a-private.md) decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Done.
@@ -1060,6 +1061,7 @@ No milestone
 - [x] [CS-797](./items/CS-797-merge-cs-753-your-move-gets-a-calmer-layout.md) decision: Merge CS-753, Your move gets a calmer layout: fewer, larger, ranked entries. Done.
 - [x] [CS-798](./items/CS-798-merge-cs-393-the-settings-registry-and-multi.md) decision: Merge CS-393, the settings registry and multi-axis sweeps. Done.
 - [?] [CS-799](./items/CS-799-the-health-view-brings-a-chosen-row-into-view.md) The Health view brings a chosen row into view, so a link from Your move lands on it. Proposed. Needs nothing.
+- [x] [CS-801](./items/CS-801-merge-cs-775-the-work-page-s-older-views-retire.md) decision: Merge CS-775, the Work page's older views retire. Done.
 
 ### The public API reviews
 

@@ -87,12 +87,12 @@ graph LR
     CS_575["CS-575 Adding CS-51's irWgsl browser suite to the browser-suite gate"]:::done
     CS_759["CS-759 Merge CS-50, Cesium IR's passes (AD, intervals with splitting, "]:::done
     CS_776["CS-776 Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-chec"]:::done
-    CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::open
+    CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::done
     CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::done
     CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
     CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::open
-    CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::decision
+    CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -422,6 +422,7 @@ graph LR
     CS_666["CS-666 GPM metadata feeds measurement accuracy"]:::open
     CS_667["CS-667 Panoramas as a module"]:::open
     CS_682["CS-682 Audit every extension 1.x 1.147 reads against 2.0, and refresh "]:::open
+    CS_802["CS-802 Is NVIDIA SimReady a target for 2.0, at which profile and relea"]:::decision
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -630,7 +631,7 @@ graph LR
     CS_772["CS-772 Dyno's views and docs name the dyno commands, the old wrappers "]:::proposed
     CS_773["CS-773 dyno analysis compare and trend give verdicts with noise estima"]:::proposed
     CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::done
-    CS_775["CS-775 The Dependencies view's waves grid retires now that the Path vi"]:::proposed
+    CS_775["CS-775 The Work page's older views retire: the Older views menu, the D"]:::open
     CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::done
     CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
     CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::done
@@ -643,6 +644,7 @@ graph LR
     CS_797["CS-797 Merge CS-753, Your move gets a calmer layout: fewer, larger, ra"]:::done
     CS_798["CS-798 Merge CS-393, the settings registry and multi-axis sweeps"]:::done
     CS_799["CS-799 The Health view brings a chosen row into view, so a link from Y"]:::proposed
+    CS_801["CS-801 Merge CS-775, the Work page's older views retire"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -746,6 +748,10 @@ graph LR
   CS_635["CS-635 Sandcastle hosts 2.0's examples"]:::open
   CS_606["CS-606 The evals are designed and running in CI"]:::open
   CS_722["CS-722 Benchmark results are shared across machines, and dyno is one c"]:::open
+  CS_506["CS-506 Initiatives and release gates are settled"]:::open
+  CS_519["CS-519 Dyno switches between the engine and the work"]:::open
+  CS_561["CS-561 Dyno's Work page shows the live system and the release plan"]:::open
+  CS_751["CS-751 The owner's views answer what needs me, what's on track and wha"]:::open
   CS_415["CS-415 WebGL 2 draws models, tiles and the globe"]:::open
   CS_417["CS-417 Transforms and styles compile through Cesium IR"]:::open
   CS_418["CS-418 Any shader language reaches both renderers"]:::open
@@ -786,16 +792,20 @@ graph LR
   CS_675["CS-675 1.x's smaller tools have 2.0 homes"]:::open
   CS_463["CS-463 Main-thread work fits the tick's slices"]:::open
   CS_461["CS-461 A headed run shows whether worker mode ticks smoother"]:::open
-  CS_416["CS-416 WebGL 2 reaches parity with WebGPU"]:::open
+  CS_505["CS-505 Issues found for other teams are filed and answered"]:::open
+  CS_493["CS-493 Planets show as points, then disks"]:::open
+  CS_471["CS-471 Nothing pops when level of detail changes"]:::open
   CS_423["CS-423 Measurements set the default thread"]:::open
   CS_465["CS-465 Jobs share one tick budget and decode can't hang"]:::open
-  CS_467["CS-467 Fidelity adapts without silent fallbacks"]:::open
-  CS_471["CS-471 Nothing pops when level of detail changes"]:::open
-  CS_472["CS-472 Transition costs are measured and the options decided"]:::open
   CS_474["CS-474 Steep warps draw without artifacts"]:::open
+  CS_495["CS-495 USD B-reps stream as 3D Tiles"]:::open
+  CS_467["CS-467 Fidelity adapts without silent fallbacks"]:::open
+  CS_534["CS-534 Infrastructure and geoscience data shows in 2.0"]:::open
+  CS_504["CS-504 Tiles are chosen by benefit per byte across views"]:::open
+  CS_416["CS-416 WebGL 2 reaches parity with WebGPU"]:::open
+  CS_472["CS-472 Transition costs are measured and the options decided"]:::open
   CS_484["CS-484 The performance targets are met or the gaps explained"]:::open
   CS_503["CS-503 Antialiased translucency's cost is known"]:::open
-  CS_504["CS-504 Tiles are chosen by benefit per byte across views"]:::open
   CS_511["CS-511 Scene benchmarks run faster than real time"]:::open
   CS_491["CS-491 Glare and the sky are checked on Intel integrated GPUs"]:::open
   CS_502["CS-502 Slang shaders pass the gate on Windows"]:::open
@@ -813,6 +823,13 @@ graph LR
   CS_695["CS-695 Every package has its API reference"]:::open
   CS_608["CS-608 Extension users have validated 2.0 with their own data"]:::open
   CS_678["CS-678 The final release is ready to publish"]:::open
+  CS_428["CS-428 Artemis II replays from pad to splashdown"]:::open
+  CS_429["CS-429 Launch and re-entry fill in the replay"]:::open
+  CS_477["CS-477 A MaterialX graph is edited live on the stage"]:::open
+  CS_496["CS-496 The CSG sample edits with local operations"]:::open
+  CS_674["CS-674 Panoramas, sensors and legacy glTF ship as experimental modules"]:::open
+  CS_676["CS-676 Geometry has physics representations"]:::open
+  CS_535["CS-535 Rays query the scene on the GPU"]:::open
   CS_20 --> CS_21
   CS_21 --> CS_22
   CS_22 --> CS_23
@@ -1206,6 +1223,10 @@ graph LR
   CS_635 --> CS_530
   CS_606 --> CS_530
   CS_722 --> CS_530
+  CS_506 --> CS_530
+  CS_519 --> CS_530
+  CS_561 --> CS_530
+  CS_751 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1248,6 +1269,16 @@ graph LR
   CS_675 --> CS_531
   CS_463 --> CS_531
   CS_461 --> CS_531
+  CS_505 --> CS_531
+  CS_493 --> CS_531
+  CS_471 --> CS_531
+  CS_423 --> CS_531
+  CS_465 --> CS_531
+  CS_474 --> CS_531
+  CS_495 --> CS_531
+  CS_467 --> CS_531
+  CS_534 --> CS_531
+  CS_504 --> CS_531
   CS_528 --> CS_532
   CS_531 --> CS_532
   CS_416 --> CS_532
@@ -1281,6 +1312,13 @@ graph LR
   CS_532 --> CS_533
   CS_608 --> CS_533
   CS_678 --> CS_533
+  CS_428 --> CS_533
+  CS_429 --> CS_533
+  CS_477 --> CS_533
+  CS_496 --> CS_533
+  CS_674 --> CS_533
+  CS_676 --> CS_533
+  CS_535 --> CS_533
   CS_541 --> CS_542
   CS_564 --> CS_545
   CS_48 --> CS_548
@@ -1419,6 +1457,8 @@ graph LR
   CS_721 --> CS_773
   CS_721 --> CS_774
   CS_746 --> CS_775
+  CS_748 --> CS_775
+  CS_749 --> CS_775
   CS_52 --> CS_777
   CS_580 --> CS_777
   CS_23 --> CS_780
