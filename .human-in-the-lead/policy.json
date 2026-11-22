@@ -22,9 +22,11 @@
       "package.json",
       ".human-in-the-lead/",
       "AGENTS.md",
+      "packages/next/AGENTS.md",
       ".husky/",
       ".github/",
-      ".claude/"
+      ".claude/",
+      "packages/next/.claude/"
     ]
   },
   "dispatch": {
