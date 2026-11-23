@@ -2,10 +2,11 @@
 id: CS-1091
 title: "2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-609
 needs: [CS-951, CS-1090]
+claimed_by: orch-11-CS-1091
 ---
 
 > **Committed by the owner (2026-11-23), through CS-1090 A: once CS-951's pnpm test runs pass.** It replaces CS-894's npm lockfile with pnpm's. Source: CS-951's spike (`docs/design/pnpm-spike.md`). Its changes to owner paths come to the owner at merge.
