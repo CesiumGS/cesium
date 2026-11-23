@@ -33,6 +33,7 @@ import {
 import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import { BudgetArbiter } from "../packages/core/src/source/budget.ts";
 import type {
   ContentWorld,
@@ -2821,5 +2822,475 @@ describe("edits, draws and two opens of one source in one world (CS-847)", () =>
     expect(hidden(bDraw)).toBe(false);
     b.content.edits.hide(box);
     expect(hidden(bDraw)).toBe(true);
+  });
+});
+
+describe("the seam's invariants (CS-1087 A, CS-1085 A, CS-1084 A, CS-1088 A)", () => {
+  /** A seeded generator (mulberry32): every run sees the same cases. */
+  function random(seed: number): () => number {
+    let s = seed | 0;
+    return () => {
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const ALPHABET = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const word = (r: () => number, n: number) =>
+    Array.from(
+      { length: n },
+      () => ALPHABET[Math.floor(r() * ALPHABET.length)],
+    ).join("");
+  const pick = <T>(r: () => number, list: readonly T[]): T =>
+    list[Math.floor(r() * list.length)]!;
+
+  /** Locators with secrets in every place a URL can hold one. */
+  function locators(n: number): string[] {
+    const r = random(847);
+    return Array.from({ length: n }, (_, i) => {
+      const host = `h${i}.example.test`;
+      const secret = word(r, 24);
+      switch (i % 6) {
+        case 0:
+          return `https://${host}/${word(r, 8)}/tiles.layers?access_token=${secret}&layer=${word(r, 5)}`;
+        case 1:
+          return `https://${host}/data.layers?X-Amz-Signature=${secret}&X-Amz-Date=20261122T000000Z&X-Amz-Credential=${word(r, 16)}`;
+        case 2:
+          return `https://${host}/v1/q.layers?next=${encodeURIComponent(`https://other.test/x?token=${secret}`)}&sig=${word(r, 12)}`;
+        case 3:
+          return `data:application/json,${word(r, 10)}?token=${secret}&x=${word(r, 6)}`;
+        case 4:
+          return `https://u${word(r, 4)}:${secret}@${host}/p.layers?k=${word(r, 6)}#${word(r, 10)}`;
+        default:
+          return `https://${host}/a/b.layers?se=2026-12-01&sp=r&sv=2024&sr=b&sig=${secret}#f${word(r, 8)}`;
+      }
+    });
+  }
+
+  /** The longest substring `a` and `b` share. */
+  function shared(a: string, b: string): string {
+    let best = "";
+    let prev = new Array<number>(b.length + 1).fill(0);
+    for (let i = 0; i < a.length; i++) {
+      const row = new Array<number>(b.length + 1).fill(0);
+      for (let j = 0; j < b.length; j++) {
+        if (a[i] === b[j]) {
+          row[j + 1] = prev[j]! + 1;
+          if (row[j + 1]! > best.length) {
+            best = a.slice(i - row[j + 1]! + 1, i + 1);
+          }
+        }
+      }
+      prev = row;
+    }
+    return best;
+  }
+
+  const text = (value: unknown) =>
+    JSON.stringify(value, (_, v: unknown) =>
+      typeof v === "bigint" ? String(v) : v,
+    );
+
+  /** Every Map and Set a content keeps, in it, its rows and its edits. */
+  function tables(content: SourceContent): [string, number][] {
+    const out: [string, number][] = [];
+    const scan = (where: string, o: object) => {
+      for (const [name, value] of Object.entries(o)) {
+        if (value instanceof Map || value instanceof Set) {
+          out.push([`${where}.${name}`, value.size]);
+        }
+      }
+    };
+    scan("content", content);
+    scan("rows", content.rows);
+    scan("edits", content.edits);
+    for (const [feature, map] of content.rows.custom) {
+      out.push([`rows.custom.${feature}`, map.size]);
+    }
+    return out;
+  }
+
+  /** What is resident now: the source's batches and their rows, the feed's own rows, images and draws. */
+  function resident(content: SourceContent): number {
+    let n = content.rows.feed.size + content.drawCount;
+    for (const map of [
+      content.rows.features,
+      content.rows.points,
+      ...content.rows.custom.values(),
+    ]) {
+      for (const held of (
+        map as Map<string, { batch: { count: number } }>
+      ).values()) {
+        n += 1 + held.batch.count;
+      }
+    }
+    return n + content.rows.images.size;
+  }
+
+  it("no locator text in identity: no substring of a URL longer than its origin reaches an ID input, a change set, a StableKey, a report or a message", async () => {
+    const engine = await fakeEngine();
+    try {
+      const world = engine.createWorld();
+      engine.addView({ target: new OffscreenTarget(64, 48), world });
+      engine.sources.registerKind({ id: "sample", module: SAMPLE });
+      engine.sources.registerKind({ id: "layered", module: LAYERED });
+      const reports: string[] = [];
+      engine.errors.on((e) => reports.push(e.message));
+      // A host's resolver that declares no name: the engine names it.
+      engine.sources.addResolver({
+        id: "bare",
+        accepts: (ref) => "resolver" in ref && ref.resolver === "bare",
+        resolve: (ref) =>
+          Promise.resolve({
+            kind: "layered",
+            url: new URL("id" in ref ? ref.id : ""),
+            credits: [],
+          }),
+      });
+      for (const href of locators(24)) {
+        reports.length = 0;
+        const said: string[] = [];
+        const content = await engine.open({ url: href, kind: "layered" });
+        // A second open of one URL without an id: reported, with an ordinal.
+        const second = await engine.open({ url: href, kind: "layered" });
+        const item = world.add(content);
+        engine.sources.tick();
+        engine.sources.tick();
+        // A kind that refuses it, and a change set for other content.
+        await engine
+          .open({ url: href, kind: "sample" })
+          .catch((e: Error) => said.push(e.message));
+        try {
+          second.resolve({ id: "x", source: "other", ops: [] });
+        } catch (e) {
+          said.push((e as Error).message);
+        }
+        const bare = await engine.open({ resolver: "bare", id: href });
+        expect(bare.source).toBe(content.source);
+        const box = world.identity.identify(content.featureId("a/box"))!;
+        const inputs = [
+          content.source,
+          content.id,
+          second.id,
+          bare.id,
+          item.key,
+          text(box.key),
+          text(world.identities.identityOfDraw(box.draw!.index)),
+          changeSetToJson(
+            content.resolve({
+              id: "cs-1",
+              source: content.source,
+              ops: [
+                { op: "delete", key: "road-0" },
+                { op: "insert", key: "new", feature: {} },
+              ],
+            }),
+          ),
+          ...reports,
+          ...said,
+        ];
+        const origin = new URL(href).origin;
+        for (const input of inputs) {
+          const common = shared(input, href);
+          expect(
+            common.length,
+            `"${common}" of ${href} in ${input}`,
+          ).toBeLessThanOrEqual(origin.length);
+        }
+        expect(said).toHaveLength(2);
+        expect(
+          reports.some((m) => m.includes("is open or drawn already")),
+        ).toBe(true);
+        content.destroy();
+        second.destroy();
+        bare.destroy();
+      }
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it("bounded state: after any sequence of puts, removes, edits and feed ops, no table is larger than the resident rows plus the host's edits", async () => {
+    const { rt, place } = runtime();
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    place(content);
+    rt.tick();
+    rt.tick();
+    const { sinks } = sourceOf(content).host;
+    const r = random(1085);
+    const keys = Array.from({ length: 40 }, (_, i) => `f${i}`);
+    const draws = new Map<string, DrawHandle>();
+    for (let step = 0; step < 3000; step++) {
+      const roll = r();
+      if (roll < 0.25) {
+        const count = 1 + Math.floor(r() * 4);
+        sinks.points.put({
+          key: `t${Math.floor(r() * 6)}`,
+          crs: "EPSG:4978",
+          count,
+          positions: new Float64Array(count * 3),
+          names: Array.from({ length: count }, () => pick(r, keys)),
+          properties: { speed: new Float64Array(count) },
+        });
+      } else if (roll < 0.4) {
+        sinks.points.remove(`t${Math.floor(r() * 6)}`);
+      } else if (roll < 0.5) {
+        const id = `d${Math.floor(r() * 5)}`;
+        const was = draws.get(id);
+        if (was) {
+          sinks.draws.removeDraw(was);
+          draws.delete(id);
+        } else {
+          draws.set(
+            id,
+            sinks.draws.addDraw({
+              mesh: sinks.draws.addMesh(createBox()),
+              id,
+              origin: Float64Array.of(0, 0, 0),
+            }),
+          );
+        }
+      } else if (roll < 0.7) {
+        const key = pick(r, keys);
+        const edit = r();
+        if (edit < 0.3) {
+          content.edits.hide(key);
+        } else if (edit < 0.5) {
+          content.edits.replace({ key }, { properties: { n: step } });
+        } else if (edit < 0.65) {
+          content.edits.insert(key, {});
+        } else {
+          content.edits.clear(key);
+        }
+      } else {
+        const key = pick(r, keys);
+        const op = pick(r, ["insert", "update", "delete"] as const);
+        sourceOf(content).push({
+          kind: "features",
+          changes: {
+            id: `cs-${step}`,
+            source: content.source,
+            ops: [
+              op === "insert"
+                ? { op, key, feature: { properties: { n: step } } }
+                : op === "update"
+                  ? { op, key, patch: { properties: { speed: step } } }
+                  : { op, key },
+            ],
+          },
+        });
+      }
+      if (step % 50 === 0) {
+        rt.tick(); // its source reloads what the feed invalidated
+      }
+      const bound = resident(content) + content.edits.size;
+      for (const [name, size] of tables(content)) {
+        expect(size, `${name} at step ${step}`).toBeLessThanOrEqual(bound);
+      }
+    }
+    expect(content.edits.size).toBeGreaterThan(0);
+    expect(content.rows.feed.size).toBeGreaterThan(0);
+  });
+
+  it("one-way projection: no table maps an ID back to a key, and keyOf answers only from a resident row, a draw or an edit record", async () => {
+    const { rt, place } = runtime();
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    place(content);
+    rt.tick();
+    rt.tick();
+    // The tables the restructuring deleted are gone.
+    for (const name of [
+      "nameIds",
+      "idNames",
+      "keys",
+      "instances",
+      "pending",
+      "feed",
+      "strays",
+      "noteKeys",
+      "forgetKeys",
+      "editFeatureOf",
+      "countStrays",
+      "takeStrayEdits",
+      "holdPending",
+      "knows",
+    ]) {
+      expect(name in content, `content.${name}`).toBe(false);
+    }
+    for (const name of ["nameIds", "idNames"]) {
+      expect(name in content.rows, `rows.${name}`).toBe(false);
+    }
+    const { sinks } = sourceOf(content).host;
+    const r = random(952);
+    const keys = Array.from({ length: 30 }, (_, i) => `k${i}`);
+    const seen = new Set(keys.map((k) => content.featureId(k)));
+    for (let step = 0; step < 1500; step++) {
+      const roll = r();
+      const key = pick(r, keys);
+      if (roll < 0.3) {
+        sinks.points.put({
+          key: `t${Math.floor(r() * 4)}`,
+          crs: "EPSG:4978",
+          count: 2,
+          positions: new Float64Array(6),
+          names: [key, pick(r, keys)],
+        });
+      } else if (roll < 0.45) {
+        sinks.points.remove(`t${Math.floor(r() * 4)}`);
+      } else if (roll < 0.65) {
+        if (r() < 0.6) {
+          content.edits.hide(key);
+        } else {
+          content.edits.clear(key);
+        }
+      } else {
+        sourceOf(content).push({
+          kind: "features",
+          changes: {
+            id: `cs-${step}`,
+            source: content.source,
+            ops: [
+              r() < 0.5
+                ? { op: "insert", key, feature: {} }
+                : { op: "delete", key },
+            ],
+          },
+        });
+      }
+      // No Map anywhere from a bigint to a string.
+      for (const o of [content, content.rows, content.edits]) {
+        for (const [name, value] of Object.entries(o)) {
+          if (value instanceof Map) {
+            for (const [k, v] of value as Map<unknown, unknown>) {
+              expect(typeof k === "bigint" && typeof v === "string", name).toBe(
+                false,
+              );
+            }
+          }
+        }
+      }
+      // keyOf is exactly what a row, the feed's row, a draw or an edit holds.
+      for (const id of seen) {
+        const row = content.rows.addressOf(id);
+        const expected =
+          content.edits.keyOf(id) ??
+          (row?.row === undefined ? row?.key : undefined);
+        expect(content.keyOf(id), `step ${step}`).toBe(expected);
+      }
+    }
+    // With nothing resident and no edits, it answers for none.
+    for (const key of ["t0", "t1", "t2", "t3", "a"]) {
+      sinks.points.remove(key);
+      sinks.features.remove(key);
+    }
+    for (const id of seen) {
+      content.edits.clear(id);
+    }
+    rt.tick();
+    sourceOf(content).push({
+      kind: "features",
+      changes: {
+        id: "cs-end",
+        source: content.source,
+        ops: keys.map((key) => ({ op: "delete" as const, key })),
+      },
+    });
+    expect([...seen].filter((id) => content.keyOf(id) !== undefined)).toEqual(
+      [],
+    );
+  });
+
+  it("names decide identity: one name, the same feature IDs whatever its URLs; two names, different ones; a version only when the name holds it", async () => {
+    const { rt, place } = runtime();
+    rt.registerKind({ id: "layered", module: LAYERED });
+    const r = random(1087);
+    const urls = locators(12);
+    let version = "1";
+    rt.addResolver({
+      id: "named",
+      accepts: (ref) => "resolver" in ref && ref.resolver === "named",
+      resolve: (ref) => {
+        const [url, name] = ("id" in ref ? ref.id : "").split(" ");
+        return Promise.resolve({
+          kind: "layered",
+          url: new URL(url!),
+          credits: [],
+          name: name!,
+          version,
+        });
+      },
+    });
+    const ids = async (url: string, name: string) => {
+      const content = await rt.open({
+        resolver: "named",
+        id: `${url} ${name}`,
+      });
+      place(content);
+      rt.tick();
+      rt.tick();
+      const out = [
+        ...content.rows.features.get("a")!.ids,
+        ...content.rows.points.get("a")!.ids,
+        content.featureId("a/box"),
+      ];
+      content.destroy();
+      return out;
+    };
+    for (let i = 0; i < 6; i++) {
+      const name = `datasets:${word(r, 8)}`;
+      const a = await ids(urls[i]!, name);
+      version = String(i + 2); // a new version, not in the name
+      const b = await ids(urls[i + 6]!, name);
+      expect(b, `${name} under two URLs`).toEqual(a);
+      const other = await ids(urls[i]!, `${name}@${version}`);
+      for (let k = 0; k < a.length; k++) {
+        expect(other[k]).not.toBe(a[k]);
+      }
+    }
+  });
+
+  it("feeds hold nothing for unloaded keys (CS-1085 A): ops on keys nothing resident holds leave nothing, and the key loads as its source writes it", async () => {
+    const { rt, place } = runtime();
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    place(content);
+    rt.tick();
+    rt.tick();
+    const before = tables(content);
+    const r = random(1085);
+    const keys = Array.from({ length: 200 }, (_, i) => `ghost-${i}`);
+    for (let step = 0; step < 2000; step++) {
+      const key = pick(r, keys);
+      sourceOf(content).push({
+        kind: "features",
+        changes: {
+          id: `cs-${step}`,
+          source: content.source,
+          ops: [
+            r() < 0.5
+              ? { op: "update", key, patch: { properties: { speed: step } } }
+              : { op: "delete", key },
+          ],
+        },
+      });
+    }
+    expect(tables(content)).toEqual(before);
+    expect(content.rows.feed.size).toBe(0);
+    for (const key of keys) {
+      expect(content.keyOf(content.featureId(key))).toBeUndefined();
+      expect(content.feature(content.featureId(key))).toBeUndefined();
+    }
+    // When one loads, it shows what its source wrote, no patch held.
+    sourceOf(content).host.sinks.points.put({
+      key: "late",
+      crs: "EPSG:4978",
+      count: 1,
+      positions: new Float64Array(3),
+      names: ["ghost-7"],
+      properties: { speed: Float64Array.of(1) },
+    });
+    expect(content.feature(content.featureId("ghost-7"))?.properties).toEqual({
+      speed: 1,
+    });
   });
 });

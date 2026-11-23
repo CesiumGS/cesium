@@ -631,13 +631,16 @@ export function Architecture() {
             credentials, credits and a kind. ion is one resolver among others.
           </li>
           <li>
-            Everything a source writes carries a stable ID in two parts: a
-            feature ID made from the source's canonical address and its own key
-            for the feature, the same wherever, however often and in whichever
-            run the source is opened, which edits and live updates key by; and
-            an instance ID for each placement, which its draws carry and which
-            is never its feature ID. Labels and edits set by feature ID reach
-            every placement.
+            Content has a name its host or resolver declares (a dataset's ID,
+            say), never taken from its URL; a plain URL with none is named by a
+            digest of it, without its credentials. Everything a source writes
+            carries a stable ID in two parts: a feature ID, the source's own key
+            for the feature projected in the content's name, the same wherever,
+            however often and in whichever run it is opened; and an instance ID
+            for each placement, which its draws carry and which is never its
+            feature ID. The key is the address: edits and labels are set by key
+            and reach every placement, and hosts save keys rather than IDs until
+            the API review settles the IDs' encoding.
           </li>
         </ul>
         <p>
@@ -682,9 +685,11 @@ export function Architecture() {
           <li>
             A source sees its world's scene time (UTC seconds since 1970, the
             clock picks and camera records read) and wall time apart. It pushes
-            invalidations, feature changes and time-stamped samples. The engine
-            applies them in its apply phase, and on a stepped clock samples wait
-            for their scene times, so a replayed feed gives the same rows. The
+            invalidations, feature changes and time-stamped samples. Feature
+            changes update what is loaded and hold nothing for the rest, so a
+            source serves content at or past what it pushed. The engine applies
+            them in its apply phase, and on a stepped clock samples wait for
+            their scene times, so a replayed feed gives the same rows. The
             engine never polls; a source may check its own server on an interval
             it declares and push what changed.
           </li>
@@ -695,8 +700,8 @@ export function Architecture() {
             engine's ID beside it, so a server that knows only its own keys can
             write and read one, serialized as JSON in an experimental 0.x
             format; and an edit layer that hides, replaces and inserts features
-            by feature ID, in every placement, and holds its edits when content
-            reloads.
+            by the source's key, in every placement, and holds its edits when
+            content reloads.
           </li>
         </ul>
         <p>
