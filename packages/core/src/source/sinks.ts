@@ -22,6 +22,7 @@ import {
   storedId,
 } from "../scene/identity.ts";
 import type { ChangeOp, FeaturePatch, GeometryData } from "./editing.ts";
+import { own } from "./records.ts";
 import type {
   ContentKey,
   CreditList,
@@ -308,7 +309,8 @@ export class ContentRows {
           );
         }
         for (const [property, values] of Object.entries(samples.values ?? {})) {
-          const column = held.batch.properties?.[property];
+          // An own column only: a name like `__proto__` reaches nothing.
+          const column = own(held.batch.properties, property);
           if (column && !Array.isArray(column)) {
             (column as Float64Array)[at.index] = values[s]!;
           }
@@ -470,7 +472,7 @@ function writeRow(
   const writes: (() => void)[] = [];
   for (const [name, value] of Object.entries(patch.properties ?? {})) {
     // An own column only: a name like `__proto__` reaches nothing.
-    const column = Object.hasOwn(columns, name) ? columns[name] : undefined;
+    const column = own(columns, name);
     if (name === "text" && text && !column) {
       if (typeof value !== "string") {
         return false;
@@ -577,15 +579,17 @@ function withoutRows<B extends FeatureBatch | PointBatch | CustomRows>(
     if (!columns) {
       return undefined;
     }
-    const out: Record<string, PropertyColumn> = {};
-    for (const [name, column] of Object.entries(columns)) {
-      out[name] = Array.isArray(column)
-        ? keep.map((i) => (column as readonly (string | null)[])[i]!)
-        : new (column.constructor as new (values: number[]) => PropertyColumn)(
-            keep.map((i) => (column as ArrayLike<number>)[i]!),
-          );
-    }
-    return out;
+    // Made from entries: a column named `__proto__` is a column.
+    return Object.fromEntries(
+      Object.entries(columns).map(([name, column]) => [
+        name,
+        Array.isArray(column)
+          ? keep.map((i) => (column as readonly (string | null)[])[i]!)
+          : new (
+              column.constructor as new (values: number[]) => PropertyColumn
+            )(keep.map((i) => (column as ArrayLike<number>)[i]!)),
+      ]),
+    );
   };
   const out: Record<string, unknown> = { ...batch, count: keep.length };
   if (batch.names) {

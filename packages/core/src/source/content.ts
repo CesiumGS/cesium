@@ -925,20 +925,23 @@ function rowFeature(
 ): FeatureData {
   const batch = held.batch;
   const columns = "columns" in batch ? batch.columns : batch.properties;
-  const properties: Record<string, PlainValue> = {};
-  for (const [name, column] of Object.entries(columns ?? {})) {
-    const value = (column as ArrayLike<unknown>)[index];
-    properties[name] = (value ?? null) as PlainValue;
-  }
+  // Made from entries (rule 4): a column named `__proto__` is a property.
+  const entries: [string, PlainValue][] = Object.entries(columns ?? {}).map(
+    ([name, column]) => [
+      name,
+      ((column as ArrayLike<unknown>)[index] ?? null) as PlainValue,
+    ],
+  );
   if ("text" in batch && batch.text) {
-    properties.text = batch.text[index] ?? null;
+    entries.push(["text", batch.text[index] ?? null]);
   }
+  const properties = Object.fromEntries(entries);
   const geometry =
     sink === "features" || sink === "points"
       ? rowGeometry(batch as FeatureBatch | PointBatch, index)
       : undefined;
   return {
-    ...(Object.keys(properties).length > 0 ? { properties } : {}),
+    ...(entries.length > 0 ? { properties } : {}),
     ...(geometry ? { geometry } : {}),
   };
 }

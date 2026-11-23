@@ -1346,3 +1346,94 @@ describe("the content-source seam's own text names content by its label (CS-1101
     ]);
   });
 });
+
+/**
+ * Rule 4 of the content-source seam: a record keyed by outside strings (a
+ * batch's `properties` or `columns`, a sample's `values`, a patch's
+ * `properties`) is read through `own` (src/source/records.ts) and made from
+ * entries, so a key like `__proto__` reaches only its own property. Any
+ * other computed read or write of a string-keyed record under src/source/
+ * is named by its line, but what this table lists, each with its reason.
+ */
+const SOURCE_RECORD_ALLOWED: Readonly<Record<string, string>> = {
+  "content.ts: w[method]":
+    "a DrawSink setter the engine names (DRAW_SETTERS), looked up on the world's prototype",
+  "content.ts: w[property]":
+    "a DrawSink method its source calls, looked up on the world (the proxy's get); nothing is written",
+};
+
+export function sourceRecordAccesses(
+  program: ts.Program,
+  file: string,
+): string[] {
+  const checker = program.getTypeChecker();
+  const source = program.getSourceFile(file)!;
+  const name = relative(join(src, "source"), file).replaceAll("\\", "/");
+  const out: string[] = [];
+  const keyed = (type: ts.Type): boolean => {
+    const t = checker.getNonNullableType(type);
+    return t.isUnion()
+      ? t.types.some(keyed)
+      : t.getStringIndexType() !== undefined;
+  };
+  const numeric = (type: ts.Type): boolean =>
+    (checker.getNonNullableType(type).flags & ts.TypeFlags.NumberLike) !== 0;
+  const visit = (n: ts.Node) => {
+    if (
+      ts.isElementAccessExpression(n) &&
+      keyed(checker.getTypeAtLocation(n.expression)) &&
+      !numeric(checker.getTypeAtLocation(n.argumentExpression))
+    ) {
+      const text = n.getText(source);
+      if (
+        !(name === "records.ts" && text === "record[name]") &&
+        !Object.hasOwn(SOURCE_RECORD_ALLOWED, `${name}: ${text}`)
+      ) {
+        const line = source.getLineAndCharacterOfPosition(
+          n.getStart(source),
+        ).line;
+        out.push(`${line + 1}: ${text}`);
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(source);
+  return out;
+}
+
+describe("the content-source seam reads outside-keyed records through own()", () => {
+  it("no computed access under src/source/ reaches a string-keyed record but own()'s", () => {
+    const paths = files(join(src, "source"), /\.ts$/);
+    const program = sourceProgram(paths);
+    const found = paths.flatMap((path) =>
+      sourceRecordAccesses(program, path).map(
+        (hit) => `${relative(repo, path).replaceAll("\\", "/")}:${hit}`,
+      ),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it("its detector flags each by line: a read, a write, an optional read, through a union", () => {
+    const path = join(src, "source", "planted.ts");
+    const text = [
+      'import type { FeatureBatch, SampleBatch } from "./types.ts";',
+      'import { own } from "./records.ts";',
+      "declare const batch: FeatureBatch;",
+      "declare const samples: SampleBatch;",
+      "declare const name: string;",
+      "export function f(out: Record<string, number>, list: number[]) {",
+      "  const column = batch.properties?.[name];",
+      "  out[name] = 1;",
+      "  const values = samples.values![name];",
+      "  const fine = own(batch.properties, name) ?? list[0];",
+      "  return [column, values, fine];",
+      "}",
+    ].join("\n");
+    const program = sourceProgram([path], { path, text });
+    expect(sourceRecordAccesses(program, path)).toEqual([
+      "7: batch.properties?.[name]",
+      "8: out[name]",
+      "9: samples.values![name]",
+    ]);
+  });
+});
