@@ -56,6 +56,7 @@ export interface Verdict {
   pairs: number;
   captures?: number;
   expected?: number;
+  mismatched?: number;
   pooled?: true;
 }
 export interface ReferencePoint {
@@ -143,6 +144,19 @@ export function verdict(
   field?: keyof Difference,
 ): Verdict;
 export function noFloorWords(v: Partial<Verdict>): string;
+export function pairsWords(n: number): string;
+export function sizeMismatch(
+  width: number,
+  height: number,
+  otherWidth: number,
+  otherHeight: number,
+): string | undefined;
+export function captureOf(options: {
+  rep: number;
+  noCapture?: boolean;
+  sweepReference?: boolean;
+}): boolean | "end";
+export function floorLog(record: ReferenceRecord | undefined): string;
 export function percent(share: number): string;
 export function differenceWords(
   difference: Difference | undefined,

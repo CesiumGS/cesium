@@ -9,6 +9,7 @@ import {
   cropRect,
   errorStats,
   pixelDifference,
+  sizeMismatch,
   type Region,
 } from "./reference.mjs";
 
@@ -132,10 +133,9 @@ async function compareFrames(
   const other = await decode(reference);
   const { width, height } = image;
   // Never rescaled: a reference of another size isn't compared.
-  if (other.width !== width || other.height !== height) {
-    return {
-      mismatch: `sizes differ: ${width}×${height} against ${other.width}×${other.height}`,
-    };
+  const mismatch = sizeMismatch(width, height, other.width, other.height);
+  if (mismatch) {
+    return { mismatch };
   }
   const a = pixels(image, width, height);
   const b = pixels(other, width, height);

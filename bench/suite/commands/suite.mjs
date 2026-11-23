@@ -131,7 +131,13 @@ import { acquireRunLock, defaultLockFile } from "../runLock.mjs";
 import { compareTable, defaultPlan, scorecard } from "../scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { runImages } from "../images.mjs";
-import { compareSweep, REFERENCE_MOMENT, shotName } from "../reference.mjs";
+import {
+  captureOf,
+  compareSweep,
+  floorLog,
+  REFERENCE_MOMENT,
+  shotName,
+} from "../reference.mjs";
 import { applyStudy, studyForRun } from "./studies.mjs";
 import {
   COLD_START_BUDGET_MS,
@@ -1445,10 +1451,16 @@ async function run() {
               : scenario,
             config,
             unsupported: unsupportedReason(catalog, scene, config.engine),
-            // The first repetition captures; a reference point's repeats
-            // capture the settled view alone, since they set its noise
-            // floor (reference.mjs): no start shot, no stepwise settle.
-            capture: rep === 0 && !opts["no-capture"] && (repeat ? "end" : true),
+            // The first repetition captures (reference.mjs, captureOf):
+            // in a sweep with a reference, the settled view alone, every
+            // point and every repeat taken the same way.
+            capture: captureOf({
+              rep,
+              noCapture: !!opts["no-capture"],
+              sweepReference: !!sweep?.reference,
+            }),
+            // The request waterfall, once per configuration.
+            waterfall: rep === 0 && repeat === 0 && !opts["no-capture"],
             render,
             ...(example ? { gpuTicks } : {}),
           };
@@ -1481,7 +1493,7 @@ async function run() {
             const probe = await runOne(
               await browserFor(scenario),
               base,
-              { ...spec, capture: false, probe: true },
+              { ...spec, capture: false, waterfall: false, probe: true },
               results,
             );
             const found = Object.keys(probe.metrics.dev ?? {}).filter((k) =>
@@ -1704,15 +1716,7 @@ async function run() {
       Object.fromEntries(scenes.map((s) => [s.id, s])),
       join(directory, stamp),
     );
-    console.log(
-      results.reference.floors
-        .map((f) =>
-          f.regions
-            ? `${f.scene}: noise floor ${(f.regions.whole.share * 100).toFixed(2)}% of pixels over ${f.pairs} pair${f.pairs === 1 ? "" : "s"}`
-            : `${f.scene}: no noise floor (--reference-reps 2 or more gives one)`,
-        )
-        .join("; "),
-    );
+    console.log(floorLog(results.reference));
   }
   if (motionFrames.length) {
     process.stdout.write(
@@ -1872,7 +1876,7 @@ async function runOne(browser, base, spec, results) {
     // When each request started, to split bytes at the motion's start.
     const startedAt = request.timing().startTime - runStart;
     starts.push(size.then((bytes) => [startedAt, bytes]));
-    if (spec.capture === true) {
+    if (spec.waterfall) {
       const t = request.timing();
       waterfall.push(
         size.then((bytes) => [

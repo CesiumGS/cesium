@@ -209,7 +209,9 @@ export function withinNoise(difference, floor, field = "share") {
 }
 
 /** "3 pairs", "1 pair". */
-const pairsWords = (n) => `${n} pair${n === 1 ? "" : "s"}`;
+/** "3 pairs", "1 pair, rough" (one pair is a rough floor). */
+export const pairsWords = (n) =>
+  `${n} pair${n === 1 ? ", rough" : "s"}`;
 
 /**
  * The floor a compared point is judged by: its own reference point's
@@ -252,6 +254,7 @@ export function verdict(record, point, region = WHOLE, field = "share") {
     pairs: floor?.pairs ?? 0,
     captures: floor?.captures,
     expected: floor?.expected ?? record?.reference?.reps,
+    ...(floor?.mismatched ? { mismatched: floor.mismatched } : {}),
     ...(floor?.pooled ? { pooled: true } : {}),
   };
 }
@@ -264,7 +267,70 @@ export function noFloorWords(v) {
   if ((v.expected ?? 1) < 2) {
     return "reference captured once";
   }
+  if (v.mismatched && (v.captures ?? 0) >= 2) {
+    return "reference captures differ in size";
+  }
   return `reference repeats failed: ${v.captures ?? 0} of ${v.expected} captures`;
+}
+
+/**
+ * Two images' sizes, if they differ, in words ("sizes differ: 1280×720
+ * against 1400×900"); undefined when they match. A reference of another
+ * size is never compared, never rescaled (flip.ts, compareFrames).
+ */
+export function sizeMismatch(width, height, otherWidth, otherHeight) {
+  return width === otherWidth && height === otherHeight
+    ? undefined
+    : `sizes differ: ${width}×${height} against ${otherWidth}×${otherHeight}`;
+}
+
+/**
+ * What one browser run captures (commands/suite.mjs): nothing after the
+ * first repetition or with --no-capture; in a sweep with a reference,
+ * the settled view alone ("end") for every point and every repeat, so
+ * each floor pair and each point's difference compare captures taken
+ * the same way; otherwise every moment (true).
+ */
+export function captureOf({ rep, noCapture, sweepReference }) {
+  if (noCapture || rep > 0) {
+    return false;
+  }
+  return sweepReference ? REFERENCE_MOMENT : true;
+}
+
+/**
+ * The CLI's closing line about the noise floors, per scene, from the
+ * record's own reference floors: how many reference points have one, on
+ * how many pairs, and why the others don't.
+ */
+export function floorLog(record) {
+  const scenes = record?.floors ?? [];
+  return scenes
+    .map((f) => {
+      const own = (record.references ?? []).filter(
+        (r) => r.scene === f.scene && r.scenario === f.scenario,
+      );
+      const floored = own.filter((r) => r.regions);
+      const pairs = floored.map((r) => r.pairs);
+      const missing = own.filter((r) => !r.regions);
+      const why = missing.length
+        ? noFloorWords({
+            captures: missing[0].captures,
+            expected: missing[0].expected,
+            mismatched: missing[0].mismatched,
+          })
+        : "";
+      if (!floored.length) {
+        return `${f.scene}: no noise floor (${why || "no reference point was captured"}${(own[0]?.expected ?? f.reps ?? 1) < 2 ? "; --reference-reps 2 or more gives one" : ""})`;
+      }
+      const lo = Math.min(...pairs);
+      const hi = Math.max(...pairs);
+      const largest = Math.max(
+        ...floored.map((r) => r.regions[WHOLE]?.share ?? 0),
+      );
+      return `${f.scene}: a noise floor for ${floored.length} of ${own.length} reference point${own.length === 1 ? "" : "s"} (${lo === hi ? lo : `${lo} to ${hi}`} pair${hi === 1 ? "" : "s"} each; largest ${percent(largest)} of pixels)${missing.length ? `; none for ${missing.length}: ${why}` : ""}`;
+    })
+    .join("; ");
 }
 
 /** A share as a percentage with no more precision than it has. */
@@ -281,8 +347,9 @@ export function percent(share) {
 
 /**
  * A point's pixel difference in words, judged by its own reference's
- * floor (`verdict`): "reference", "within noise (3 pairs)", "4.1% of
- * pixels", "4.1% of pixels (reference captured once)", or "not compared".
+ * floor (`verdict`): "reference", "within noise (3 pairs)", "within noise
+ * (1 pair, rough)", "4.1% of pixels (beyond noise, 3 pairs)", "4.1% of
+ * pixels (reference captured once)", or "not compared".
  * A pooled floor (a record from before per-reference floors) says so.
  */
 export function differenceWords(difference, v, { reference, mismatch } = {}) {
@@ -300,7 +367,9 @@ export function differenceWords(difference, v, { reference, mismatch } = {}) {
     return `within noise (${pairsWords(v.pairs)}${pooled})`;
   }
   const words = `${percent(difference.share)} of pixels`;
-  return v?.within === false ? words : `${words} (${noFloorWords(v ?? {})})`;
+  return v?.within === false
+    ? `${words} (beyond noise, ${pairsWords(v.pairs)}${pooled})`
+    : `${words} (${noFloorWords(v ?? {})})`;
 }
 
 /** The metric keys a region's difference is recorded under. */

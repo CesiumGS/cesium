@@ -531,16 +531,21 @@ export function pointVerdict(
 }
 
 /** "3 pairs", "2 to 3 pairs" (", pooled" for a pooled floor). */
-function pairsText(pairs: number[], pooled: boolean) {
+/**
+ * "3 pairs", "2 to 3 pairs", "1 pair, rough", "1 to 3 pairs, some
+ * rough" (one pair is a rough floor); ", pooled" for a pooled floor.
+ */
+export function pairsText(pairs: number[], pooled = false) {
   const lo = Math.min(...pairs);
   const hi = Math.max(...pairs);
-  return `${lo === hi ? lo : `${lo} to ${hi}`} pair${hi === 1 ? "" : "s"}${pooled ? ", pooled" : ""}`;
+  const rough = lo === 1 ? (hi === 1 ? ", rough" : ", some rough") : "";
+  return `${lo === hi ? lo : `${lo} to ${hi}`} pair${hi === 1 ? "" : "s"}${rough}${pooled ? ", pooled" : ""}`;
 }
 
 /**
  * A verdict as a table note: "reference", "within noise (3 pairs)",
- * "within noise in 1 of 2 scenes", "no floor: reference captured once",
- * or nothing for a point beyond noise in one scene.
+ * "beyond noise (1 pair, rough)", "within noise in 1 of 1 scene with a
+ * floor (2 shown, 1 without one)", "no floor: reference captured once".
  */
 export function verdictNote(v: PointVerdict | undefined): string | undefined {
   if (!v) {
@@ -550,14 +555,15 @@ export function verdictNote(v: PointVerdict | undefined): string | undefined {
     return "reference";
   }
   if (!v.judged) {
-    return `no floor${v.noFloor ? `: ${v.noFloor}` : ""}`;
+    return v.scenes > 1
+      ? `no floor in any of the ${v.scenes} scenes shown`
+      : `no floor${v.noFloor ? `: ${v.noFloor}` : ""}`;
   }
   if (v.scenes > 1) {
-    return `within noise in ${v.within} of ${v.judged} scenes`;
+    const without = v.scenes - v.judged;
+    return `within noise in ${v.within} of ${v.judged} scene${v.judged === 1 ? "" : "s"} with a floor${without ? ` (${v.scenes} shown, ${without} without one)` : ""}`;
   }
-  return v.within
-    ? `within noise (${pairsText(v.pairs, v.pooled)})`
-    : undefined;
+  return `${v.within ? "within" : "beyond"} noise (${pairsText(v.pairs, v.pooled)})`;
 }
 
 /**
@@ -768,7 +774,9 @@ export function noiseSummary(
     );
     return f?.regions
       ? []
-      : [{ ...x, why: noFloorWords({ expected: f?.reps ?? 1, captures: 1 }) }];
+      : // A pooled record holds no captures per reference: say only
+        // what verdict() says.
+        [{ ...x, why: noFloorWords({ pooled: true }) }];
   });
   return {
     pooled: !record.references,

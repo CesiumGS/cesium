@@ -34,6 +34,7 @@ import {
   type Line,
   type Panel,
   pointValue,
+  pairsText,
   pointVerdict,
   pointWords,
   scenarioOf,
@@ -384,11 +385,6 @@ function NoiseAnswer({
     const p = model.points.find((x) => x.config === config);
     return `${p ? sentence(coordsWords(model, p.coords)) : config}${several ? ` in ${titleOf(sceneId)}` : ""}`;
   };
-  const pairs = (list: number[]) => {
-    const lo = Math.min(...list);
-    const hi = Math.max(...list);
-    return `${lo === hi ? lo : `${lo} to ${hi}`} pair${hi === 1 ? "" : "s"} each`;
-  };
   const items = answer.regions
     .filter((r) => r.compared)
     .map((r) => {
@@ -400,7 +396,7 @@ function NoiseAnswer({
             : `all ${r.compared} compared points are`;
       const floors = answer.pooled
         ? "the pooled floor"
-        : `its own reference's floor, ${pairs(r.pairs)}`;
+        : `its own reference's floor: ${pairsText(r.pairs)}`;
       return (
         <li key={r.region}>
           <Typography variant="body-md" render={<span />}>

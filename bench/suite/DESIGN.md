@@ -1360,7 +1360,17 @@ be one.
     verdicts say "pooled", a note says they may call too much within
     noise, and its band is one gray band.
   - Two images of different sizes are never rescaled: "not compared
-    (sizes differ)".
+    (sizes differ)"; a reference whose captures differ in size has no
+    floor, and says so.
+  - A floor of one pair (two captures) is rough, and says so: "within
+    noise (1 pair, rough)". Verdicts beyond noise carry their pairs too:
+    "25% of pixels (beyond noise, 3 pairs)". Over every scene, notes say
+    how many scenes are shown and how many have no floor.
+  - Captures: in a sweep with a reference, every point and every repeat
+    captures the settled view alone, taken the same way, so each floor
+    pair and each point's difference compare like with like. Such a
+    sweep's filmstrip has no start frame and no selection parity (its
+    reference metrics take their place); its request waterfall stays.
   - The images: per panel, a table with lines down and x across, the
     panels side by side where they fit; each thumbnail says its
     difference in words ("Within noise", "25% of pixels", "Reference"). Over every scene, an "Images of" choice picks

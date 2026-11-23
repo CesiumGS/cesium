@@ -1881,7 +1881,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       metrics.purposeStats = purposeStats;
     }
     const purposes = adapter.requestPurposes?.();
-    if (spec.capture === true && purposes?.length) {
+    if (spec.capture && purposes?.length) {
       metrics.purposes = [...purposes];
     }
     await endMeasurement();

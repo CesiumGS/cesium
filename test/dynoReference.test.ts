@@ -16,7 +16,12 @@ import {
   pixelDifference,
   referenceIndex,
   regionsOf,
+  captureOf,
+  floorFor,
+  floorLog,
+  noFloorWords,
   shotName,
+  sizeMismatch,
   verdict,
   withinNoise,
   type Region,
@@ -31,6 +36,7 @@ import {
   metricGroups,
   moveDimension,
   noiseSummary,
+  pairsText,
   pointVerdict,
   verdictNote,
   pointWords,
@@ -172,7 +178,7 @@ describe("the noise floor", () => {
       differenceWords({ share: 0.015, mean: 0 }, v(true, { pooled: true })),
     ).toBe("within noise (3 pairs, pooled)");
     expect(differenceWords({ share: 0.041, mean: 0 }, v(false))).toBe(
-      "4.1% of pixels",
+      "4.1% of pixels (beyond noise, 3 pairs)",
     );
     expect(
       differenceWords(
@@ -394,7 +400,7 @@ describe("comparing a sweep with its reference", () => {
     expect(far.within).toEqual({ whole: false, cliff: false });
     expect(
       pointWords(record, "vex-x10-zermatt", "cold-orbit", far.config),
-    ).toBe("25% of pixels");
+    ).toBe("25% of pixels (beyond noise, 3 pairs)");
     expect(far.heatmap).toMatch(/\.ref\.flip\.png$/);
     expect(saved.some((n) => /\.r2\.jpg$/.test(n))).toBe(true);
   });
@@ -595,14 +601,16 @@ describe("the sweep view's model", () => {
       pairs: [3, 3],
     });
     expect(whole!.beyond.map((b) => b.words)).toEqual([
-      "25% of pixels",
-      "25% of pixels",
+      "25% of pixels (beyond noise, 3 pairs)",
+      "25% of pixels (beyond noise, 3 pairs)",
     ]);
     expect(whole!.beyond.every((b) => b.config.includes("param.x=10"))).toBe(
       true,
     );
     expect(cliff).toMatchObject({ region: "cliff", compared: 4, within: 2 });
-    expect(cliff!.beyond[0]!.words).toBe("50% of pixels");
+    expect(cliff!.beyond[0]!.words).toBe(
+      "50% of pixels (beyond noise, 3 pairs)",
+    );
     expect(noiseSummary(undefined, s, m, ALL)).toBeUndefined();
   });
 
@@ -844,7 +852,7 @@ describe("each point against its own reference's floor", () => {
     expect(quiet.within!.whole).toBe(false);
     expect(verdict(record, quiet).within).toBe(false);
     expect(pointWords(record, "s1", "cold-orbit", quiet.config)).toBe(
-      "6.3% of pixels",
+      "6.3% of pixels (beyond noise, 3 pairs)",
     );
     // ...and the same change beside B's noisy reference (same coordinates,
     // other engine) is within it.
@@ -856,7 +864,7 @@ describe("each point against its own reference's floor", () => {
     // The table and the chart read the same verdict and floor.
     const v = pointVerdict(record, s, quiet.config, "pixelDiffShare", "s1")!;
     expect(v).toMatchObject({ judged: 1, within: 0, floor: 0 });
-    expect(verdictNote(v)).toBeUndefined();
+    expect(verdictNote(v)).toBe("beyond noise (3 pairs)");
     expect(
       verdictNote(
         pointVerdict(record, s, noisy.config, "pixelDiffShare", "s1"),
@@ -907,13 +915,13 @@ describe("each point against its own reference's floor", () => {
     const all = pointVerdict(record, s, point, "pixelDiffShare", ALL)!;
     expect(all).toMatchObject({ scenes: 2, judged: 2, within: 1 });
     expect(all.floor).toBeUndefined();
-    expect(verdictNote(all)).toBe("within noise in 1 of 2 scenes");
+    expect(verdictNote(all)).toBe("within noise in 1 of 2 scenes with a floor");
     // One scene at a time: the note and the band.
     const one = pointVerdict(record, s, point, "pixelDiffShare", "s1")!;
     expect(verdictNote(one)).toBe("within noise (3 pairs)");
     expect(one.floor).toBe(2 / 32);
     const two = pointVerdict(record, s, point, "pixelDiffShare", "s2")!;
-    expect(verdictNote(two)).toBeUndefined();
+    expect(verdictNote(two)).toBe("beyond noise (3 pairs)");
     expect(two.floor).toBe(2 / 32);
     // The answer counts the same way: within in s1, not in s2.
     const answer = noiseSummary(record, s, m, ALL)!;
@@ -923,7 +931,7 @@ describe("each point against its own reference's floor", () => {
     expect(mine("s1")).toBe(false);
     expect(mine("s2")).toBe(true);
     expect(whole.beyond.find((b) => b.config === point)!.words).toBe(
-      "25% of pixels",
+      "25% of pixels (beyond noise, 3 pairs)",
     );
   });
 
@@ -983,6 +991,223 @@ describe("each point against its own reference's floor", () => {
     expect(p.regions).toBeUndefined();
     expect(pointWords(record, "s1", "cold-orbit", point)).toBe(
       "not compared (sizes differ: 4×4 against 8×4)",
+    );
+  });
+});
+
+describe("the floors, said plainly", () => {
+  const A = "2.0@a";
+  const cfg = (a: number, sh: boolean) => `${A}+lodExponent=${a}+shadows=${sh}`;
+  const quiet = { [cfg(1, true)]: 1, [cfg(1, false)]: 1 };
+
+  it("logs each scene's floors from the reference points' own", async () => {
+    const floored = (await runOf(oneAxisSweep([A], 3), ["s1"], quiet, {}))
+      .record;
+    expect(floorLog(floored)).toBe(
+      "s1: a noise floor for 2 of 2 reference points (3 pairs each; largest 6.3% of pixels)",
+    );
+    const once = (await compareSweep({
+      shots: shotsFor(oneAxisSweep([A], 1), ["s1"], {}, {}, 1),
+      sweep: oneAxisSweep([A], 1),
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    expect(floorLog(once)).toBe(
+      "s1: no noise floor (reference captured once; --reference-reps 2 or more gives one)",
+    );
+    // One reference point's repeats failed: only its first capture.
+    const sweep = oneAxisSweep([A], 3);
+    const shots = shotsFor(sweep, ["s1"], quiet, {}).filter(
+      (x) => !(x.config === cfg(1, false) && x.repeat > 0),
+    );
+    const partial = (await compareSweep({
+      shots,
+      sweep,
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    expect(floorLog(partial)).toBe(
+      "s1: a noise floor for 1 of 2 reference points (3 pairs each; largest 6.3% of pixels); none for 1: reference repeats failed: 1 of 3 captures",
+    );
+  });
+
+  it("marks a one-pair floor as rough, and gives beyond-noise verdicts their pairs", async () => {
+    // Two captures a reference: one pair. The point changes 1 pixel
+    // against a floor of 1 in s1 and 4 in s2.
+    const sweep = oneAxisSweep([A], 2);
+    const point = cfg(0.5, true);
+    const shots = shotsFor(sweep, ["s1"], quiet, { [point]: 1 }, 2);
+    const record = (await compareSweep({
+      shots,
+      sweep,
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    expect(pointWords(record, "s1", "cold-orbit", point)).toBe(
+      "within noise (1 pair, rough)",
+    );
+    const far = cfg(0.5, false);
+    const shots2 = shotsFor(sweep, ["s1"], quiet, { [far]: 4 }, 2);
+    const record2 = (await compareSweep({
+      shots: shots2,
+      sweep,
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    expect(pointWords(record2, "s1", "cold-orbit", far)).toBe(
+      "13% of pixels (beyond noise, 1 pair, rough)",
+    );
+    expect(pairsText([3])).toBe("3 pairs");
+    expect(pairsText([1])).toBe("1 pair, rough");
+    expect(pairsText([1, 3])).toBe("1 to 3 pairs, some rough");
+    expect(pairsText([3], true)).toBe("3 pairs, pooled");
+  });
+
+  it("says how many scenes are shown and how many have no floor", async () => {
+    // s2's references were captured once: no floor there.
+    const sweep = oneAxisSweep([A], 3);
+    const point = cfg(0.5, true);
+    const reference = (await compareSweep({
+      shots: shotsFor(sweep, ["s1", "s2"], quiet, { [point]: 1 }).filter(
+        (x) => !(x.scene === "s2" && x.repeat > 0),
+      ),
+      sweep,
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    const { s } = await runOf(sweep, ["s1", "s2"], quiet, { [point]: 1 });
+    const all = pointVerdict(reference, s, point, "pixelDiffShare", ALL)!;
+    expect(all).toMatchObject({ scenes: 2, judged: 1, within: 1 });
+    expect(verdictNote(all)).toBe(
+      "within noise in 1 of 1 scene with a floor (2 shown, 1 without one)",
+    );
+    expect(
+      verdictNote(pointVerdict(reference, s, point, "pixelDiffShare", "s2")),
+    ).toBe("no floor: reference repeats failed: 1 of 3 captures");
+  });
+
+  it("says when reference captures differ in size", async () => {
+    expect(
+      noFloorWords({ captures: 3, expected: 3, mismatched: 3, pairs: 0 }),
+    ).toBe("reference captures differ in size");
+    // Every repeat of the reference a different size from the first.
+    const sweep = oneAxisSweep([A], 3);
+    const shots = shotsFor(sweep, ["s1"], {}, {}).map((x) =>
+      x.config === cfg(1, true) && x.repeat > 0
+        ? { ...x, png: new Uint8ClampedArray(4 * (x.repeat + 2)) }
+        : x,
+    );
+    const sized = async (test: unknown, ref: unknown, regions: Region[]) =>
+      (test as Uint8ClampedArray).length !== (ref as Uint8ClampedArray).length
+        ? { mismatch: "sizes differ" }
+        : compare(test, ref, regions);
+    const record = (await compareSweep({
+      shots,
+      sweep,
+      scenes: {},
+      compare: sized,
+      ...io,
+    }))!;
+    const own = record.references!.find((r) => r.config === cfg(1, true))!;
+    expect(own).toMatchObject({ captures: 3, pairs: 0, mismatched: 3 });
+    expect(own.regions).toBeUndefined();
+    expect(pointWords(record, "s1", "cold-orbit", cfg(0.5, true))).toBe(
+      "0% of pixels (reference captures differ in size)",
+    );
+  });
+
+  it("says only what an old pooled record holds", async () => {
+    const record = {
+      moment: "end",
+      threshold: 0.1,
+      reference: { id: "view.lodExponent", value: 1, reps: 1 },
+      floors: [
+        {
+          scene: "s1",
+          scenario: "cold-orbit",
+          reps: 1,
+          regionNames: ["whole"],
+        },
+      ],
+      points: [
+        {
+          scene: "s1",
+          scenario: "cold-orbit",
+          config: cfg(0.5, true),
+          image: "p.jpg",
+          against: cfg(1, true),
+          regions: { whole: { share: 0.05, mean: 0 } },
+        },
+      ],
+      repeats: [],
+    };
+    const { s, m } = await runOf(oneAxisSweep([A], 1), ["s1"], {}, {});
+    const answer = noiseSummary(record, s, m, ALL)!;
+    expect(answer.pooled).toBe(true);
+    expect(answer.noFloor).toEqual([
+      { scene: "s1", scenario: "cold-orbit", why: "no noise floor" },
+    ]);
+    expect(pointWords(record, "s1", "cold-orbit", cfg(0.5, true))).toBe(
+      "5.0% of pixels (no noise floor)",
+    );
+  });
+
+  it("captures the settled view alone, the same way for every sweep point", () => {
+    expect(captureOf({ rep: 0, sweepReference: true })).toBe("end");
+    expect(captureOf({ rep: 0, sweepReference: false })).toBe(true);
+    expect(captureOf({ rep: 1, sweepReference: true })).toBe(false);
+    expect(captureOf({ rep: 0, noCapture: true, sweepReference: true })).toBe(
+      false,
+    );
+  });
+
+  it("finds a point's reference outside the grid through floorFor", async () => {
+    // The reference is shadows off, outside the grid of error exponents.
+    const sweep: SweepRecord = {
+      axes: [{ id: "view.lodExponent", values: [0.5, 1] }],
+      reference: { id: "view.shadows", value: false, reps: 3, outside: true },
+      engines: [A],
+      points: [
+        { coords: { "view.lodExponent": 0.5 }, configs: ["p05"] },
+        { coords: { "view.lodExponent": 1 }, configs: ["p1"] },
+        {
+          coords: { "view.lodExponent": 0.5, "view.shadows": false },
+          configs: ["r05"],
+          reference: true,
+        },
+        {
+          coords: { "view.lodExponent": 1, "view.shadows": false },
+          configs: ["r1"],
+          reference: true,
+        },
+      ],
+    };
+    // r05 is quiet, r1 noisy (4 pixels).
+    const record = (await compareSweep({
+      shots: shotsFor(sweep, ["s1"], { r05: 0, r1: 2 }, { p05: 2, p1: 2 }),
+      sweep,
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    const p05 = record.points.find((p) => p.config === "p05")!;
+    const p1 = record.points.find((p) => p.config === "p1")!;
+    expect(p05.against).toBe("r05");
+    expect(floorFor(record, p05)!.config).toBe("r05");
+    expect(floorFor(record, p1)!.config).toBe("r1");
+    expect(verdict(record, p05).within).toBe(false);
+    expect(verdict(record, p1).within).toBe(true);
+  });
+
+  it("refuses images of different sizes, as flip.ts's compareFrames does", () => {
+    expect(sizeMismatch(1280, 720, 1280, 720)).toBeUndefined();
+    expect(sizeMismatch(1280, 720, 1400, 900)).toBe(
+      "sizes differ: 1280×720 against 1400×900",
     );
   });
 });
