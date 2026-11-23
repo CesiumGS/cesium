@@ -15,7 +15,10 @@
 // two lockfiles agree on them. When they don't, the snapshot installs its
 // own (`npm ci --ignore-scripts`, inside the snapshot), or the run stops;
 // it first removes its own links, so the install can't write through one
-// into the worktree. The local secrets file is copied as a plain file.
+// into the worktree. Under pnpm (CS-1091), on either side, the snapshot
+// always installs its own: pnpm links each workspace package's siblings
+// into that package's own node_modules, so the worktree's would bring the
+// worktree's code back, and a warm pnpm install takes seconds. The local secrets file is copied as a plain file.
 // Commits from before CS-611 read their 1.x build from CESIUM_BUILD_DIR,
 // which the Lab sets to the pinned one (suite/commands/lab.mjs). This
 // module deletes nothing but the links it made; remove old worktrees by
@@ -168,6 +171,7 @@ function link(target, path) {
 }
 
 const STATE = ".bench-deps.json";
+const PNPM_LOCK = "pnpm-lock.yaml";
 
 /**
  * Removes the links this module made in `dir`: those its state file
@@ -259,45 +263,64 @@ export function linkSnapshotPackages(
     );
   }
   const stateFile = join(modules, STATE);
-  const ownLock = join(dir, "package-lock.json");
+  const pnpm = existsSync(join(dir, PNPM_LOCK));
+  const worktreePnpm = existsSync(join(repo, PNPM_LOCK));
+  const ownLock = join(dir, pnpm ? PNPM_LOCK : "package-lock.json");
   const lockText = existsSync(ownLock) ? readFileSync(ownLock, "utf8") : "";
   const lockHash = createHash("sha256").update(lockText).digest("hex");
   const state = readJson(stateFile);
   const worktreeLock = join(repo, "package-lock.json");
   const differences =
-    lockText && existsSync(worktreeLock)
+    !pnpm && !worktreePnpm && lockText && existsSync(worktreeLock)
       ? thirdPartyDifferences(lockText, readFileSync(worktreeLock, "utf8"))
       : [];
+  // pnpm, on either side: the worktree's tree can't be shared (above).
+  const why = pnpm
+    ? "it installs with pnpm"
+    : worktreePnpm
+      ? "the worktree installs with pnpm"
+      : "";
   // Installed for this very lockfile: npm's folders are the snapshot's
   // own, whatever the worktree's lockfile says now.
   if (state?.mode === "installed" && state.lock === lockHash) {
     return { mode: "installed", differences };
   }
-  if (differences.length > 0 || state?.mode === "installed") {
+  if (why || differences.length > 0 || state?.mode === "installed") {
     const shown = differences.slice(0, 5).join(", ");
     const more =
       differences.length > 5 ? ` and ${differences.length - 5} more` : "";
+    const cause = why || "its lockfile differs from the worktree's";
+    const detail = why ? "" : ` (${shown || "an earlier install"}${more})`;
     // npm clears only the root node_modules: a nested link left in place
     // would have it write into the worktree's folder.
     removeOwnLinks(dir, state);
     const outside = outsideLinks(dir);
     if (outside.length > 0) {
       throw new Error(
-        `${dir}: its lockfile differs from the worktree's, but ${outside.join(", ")} ${outside.length === 1 ? "is a link" : "are links"} out of the snapshot, so an install there would write through ${outside.length === 1 ? "it" : "them"}: not installing. Remove ${outside.length === 1 ? "it" : "them"} and run again.`,
+        `${dir}: ${cause}, but ${outside.join(", ")} ${outside.length === 1 ? "is a link" : "are links"} out of the snapshot, so an install there would write through ${outside.length === 1 ? "it" : "them"}: not installing. Remove ${outside.length === 1 ? "it" : "them"} and run again.`,
       );
     }
     console.log(
-      `${dir}: its lockfile differs from the worktree's (${shown || "an earlier install"}${more}): installing its own dependencies there`,
+      `${dir}: ${cause}${detail}: installing its own dependencies there`,
     );
     try {
-      install(
-        process.platform === "win32" ? "npm.cmd" : "npm",
-        ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
-        dir,
-      );
+      const windows = process.platform === "win32";
+      if (pnpm) {
+        install(
+          windows ? "pnpm.cmd" : "pnpm",
+          ["install", "--frozen-lockfile", "--ignore-scripts", "--prefer-offline"],
+          dir,
+        );
+      } else {
+        install(
+          windows ? "npm.cmd" : "npm",
+          ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+          dir,
+        );
+      }
     } catch (error) {
       throw new Error(
-        `${dir}: its lockfile differs from the worktree's (${shown}${more}), and installing its own dependencies failed: ${error instanceof Error ? error.message : String(error)}. Compare with a separate checkout and its own server (--url) instead.`,
+        `${dir}: ${cause}${detail}, and installing its own dependencies failed: ${error instanceof Error ? error.message : String(error)}. Compare with a separate checkout and its own server (--url) instead.`,
         { cause: error },
       );
     }
@@ -306,7 +329,7 @@ export function linkSnapshotPackages(
       stateFile,
       `${JSON.stringify({ mode: "installed", lock: lockHash, links: [] })}\n`,
     );
-    // npm ci links the workspace packages itself.
+    // npm ci and pnpm install link the workspace packages themselves.
     return { mode: "installed", differences };
   }
   const links = [];

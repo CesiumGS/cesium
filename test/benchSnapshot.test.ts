@@ -463,6 +463,53 @@ describe("third-party dependencies", () => {
     rmSync(repo, { recursive: true, force: true });
   });
 
+  it("a snapshot that installs with pnpm always installs its own, with pnpm, once per lockfile", () => {
+    // pnpm links each workspace package's siblings into its own node_modules,
+    // so the worktree's nested folders would bring the worktree's code back.
+    const { repo, at } = pair();
+    writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+    writeFileSync(join(at, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+    const calls: { command: string; args: string[]; cwd: string }[] = [];
+    const install = (command: string, args: string[], cwd: string) =>
+      calls.push({ command, args, cwd });
+    const result = linkSnapshotPackages(at, repo, { install });
+    expect(result).toEqual({ mode: "installed", differences: [] });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.command).toMatch(/^pnpm(\.cmd)?$/);
+    expect(calls[0]?.args).toEqual([
+      "install",
+      "--frozen-lockfile",
+      "--ignore-scripts",
+      "--prefer-offline",
+    ]);
+    expect(calls[0]?.cwd).toBe(at);
+    // No link to the worktree's nested folder was made.
+    expect(existsSync(join(at, "packages", "core", "node_modules"))).toBe(
+      false,
+    );
+    linkSnapshotPackages(at, repo, { install });
+    expect(calls).toHaveLength(1);
+    writeFileSync(join(at, "pnpm-lock.yaml"), "lockfileVersion: '9.1'\n");
+    linkSnapshotPackages(at, repo, { install });
+    expect(calls).toHaveLength(2);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("an npm snapshot under a pnpm worktree installs its own with npm, even when nothing else differs", () => {
+    const { repo, at } = pair();
+    writeFileSync(join(repo, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n");
+    const calls: { command: string; args: string[]; cwd: string }[] = [];
+    const result = linkSnapshotPackages(at, repo, {
+      install: (command, args, cwd) => calls.push({ command, args, cwd }),
+    });
+    expect(result.mode).toBe("installed");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.command).toMatch(/^npm(\.cmd)?$/);
+    expect(calls[0]?.args.slice(0, 1)).toEqual(["ci"]);
+    expect(calls[0]?.cwd).toBe(at);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
   it("refuses a snapshot whose own node_modules is a link", () => {
     const { repo, at } = pair();
     const elsewhere = join(repo, "elsewhere");

@@ -631,7 +631,7 @@ describe("the changeset rule's check", () => {
       },
     });
     const result = check(
-      "D\t.changeset/owls.md\nD\t.changeset/fox.md\nM\tpackages/core/package.json\nA\tpackages/core/CHANGELOG.md\nM\tpackages/time/package.json\nM\tpackage-lock.json\n",
+      "D\t.changeset/owls.md\nD\t.changeset/fox.md\nM\tpackages/core/package.json\nA\tpackages/core/CHANGELOG.md\nM\tpackages/time/package.json\nM\tpnpm-lock.yaml\n",
       head,
       before,
     );

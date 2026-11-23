@@ -14,8 +14,10 @@
 //    CHANGELOG.md section.
 // 2. The experimental line's paired version (scripts/release/lines.mjs),
 //    then the check of both lines, the root's dependency included.
-// 3. `npm install --package-lock-only --ignore-scripts`: the lockfile's
-//    workspace versions follow, so `npm ci` still agrees with it.
+// 3. `pnpm install --lockfile-only --ignore-scripts` (CS-1091; npm's
+//    `install --package-lock-only` in a tree that still has
+//    package-lock.json): the lockfile's workspace versions follow, so a
+//    frozen install still agrees with it.
 //
 // It changes files only; review them, run `npm run release:notes`, and
 // commit the result as its own change. Nothing here publishes.
@@ -74,7 +76,7 @@ export function planRelease(root, changeset) {
   const scratch = mkdtempSync(join(tmpdir(), "cesium-release-plan-"));
   try {
     const rootManifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    for (const file of ["package.json", "package-lock.json"]) {
+    for (const file of ["package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "package-lock.json"]) {
       if (existsSync(join(root, file))) {
         cpSync(join(root, file), join(scratch, file));
       }
@@ -133,7 +135,12 @@ export function writeReleaseRecord(root, options = {}) {
   if (problems.length > 0) {
     throw new Error(`the version lines after versioning:\n  ${problems.join("\n  ")}`);
   }
-  if (lockfile) {
+  if (lockfile && existsSync(join(root, "pnpm-lock.yaml"))) {
+    execFileSync("pnpm", ["install", "--lockfile-only", "--ignore-scripts"], {
+      cwd: root,
+      stdio: "inherit",
+    });
+  } else if (lockfile) {
     execFileSync(
       "npm",
       ["install", "--package-lock-only", "--ignore-scripts", "--no-audit", "--no-fund"],

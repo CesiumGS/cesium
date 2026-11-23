@@ -4,7 +4,7 @@
 // source"). Its own @cesium/* dependencies must never stand in for 2.0's.
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { PINNED_1X } from "../bench/suite/engines.mjs";
@@ -22,25 +22,47 @@ const twoZero = [
 ].map((dir) => join(root, dir));
 const json = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 
-interface LockEntry {
-  name?: string;
-  version?: string;
-  resolved?: string;
-  integrity?: string;
-  link?: boolean;
+/**
+ * pnpm-lock.yaml (CS-1091), read by its two-space layout: no YAML parser is
+ * a declared dependency. A section's entries are the keys indented by two
+ * spaces, each with the lines below it.
+ */
+const lockText = readFileSync(join(root, "pnpm-lock.yaml"), "utf8");
+function lockSection(name: string): Map<string, string> {
+  const heading = `\n${name}:\n`;
+  const start = lockText.indexOf(heading);
+  if (start < 0) {
+    throw new Error(`pnpm-lock.yaml has no ${name} section`);
+  }
+  const entries = new Map<string, string>();
+  let key = "";
+  for (const line of lockText.slice(start + heading.length).split("\n")) {
+    if (/^\S/.test(line)) {
+      break;
+    }
+    // An entry with nothing under it is written on one line: `tools/dyno: {}`.
+    const head = /^ {2}(\S.*?):(?: \{\})?$/.exec(line);
+    if (head) {
+      key = head[1]!.replace(/^'(.*)'$/, "$1");
+      entries.set(key, "");
+    } else if (key && line.trim()) {
+      entries.set(key, `${entries.get(key)}${line}\n`);
+    }
+  }
+  return entries;
 }
-const lock = json(join(root, "package-lock.json")) as {
-  packages: Record<string, LockEntry>;
-};
+const importers = lockSection("importers");
+const lockPackages = lockSection("packages");
 const rootManifest = json(join(root, "package.json")) as {
   devDependencies: Record<string, string>;
 };
 
-/** The lockfile's workspace folders, by package name. */
+/** The workspace's folders (the lockfile's importers), by package name. */
 const workspaces = new Map(
-  Object.entries(lock.packages)
-    .filter(([path, entry]) => !path.includes("node_modules") && entry.name)
-    .map(([path, entry]) => [entry.name!, path]),
+  [...importers.keys()].map((path) => [
+    (json(join(root, path, "package.json")) as { name: string }).name,
+    path,
+  ]),
 );
 
 /** 2.0's own source: what ships and what it tests and measures with. */
@@ -96,13 +118,14 @@ describe("the pinned 1.x", () => {
     expect(rootManifest.devDependencies["cesium-1x"]).toBe(
       `npm:cesium@${PINNED_1X}`,
     );
-    const entry = lock.packages["node_modules/cesium-1x"]!;
-    expect(entry.name).toBe("cesium");
-    expect(entry.version).toBe(PINNED_1X);
-    expect(entry.resolved).toBe(
-      `https://registry.npmjs.org/cesium/-/cesium-${PINNED_1X}.tgz`,
+    expect(importers.get(".")).toContain(
+      `      cesium-1x:\n        specifier: npm:cesium@${PINNED_1X}\n        version: cesium@${PINNED_1X}\n`,
     );
-    expect(entry.integrity).toMatch(/^sha512-/);
+    // A registry package's resolution has an integrity and no tarball or
+    // directory: pnpm writes those only for packages from elsewhere.
+    expect(lockPackages.get(`cesium@${PINNED_1X}`)).toMatch(
+      /^ {4}resolution: \{integrity: sha512-[^,}]+\}\n/,
+    );
   });
 
   it("installs 1.x's engine and widgets from the registry, not from this repository", () => {
@@ -110,9 +133,19 @@ describe("the pinned 1.x", () => {
       ["@cesium/engine", "26."],
       ["@cesium/widgets", "16."],
     ] as const) {
-      const entry = lock.packages[`node_modules/${name}`]!;
-      expect(entry.link, name).toBeUndefined();
-      expect(entry.version!.startsWith(major), name).toBe(true);
+      const versions = [...lockPackages.keys()]
+        .filter((key) => key.startsWith(`${name}@`))
+        .map((key) => key.slice(name.length + 1));
+      expect(versions.length, name).toBeGreaterThan(0);
+      for (const version of versions) {
+        expect(version.startsWith(major), `${name}@${version}`).toBe(true);
+        expect(lockPackages.get(`${name}@${version}`)).toMatch(
+          /^ {4}resolution: \{integrity: sha512-[^,}]+\}\n/,
+        );
+      }
+      expect(lockText).not.toMatch(
+        new RegExp(`'${name}':\\n {8}specifier: [^\\n]+\\n {8}version: link:`),
+      );
       expect(workspaces.has(name), name).toBe(false);
     }
   });
@@ -183,12 +216,24 @@ describe("the pinned 1.x", () => {
   it("never stands in for the workspace's @cesium/core", () => {
     const core = workspaces.get("@cesium/core");
     if (core) {
-      // Once 2.0 has a package named @cesium/core, the name resolves to it,
-      // and 1.x's 0.1.x nests under the 1.x packages that need it.
-      expect(lock.packages["node_modules/@cesium/core"]).toMatchObject({
-        link: true,
-        resolved: core,
-      });
+      // Once 2.0 has a package named @cesium/core, the name resolves to it
+      // in every workspace package that names it, and 1.x's 0.1.x stays
+      // with the 1.x packages that need it.
+      let named = 0;
+      for (const [path, body] of importers) {
+        const entry =
+          /'@cesium\/core':\n {8}specifier: [^\n]+\n {8}version: ([^\n]+)\n/.exec(
+            body,
+          );
+        if (!entry) {
+          continue;
+        }
+        named++;
+        expect(entry[1], path).toBe(
+          `link:${relative(join(root, path), join(root, core)).split(sep).join("/")}`,
+        );
+      }
+      expect(named).toBeGreaterThan(0);
       const resolved = createRequire(join(next, "package.json")).resolve(
         "@cesium/core/package.json",
       );
