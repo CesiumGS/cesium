@@ -209,9 +209,7 @@ entry	name	kind	tier
 .	MaterialOptions	type	-
 .	MeasureIn	interface	-
 .	MeasureInOptions	interface	-
-.	MeshCapGeometry	interface	-
 .	MeshCapHit	interface	-
-.	MeshCapPlane	interface	-
 .	MeshCapRegion	interface	-
 .	MeshCapReport	interface	-
 .	MeshCapSurface	interface	-
@@ -320,7 +318,6 @@ entry	name	kind	tier
 .	SceneItem	class	-
 .	SceneItemOptions	interface	-
 .	SdfGeometryOptions	interface	-
-.	SectionJob	class	-
 .	SectionOptions	interface	-
 .	SectionOutcome	interface	-
 .	SectionPlaneInput	interface	-
@@ -421,7 +418,6 @@ entry	name	kind	tier
 .	WorldClip	interface	-
 .	WorldMemory	interface	-
 .	accuracyAlong	function	-
-.	assembleMeshCaps	function	-
 .	astrophotoCurveStage	function	-
 .	bend	function	-
 .	blend	function	-
@@ -493,7 +489,6 @@ entry	name	kind	tier
 .	measureIn	function	-
 .	memorySlangCache	function	-
 .	meshGeometry	function	-
-.	meshPlane	function	-
 .	modelUsage	function	-
 .	nurbsCurveToSegments	function	-
 .	nurbsSurfaceToPatches	function	-
@@ -504,7 +499,6 @@ entry	name	kind	tier
 .	placePosition	function	-
 .	pointIn	function	-
 .	radialDistortion	function	-
-.	rayHitRegions	function	-
 .	readBrepExtension	function	-
 .	readWithProgress	function	-
 .	resamplable	function	-
@@ -512,7 +506,6 @@ entry	name	kind	tier
 .	resolveIonAsset	function	-
 .	resolveUri	function	-
 .	runBulk	function	-
-.	runSection	function	-
 .	scaleAbout	function	-
 .	scaleAboutEdge	function	-
 .	scaleAlongAxes	function	-
@@ -520,7 +513,6 @@ entry	name	kind	tier
 .	sdfGeometry	function	-
 .	secondDerivativeBound	function	-
 .	sectionBrep	function	-
-.	sectionTile	function	-
 .	slangPostShader	function	-
 .	stableIdOf	function	-
 .	stableIdToHex	function	-
@@ -530,12 +522,10 @@ entry	name	kind	tier
 .	taper	function	-
 .	terrainQueries	function	-
 .	tessellateBrep	function	-
-.	tileBounds	function	-
 .	tileHeaderKey	function	-
 .	timeSlices	function	-
 .	transverseMercator	function	-
 .	transverseMercatorToGeographic	function	-
-.	triangulateRegion	function	-
 .	twist	function	-
 .	utm	function	-
 .	utmToGeographic	function	-
@@ -1112,9 +1102,7 @@ ui	zoneOf	function	-
 @cesium/core	MaterialOptions	type	-
 @cesium/core	MeasureIn	interface	-
 @cesium/core	MeasureInOptions	interface	-
-@cesium/core	MeshCapGeometry	interface	-
 @cesium/core	MeshCapHit	interface	-
-@cesium/core	MeshCapPlane	interface	-
 @cesium/core	MeshCapRegion	interface	-
 @cesium/core	MeshCapReport	interface	-
 @cesium/core	MeshCapSurface	interface	-
@@ -1223,7 +1211,6 @@ ui	zoneOf	function	-
 @cesium/core	SceneItem	class	-
 @cesium/core	SceneItemOptions	interface	-
 @cesium/core	SdfGeometryOptions	interface	-
-@cesium/core	SectionJob	class	-
 @cesium/core	SectionOptions	interface	-
 @cesium/core	SectionOutcome	interface	-
 @cesium/core	SectionPlaneInput	interface	-
@@ -1324,7 +1311,6 @@ ui	zoneOf	function	-
 @cesium/core	WorldClip	interface	-
 @cesium/core	WorldMemory	interface	-
 @cesium/core	accuracyAlong	function	-
-@cesium/core	assembleMeshCaps	function	-
 @cesium/core	astrophotoCurveStage	function	-
 @cesium/core	bend	function	-
 @cesium/core	blend	function	-
@@ -1396,7 +1382,6 @@ ui	zoneOf	function	-
 @cesium/core	measureIn	function	-
 @cesium/core	memorySlangCache	function	-
 @cesium/core	meshGeometry	function	-
-@cesium/core	meshPlane	function	-
 @cesium/core	modelUsage	function	-
 @cesium/core	nurbsCurveToSegments	function	-
 @cesium/core	nurbsSurfaceToPatches	function	-
@@ -1407,7 +1392,6 @@ ui	zoneOf	function	-
 @cesium/core	placePosition	function	-
 @cesium/core	pointIn	function	-
 @cesium/core	radialDistortion	function	-
-@cesium/core	rayHitRegions	function	-
 @cesium/core	readBrepExtension	function	-
 @cesium/core	readWithProgress	function	-
 @cesium/core	resamplable	function	-
@@ -1415,7 +1399,6 @@ ui	zoneOf	function	-
 @cesium/core	resolveIonAsset	function	-
 @cesium/core	resolveUri	function	-
 @cesium/core	runBulk	function	-
-@cesium/core	runSection	function	-
 @cesium/core	scaleAbout	function	-
 @cesium/core	scaleAboutEdge	function	-
 @cesium/core	scaleAlongAxes	function	-
@@ -1423,7 +1406,6 @@ ui	zoneOf	function	-
 @cesium/core	sdfGeometry	function	-
 @cesium/core	secondDerivativeBound	function	-
 @cesium/core	sectionBrep	function	-
-@cesium/core	sectionTile	function	-
 @cesium/core	slangPostShader	function	-
 @cesium/core	stableIdOf	function	-
 @cesium/core	stableIdToHex	function	-
@@ -1433,12 +1415,10 @@ ui	zoneOf	function	-
 @cesium/core	taper	function	-
 @cesium/core	terrainQueries	function	-
 @cesium/core	tessellateBrep	function	-
-@cesium/core	tileBounds	function	-
 @cesium/core	tileHeaderKey	function	-
 @cesium/core	timeSlices	function	-
 @cesium/core	transverseMercator	function	-
 @cesium/core	transverseMercatorToGeographic	function	-
-@cesium/core	triangulateRegion	function	-
 @cesium/core	twist	function	-
 @cesium/core	utm	function	-
 @cesium/core	utmToGeographic	function	-

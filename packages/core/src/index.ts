@@ -105,18 +105,10 @@ export {
   type ClipCaps,
 } from "./scene/world/capFaces.ts";
 export {
-  assembleMeshCaps,
-  meshPlane,
-  rayHitRegions,
-  sectionTile,
-  tileBounds,
-  triangulateRegion,
   type ElementCap,
   type MeshCapHit,
-  type MeshCapPlane,
   type MeshCapRegion,
   type MeshCapReport,
-  type MeshCapGeometry,
   type MeshCapTile,
   type TileSection,
 } from "./scene/world/meshCaps.ts";
@@ -621,8 +613,6 @@ export {
   tessellateBrep,
   faceTrim,
   sectionBrep,
-  SectionJob,
-  runSection,
   type BrepMesh,
   type CapFace,
   type SectionOptions,
