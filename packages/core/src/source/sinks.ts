@@ -1,15 +1,17 @@
 /**
  * The engine's side of the row sinks (CS-847): what a source writes to
  * `RasterSink`, `FeatureSink`, `PointSink` and custom rows, held per
- * content by content key, each row with its stable ID (CS-815) and each
+ * content by content key, each row with its feature ID (CS-815, CS-957 A) and each
  * batch with its credits. The edit layer and queries read them; the
  * renderer halves that draw them come with their sources (imagery with
  * CS-555, features with CS-557, render features with CS-841's item).
  *
- * The override contract: a source keys everything by stable ID and never
- * sees overrides. A row's ID is made from its batch's `names` entry (the
- * source's own key, the same at every level) or else from the batch's key
- * and its index. A writable source must name every row (CS-831's S7).
+ * The override contract: a source keys everything by its own keys and never
+ * sees overrides. A row's feature ID is made from its content (its content
+ * ID and canonical source) and its batch's `names` entry (the source's own
+ * key, the same at every level), or else from the batch's key and its index:
+ * never from a scene item, so every item of the content shares it. A
+ * writable source must name every row (CS-831's S7).
  */
 import { stableIdOf, type StableId } from "../scene/identity.ts";
 import type {
@@ -43,10 +45,29 @@ export interface RowAt {
   readonly index: number;
 }
 
-/** What makes the rows' IDs: the content's item key and canonical source. */
+/** What makes the rows' feature IDs: the content's ID and canonical source. */
 export interface RowIdentityContext {
-  readonly item: string;
+  /** The content's ID (`SourceContent.id`). */
+  readonly content: string;
   readonly source: string;
+}
+
+/**
+ * The feature ID of the row its source names `name` in content
+ * `identity` (`FeatureId`): CS-815's `named` key, with the content's ID
+ * where the key has its item, until CS-961 gives feature IDs a key kind of
+ * their own.
+ */
+export function featureIdOf(
+  identity: RowIdentityContext,
+  name: string,
+): StableId {
+  return stableIdOf({
+    kind: "named",
+    item: identity.content,
+    source: identity.source,
+    name,
+  });
 }
 
 /**
@@ -247,6 +268,13 @@ export class ContentRows {
 
   /** Every name's ID, for samples. */
   private readonly nameIds = new Map<string, StableId>();
+  /** Every named row's name, by its ID: the source's key for a feature ID. */
+  private readonly idNames = new Map<StableId, string>();
+
+  /** The source's key for feature `id`, when a row it wrote named it. */
+  nameOf(id: StableId): string | undefined {
+    return this.idNames.get(id);
+  }
 
   private *rowMaps(): Generator<
     [
@@ -303,17 +331,18 @@ export class ContentRows {
 
   private idsOf(batch: FeatureBatch | PointBatch | CustomRows): BigUint64Array {
     const ids = new BigUint64Array(batch.count);
-    const { item, source } = this.identity;
+    const { content, source } = this.identity;
     for (let i = 0; i < batch.count; i++) {
       const name = batch.names?.[i];
       if (name !== undefined) {
-        const id = stableIdOf({ kind: "named", item, source, name });
+        const id = featureIdOf(this.identity, name);
         this.nameIds.set(name, id);
+        this.idNames.set(id, name);
         ids[i] = id;
       } else {
         ids[i] = stableIdOf({
           kind: "content",
-          item,
+          item: content,
           source,
           content: batch.key,
           set: 0,

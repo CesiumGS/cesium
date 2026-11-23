@@ -1,7 +1,8 @@
 /**
  * The edit layer (CS-831, built here per CS-865): one per content, between
  * the sinks and what reads them. It hides, replaces and inserts features by
- * stable ID, and its overrides hold through streaming: a row that reloads
+ * feature ID (`FeatureId`, CS-957 A): every item of its content, wherever it
+ * is placed, shows the same edits. Its overrides hold through streaming: a row that reloads
  * (the same ID in a new batch, at another level, after eviction) comes back
  * with its override, because the layer is applied on read, never written
  * into the source's rows. Sources never see it.
@@ -14,10 +15,10 @@
  *
  * Sessions, undo, commits and merging are after alpha.1 (docs/design/editing.md).
  */
-import type { StableId } from "../scene/identity.ts";
 import type { FeatureData } from "./editing.ts";
+import type { FeatureId } from "./types.ts";
 
-/** The largest stable ID: they're unsigned 64-bit. */
+/** The largest feature ID: they're unsigned 64-bit. */
 const MAX_ID = (1n << 64n) - 1n;
 
 /**
@@ -30,31 +31,34 @@ export type Override =
   | { readonly kind: "insert"; readonly feature: FeatureData };
 
 /**
- * Hides, replaces and inserts features by stable ID.
+ * Hides, replaces and inserts features by feature ID, for every item of its content.
  * @experimental
  */
 export class EditLayer {
-  private readonly overrides = new Map<StableId, Override>();
-  private readonly listeners = new Set<(ids: readonly StableId[]) => void>();
+  private readonly overrides = new Map<FeatureId, Override>();
+  private readonly listeners = new Set<(ids: readonly FeatureId[]) => void>();
   private revision_ = 0;
 
   /** Stops drawing `id` wherever it is: every tile, level and draw that holds it. */
-  hide(id: StableId): void {
+  hide(id: FeatureId): void {
     this.set(id, { kind: "hide" });
   }
 
   /** Hides `id` and shows `feature` in its place. */
-  replace(id: StableId, feature: FeatureData): void {
+  replace(id: FeatureId, feature: FeatureData): void {
     this.set(id, { kind: "replace", feature: frozen(feature) });
   }
 
-  /** A new feature, with an ID the client made (provisional until committed). */
-  insert(id: StableId, feature: FeatureData): void {
+  /**
+   * A new feature, with the feature ID of a key the client made
+   * (`SourceContent.featureId`), provisional until committed.
+   */
+  insert(id: FeatureId, feature: FeatureData): void {
     this.set(id, { kind: "insert", feature: frozen(feature) });
   }
 
   /** Drops `id`'s override: the source's own content shows again. */
-  clear(id: StableId): void {
+  clear(id: FeatureId): void {
     if (this.overrides.delete(id)) {
       this.bump([id]);
     }
@@ -70,18 +74,18 @@ export class EditLayer {
   }
 
   /** `id`'s override, if it has one. */
-  get(id: StableId): Override | undefined {
+  get(id: FeatureId): Override | undefined {
     return this.overrides.get(id);
   }
 
   /** Whether the source's own `id` draws: false when hidden or replaced. */
-  showsBase(id: StableId): boolean {
+  showsBase(id: FeatureId): boolean {
     const o = this.overrides.get(id);
     return o === undefined || o.kind === "insert";
   }
 
   /** Every override, in the order set. */
-  entries(): IterableIterator<[StableId, Override]> {
+  entries(): IterableIterator<[FeatureId, Override]> {
     return this.overrides.entries();
   }
 
@@ -96,22 +100,22 @@ export class EditLayer {
   }
 
   /** Called with the IDs each change touched. Returns the remover. */
-  onChange(listener: (ids: readonly StableId[]) => void): () => void {
+  onChange(listener: (ids: readonly FeatureId[]) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
-  private set(id: StableId, override: Override): void {
+  private set(id: FeatureId, override: Override): void {
     if (typeof id !== "bigint" || id <= 0n || id > MAX_ID) {
       throw new TypeError(
-        "EditLayer: an ID is a stable ID (an unsigned 64-bit bigint, not 0).",
+        "EditLayer: an ID is a feature ID (an unsigned 64-bit bigint, not 0).",
       );
     }
     this.overrides.set(id, override);
     this.bump([id]);
   }
 
-  private bump(ids: readonly StableId[]): void {
+  private bump(ids: readonly FeatureId[]): void {
     this.revision_++;
     for (const listener of [...this.listeners]) {
       listener(ids);

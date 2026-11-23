@@ -60,6 +60,33 @@ export interface ModuleRef {
 export type ContentKey = string;
 
 /**
+ * A feature's ID (CS-957 A): made from its content and the source's own key
+ * for the feature (`RowIdentity.names`), never from the scene item that
+ * places it, so it is the same wherever the content is placed. Rows, the
+ * edit layer, change sets, metadata and labels name it.
+ *
+ * Until CS-961 gives it a key kind of its own, it is CS-815's `named` key
+ * (or `content` key, for an unnamed row) with the content's ID
+ * (`SourceContent.id`) where that key has its item.
+ * @experimental
+ */
+export type FeatureId = StableId;
+
+/**
+ * A placed feature's ID (CS-957 A): its feature ID with the placement, the
+ * scene item, that draws it. Each item's draws carry its own, so one content
+ * placed twice gives two; picks, ray hits and the ID image report it beside
+ * the feature ID (CS-961).
+ *
+ * Until CS-961 gives it an encoding of its own, it is the ID CS-815 makes
+ * with the item's key (`ContentItem.key`). The first item's key is the
+ * content's ID, so its instance IDs equal its feature IDs; a second item's
+ * differ.
+ * @experimental
+ */
+export type InstanceId = StableId;
+
+/**
  * One credit a piece of content needs shown (ion's `Attribution` has this shape).
  * @experimental
  */
@@ -93,7 +120,7 @@ export interface SourceExtent {
     readonly min: readonly [number, number, number];
     readonly max: readonly [number, number, number];
   };
-  /** Seconds on the views' clock (`SourceClock.seconds`). */
+  /** Scene time (`SourceClock.seconds`): UTC seconds since 1970. */
   readonly time?: { readonly start: number; readonly stop: number };
   /** The reference frame its coordinates are in, when not the body's fixed frame. */
   readonly frame?: string;
@@ -296,9 +323,12 @@ export interface SourceCapabilities {
 export interface SourceQueries {
   /** Height (m) above the ellipsoid at a point (radians), where it knows one. */
   height?(longitude: number, latitude: number): number | undefined;
-  /** A feature by its ID, where the service can look one up. */
+  /**
+   * A feature by the source's own key for it (`RowIdentity.names`), where
+   * the service can look one up. The engine maps a feature ID to its key.
+   */
   feature?(
-    id: StableId,
+    key: string,
     init: { readonly signal?: AbortSignal },
   ): Promise<FeatureData | undefined>;
 }
@@ -319,20 +349,41 @@ export interface SourceHost {
   readonly budget: BudgetClient;
   /** Where its output goes. */
   readonly sinks: ContentSinks;
-  /** The views' time; stepped or real time (CS-816). */
+  /** The scene time of its content's world, and wall time apart (CS-960 A). */
   readonly clock: SourceClock;
   /** A push: content changed. Wakes the engine; it applies in the apply phase. */
   changed(change: SourceChange): void;
 }
 
 /**
- * The views' time.
+ * The time a source sees (CS-960 A): the scene time of its content's world,
+ * the clock picks and camera records read, with its epoch and time scale
+ * named, and wall time as a separate field. Every other time in the seam
+ * (`SourceExtent.time`, `RasterImage.time`, `SampleBatch.times`) is scene time.
  * @experimental
  */
 export interface SourceClock {
-  /** Seconds on the views' clock. */
+  /**
+   * Scene time: seconds since `epoch` on `timeScale`, from its content's
+   * world's scene clock (`SceneClock.seconds`). 0 while the world has no
+   * scene clock, as picks read it; it pauses, jumps and runs backward with
+   * the scene clock.
+   */
   readonly seconds: number;
-  /** True when a host steps it (CS-816): samples then wait for their times. */
+  /** The scene time's epoch: 1970-01-01T00:00:00 UTC. */
+  readonly epoch: "1970-01-01T00:00:00Z";
+  /**
+   * The scene time's time scale: UTC, as the scene clock counts it
+   * (`SceneClock`). How it counts leap seconds is the time package's to say.
+   */
+  readonly timeScale: "UTC";
+  /**
+   * Wall time: real seconds since the engine started (`Engine.time`), apart
+   * from the scene time. For what runs while the scene's time stands still:
+   * an animation, a server's polling interval (CS-863).
+   */
+  readonly wallSeconds: number;
+  /** True when a host steps it (CS-816): samples then wait for their scene times. */
   readonly stepped: boolean;
 }
 
@@ -385,8 +436,8 @@ export interface SourceView {
 export interface SourceTick {
   /** Its items' views, in the order the engine holds them. */
   readonly views: readonly SourceView[];
-  /** Seconds on the views' clock. */
-  readonly seconds: number;
+  /** The scene time, with its epoch and time scale, and wall time apart (`SourceHost.clock` now). */
+  readonly clock: SourceClock;
   /** What the budget granted since its last update. */
   readonly grant: SourceGrant;
   /** Invalidations the engine applied since its last update: select again. */
@@ -468,10 +519,12 @@ export type PropertyColumn =
   | readonly (string | null)[];
 
 /**
- * How rows name the features in them, for their stable IDs (CS-815). Each
- * row gets an ID: from its `names` entry (the source's own key: a primary
- * key, a GeoJSON `id`), the same at every level, or else from the batch's
- * key and its index. A writable source names every row (CS-831's S7).
+ * How rows name the features in them, for their feature IDs (`FeatureId`,
+ * CS-815). Each row gets one: from its `names` entry (the source's own key:
+ * a primary key, a GeoJSON `id`), the same at every level and wherever the
+ * content is placed, or else from the batch's key and its index. A writable
+ * source names every row (CS-831's S7): change sets name a feature by that
+ * key (`ChangeOp.key`).
  * @experimental
  */
 export interface RowIdentity {
@@ -542,7 +595,7 @@ export interface RasterImage {
         readonly mediaType: string;
         readonly data: Uint8Array;
       };
-  /** Seconds on the views' clock it shows, for a time-dynamic layer. */
+  /** The scene time it shows (`SourceClock.seconds`), for a time-dynamic layer. */
   readonly time?: number;
   readonly credits?: CreditList;
 }
@@ -611,7 +664,7 @@ export interface InvalidateChange {
  * @experimental
  */
 export interface SampleBatch {
-  /** Seconds on the views' clock, one per sample. */
+  /** Scene time (`SourceClock.seconds`), one per sample. */
   readonly times: Float64Array;
   /** The row each sample moves (`RowIdentity.names`). */
   readonly names: readonly string[];

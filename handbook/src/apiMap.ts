@@ -1371,6 +1371,8 @@ export const API_ROWS: readonly ApiRow[] = [
       "PlainData",
       "PlainValue",
       "ContentKey",
+      "FeatureId",
+      "InstanceId",
       "SourceJobs",
       "SourceJobSpec",
       "DecoderRef",
@@ -1417,6 +1419,7 @@ export const API_ROWS: readonly ApiRow[] = [
     supporting: [
       "Override",
       "ChangeOp",
+      "FeatureRef",
       "FeatureData",
       "FeaturePatch",
       "GeometryData",

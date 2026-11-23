@@ -7,14 +7,16 @@
  * - **Open:** a reference goes through the resolvers (the host's, then
  *   plain URLs), the registry picks the kind, its decoders load into every
  *   worker, and the kind opens the source over its host.
- * - **Tick:** each source whose content an item places gets `update` with
- *   its views, the clock, its grant and the invalidations since; then the
- *   arbiter grants this tick's wants (`BudgetArbiter`).
+ * - **Tick:** each source whose content an item shows gets `update` with
+ *   its views, its clock (its world's scene time, and wall time apart:
+ *   CS-960 A), its grant and the invalidations since; then the arbiter
+ *   grants this tick's wants (`BudgetArbiter`).
  * - **Push:** `host.changed` queues the change and wakes the engine; it
  *   applies in the apply phase (`Jobs.slice`), under the phase's budget: what
  *   doesn't fit waits for the next tick's phase. Samples carry their times:
  *   in real time they apply as they arrive; on a stepped clock (CS-816) they
- *   wait until the clock reaches them, so a replayed feed gives the same rows.
+ *   wait until their world's scene time reaches them, so a replayed feed
+ *   gives the same rows.
  *   The engine never polls a source (CS-863: a source may poll its own server).
  * - **Bounds:** between ticks a source may queue at most `MAX_QUEUED_CHANGES`
  *   changes; past that its queued invalidations collapse into one
@@ -28,7 +30,7 @@
  */
 import type { FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
-import { canonicalSource, type StableId } from "../scene/identity.ts";
+import { canonicalSource } from "../scene/identity.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
 import { SourceContent } from "./content.ts";
 import {
@@ -50,6 +52,7 @@ import type {
   BudgetClient,
   ContentSinks,
   ContentSource,
+  FeatureId,
   PlainValue,
   SampleBatch,
   SourceChange,
@@ -83,8 +86,11 @@ export interface SourceRuntimeOptions {
   readonly wake?: () => void;
   /** The provider every request goes through (default: `FetchProvider.default`, read when asked). */
   readonly fetch: () => FetchProvider;
-  /** The views' time: the engine's, or a test's fake (until CS-816's stepped clock). */
-  readonly clock: () => SourceClock;
+  /**
+   * The clock `content`'s source sees: its world's scene time, and the
+   * engine's wall time apart; or a test's fake (until CS-816's stepped clock).
+   */
+  readonly clock: (content: SourceContent) => SourceClock;
   /** The views that show `content`. */
   readonly views?: (content: SourceContent) => readonly SourceView[];
   readonly budget?: BudgetOptions;
@@ -283,11 +289,9 @@ export class SourceRuntime {
     if (this.destroyed) {
       return false;
     }
-    const clock = this.options.clock();
     for (const opened of this.opened) {
       const { content } = opened;
-      const item = content.item;
-      if (!item || !item.show) {
+      if (!content.shown) {
         continue;
       }
       const grant = this.budget.takeGrant(opened.client);
@@ -295,7 +299,7 @@ export class SourceRuntime {
       try {
         content.contentSource.update({
           views: this.options.views?.(content) ?? [],
-          seconds: clock.seconds,
+          clock: this.options.clock(content),
           grant,
           invalidated,
         });
@@ -309,7 +313,7 @@ export class SourceRuntime {
       }
     }
     const granted = this.budget.arbitrate();
-    if (this.hasDueSample(clock)) {
+    if (this.hasDueSample()) {
       this.scheduleApply();
     }
     return granted > 0;
@@ -385,7 +389,7 @@ export class SourceRuntime {
       budget,
       sinks,
       get clock() {
-        return clock();
+        return clock(opened.content);
       },
       changed: (change) => this.push(opened, change),
     };
@@ -618,10 +622,9 @@ export class SourceRuntime {
     }
     this.queue = [];
     this.queueHead = 0;
-    const clock = this.options.clock();
     let finished = true;
     // Due samples are a prefix once sorted: applied by time, then arrival.
-    while (this.hasDueSample(clock)) {
+    while (this.hasDueSample()) {
       if (applied > 0 && spent()) {
         finished = false;
         break;
@@ -656,8 +659,13 @@ export class SourceRuntime {
     }
   }
 
-  /** Whether a buffered sample is due: in real time any; on a stepped clock, one the clock reached. */
-  private hasDueSample(clock: SourceClock): boolean {
+  /**
+   * Whether a buffered sample is due: in real time any; on a stepped clock,
+   * one its content's scene time reached. Samples wait in one time order,
+   * so on stepped clocks of different worlds the earliest waits for its own
+   * world's (CS-816 steps them).
+   */
+  private hasDueSample(): boolean {
     if (this.samplesHead >= this.samples.length) {
       return false;
     }
@@ -668,9 +676,9 @@ export class SourceRuntime {
       this.samplesHead = 0;
       this.samplesSorted = true;
     }
-    return (
-      !clock.stepped || this.samples[this.samplesHead]!.time <= clock.seconds
-    );
+    const head = this.samples[this.samplesHead]!;
+    const clock = this.options.clock(head.opened.content);
+    return !clock.stepped || head.time <= clock.seconds;
   }
 
   /** Drops the applied part of the queue once it is most of it. */
@@ -712,22 +720,21 @@ export class SourceRuntime {
   }
 
   /**
-   * Others' change set from the source's feed: checked (a malformed one is
-   * dropped and reported), then applied under this client's edits.
+   * Others' change set from the source's feed: checked and resolved by its
+   * keys (a malformed one, or one whose IDs aren't its keys', is dropped
+   * and reported), then applied under this client's edits.
    */
   private applyFeatures(opened: Opened, changes: ChangeSet): void {
     checkChangeSet(changes);
     const { content } = opened;
-    for (const op of changes.ops) {
+    for (const op of content.resolve(changes).ops) {
+      const id = op.id!;
       if (op.op === "insert") {
-        content.feed.insert(op.id, op.feature);
+        content.feed.insert(id, op.feature);
       } else if (op.op === "delete") {
-        content.feed.hide(op.id);
+        content.feed.hide(id);
       } else {
-        content.feed.replace(
-          op.id,
-          patched(feedBase(content, op.id), op.patch),
-        );
+        content.feed.replace(id, patched(feedBase(content, id), op.patch));
       }
     }
   }
@@ -814,7 +821,7 @@ function invalidatesAll(change: SourceChange): boolean {
 }
 
 /** What a feed's update patches: the feature as the feed has it, else as the source does. */
-function feedBase(content: SourceContent, id: StableId): FeatureData {
+function feedBase(content: SourceContent, id: FeatureId): FeatureData {
   const o = content.feed.get(id);
   return (o && o.kind !== "hide" ? o.feature : content.baseFeature(id)) ?? {};
 }

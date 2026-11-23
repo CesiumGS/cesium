@@ -946,11 +946,14 @@ export class World {
   /**
    * Places content an open source gave (`Engine.open`) in this world: its
    * source then updates each tick with this world's views, and draws here.
-   * Content belongs to the first world it is added to, with one item there
-   * in this version (`ContentItem`); its item's key is its content ID
-   * (`Engine.open`'s `id`). Throws for a destroyed world, content of another
-   * world, a second item, destroyed content, an `id` other than its content
-   * ID, and identity options `SceneItemOptions` refuses.
+   * Content belongs to the first world it is added to, and may have several
+   * items there (`ContentItem`), each with every draw its source writes and
+   * its own instance IDs (CS-957 A); feature IDs and edits are the
+   * content's, the same in every item. An item's key (`ContentItem.key`) is
+   * `options.id`, else the content ID for the first, then the content ID
+   * with an ordinal (`#2`), reported. Throws for a destroyed world, content
+   * of another world, destroyed content, an `id` an item holds or another
+   * open content's ID, and identity options `SceneItemOptions` refuses.
    * @experimental
    */
   add(content: SourceContent, options?: ContentItemOptions): ContentItem;
@@ -963,16 +966,22 @@ export class World {
         throw new Error("World.add: the world is destroyed.");
       }
       checkItemIdentity(options, "World.add");
-      if (options.id !== undefined && options.id !== content.id) {
+      if (
+        options.id !== undefined &&
+        options.id !== content.id &&
+        this.identities.holdsItemKey(options.id)
+      ) {
         throw new Error(
-          "World.add: content's item key is its content ID; give the id to Engine.open (OpenOptions.id).",
+          `World.add: an item or another open content has the key "${options.id}": each item's key is its own.`,
         );
       }
-      // Its rows' IDs and its draws' are made with its content ID: one scheme.
+      // The content ID is its first item's key while that item stays; a
+      // later item without an id takes an ordinal after it.
+      const ownKeyFree = !content.items.some((i) => i.key === content.id);
       const identity = makeItemIdentity(
         this,
-        { ...options, id: content.id },
-        content.source,
+        { ...options, id: options.id ?? (ownKeyFree ? content.id : undefined) },
+        content.id,
       );
       return content.addItem(this, identity, options, () =>
         this.identities.releaseItemKey(identity.key),

@@ -2,10 +2,19 @@
 // a "whole" source with no network that writes to every sink (draws, images,
 // features, points, custom rows), wants its content through the shared
 // budget, decodes on a worker through its kind's decoder, and pushes
-// samples, invalidations and feature changes when a test tells it to.
+// samples, invalidations and feature changes when a test tells it to. A
+// writable one commits to an in-memory server that knows only its own keys
+// (CS-952 A), never the engine's feature IDs.
 import { createBox } from "../../../packages/core/src/scene/meshes.ts";
 import {
   READ_ONLY,
+  changeSetFromJson,
+  changeSetToJson,
+  type ChangeSet,
+  type CommitResult,
+  type FeatureData,
+  type FeatureVersion,
+  type SourceWriter,
   type WriteCapabilities,
 } from "../../../packages/core/src/source/editing.ts";
 import type {
@@ -38,7 +47,7 @@ interface SampleOptions {
   /** Leave the rows unnamed (to show the writable check). */
   unnamed?: boolean;
   /**
-   * Check its server's version every this many seconds on the views' clock
+   * Check its server's version every this many seconds of wall time
    * (CS-863), under the budget, and push an invalidation when it changes.
    */
   polls?: number;
@@ -46,6 +55,12 @@ interface SampleOptions {
   silent?: boolean;
   /** Submit a decode job, then throw, while its kind opens it. */
   throwOnOpen?: boolean;
+  /**
+   * A track: each update writes point "craft" (rows "track") where it is at
+   * the scene time, `speed` meters a second east of the origin from scene
+   * time `start` (UTC seconds since 1970).
+   */
+  track?: { start: number; speed: number };
 }
 
 export class SampleSource implements ContentSource {
@@ -55,7 +70,18 @@ export class SampleSource implements ContentSource {
   readonly capabilities;
   readonly ready = Promise.resolve();
   readonly credits = [{ html: "Sample data" }];
-  readonly writer;
+  readonly writer: SourceWriter | undefined;
+  /**
+   * Its server, when writable: features by its own keys, and their
+   * versions. It never sees a feature ID: change sets reach it as JSON, and
+   * it reads them by key.
+   */
+  readonly server = new Map<
+    string,
+    { version: string; feature: FeatureData }
+  >();
+  private serverVersion = 1;
+  private nextRoad = 2;
   /** Each tick it saw: its grant's keys, the views and invalidations. */
   readonly ticks: {
     keys: readonly string[];
@@ -92,8 +118,21 @@ export class SampleSource implements ContentSource {
         : {}),
       write,
     } as const;
+    if (this.options.writable) {
+      this.server.set("road-0", {
+        version: "1",
+        feature: { properties: { lanes: 2, name: "Main" } },
+      });
+      this.server.set("road-1", {
+        version: "1",
+        feature: { properties: { lanes: 4, name: "Side" } },
+      });
+    }
     this.writer = this.options.writable
-      ? { commit: async () => ({ ok: true as const, version: "2" }) }
+      ? {
+          commit: async (changes) => this.commit(changeSetToJson(changes)),
+          read: async (keys) => this.read(keys),
+        }
       : undefined;
     if (this.options.throwOnOpen) {
       this.sum(Float64Array.of(1)).catch(() => {});
@@ -111,6 +150,18 @@ export class SampleSource implements ContentSource {
       this.throwOnUpdate--;
       throw new Error("the sample's update failed");
     }
+    const track = this.options.track;
+    if (track) {
+      // Time-dependent content: where the craft is at the scene time.
+      const x = (tick.clock.seconds - track.start) * track.speed;
+      this.host.sinks.points.put({
+        key: "track",
+        crs: "EPSG:4978",
+        count: 1,
+        positions: Float64Array.of(x, 0, 0),
+        names: ["craft"],
+      });
+    }
     for (const change of tick.invalidated) {
       for (const key of change.keys ?? [...this.loaded]) {
         this.loaded.delete(key);
@@ -119,7 +170,7 @@ export class SampleSource implements ContentSource {
     const origin = this.options.origin ?? this.asset.url.origin;
     for (const key of tick.grant.keys) {
       if (key === VERSION) {
-        this.poll(tick.seconds);
+        this.poll(tick.clock.wallSeconds);
         continue;
       }
       this.write(key);
@@ -129,7 +180,7 @@ export class SampleSource implements ContentSource {
     if (
       interval !== undefined &&
       !this.polling &&
-      tick.seconds - this.lastPoll >= interval
+      tick.clock.wallSeconds - this.lastPoll >= interval
     ) {
       // Its own check, on its declared interval, through the shared budget.
       this.host.budget.want({
@@ -220,6 +271,49 @@ export class SampleSource implements ContentSource {
         this.host.budget.settle(VERSION, 0);
         this.host.budget.release(VERSION);
       });
+  }
+
+  /**
+   * The server's commit: JSON in, applied by each op's key (an `id` beside
+   * it is the engine's, and ignored); an insert's provisional key gets the
+   * server's own (`CommitResult.keys`).
+   */
+  private commit(text: string): CommitResult {
+    const changes: ChangeSet = changeSetFromJson(text);
+    const version = String(++this.serverVersion);
+    const keys: Record<string, string> = {};
+    for (const op of changes.ops) {
+      if (op.op === "insert") {
+        const key = `road-${this.nextRoad++}`;
+        keys[op.key] = key;
+        this.server.set(key, { version, feature: op.feature });
+      } else if (op.op === "delete") {
+        this.server.delete(op.key);
+      } else {
+        const was = this.server.get(op.key)?.feature ?? {};
+        const properties: Record<string, unknown> = { ...was.properties };
+        for (const [name, value] of Object.entries(op.patch.properties ?? {})) {
+          if (value === null) {
+            delete properties[name];
+          } else {
+            properties[name] = value;
+          }
+        }
+        this.server.set(op.key, {
+          version,
+          feature: { ...was, properties } as FeatureData,
+        });
+      }
+    }
+    return { ok: true, version, keys };
+  }
+
+  /** The server's features by its own keys. */
+  private read(keys: readonly string[]): FeatureVersion[] {
+    return keys.map((key) => {
+      const held = this.server.get(key);
+      return held ? { key, ...held } : { key };
+    });
   }
 
   /** A push, as its feed would make one. */

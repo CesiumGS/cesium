@@ -631,8 +631,11 @@ export function Architecture() {
             credentials, credits and a kind. ion is one resolver among others.
           </li>
           <li>
-            Everything a source writes carries a stable ID, which picks, edits
-            and live updates key by.
+            Everything a source writes carries a stable ID in two parts: a
+            feature ID made from the content and the source's own key for the
+            feature, the same wherever the content is placed, which edits and
+            live updates key by; and an instance ID for each placement, which
+            its draws carry.
           </li>
         </ul>
         <p>
@@ -657,7 +660,9 @@ export function Architecture() {
             A kind is registered by module URL, and its decoders load by URL
             into every worker of the pool. <C>engine.open(ref)</C> resolves a
             reference, picks the kind and opens the source, and{" "}
-            <C>world.add(content)</C> places it.
+            <C>world.add(content)</C> places it. One content can be placed
+            several times in its world; each placement draws everything its
+            source wrote, with its own instance IDs.
           </li>
           <li>
             The budget arbiter takes every source's wants each tick (a class:
@@ -668,23 +673,28 @@ export function Architecture() {
           </li>
           <li>
             Sinks take images, vector features, points and rows for a render
-            feature as plain columns, each row with its stable ID and each batch
-            with its credits. Drawing what the image, feature and custom sinks
-            hold comes with the sources that write them.
+            feature as plain columns, each row with its feature ID and each
+            batch with its credits. Drawing what the image, feature and custom
+            sinks hold comes with the sources that write them.
           </li>
           <li>
-            A source pushes invalidations, feature changes and time-stamped
-            samples. The engine applies them in its apply phase, and on a
-            stepped clock samples wait for their times, so a replayed feed gives
-            the same rows. The engine never polls; a source may check its own
-            server on an interval it declares and push what changed.
+            A source sees its world's scene time (UTC seconds since 1970, the
+            clock picks and camera records read) and wall time apart. It pushes
+            invalidations, feature changes and time-stamped samples. The engine
+            applies them in its apply phase, and on a stepped clock samples wait
+            for their scene times, so a replayed feed gives the same rows. The
+            engine never polls; a source may check its own server on an interval
+            it declares and push what changed.
           </li>
           <li>
             For editing: write capabilities (every source is read-only for now),
             change sets with patch updates, per-operation versions and typed
-            conflicts, serialized as JSON in an experimental 0.x format, and an
-            edit layer that hides, replaces and inserts features by stable ID
-            and holds its edits when content reloads.
+            conflicts, each feature named by the source's own key with the
+            engine's ID beside it, so a server that knows only its own keys can
+            write and read one, serialized as JSON in an experimental 0.x
+            format; and an edit layer that hides, replaces and inserts features
+            by feature ID, in every placement, and holds its edits when content
+            reloads.
           </li>
         </ul>
         <p>

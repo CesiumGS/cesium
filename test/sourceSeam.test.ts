@@ -57,6 +57,21 @@ const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
 const sourceOf = (content: SourceContent) =>
   content.contentSource as unknown as SampleSource;
 
+/** A source's clock: scene time `seconds`, and wall time apart (the same unless given). */
+function sourceClock(
+  seconds: number,
+  stepped = false,
+  wallSeconds = seconds,
+): SourceClock {
+  return {
+    seconds,
+    epoch: "1970-01-01T00:00:00Z",
+    timeScale: "UTC",
+    wallSeconds,
+    stepped,
+  };
+}
+
 /** A world that records what content sets on its draws. */
 function stubWorld() {
   let next = 1;
@@ -95,7 +110,7 @@ function runtime(
       loadDecoder: () => {},
     },
     fetch: () => options.fetch ?? FetchProvider.default,
-    clock: options.clock ?? (() => ({ seconds: 0, stepped: false })),
+    clock: options.clock ?? (() => sourceClock(0)),
     budget: { slotsPerOrigin: options.slots ?? 16 },
     report: (message) => reports.push(message),
   });
@@ -128,7 +143,7 @@ describe("kinds by module reference, and decoders on the pool's workers", () => 
     const rt = new SourceRuntime({
       pool,
       fetch: () => FetchProvider.default,
-      clock: () => ({ seconds: 0, stepped: false }),
+      clock: () => sourceClock(0),
     });
     rt.registerKind({ id: "sample", module: SAMPLE });
     const content = await rt.open({ url: "https://data.test/city.sample" });
@@ -210,13 +225,10 @@ describe("Engine.open and World.add", () => {
     );
     expect(content.kind).toBe("sample");
     expect(content.asset.url.href).toBe("https://data.test/city.sample");
-    // Its item's key is its content ID: rows and draws share one ID scheme.
-    expect(() => world.add(content, { id: "town" })).toThrow(
-      /item key is its content ID/,
-    );
-    const item = world.add(content, { id: "city" });
-    expect(item.identity.key).toBe("city");
-    expect(content.item).toBe(item);
+    // Its first item's key is its content ID, unless the host names one.
+    const item = world.add(content);
+    expect(item.key).toBe("city");
+    expect(content.items).toEqual([item]);
     engine.sources.tick(); // it wants "a"; the budget grants it
     engine.sources.tick(); // it writes "a"
     const source = sourceOf(content);
@@ -236,13 +248,15 @@ describe("Engine.open and World.add", () => {
       "Roads",
       "Image a",
     ]);
-    // Stable IDs from the source's own names (CS-815): the same in another run.
+    // Feature IDs from the source's own names (CS-815): the same in another run.
     const road = stableIdOf({
       kind: "named",
       item: content.id,
       source: content.source,
       name: "road-1",
     });
+    expect(content.featureId("road-1")).toBe(road);
+    expect(content.keyOf(road)).toBe("road-1");
     expect(content.rows.features.get("a")!.ids[1]).toBe(road);
     expect(content.feature(road)).toEqual({
       properties: { lanes: 4, name: "Side" },
@@ -258,7 +272,7 @@ describe("Engine.open and World.add", () => {
     // The draw's ID is the one the world's identity table gives it.
     const drawId = stableIdOf({
       kind: "draw",
-      item: item.identity.key,
+      item: item.key,
       source: content.source,
       content: "a/box",
     });
@@ -439,7 +453,7 @@ describe("push on a stepped clock", () => {
     let seconds = 0;
     const { rt, jobs, place } = runtime({
       phased: true,
-      clock: () => ({ seconds, stepped: true }),
+      clock: () => sourceClock(seconds, true),
     });
     const content = await rt.open({ url: "https://feed.test/cars.sample" });
     place(content);
@@ -535,7 +549,7 @@ describe("a source polling its own server (CS-863)", () => {
     });
     let seconds = 0;
     const { rt, jobs, place } = runtime({
-      clock: () => ({ seconds, stepped: true }),
+      clock: () => sourceClock(seconds, true),
       fetch: provider,
       phased: true,
     });
@@ -697,36 +711,33 @@ describe("the edit layer (CS-865)", () => {
 
   it("applies a feed's change set under this client's edits, and drops a malformed one", async () => {
     const { rt, place, reports } = runtime();
-    const content = await rt.open({
-      url: "https://data.test/city.sample",
-      id: "city",
-    });
+    const content = await rt.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
     place(content);
     rt.tick();
     rt.tick();
-    const road0 = stableIdOf({
-      kind: "named",
-      item: "city",
-      source: content.source,
-      name: "road-0",
-    });
-    const road1 = stableIdOf({
-      kind: "named",
-      item: "city",
-      source: content.source,
-      name: "road-1",
+    const road0 = content.featureId("road-0");
+    const road1 = content.featureId("road-1");
+    // The source's rows: a feed's update patches what they hold.
+    expect(content.feature(road0)?.properties).toEqual({
+      lanes: 2,
+      name: "Main",
     });
     const changes: ChangeSet = {
       id: "cs-1",
       source: "city",
       base: "1",
+      // By the source's own keys (CS-952 A): the feed knows no feature IDs,
+      // or gives one beside its key.
       ops: [
         {
           op: "update",
-          id: road0,
+          key: "road-0",
           patch: { properties: { lanes: 6, name: null } },
         },
-        { op: "delete", id: road1 },
+        { op: "delete", key: "road-1", id: road1 },
       ],
     };
     sourceOf(content).push({ kind: "features", changes });
@@ -738,8 +749,22 @@ describe("the edit layer (CS-865)", () => {
       kind: "features",
       changes: { id: "", source: "city", ops: [] },
     });
+    // An ID that isn't its key's (made for other content) is refused whole.
+    sourceOf(content).push({
+      kind: "features",
+      changes: {
+        id: "cs-3",
+        source: "city",
+        ops: [
+          { op: "delete", key: "car-0" },
+          { op: "delete", key: "car-1", id: road1 },
+        ],
+      },
+    });
+    expect(content.feature(content.featureId("car-0"))).toBeDefined();
     expect(reports).toEqual([
       'the "sample" source\'s features change threw: change set: its id is a non-empty string.',
+      "the \"sample\" source's features change threw: change set: op 1: its id isn't its key's feature ID in this content.",
     ]);
   });
 });
@@ -771,7 +796,7 @@ describe("CS-831's types: write capabilities and change sets", () => {
     ]);
   });
 
-  it("serializes as JSON with a format name and a 0.x version, IDs as decimal strings, and reads it back", () => {
+  it("serializes as JSON with a format name and version 0.2.0, each feature by its key with its ID beside it in decimal, and reads it back", () => {
     const id = (1n << 63n) + 5n;
     const changes: ChangeSet = {
       id: "cs-2",
@@ -780,6 +805,7 @@ describe("CS-831's types: write capabilities and change sets", () => {
       ops: [
         {
           op: "insert",
+          key: "new-pin",
           id,
           feature: {
             geometry: {
@@ -791,13 +817,15 @@ describe("CS-831's types: write capabilities and change sets", () => {
         },
         {
           op: "update",
+          key: "road-7",
           id: 7n,
           base: "e1",
           patch: { properties: { lanes: 3, old: null } },
           before: { properties: { lanes: 2 } },
           overwrite: true,
         },
-        { op: "delete", id: 9n, before: { properties: { a: 1 } } },
+        // From a server that knows only its own keys: no ID beside it.
+        { op: "delete", key: "road-9", before: { properties: { a: 1 } } },
       ],
       meta: { author: "a person", time: "2026-11-22T00:00:00Z", note: "n" },
     };
@@ -805,18 +833,19 @@ describe("CS-831's types: write capabilities and change sets", () => {
     const json = JSON.parse(text) as Record<string, unknown>;
     expect(json.format).toBe(CHANGE_SET_FORMAT);
     expect(json.version).toBe(CHANGE_SET_VERSION);
-    expect(CHANGE_SET_VERSION).toMatch(/^0\./);
-    expect((json.changeSet as { ops: { id: string }[] }).ops[0]!.id).toBe(
-      id.toString(),
-    );
+    expect(CHANGE_SET_VERSION).toBe("0.2.0");
+    const ops = (json.changeSet as { ops: { key: string; id?: string }[] }).ops;
+    expect(ops[0]).toMatchObject({ key: "new-pin", id: id.toString() });
+    expect(ops[2]!.key).toBe("road-9");
+    expect(ops[2]).not.toHaveProperty("id");
     expect(changeSetFromJson(text)).toEqual(changes);
   });
 
-  it("refuses another format, a version that isn't 0.x, a bad ID or op, and what passes its limits, naming no value", () => {
+  it("refuses another format, a version other than 0.2.x, a missing key, a bad ID or op, and what passes its limits, naming no value", () => {
     const wrap = (changeSet: unknown, extra: Record<string, unknown> = {}) =>
       JSON.stringify({
         format: CHANGE_SET_FORMAT,
-        version: "0.1.0",
+        version: "0.2.1",
         changeSet,
         ...extra,
       });
@@ -824,21 +853,34 @@ describe("CS-831's types: write capabilities and change sets", () => {
     expect(() =>
       changeSetFromJson(JSON.stringify({ format: "geojson" })),
     ).toThrow(/format/);
-    expect(() => changeSetFromJson(wrap(ok, { version: "1.0.0" }))).toThrow(
-      /isn't 0\.x/,
-    );
+    expect(changeSetFromJson(wrap(ok)).ops).toEqual([]);
+    for (const version of ["1.0.0", "0.1.0", "0.3.0"]) {
+      expect(() => changeSetFromJson(wrap(ok, { version }))).toThrow(
+        /isn't one this reads \(0\.2\.0: its minor version, 0\.2\.x\)/,
+      );
+    }
+    // 0.1.0's shape: an ID and no key.
     expect(() =>
-      changeSetFromJson(wrap({ ...ok, ops: [{ op: "delete", id: "0" }] })),
-    ).toThrow(/op 0: its id is a stable ID/);
+      changeSetFromJson(wrap({ ...ok, ops: [{ op: "delete", id: "3" }] })),
+    ).toThrow(/op 0: its key is the source's key/);
     expect(() =>
-      changeSetFromJson(wrap({ ...ok, ops: [{ op: "move", id: "3" }] })),
+      changeSetFromJson(
+        wrap({ ...ok, ops: [{ op: "delete", key: "a", id: "0" }] }),
+      ),
+    ).toThrow(/op 0: its id is a feature ID in decimal/);
+    expect(() =>
+      changeSetFromJson(wrap({ ...ok, ops: [{ op: "move", key: "a" }] })),
     ).toThrow(/op 0: its op is/);
     expect(() =>
       changeSetFromJson(
         wrap({
           ...ok,
           ops: [
-            { op: "insert", id: "3", feature: { geometry: { type: "Point" } } },
+            {
+              op: "insert",
+              key: "a",
+              feature: { geometry: { type: "Point" } },
+            },
           ],
         }),
       ),
@@ -848,8 +890,8 @@ describe("CS-831's types: write capabilities and change sets", () => {
         wrap({
           ...ok,
           ops: [
-            { op: "delete", id: "3" },
-            { op: "delete", id: "4" },
+            { op: "delete", key: "a" },
+            { op: "delete", key: "b" },
           ],
         }),
         {
@@ -862,7 +904,7 @@ describe("CS-831's types: write capabilities and change sets", () => {
         wrap({
           ...ok,
           ops: [
-            { op: "update", id: "3", patch: { properties: "secret-value" } },
+            { op: "update", key: "a", patch: { properties: "secret-value" } },
           ],
         }),
       );
@@ -1315,7 +1357,7 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
 
 describe("what the sinks, the edit layer and the change sets refuse", () => {
   it("refuses offsets that don't increase from 0, and holes outside their feature", () => {
-    const { features } = new ContentRows({ item: "i", source: "s" }).sinks();
+    const { features } = new ContentRows({ content: "i", source: "s" }).sinks();
     const lines = (offsets: number[], holes?: number[][]) => ({
       key: "k",
       geometry: "polygon" as const,
@@ -1351,7 +1393,7 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
     const wrap = (changeSet: unknown, extra: Record<string, unknown> = {}) =>
       JSON.stringify({
         format: CHANGE_SET_FORMAT,
-        version: "0.1.0",
+        version: "0.2.0",
         changeSet,
         ...extra,
       });
@@ -1362,7 +1404,7 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
     ).toThrow(/2 ops, more than its limit/);
     expect(() =>
       changeSetFromJson(wrap(ok, { version: "1.0.0-secret-tag" })),
-    ).toThrow(/version isn't 0\.x/);
+    ).toThrow(/version isn't one this reads/);
     try {
       changeSetFromJson(wrap(ok, { version: "9.secret-tag" }));
     } catch (error) {
@@ -1382,13 +1424,13 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
     );
     expect(() =>
       changeSetFromJson(
-        wrap({ ...ok, ops: [{ op: "delete", id: "3", why: "no" }] }),
+        wrap({ ...ok, ops: [{ op: "delete", key: "a", why: "no" }] }),
       ),
     ).toThrow(/op 0 has a field it doesn't know/);
     // -0 in the text: JSON reads it, and can't write it back.
     const negativeZero = wrap({
       ...ok,
-      ops: [{ op: "insert", id: "3", feature: { properties: { h: 0 } } }],
+      ops: [{ op: "insert", key: "a", feature: { properties: { h: 0 } } }],
     }).replace('"h":0', '"h":-0');
     expect(() => changeSetFromJson(negativeZero)).toThrow(
       /a number JSON can't carry/,
@@ -1398,7 +1440,9 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
       expect(() =>
         changeSetToJson({
           ...ok,
-          ops: [{ op: "insert", id: 3n, feature: { properties: { h: bad } } }],
+          ops: [
+            { op: "insert", key: "a", feature: { properties: { h: bad } } },
+          ],
         }),
       ).toThrow(/a number JSON can't carry/);
     }
@@ -1536,12 +1580,11 @@ describe("a throwing update, destroy or open loses nothing and stops nothing", (
 });
 
 describe("the bounds keep others' edits and say what they drop", () => {
-  const set = (n: number, id: StableIdLike): ChangeSet => ({
+  const set = (n: number, key: string): ChangeSet => ({
     id: `cs-${n}`,
     source: "city",
-    ops: [{ op: "delete", id }],
+    ops: [{ op: "delete", key }],
   });
-  type StableIdLike = ReturnType<typeof stableIdOf>;
 
   it("keeps queued change sets through a collapse, and reports dropped change sets plainly, once", async () => {
     const { rt, jobs, place, reports } = runtime({ phased: true });
@@ -1561,7 +1604,7 @@ describe("the bounds keep others' edits and say what they drop", () => {
       name: "road-0",
     });
     const source = sourceOf(content);
-    source.push({ kind: "features", changes: set(0, road0) });
+    source.push({ kind: "features", changes: set(0, "road-0") });
     for (let i = 0; i < MAX_QUEUED_CHANGES; i++) {
       source.push({ kind: "invalidate", keys: ["none"] });
     }
@@ -1574,7 +1617,7 @@ describe("the bounds keep others' edits and say what they drop", () => {
     // Change sets alone past the bound: the rest are dropped, said once.
     reports.length = 0;
     for (let i = 1; i <= MAX_QUEUED_CHANGES + 5; i++) {
-      source.push({ kind: "features", changes: set(i, road0) });
+      source.push({ kind: "features", changes: set(i, "road-0") });
     }
     expect(reports).toEqual([
       expect.stringContaining(
@@ -1585,7 +1628,7 @@ describe("the bounds keep others' edits and say what they drop", () => {
 
   it("reports samples dropped at the bound once per run of drops", async () => {
     const { rt, place, reports } = runtime({
-      clock: () => ({ seconds: 0, stepped: true }),
+      clock: () => sourceClock(0, true),
     });
     const content = await rt.open({ url: "https://feed.test/cars.sample" });
     place(content);
@@ -1662,7 +1705,7 @@ describe("content and tileset items take one ordinal rule", () => {
     expect(world.add(content).identity.key).toBe(URL_);
   });
 
-  it("gives a draw added after its item is removed the IDs it has placed", async () => {
+  it("keeps a draw added while no item places it, and places it with the IDs it had when placed again", async () => {
     const content = await engine.open({ url: URL_ }, { id: "site" });
     const item = world.add(content);
     engine.sources.tick();
@@ -1680,6 +1723,253 @@ describe("content and tileset items take one ordinal rule", () => {
       source: content.source,
       content: "late/box",
     });
+    // No item places it: nothing of it is in the world.
+    expect(world.identity.identify(late)).toBeUndefined();
+    expect(content.drawCount).toBe(2);
+    expect(world.add(content).key).toBe("site");
     expect(world.identity.identify(late)).toBeDefined();
+  });
+});
+
+describe("two IDs, change sets by the source's keys, and the scene clock (CS-957 A, CS-952 A, CS-960 A)", () => {
+  let engine: Engine;
+  let world: World;
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+  });
+  afterEach(() => engine.destroy());
+
+  it("places one content twice: the same feature IDs in its rows and edits, and two instance IDs for its draws", async () => {
+    const content = await engine.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
+    const west = world.add(content);
+    const east = world.add(content); // no id: an ordinal after the content ID
+    expect([west.key, east.key]).toEqual(["city", "city#2"]);
+    expect(content.items).toEqual([west, east]);
+    engine.sources.tick();
+    engine.sources.tick();
+
+    // Rows: one feature ID per feature, made from the content and the
+    // source's key, never from an item.
+    const road1 = content.featureId("road-1");
+    expect(content.rows.features.get("a")!.ids[1]).toBe(road1);
+    expect(road1).not.toBe(
+      stableIdOf({
+        kind: "named",
+        item: east.key,
+        source: content.source,
+        name: "road-1",
+      }),
+    );
+
+    // Draws: the source wrote one; each item has its own, with its instance ID.
+    expect(content.drawCount).toBe(1);
+    const instanceOf = (key: string) =>
+      stableIdOf({
+        kind: "draw",
+        item: key,
+        source: content.source,
+        content: "a/box",
+      });
+    const [westBox, eastBox] = [instanceOf(west.key), instanceOf(east.key)];
+    expect(westBox).not.toBe(eastBox);
+    const westDraw = world.identity.identify(westBox)!.draw!.index;
+    const eastDraw = world.identity.identify(eastBox)!.draw!.index;
+    expect(westDraw).not.toBe(eastDraw);
+    const hidden = (index: number) =>
+      (world.draws.recordsU32[index * RECORD_WORDS + FLAGS_WORD]! &
+        RecordFlags.hidden) !==
+      0;
+
+    // Edits name the feature ID: one edit, every item. The box's feature
+    // ID is made with the content ID (the first item's instance ID until CS-961).
+    const box = stableIdOf({
+      kind: "draw",
+      item: content.id,
+      source: content.source,
+      content: "a/box",
+    });
+    expect([...content.features()].map((f) => f.id)).toContain(box);
+    content.edits.hide(box);
+    expect([hidden(westDraw), hidden(eastDraw)]).toEqual([true, true]);
+    content.edits.clear(box);
+    content.edits.hide(road1);
+    expect(content.feature(road1)).toBeUndefined();
+
+    // An item's own state is its own; removing one leaves the other's IDs.
+    east.show = false;
+    expect([hidden(westDraw), hidden(eastDraw)]).toEqual([false, true]);
+    west.remove();
+    expect(world.identity.identify(westBox)).toBeUndefined();
+    expect(world.identity.identify(eastBox)).toBeDefined();
+    expect(content.featureId("road-1")).toBe(road1);
+    expect(content.feature(road1)).toBeUndefined(); // the edit stays
+    // A key an item holds, or another open content's ID, is refused.
+    const other = await engine.open(
+      { url: "https://data.test/other.sample" },
+      { id: "other" },
+    );
+    expect(() => world.add(content, { id: "city#2" })).toThrow(
+      /has the key "city#2"/,
+    );
+    expect(() => world.add(content, { id: "other" })).toThrow(
+      /another open content has the key "other"/,
+    );
+    expect(world.add(other).key).toBe("other");
+  });
+
+  it("round-trips a change set through a source that knows only its own keys", async () => {
+    const content = await engine.open(
+      { url: "https://data.test/city.sample", options: { writable: true } },
+      { id: "city" },
+    );
+    world.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    const source = sourceOf(content);
+    const writer = content.contentSource.writer!;
+
+    // The client edits by feature ID, and its change set names each
+    // feature by the source's key, with the ID beside it.
+    const road1 = content.featureId("road-1");
+    const mine = content.resolve({
+      id: "cs-mine",
+      source: content.id,
+      ops: [
+        {
+          op: "update",
+          key: content.keyOf(road1)!,
+          patch: { properties: { lanes: 5 } },
+        },
+        {
+          op: "insert",
+          key: "provisional-1",
+          feature: { properties: { lanes: 1, name: "New" } },
+        },
+      ],
+    });
+    expect(mine.ops.map((op) => [op.key, op.id])).toEqual([
+      ["road-1", road1],
+      ["provisional-1", content.featureId("provisional-1")],
+    ]);
+    // The server reads it by key, and answers in its own keys.
+    const result = await writer.commit(mine, {});
+    expect(result).toEqual({
+      ok: true,
+      version: "2",
+      keys: { "provisional-1": "road-2" },
+    });
+    expect(source.server.get("road-1")!.feature.properties).toEqual({
+      lanes: 5,
+      name: "Side",
+    });
+    expect(JSON.stringify([...source.server])).not.toContain(String(road1));
+    expect(await writer.read!(["road-1", "gone"], {})).toEqual([
+      {
+        key: "road-1",
+        version: "2",
+        feature: { properties: { lanes: 5, name: "Side" } },
+      },
+      { key: "gone" },
+    ]);
+
+    // Its feed: JSON the server wrote with its own keys and no IDs. The
+    // engine resolves each by key, so this client's feature IDs match.
+    const theirs = JSON.stringify({
+      format: CHANGE_SET_FORMAT,
+      version: CHANGE_SET_VERSION,
+      changeSet: {
+        id: "cs-server-3",
+        source: "city",
+        ops: [
+          { op: "update", key: "road-0", patch: { properties: { lanes: 8 } } },
+          {
+            op: "insert",
+            key: "road-2",
+            feature: { properties: { lanes: 1, name: "New" } },
+          },
+        ],
+      },
+    });
+    source.push({ kind: "features", changes: changeSetFromJson(theirs) });
+    await Promise.resolve();
+    engine.scene.workers.jobs.apply(Infinity);
+    expect(content.feature(content.featureId("road-0"))?.properties).toEqual({
+      lanes: 8,
+      name: "Main",
+    });
+    const inserted = content.featureId(
+      (result as { keys: Record<string, string> }).keys["provisional-1"]!,
+    );
+    expect(content.feature(inserted)?.properties?.name).toBe("New");
+    expect(content.keyOf(inserted)).toBe("road-2");
+    // Back out as JSON: the keys, with this client's IDs beside them.
+    const out = JSON.parse(
+      changeSetToJson(content.resolve(changeSetFromJson(theirs))),
+    ) as { changeSet: { ops: { key: string; id: string }[] } };
+    expect(out.changeSet.ops[0]).toMatchObject({
+      key: "road-0",
+      id: String(content.featureId("road-0")),
+    });
+  });
+
+  it("gives sources the world's scene time, far from wall time, with its epoch and time scale, and wall time apart", async () => {
+    // 2026-11-22T00:00:00Z: the scene's time, while the engine started just now.
+    const scene = Date.UTC(2026, 10, 22) / 1000;
+    let seconds = scene;
+    const sceneClock = {
+      get seconds() {
+        return seconds;
+      },
+      rate: 1,
+      paused: true,
+      change: "jump" as const,
+      watch: () => () => {},
+    };
+    const content = await engine.open(
+      {
+        url: "https://data.test/craft.sample",
+        options: { keys: [], track: { start: scene, speed: 2 } },
+      },
+      { id: "craft" },
+    );
+    world.add(content);
+    const source = sourceOf(content);
+    // No scene clock yet: scene time 0, as picks read it.
+    expect(source.host.clock.seconds).toBe(0);
+    engine.cameras.setClock(world, sceneClock);
+    const x = () => content.rows.points.get("track")!.batch.positions[0];
+
+    seconds = scene + 100;
+    engine.sources.tick();
+    const clock = source.host.clock;
+    expect(clock).toMatchObject({
+      seconds: scene + 100,
+      epoch: "1970-01-01T00:00:00Z",
+      timeScale: "UTC",
+      stepped: false,
+    });
+    expect(Math.abs(clock.wallSeconds - engine.time)).toBeLessThan(5);
+    expect(clock.seconds - clock.wallSeconds).toBeGreaterThan(1e9);
+    expect(x()).toBe(200); // where the craft is at the scene time
+    // The scene's time jumps back an hour; wall time runs on.
+    seconds = scene - 3600;
+    engine.sources.tick();
+    expect(x()).toBe(-7200);
+    // A view's camera record is at scene time, as a pick's is.
+    let recorded: number | undefined;
+    const update = source.update.bind(source);
+    source.update = (tick) => {
+      recorded = tick.views[0]!.camera().pose.seconds;
+      expect(tick.clock.seconds).toBe(seconds);
+      update(tick);
+    };
+    engine.sources.tick();
+    expect(recorded).toBe(scene - 3600);
   });
 });

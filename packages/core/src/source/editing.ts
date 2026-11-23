@@ -6,16 +6,22 @@
  * named CRS, provisional IDs, partial results and typed conflicts), and how
  * one is committed (`SourceWriter`, `CommitResult`).
  *
+ * A feature is named by the source's own key for it, with the engine's
+ * feature ID beside it (CS-952 A): `key` is what a server, a peer or a
+ * writer knows (a primary key, an element ID, a prim path); `id` is the
+ * engine's, a one-way hash none of them can reverse. Applying a change set
+ * resolves each feature by its key (`SourceContent.resolve`), and refuses
+ * one whose `id` isn't its key's.
+ *
  * The serialized form (CS-862) is JSON tagged with a format name and a 0.x
  * version, experimental until a second writer exists: `changeSetToJson` and
- * `changeSetFromJson`. Stable IDs are 64-bit, so the JSON holds them as
+ * `changeSetFromJson`. Feature IDs are 64-bit, so the JSON holds them as
  * decimal strings. At 0.x a field it doesn't know is refused, not passed
  * through: a writer's newer field would otherwise be lost silently. Numbers
  * are finite and never -0, since JSON can't carry NaN or the infinities and
  * reads "-0" back as 0's sign only by accident: what is checked round-trips.
  */
-import type { StableId } from "../scene/identity.ts";
-import type { PlainValue } from "./types.ts";
+import type { FeatureId, PlainValue } from "./types.ts";
 
 /**
  * What a source can write. Capabilities are a hint for the interface, not
@@ -104,33 +110,49 @@ export interface FeaturePatch {
 }
 
 /**
+ * How a change set names one feature (CS-952 A): by the source's own key,
+ * with the engine's feature ID beside it.
+ * @experimental
+ */
+export interface FeatureRef {
+  /**
+   * The source's own key for the feature (`RowIdentity.names`): what
+   * applying the change set resolves by. An insert's is provisional when the
+   * client made it; the commit maps it to the source's (`CommitResult.keys`).
+   */
+  readonly key: string;
+  /**
+   * The engine's feature ID for `key` in this content. The engine fills it
+   * (`SourceContent.resolve`); a server or a peer that knows only its own
+   * keys leaves it out. One that isn't its key's is refused.
+   */
+  readonly id?: FeatureId;
+}
+
+/**
  * One operation of a change set.
  * @experimental
  */
 export type ChangeOp =
-  /** `id` is provisional, made by the client; the commit maps it to the source's (`CommitResult.ids`). */
-  | {
+  | (FeatureRef & {
       readonly op: "insert";
-      readonly id: StableId;
       readonly feature: FeatureData;
-    }
-  | {
+    })
+  | (FeatureRef & {
       readonly op: "update";
-      readonly id: StableId;
       /** The feature's version it was made against (`versioned: "feature"`). */
       readonly base?: string;
       readonly patch: FeaturePatch;
       readonly before?: FeaturePatch;
       /** Skips the concurrency check: a person chose it, and it's recorded. */
       readonly overwrite?: true;
-    }
-  | {
+    })
+  | (FeatureRef & {
       readonly op: "delete";
-      readonly id: StableId;
       readonly base?: string;
       readonly before?: FeatureData;
       readonly overwrite?: true;
-    };
+    });
 
 /**
  * A list of operations on features, with the version it was made against:
@@ -153,11 +175,11 @@ export interface ChangeSet {
 }
 
 /**
- * A feature's current version, as a writer reads it.
+ * A feature's current version, as a writer reads it: by the source's key,
+ * with the feature ID beside it once the engine fills it.
  * @experimental
  */
-export interface FeatureVersion {
-  readonly id: StableId;
+export interface FeatureVersion extends FeatureRef {
   readonly version?: string;
   /** Absent: deleted, or never existed. */
   readonly feature?: FeatureData;
@@ -168,8 +190,7 @@ export interface FeatureVersion {
  * user data or credentials.
  * @experimental
  */
-export interface Conflict {
-  readonly id: StableId;
+export interface Conflict extends FeatureRef {
   readonly kind: "changed" | "deleted" | "exists" | "forbidden" | "invalid";
   /** Index into the change set's ops. */
   readonly op: number;
@@ -181,22 +202,22 @@ export interface Conflict {
 
 /**
  * A commit's outcome: applied, applied in part (no transactions), or
- * refused. `ids` maps each insert's provisional ID (as a decimal string)
- * to the source's.
+ * refused. `keys` maps each insert's provisional key to the source's own,
+ * which the engine makes its feature ID from.
  * @experimental
  */
 export type CommitResult =
   | {
       readonly ok: true;
       readonly version: string;
-      readonly ids?: Readonly<Record<string, StableId>>;
+      readonly keys?: Readonly<Record<string, string>>;
     }
   | {
       readonly ok: "partial";
       readonly version: string;
       readonly applied: readonly number[];
       readonly conflicts: readonly Conflict[];
-      readonly ids?: Readonly<Record<string, StableId>>;
+      readonly keys?: Readonly<Record<string, string>>;
     }
   | { readonly ok: false; readonly conflicts: readonly Conflict[] };
 
@@ -209,9 +230,12 @@ export interface SourceWriter {
     changes: ChangeSet,
     init: { readonly signal?: AbortSignal },
   ): Promise<CommitResult>;
-  /** The current versions of these features, to rebase on or to learn whether a lost commit landed. */
+  /**
+   * The current versions of the features with these keys (the source's
+   * own), to rebase on or to learn whether a lost commit landed.
+   */
   read?(
-    ids: readonly StableId[],
+    keys: readonly string[],
     init: { readonly signal?: AbortSignal },
   ): Promise<readonly FeatureVersion[]>;
 }
@@ -227,9 +251,14 @@ export const CHANGE_SET_FORMAT = "cesium-change-set";
 
 /**
  * Its version: 0.x, experimental until a second writer exists (CS-862).
+ *
+ * 0.2.0 (CS-952 A): each op names its feature by `key`, the source's own
+ * key, required; `id`, the feature ID in decimal, is beside it and
+ * optional. In 0.1.0 an op had `id` only. A reader reads its own minor
+ * version only, since a 0.x minor version may break the one before.
  * @experimental
  */
-export const CHANGE_SET_VERSION = "0.1.0";
+export const CHANGE_SET_VERSION = "0.2.0";
 
 /**
  * What a change set from outside may hold before it's refused.
@@ -242,6 +271,8 @@ export interface ChangeSetLimits {
   readonly chars?: number;
 }
 
+/** The versions `changeSetFromJson` reads: its own minor version. */
+const VERSION_READ = /^0\.2\.\d+$/;
 const DEFAULT_OPS = 10_000;
 const DEFAULT_CHARS = 16 * 1024 * 1024;
 const MAX_ID = (1n << 64n) - 1n;
@@ -253,16 +284,16 @@ const ENVELOPE_FIELDS = new Set(["format", "version", "changeSet"]);
 const CHANGE_SET_FIELDS = new Set(["id", "source", "base", "ops", "meta"]);
 const META_FIELDS = new Set(["author", "time", "note"]);
 const OP_FIELDS: Readonly<Record<ChangeOp["op"], ReadonlySet<string>>> = {
-  insert: new Set(["op", "id", "feature"]),
-  update: new Set(["op", "id", "base", "patch", "before", "overwrite"]),
-  delete: new Set(["op", "id", "base", "before", "overwrite"]),
+  insert: new Set(["op", "key", "id", "feature"]),
+  update: new Set(["op", "key", "id", "base", "patch", "before", "overwrite"]),
+  delete: new Set(["op", "key", "id", "base", "before", "overwrite"]),
 };
 const FEATURE_FIELDS = new Set(["properties", "geometry"]);
 const GEOMETRY_FIELDS = new Set(["crs", "type", "coordinates"]);
 
 /**
- * `changes` as JSON text: `{ format, version, changeSet }`, with each stable
- * ID a decimal string.
+ * `changes` as JSON text: `{ format, version, changeSet }`, with each
+ * feature ID a decimal string.
  * @experimental
  */
 export function changeSetToJson(changes: ChangeSet): string {
@@ -279,9 +310,11 @@ export function changeSetToJson(changes: ChangeSet): string {
 }
 
 /**
- * Reads JSON text that `changeSetToJson` wrote (or another writer of
- * version 0.x). Throws a `TypeError` naming what's wrong, never echoing
- * property values: change sets carry user data.
+ * Reads JSON text that `changeSetToJson` wrote, or another writer of its
+ * minor version (0.2.x). An op without an `id` keeps none: the engine fills
+ * it from the op's key (`SourceContent.resolve`). Throws a `TypeError`
+ * naming what's wrong, never echoing property values: change sets carry
+ * user data.
  * @experimental
  */
 export function changeSetFromJson(
@@ -301,10 +334,10 @@ export function changeSetFromJson(
     throw new TypeError(`change set: the format isn't "${CHANGE_SET_FORMAT}".`);
   }
   const version = parsed.version;
-  if (typeof version !== "string" || !/^0\.\d+\.\d+$/.test(version)) {
+  if (typeof version !== "string" || !VERSION_READ.test(version)) {
     // Never the value itself: the text is from outside.
     throw new TypeError(
-      `change set: its version isn't 0.x; this reads ${CHANGE_SET_VERSION}.`,
+      `change set: its version isn't one this reads (${CHANGE_SET_VERSION}: its minor version, 0.2.x).`,
     );
   }
   checkFields(parsed, ENVELOPE_FIELDS, "change set: the envelope");
@@ -319,6 +352,9 @@ export function changeSetFromJson(
     ops: raw.ops.map((op: unknown, index: number) => {
       if (!isRecord(op)) {
         throw new TypeError(`change set: op ${index} isn't an object.`);
+      }
+      if (op.id === undefined) {
+        return op;
       }
       return { ...op, id: idFrom(op.id, index) };
     }),
@@ -394,9 +430,17 @@ function checkOp(op: ChangeOp, index: number): void {
   if (!isRecord(op)) {
     throw new TypeError(`${where} isn't an object.`);
   }
-  if (typeof op.id !== "bigint" || op.id <= 0n || op.id > MAX_ID) {
+  if (typeof op.key !== "string" || op.key.length === 0) {
     throw new TypeError(
-      `${where}: its id is a stable ID (a 64-bit bigint, not 0).`,
+      `${where}: its key is the source's key for the feature, a non-empty string.`,
+    );
+  }
+  if (
+    op.id !== undefined &&
+    (typeof op.id !== "bigint" || op.id <= 0n || op.id > MAX_ID)
+  ) {
+    throw new TypeError(
+      `${where}: its id is a feature ID (a 64-bit bigint, not 0) or absent.`,
     );
   }
   if (Object.hasOwn(OP_FIELDS, op.op)) {
@@ -535,7 +579,7 @@ function checkGeometry(geometry: unknown, where: string): void {
 function idFrom(value: unknown, index: number): bigint {
   if (typeof value !== "string" || !/^[1-9]\d{0,19}$/.test(value)) {
     throw new TypeError(
-      `change set: op ${index}: its id is a stable ID in decimal.`,
+      `change set: op ${index}: its id is a feature ID in decimal.`,
     );
   }
   return BigInt(value);

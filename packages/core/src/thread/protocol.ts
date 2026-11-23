@@ -122,7 +122,8 @@ const TABLE: Record<string, EntryTable> = {
       AssetRef BudgetOptions ChangeOp ChangeSet ChangeSetLimits CommitResult
       Conflict ContentItemOptions ContentKey Credit CreditList CustomRows
       DecoderContext DecoderRef DecoderResult FeatureBatch FeatureData
-      FeaturePatch FeatureSchema FeatureVersion GeometryData InvalidateChange
+      FeatureId FeaturePatch FeatureRef FeatureSchema FeatureVersion
+      GeometryData InstanceId InvalidateChange
       KindRef ModuleRef OpenOptions Override PlainData PlainValue PointBatch
       PropertyColumn RasterImage ResolvedAsset RowIdentity SampleBatch
       SourceCapabilities SourceChange SourceClock SourceExtent SourceGrant
@@ -519,7 +520,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     },
     ContentItem: {
       snapshot: `
-        content removed world
+        content key removed world
       `,
       mutation: `
         show viewMask
@@ -591,7 +592,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     },
     SourceContent: {
       snapshot: `
-        asset capabilities destroyed id item kind source world
+        asset capabilities destroyed id items kind source world
       `,
       command: `
         destroy
@@ -600,15 +601,15 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         ready
       `,
       "sync-read": `
-        credits feature features
+        credits feature featureId features keyOf resolve
       `,
       mutation: `
         edits
       `,
       "cannot-cross": `
         addItem attach baseFeature contentSource drawCount drawSink feed
-        noteInvalidated onDestroy refreshDraws restoreInvalidated rows shows
-        takeInvalidated
+        noteInvalidated onDestroy placedDraws refreshDraws restoreInvalidated
+        rows shown showsBase takeInvalidated viewMask
       `,
     },
     SourceHost: {

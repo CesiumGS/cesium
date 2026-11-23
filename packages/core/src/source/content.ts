@@ -1,19 +1,29 @@
 /**
  * Content an open source gives (`Engine.open`), and its items
  * (`World.add`) (CS-847). A source is content; an item is content placed in
- * a world. The content holds what its source wrote: draws in its world,
- * rows in the row sinks (`ContentRows`), and the edit layer over both
- * (`EditLayer`), so every read through it sees the edits.
+ * a world. The content holds what its source wrote: draws, rows in the row
+ * sinks (`ContentRows`), and the edit layer over both (`EditLayer`), so
+ * every read through it sees the edits.
  *
- * In this version content belongs to one world, the first it is added to,
- * and has one item there, as a tileset's first item; several items of one
- * content come with CS-554, which makes items general.
+ * Content belongs to one world, the first it is added to, and may have
+ * several items there. Each item places every draw its source writes: the
+ * source writes a draw once, and its content keeps one draw in the world
+ * per item. Items have no placement of their own yet, so they draw in the
+ * same place (CS-554 makes items general, with placement).
  *
- * One ID scheme: every stable ID a content gives, its rows' and its draws',
- * is made with its content ID (`SourceContent.id`) as the item, and its
- * item's key is that ID (`World.add`). So IDs don't change when an item is
- * removed and the content placed again, and two open contents never share
- * them (`Engine.open` refuses or numbers a second of one ID).
+ * Two IDs (CS-957 A):
+ * - **Feature IDs** (`FeatureId`) are made from the content, its content ID
+ *   (`SourceContent.id`) and canonical source, and the source's own key for
+ *   the feature, never from an item. Rows, the edit layer and change sets
+ *   name them; every item shows the same edits.
+ * - **Instance IDs** (`InstanceId`) add the item: each item's draws carry its
+ *   identity, keyed by `ContentItem.key`, so one content placed twice gives
+ *   two. Until CS-961 encodes them, the first item's key is the content ID,
+ *   so its instance IDs equal its feature IDs.
+ *
+ * IDs don't change when an item is removed and the content placed again,
+ * and two open contents never share feature IDs (`Engine.open` refuses or
+ * numbers a second of one ID).
  *
  * Once destroyed, its sinks refuse writes (they throw), its source's jobs
  * are canceled and its pushes dropped; a draw sink's releases still pass,
@@ -23,18 +33,24 @@ import {
   canonicalSource,
   stableIdOf,
   type ItemIdentity,
-  type StableId,
 } from "../scene/identity.ts";
 import type { DrawHandle, DrawOptions } from "../scene/world/types.ts";
 import type { DrawSink } from "../streaming/DrawSink.ts";
-import { isReadOnly, type FeatureData, type GeometryData } from "./editing.ts";
+import {
+  isReadOnly,
+  type ChangeOp,
+  type ChangeSet,
+  type FeatureData,
+  type GeometryData,
+} from "./editing.ts";
 import { EditLayer } from "./editLayer.ts";
-import { ContentRows, type HeldRows } from "./sinks.ts";
+import { ContentRows, featureIdOf, type HeldRows } from "./sinks.ts";
 import type {
   ContentSource,
   CreditList,
   CustomRows,
   FeatureBatch,
+  FeatureId,
   InvalidateChange,
   PlainValue,
   PointBatch,
@@ -57,9 +73,10 @@ export interface ContentWorld extends DrawSink {
  */
 export interface ContentItemOptions {
   /**
-   * The item's key, for its stable IDs: always its content's ID
-   * (`Engine.open`'s `id`), so another value is refused. Its rows and draws
-   * share one ID scheme.
+   * The item's key (`ContentItem.key`), for its draws' instance IDs, unique
+   * among the world's items. Default: the content's ID for its first item,
+   * then the content's ID with an ordinal (`#2`), reported, as a second item
+   * of a tileset takes. Feature IDs never depend on it.
    */
   readonly id?: string;
   /** Labels by taxonomy for everything it draws (as `SceneItemOptions.labels`). */
@@ -83,10 +100,40 @@ const RELEASES: ReadonlySet<PropertyKey> = new Set([
   "freeClip",
 ]);
 
-interface TrackedDraw {
+/**
+ * `DrawSink`'s calls on one draw that set its state: each item's draw takes
+ * them, and an item placed later takes the last of each.
+ */
+const DRAW_SETTERS: ReadonlySet<PropertyKey> = new Set([
+  "setDrawGeometricError",
+  "setDrawHeightNormal",
+  "setCurvilinearAt",
+  "setDrawMaterial",
+  "setColor",
+  "setDrawDebug",
+  "setDrawMorph",
+  "setCollision",
+  "setGround",
+  "setTerrainClip",
+]);
+
+/** `DrawSink`'s reads of one draw: answered by its first item's draw. */
+const DRAW_READS: ReadonlySet<PropertyKey> = new Set([
+  "drawMatrix",
+  "drawMaterial",
+]);
+
+/** One draw its source wrote, and the draw each item has of it. */
+interface SourceDraw {
+  /** The handle its source holds. */
   readonly handle: DrawHandle;
-  /** Its ID when it has no features (one ID for the whole draw). */
-  readonly id: StableId | undefined;
+  readonly options: DrawOptions;
+  /** Its feature ID when it has no features (one ID for the whole draw). */
+  readonly id: FeatureId | undefined;
+  /** The last arguments of each of `DRAW_SETTERS` called on it, after the handle. */
+  readonly calls: Map<PropertyKey, unknown[]>;
+  /** Each item's draw of it, in the world. */
+  readonly placed: Map<ContentItem, DrawHandle>;
 }
 
 /**
@@ -97,8 +144,8 @@ export class SourceContent {
   /** The rows its source wrote to the row sinks. @internal */
   readonly rows: ContentRows;
   /**
-   * The edit layer: hide, replace and insert by stable ID (CS-865), over
-   * everything this content shows.
+   * The edit layer: hide, replace and insert by feature ID (CS-865,
+   * CS-957 A), over everything this content shows, in every item.
    * @experimental
    */
   readonly edits = new EditLayer();
@@ -108,14 +155,11 @@ export class SourceContent {
   readonly source: string;
   private source_: ContentSource | undefined;
   private world_: ContentWorld | undefined;
-  private item_: ContentItem | undefined;
-  /**
-   * Its item's identity, kept once its item is removed: a draw its source
-   * adds then (a job finishing late) has the same IDs it would have placed.
-   */
-  private identity_: ItemIdentity | undefined;
-  private readonly draws = new Map<string, TrackedDraw>();
-  private readonly drawsById = new Map<StableId, Set<string>>();
+  private readonly items_: ContentItem[] = [];
+  /** By the source's handle (`index`, which only this content gives out). */
+  private readonly draws = new Map<number, SourceDraw>();
+  private readonly drawsById = new Map<FeatureId, Set<number>>();
+  private nextDraw = 1;
   private invalidated: InvalidateChange[] = [];
   private destroyed_ = false;
   /** The draw sink its source writes: the world's, once placed. @internal */
@@ -131,9 +175,9 @@ export class SourceContent {
     readonly kind: string,
   ) {
     this.source = canonicalSource(asset.url.href);
-    this.rows = new ContentRows({ item: id, source: this.source });
+    this.rows = new ContentRows({ content: id, source: this.source });
     this.drawSink = this.makeDrawSink();
-    const reapply = (ids: readonly StableId[]) => this.refreshDraws(ids);
+    const reapply = (ids: readonly FeatureId[]) => this.refreshDraws(ids);
     this.edits.onChange(reapply);
     this.feed.onChange(reapply);
   }
@@ -191,14 +235,63 @@ export class SourceContent {
     return this.world_;
   }
 
-  /** Its item, while one places it. */
-  get item(): ContentItem | undefined {
-    return this.item_;
+  /** The items that place it now, in the order added. */
+  get items(): readonly ContentItem[] {
+    return this.items_;
   }
 
   get destroyed(): boolean {
     return this.destroyed_;
   }
+
+  /**
+   * The feature ID of the feature its source names `key` (`RowIdentity.names`):
+   * the same in every item, and in every run that opens it with this ID.
+   * @experimental
+   */
+  featureId(key: string): FeatureId {
+    if (typeof key !== "string" || key.length === 0) {
+      throw new TypeError(
+        "SourceContent.featureId: a key is the source's own, a non-empty string.",
+      );
+    }
+    return featureIdOf({ content: this.id, source: this.source }, key);
+  }
+
+  /**
+   * The source's own key for feature `id`, when a row its source wrote
+   * named it, or an edit or change set of this content did.
+   * @experimental
+   */
+  keyOf(id: FeatureId): string | undefined {
+    return this.rows.nameOf(id) ?? this.keys.get(id);
+  }
+
+  /**
+   * `changes` with each op's feature ID filled from its key (CS-952 A): how
+   * a change set from a server or a peer that knows only its own keys is
+   * applied. Throws a `TypeError` when an op's `id` isn't its key's (a
+   * change set made for other content), naming the op, never a value.
+   * @experimental
+   */
+  resolve(changes: ChangeSet): ChangeSet {
+    return {
+      ...changes,
+      ops: changes.ops.map((op, index): ChangeOp => {
+        const id = this.featureId(op.key);
+        if (op.id !== undefined && op.id !== id) {
+          throw new TypeError(
+            `change set: op ${index}: its id isn't its key's feature ID in this content.`,
+          );
+        }
+        this.keys.set(id, op.key);
+        return { ...op, id };
+      }),
+    };
+  }
+
+  /** Keys an edit or a change set named, by feature ID: those no row named. */
+  private readonly keys = new Map<FeatureId, string>();
 
   /**
    * The credits of what it holds now: its source's own, then each piece
@@ -224,7 +317,7 @@ export class SourceContent {
    * for a draw with no row data, or undefined when hidden or not loaded.
    * @experimental
    */
-  feature(id: StableId): FeatureData | undefined {
+  feature(id: FeatureId): FeatureData | undefined {
     for (const layer of [this.edits, this.feed]) {
       const o = layer.get(id);
       if (o) {
@@ -239,12 +332,12 @@ export class SourceContent {
    * inserts, each once.
    * @experimental
    */
-  *features(): IterableIterator<{ id: StableId; feature: FeatureData }> {
-    const seen = new Set<StableId>();
+  *features(): IterableIterator<{ id: FeatureId; feature: FeatureData }> {
+    const seen = new Set<FeatureId>();
     const visit = function* (
       this: SourceContent,
-      id: StableId,
-    ): Generator<{ id: StableId; feature: FeatureData }> {
+      id: FeatureId,
+    ): Generator<{ id: FeatureId; feature: FeatureData }> {
       if (seen.has(id)) {
         return;
       }
@@ -269,13 +362,25 @@ export class SourceContent {
     }
   }
 
-  /** @internal Its source's draw `id` shows: not hidden by an edit, and its item shown. */
-  shows(id: StableId): boolean {
-    return (
-      (this.item_?.show ?? false) &&
-      this.edits.showsBase(id) &&
-      this.feed.showsBase(id)
-    );
+  /** @internal Whether an item shows it now: what its source's update waits for. */
+  get shown(): boolean {
+    return this.items_.some((item) => item.show);
+  }
+
+  /** @internal The views of its shown items, one bit per view. */
+  get viewMask(): number {
+    let mask = 0;
+    for (const item of this.items_) {
+      if (item.show) {
+        mask |= item.viewMask;
+      }
+    }
+    return mask >>> 0;
+  }
+
+  /** @internal Its source's draw `id` shows: not hidden by an edit. */
+  showsBase(id: FeatureId): boolean {
+    return this.edits.showsBase(id) && this.feed.showsBase(id);
   }
 
   /** @internal Places it in `world` (`World.add`). */
@@ -293,21 +398,27 @@ export class SourceContent {
       release();
       throw new Error("World.add: the content draws in another world.");
     }
-    if (this.item_ !== undefined) {
-      release();
-      throw new Error(
-        "World.add: the content has an item already; one item per content until items are general (CS-554).",
-      );
-    }
     this.world_ = world;
-    this.identity_ = identity;
-    const item = new ContentItem(this, world, identity, options, () => {
-      this.item_ = undefined;
-      this.refreshDraws(undefined);
-      release();
-    });
-    this.item_ = item;
-    this.refreshDraws(undefined);
+    const item: ContentItem = new ContentItem(
+      this,
+      world,
+      identity,
+      options,
+      () => {
+        this.unplace(item);
+        this.items_.splice(this.items_.indexOf(item), 1);
+        release();
+      },
+    );
+    this.items_.push(item);
+    try {
+      for (const draw of this.draws.values()) {
+        this.place(draw, item);
+      }
+    } catch (error) {
+      item.remove(); // what it placed goes, and so does its key
+      throw error;
+    }
     return item;
   }
 
@@ -330,9 +441,14 @@ export class SourceContent {
     this.invalidated.push(change);
   }
 
-  /** @internal The draws its source holds now. */
+  /** @internal The draws its source holds now (each placed once per item). */
   get drawCount(): number {
     return this.draws.size;
+  }
+
+  /** @internal Each item's draw in the world of its source's draw `handle`. */
+  placedDraws(handle: DrawHandle): ReadonlyMap<ContentItem, DrawHandle> {
+    return this.draws.get(handle.index)?.placed ?? new Map();
   }
 
   /** Closes its source and removes everything it drew. */
@@ -345,13 +461,11 @@ export class SourceContent {
     try {
       this.source_?.destroy();
     } finally {
-      const world = this.world_;
-      for (const tracked of [...this.draws.values()]) {
-        world?.removeDraw(tracked.handle);
+      for (const item of [...this.items_]) {
+        item.remove();
       }
       this.draws.clear();
       this.drawsById.clear();
-      this.item_?.remove();
       this.onDestroy?.();
     }
   }
@@ -364,7 +478,7 @@ export class SourceContent {
   }
 
   /** @internal The source's own feature `id`, from its rows or draws, under every edit. */
-  baseFeature(id: StableId): FeatureData | undefined {
+  baseFeature(id: FeatureId): FeatureData | undefined {
     const at = this.rows.rowsOf(id)[0];
     if (at) {
       const held = this.rows.batchAt(at)!;
@@ -373,36 +487,89 @@ export class SourceContent {
     return this.drawsById.has(id) ? {} : undefined;
   }
 
-  /** @internal Visibility and view masks on its draws: those with `ids`, or all. */
-  refreshDraws(ids: readonly StableId[] | undefined): void {
+  /**
+   * @internal Visibility and view masks on its items' draws: of the draws
+   * with feature IDs `ids`, or of all of `item`'s (or every item's).
+   */
+  refreshDraws(
+    ids: readonly FeatureId[] | undefined,
+    item?: ContentItem,
+  ): void {
     const world = this.world_;
     if (!world) {
       return;
     }
-    const keys = ids
-      ? ids.flatMap((id) => [...(this.drawsById.get(id) ?? [])])
-      : [...this.draws.keys()];
-    const mask = this.item_?.viewMask ?? ALL_VIEWS;
-    const shown = this.item_?.show ?? false;
-    for (const key of keys) {
-      const tracked = this.draws.get(key);
-      if (!tracked) {
-        continue;
+    const draws = ids
+      ? ids.flatMap((id) =>
+          [...(this.drawsById.get(id) ?? [])].map((i) => this.draws.get(i)!),
+        )
+      : [...this.draws.values()];
+    for (const draw of draws) {
+      for (const [placedBy, handle] of draw.placed) {
+        if (item !== undefined && placedBy !== item) {
+          continue;
+        }
+        world.setVisible(handle, this.drawShows(draw, placedBy));
+        if (!ids) {
+          world.setViewMask(handle, placedBy.viewMask);
+        }
       }
-      world.setVisible(
-        tracked.handle,
-        tracked.id === undefined ? shown : this.shows(tracked.id),
-      );
-      if (!ids) {
-        world.setViewMask(tracked.handle, mask);
+    }
+  }
+
+  private drawShows(draw: SourceDraw, item: ContentItem): boolean {
+    return item.show && (draw.id === undefined || this.showsBase(draw.id));
+  }
+
+  /**
+   * `item`'s draw of `draw` in the world: its item's identity, for its
+   * instance IDs, and the last of each state its source set.
+   */
+  private place(draw: SourceDraw, item: ContentItem): void {
+    const world = this.world_!;
+    const { options } = draw;
+    const handle = world.addDraw({
+      ...options,
+      viewMask: item.viewMask,
+      identity: {
+        ...(options.identity ?? {
+          source: this.source,
+          content: options.id!,
+          set: options.features ? 0 : -1,
+          scope: "tile",
+        }),
+        item: item.identity,
+      },
+    });
+    draw.placed.set(item, handle);
+    const w = world as unknown as Record<
+      PropertyKey,
+      (...args: unknown[]) => unknown
+    >;
+    for (const [method, args] of draw.calls) {
+      w[method]?.call(world, handle, ...args);
+    }
+    world.setVisible(handle, this.drawShows(draw, item));
+  }
+
+  /** Removes `item`'s draws from the world. */
+  private unplace(item: ContentItem): void {
+    const world = this.world_;
+    for (const draw of this.draws.values()) {
+      const handle = draw.placed.get(item);
+      if (handle) {
+        draw.placed.delete(item);
+        world?.removeDraw(handle);
       }
     }
   }
 
   /**
    * `DrawSink` as it is, over its world: each draw it adds names its
-   * content (`DrawOptions.id`), gets its item's identity for its stable
-   * IDs, and starts hidden where an edit hides it.
+   * content (`DrawOptions.id`), and is placed once per item, each with its
+   * item's identity for its instance IDs, starting hidden where an edit
+   * hides it. The handle its source holds is the content's own: the calls
+   * `DrawSink` names on one draw reach each item's.
    */
   private makeDrawSink(): DrawSink {
     const world = (): ContentWorld => {
@@ -420,19 +587,7 @@ export class SourceContent {
           "DrawSink.addDraw: a source's draw names its content (DrawOptions.id), so its stable IDs hold across reloads (CS-815).",
         );
       }
-      const w = world();
-      const item = this.identity_;
-      const handle = w.addDraw({
-        ...options,
-        viewMask: this.item_?.viewMask ?? ALL_VIEWS,
-        identity: options.identity ?? {
-          source: this.source,
-          content: options.id,
-          set: options.features ? 0 : -1,
-          scope: "tile",
-          ...(item ? { item } : {}),
-        },
-      });
+      world();
       const id = options.features
         ? undefined
         : stableIdOf({
@@ -441,38 +596,65 @@ export class SourceContent {
             source: this.source,
             content: options.id,
           });
-      const key = `${handle.index}:${handle.generation}`;
-      this.draws.set(key, { handle, id });
+      const handle: DrawHandle = {
+        index: this.nextDraw++,
+        generation: 0,
+        name: options.name,
+      };
+      const draw: SourceDraw = {
+        handle,
+        options: { ...options },
+        id,
+        calls: new Map(),
+        placed: new Map(),
+      };
+      this.draws.set(handle.index, draw);
       if (id !== undefined) {
         let set = this.drawsById.get(id);
         if (!set) {
           set = new Set();
           this.drawsById.set(id, set);
         }
-        set.add(key);
+        set.add(handle.index);
       }
-      w.setVisible(
-        handle,
-        id === undefined ? (this.item_?.show ?? false) : this.shows(id),
-      );
+      try {
+        for (const item of this.items_) {
+          this.place(draw, item);
+        }
+      } catch (error) {
+        removeDraw(handle);
+        throw error;
+      }
       return handle;
     };
     const removeDraw = (handle: DrawHandle): void => {
-      const key = `${handle.index}:${handle.generation}`;
-      const tracked = this.draws.get(key);
-      if (tracked) {
-        this.draws.delete(key);
-        if (tracked.id !== undefined) {
-          const set = this.drawsById.get(tracked.id);
-          set?.delete(key);
-          if (set?.size === 0) {
-            this.drawsById.delete(tracked.id);
-          }
+      const draw = this.draws.get(handle?.index);
+      if (!draw || draw.handle.generation !== handle.generation) {
+        if (this.destroyed_) {
+          return; // removed with its content
         }
-      } else if (this.destroyed_) {
-        return; // removed with its content
+        throw new Error("DrawSink.removeDraw: not a draw this source holds.");
       }
-      world().removeDraw(handle);
+      this.draws.delete(handle.index);
+      if (draw.id !== undefined) {
+        const set = this.drawsById.get(draw.id);
+        set?.delete(handle.index);
+        if (set?.size === 0) {
+          this.drawsById.delete(draw.id);
+        }
+      }
+      const w = this.world_;
+      for (const placed of draw.placed.values()) {
+        w?.removeDraw(placed);
+      }
+      draw.placed.clear();
+    };
+    const drawOf = (handle: DrawHandle, where: string): SourceDraw => {
+      const draw = this.draws.get(handle?.index);
+      if (!draw) {
+        throw new Error(`DrawSink.${where}: not a draw this source holds.`);
+      }
+      return draw;
     };
     return new Proxy({} as DrawSink, {
       get: (_target, property) => {
@@ -490,7 +672,32 @@ export class SourceContent {
         if (this.destroyed_ && !RELEASES.has(property)) {
           return () => this.checkOpen(`DrawSink.${String(property)}`);
         }
-        return (value as (...args: unknown[]) => unknown).bind(w);
+        const call = value as (...args: unknown[]) => unknown;
+        if (DRAW_SETTERS.has(property)) {
+          return (handle: DrawHandle, ...args: unknown[]) => {
+            const draw = drawOf(handle, String(property));
+            draw.calls.delete(property); // the latest goes last when replayed
+            draw.calls.set(property, args);
+            for (const placed of draw.placed.values()) {
+              call.call(w, placed, ...args);
+            }
+          };
+        }
+        if (DRAW_READS.has(property)) {
+          return (handle: DrawHandle, ...args: unknown[]) => {
+            const draw = drawOf(handle, String(property));
+            const first = draw.placed.values().next().value;
+            if (first !== undefined) {
+              return call.call(w, first, ...args);
+            }
+            if (property === "drawMaterial") {
+              return (draw.calls.get("setDrawMaterial")?.[0] ??
+                draw.options.material) as number | undefined;
+            }
+            return undefined; // no item places it: it has no matrix in the world
+          };
+        }
+        return call.bind(w);
       },
       has: (_target, property) => property in world(),
     });
@@ -498,7 +705,9 @@ export class SourceContent {
 }
 
 /**
- * Content placed in a world (`World.add`): whether it shows and in which views.
+ * Content placed in a world (`World.add`): whether it shows and in which
+ * views. Each item has its own draws of its content, with its own instance
+ * IDs (`ContentItem.key`); the content's edits and feature IDs are shared.
  * @experimental
  */
 export class ContentItem {
@@ -510,13 +719,21 @@ export class ContentItem {
   constructor(
     readonly content: SourceContent,
     readonly world: ContentWorld,
-    /** @internal Its key and labels, for the stable IDs of what it draws. */
+    /** @internal Its key and labels, for the instance IDs of what it draws. */
     readonly identity: ItemIdentity,
     options: ContentItemOptions,
     private readonly onRemove: () => void,
   ) {
     this.show_ = options.show ?? true;
     this.viewMask_ = (options.viewMask ?? ALL_VIEWS) >>> 0;
+  }
+
+  /**
+   * Its key among the world's items (`ContentItemOptions.id`): what its
+   * draws' instance IDs are made with (`InstanceId`).
+   */
+  get key(): string {
+    return this.identity.key;
   }
 
   /** Whether it draws. Default true. */
@@ -549,8 +766,8 @@ export class ContentItem {
   }
 
   /**
-   * Stops drawing the content and stops its updates. The content stays
-   * open: `World.add` places it again; `SourceContent.destroy` closes it.
+   * Stops drawing its content here: its draws leave the world. The content
+   * stays open: `World.add` places it again; `SourceContent.destroy` closes it.
    */
   remove(): void {
     if (this.removed_) {
@@ -564,7 +781,7 @@ export class ContentItem {
     if (this.removed_) {
       return;
     }
-    this.content.refreshDraws(undefined);
+    this.content.refreshDraws(undefined, this);
   }
 }
 

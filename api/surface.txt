@@ -159,7 +159,9 @@ entry	name	kind	tier
 .	FaceTrim	interface	-
 .	FeatureBatch	interface	experimental
 .	FeatureData	interface	experimental
+.	FeatureId	type	experimental
 .	FeaturePatch	interface	experimental
+.	FeatureRef	interface	experimental
 .	FeatureSchema	interface	experimental
 .	FeatureSink	type	experimental
 .	FeatureStyle	class	-
@@ -216,6 +218,7 @@ entry	name	kind	tier
 .	IncomingResponse	interface	-
 .	InspectController	class	-
 .	InspectControllerOptions	interface	-
+.	InstanceId	type	experimental
 .	InstanceOptions	interface	-
 .	InvalidateChange	interface	experimental
 .	IonAsset	interface	-
@@ -1135,7 +1138,9 @@ ui	zoneOf	function	-
 @cesium/core	FaceTrim	interface	-
 @cesium/core	FeatureBatch	interface	experimental
 @cesium/core	FeatureData	interface	experimental
+@cesium/core	FeatureId	type	experimental
 @cesium/core	FeaturePatch	interface	experimental
+@cesium/core	FeatureRef	interface	experimental
 @cesium/core	FeatureSchema	interface	experimental
 @cesium/core	FeatureSink	type	experimental
 @cesium/core	FeatureStyle	class	-
@@ -1192,6 +1197,7 @@ ui	zoneOf	function	-
 @cesium/core	IncomingResponse	interface	-
 @cesium/core	InspectController	class	-
 @cesium/core	InspectControllerOptions	interface	-
+@cesium/core	InstanceId	type	experimental
 @cesium/core	InstanceOptions	interface	-
 @cesium/core	InvalidateChange	interface	experimental
 @cesium/core	IonAsset	interface	-
