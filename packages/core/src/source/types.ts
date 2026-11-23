@@ -637,6 +637,16 @@ export interface CustomRows extends RowIdentity {
  * @experimental
  */
 export interface RowSink<B> {
+  /**
+   * Holds `batch` in place of what its key held. What a source puts is at
+   * or past the last change it pushed (CS-1085 A): a batch it requested
+   * before a push and receives after it, it brings up to the push before
+   * putting, or requests again. The engine holds nothing of a push for a
+   * key that isn't resident, so a stale batch would show a change as
+   * undone; the engine can't tell, and only the source knows its own
+   * requests and versions. The engine holds the batch by reference: a
+   * source doesn't change its arrays, `names` above all, once put.
+   */
   put(batch: B): void;
   remove(key: ContentKey): void;
 }
@@ -701,6 +711,16 @@ export interface SampleBatch {
  */
 export type SourceChange =
   | InvalidateChange
-  /** Features others changed: CS-831's change feed in. */
+  /**
+   * Features others changed: CS-831's change feed in, a change set others
+   * committed (CS-1085 A). It has two outcomes only (CS-1102 A): applied in
+   * place to resident rows, or turned into an invalidation. An op for a key
+   * nothing resident holds is not held, a peer's insert included: for an
+   * insert to show, the source invalidates the content that holds it, in
+   * the same push or the next. A change set that fails its check becomes
+   * an invalidation of everything; so does a queue past
+   * `MAX_QUEUED_CHANGES` ops. What the source writes after it is at or
+   * past it (`RowSink.put`).
+   */
   | { readonly kind: "features"; readonly changes: ChangeSet }
   | { readonly kind: "samples"; readonly samples: SampleBatch };

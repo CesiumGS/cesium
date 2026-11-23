@@ -632,15 +632,20 @@ export function Architecture() {
           </li>
           <li>
             Content has a name its host or resolver declares (a dataset's ID,
-            say), never taken from its URL; a plain URL with none is named by a
-            digest of it, without its credentials. Everything a source writes
-            carries a stable ID in two parts: a feature ID, the source's own key
-            for the feature projected in the content's name, the same wherever,
-            however often and in whichever run it is opened; and an instance ID
-            for each placement, which its draws carry and which is never its
-            feature ID. The key is the address: edits and labels are set by key
-            and reach every placement, and hosts save keys rather than IDs until
-            the API review settles the IDs' encoding.
+            say), in a form no URL fits, so a URL or a piece of one is refused
+            as a name. Content with none gets a name the engine derives: a
+            digest of everything its kind receives (its kind, its URL and its
+            options) but the credential its resolver declares, so two contents a
+            kind could tell apart never share one. The engine's own messages
+            name content by its kind and a number, never by its name or its
+            keys. Everything a source writes carries a stable ID in two parts: a
+            feature ID, the source's own key for the feature projected in the
+            content's name, the same wherever, however often and in whichever
+            run it is opened; and an instance ID for each placement, which its
+            draws carry and which is never its feature ID. The key is the
+            address: edits and labels are set by key and reach every placement,
+            and hosts save keys rather than IDs until the API review settles the
+            IDs' encoding.
           </li>
         </ul>
         <p>
@@ -685,13 +690,17 @@ export function Architecture() {
           <li>
             A source sees its world's scene time (UTC seconds since 1970, the
             clock picks and camera records read) and wall time apart. It pushes
-            invalidations, feature changes and time-stamped samples. Feature
-            changes update what is loaded and hold nothing for the rest, so a
-            source serves content at or past what it pushed. The engine applies
-            them in its apply phase, and on a stepped clock samples wait for
-            their scene times, so a replayed feed gives the same rows. The
-            engine never polls; a source may check its own server on an interval
-            it declares and push what changed.
+            invalidations, feature changes and time-stamped samples. A feature
+            change is applied to what is loaded or turned into an invalidation,
+            and the engine holds nothing else of it: for a new feature to show,
+            its source invalidates the tile that holds it, and serves content at
+            or past what it pushed. A queue that overflows, or a change set that
+            fails its check, becomes an invalidation of everything, so the
+            source reloads and nothing is lost. The engine applies them in its
+            apply phase, and on a stepped clock samples wait for their scene
+            times, so a replayed feed gives the same rows. The engine never
+            polls; a source may check its own server on an interval it declares
+            and push what changed.
           </li>
           <li>
             For editing: write capabilities (every source is read-only for now),
@@ -711,7 +720,7 @@ export function Architecture() {
         </p>
         <Written
           from="the design note docs/design/content-source-seam.md, the stable IDs in packages/core/src/scene/identity.ts, and the seam in packages/core/src/source/"
-          on="2026-11-22"
+          on="2026-11-23"
         />
       </Section>
     </Page>
