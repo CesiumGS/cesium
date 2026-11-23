@@ -1505,6 +1505,42 @@ describe(
         expect(tile.isClipped).toBe(true);
       });
 
+      it("creates fill meshes for tiles clipped away by inverse polygons", function () {
+        if (!scene.context.webgl2) {
+          return;
+        }
+
+        const globe = scene.globe;
+        scene.globe.clippingPolygons = new ClippingPolygonCollection({
+          polygons: [polygon],
+          inverse: true,
+        });
+
+        switchViewMode(
+          SceneMode.SCENE3D,
+          new GeographicProjection(Ellipsoid.WGS84),
+        );
+
+        // Render once while terrain is still loading, so the rendered
+        // tiles have no vertex array yet and are drawn from a fill mesh.
+        // A tile clipped away by inverse polygons must still get its
+        // fill mesh: a neighboring fill tile stitches its edges against
+        // that mesh, and reading the edge indices of an undefined mesh
+        // crashes the frame (#13967).
+        scene.renderForSpecs();
+
+        let checkedTiles = 0;
+        forEachRenderedTile(globe._surface, 1, undefined, function (tile) {
+          const surfaceTile = tile.data;
+          if (!defined(surfaceTile.vertexArray)) {
+            ++checkedTiles;
+            expect(surfaceTile.fill).toBeDefined();
+            expect(surfaceTile.fill.mesh).toBeDefined();
+          }
+        });
+        expect(checkedTiles).toBeGreaterThan(0);
+      });
+
       it("Clips tiles that intersect a clipping region", async function () {
         if (!scene.context.webgl2) {
           return;
