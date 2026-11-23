@@ -59,16 +59,16 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "3df6d94f3e3c130a94687d23ec98c35a",
-    "canonicalLength": 8457
+    "canonical": "03ec96064f1ae18ddeee583bd485e244",
+    "canonicalLength": 10595
    },
    "positionWgsl": {
-    "canonical": "21a4ae6430b1e01cf7fdf42455e6f583",
-    "canonicalLength": 7049
+    "canonical": "6779ff15a8ac52174ea2dcdfffc29477",
+    "canonicalLength": 9187
    },
    "centerConstantsWgsl": {
-    "canonical": "1d3bf8f3513c7b6c71c4972eea9b9a27",
-    "canonicalLength": 10424
+    "canonical": "dd61c52a11dc77a944f39bff4d7f5a27",
+    "canonicalLength": 10840
    },
    "uniformsLayout": {
     "floats": 28,
@@ -120,12 +120,12 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "5b14ad7549ce3f634a2811dd625aed8a",
-    "canonicalLength": 9157
+    "canonical": "6357f95f93b2b9cc7ea07aadf14e3d7d",
+    "canonicalLength": 11295
    },
    "positionWgsl": {
-    "canonical": "4b356d8d67331f9b75cf19e69226727b",
-    "canonicalLength": 7183
+    "canonical": "458b38dbcc75161a7cb6bcd7e3b9d982",
+    "canonicalLength": 9321
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
@@ -186,16 +186,16 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "3df6d94f3e3c130a94687d23ec98c35a",
-    "canonicalLength": 8457
+    "canonical": "03ec96064f1ae18ddeee583bd485e244",
+    "canonicalLength": 10595
    },
    "positionWgsl": {
-    "canonical": "21a4ae6430b1e01cf7fdf42455e6f583",
-    "canonicalLength": 7049
+    "canonical": "6779ff15a8ac52174ea2dcdfffc29477",
+    "canonicalLength": 9187
    },
    "centerConstantsWgsl": {
-    "canonical": "1d3bf8f3513c7b6c71c4972eea9b9a27",
-    "canonicalLength": 10424
+    "canonical": "dd61c52a11dc77a944f39bff4d7f5a27",
+    "canonicalLength": 10840
    },
    "uniformsLayout": {
     "floats": 28,
@@ -247,16 +247,16 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "7426967e5a6119dc10458157fb7c3ff1",
-    "canonicalLength": 6755
+    "canonical": "c722e1f64b98eed50a017da9e4585a0b",
+    "canonicalLength": 8893
    },
    "positionWgsl": {
-    "canonical": "21a4ae6430b1e01cf7fdf42455e6f583",
-    "canonicalLength": 7049
+    "canonical": "6779ff15a8ac52174ea2dcdfffc29477",
+    "canonicalLength": 9187
    },
    "centerConstantsWgsl": {
-    "canonical": "7026ed28f14ac6d46983fa3498fe2a89",
-    "canonicalLength": 10151
+    "canonical": "87c1f069b301e2f5259735fde8d6ca42",
+    "canonicalLength": 10567
    },
    "uniformsLayout": {
     "floats": 28,

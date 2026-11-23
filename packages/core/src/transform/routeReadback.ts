@@ -150,10 +150,13 @@ export const CENTER: Bound = { abs: 0, rel: 1 };
  * (measured 6.6 × 10⁻⁸ m, a ratio of 0.11), where a fixed 10⁻⁷ m had less
  * room than the plausible worst, 150 ulps of 6.4 × 10⁶ m (1.4 × 10⁻⁷ m).
  * The one ulp is an assumption about the built-ins' float64 programs, not a
- * derivation from them. abs 10⁻⁹ is measured, not derived: routes whose
- * float64 work runs through values larger than their output (geocentric to
- * geographic, 5 × 10⁻¹⁰) agree to it. A value past 2³⁰ units is float32
- * (`fixParts`): its case adds 2⁻²⁴ of its scale.
+ * derivation from them, and it doesn't hold for the multi-step built-ins
+ * (geocentric to geographic, the transverse Mercator series), whose float64
+ * work runs through values larger than their output: for them the absolute
+ * term carries the agreement. abs 10⁻⁹ is measured, not derived (geocentric
+ * to geographic, 5 × 10⁻¹⁰), and it doesn't grow with the values. A value
+ * whose whole units leave int32's range is float32 (`fixParts`): its case
+ * adds 2⁻²⁴ of its scale.
  */
 export const INPUTS: Bound = { abs: 1e-9, rel: 2 * 2 ** -52 };
 

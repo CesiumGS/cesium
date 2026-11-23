@@ -44,8 +44,8 @@
 // (WGSL and GLSL ES 3.00 specify it).
 //
 // - The whole units (h, l): integers, |h| ≤ 2¹⁵ and l < 2¹⁶, exact in float32
-//   and as int32. Their sums and the products W_P·W_G are int32, exact modulo
-//   2³², so exact while the term's whole units are under 2³¹. Error: 0.
+//   and as int32. Their sums and the products W_P·W_G are int32, exact while
+//   each stays in int32's range, and guarded past it (below). Error: 0.
 // - The 2⁻²⁴ units (k): |k| ≤ 2²³, exact the same way. W·k·2⁻²⁴ is exact as
 //   limbs (`tg_wk`, every product under 2²⁸), and its carries are shifts of a
 //   sum under 7·2²⁴. Error: 0.
@@ -95,45 +95,74 @@
 // parameters have fractions; the readback holds each case to the bound at
 // its own parts.
 //
-// The exact range: every value under 2³⁰ units (1.07 × 10⁹ m at 1 unit =
-// 1 m, 2.8 times the Moon's distance), and each s·G under 2³¹ units. At or
-// past 2³⁰ units, a value falls back: its parts are (0, 0, 0, the value as
-// float32), and it costs up to 2⁻²⁴ of itself (64 m at 2³⁰ m). Every writer
-// of parts falls back the same way: `fixParts` on the CPU (a record's F(c)
-// and G, the CPU path's eye, each parameter), `tg_splitParts` for the
-// renderer's eye and `tgc_parts` for the compute pass's records. So F(c)
-// less the eye is under 2³¹ units whenever both are exact, and their whole
-// units can't wrap: a fallback value's whole units are 0. The renderer has
-// no one place on the CPU that knows both a draw's F(c) and the view's eye
-// (the eye is written per view, the records per draw), so the guard is in
-// the parts themselves. The bound above still holds against the parts, with
-// S then as large as the value.
+// The exact range (CS-1096 A): every value whose whole units fit an int32,
+// from −2³¹ to 2³¹ − 1 (2.1 × 10⁹ m at 1 unit = 1 m, 5.6 times the Moon's
+// distance). Past it, a value falls back: its parts are (0, 0, 0, the value
+// as float32), and it costs up to 2⁻²⁴ of itself (128 m at 2³¹ m). A value
+// that isn't finite falls back the same way. Every writer of parts decides
+// by the same test, on the value's whole units: `fixParts` on the CPU (a
+// record's F(c) and G, the CPU path's eye, each parameter), `tg_splitParts`
+// for the renderer's eye and `tgc_parts` for the compute pass's records.
+// The two GPU writers add the high's and the low's whole units as integers
+// and test that sum's sign, so a high that rounds up to 2³¹ (a value within
+// 64 units of it) is still exact. (They round a half-unit tie to even, and
+// `fixParts` rounds it up: at a tie on the range's edge the two can differ,
+// and both are then exact or within 2⁻²⁴ of the value.)
 //
-// `tg_splitParts` reads the renderer's eye as `splitVec3` splits it: past
-// 2²⁴ units the high is the nearest float32, not a whole number of units, so
-// the low holds up to half a float32 ulp of the high (32 units under 2³⁰)
-// and |k| reaches 2²⁹, not 2²³. That is safe: k is an int32 from the start,
-// `tg_diff`'s q is then under 2²⁹ + 2²³, `tg_addMul` adds under 6·2²⁴ to it
-// before it carries, and `tg_value` adds 2²³: every sum stays under 2³¹. The
-// eye's k and r aren't factors of any product, and its r is still under
-// 2⁻²⁵, so the bound counts them as before.
+// Each sum of whole units is guarded instead: F(c) less the eye, each
+// s·G, and each sum of those can leave int32's range when the values
+// don't. A sum wraps when its operands share a sign that it doesn't (for
+// a − b: a's and b's signs differ and the result's differs from a's); a
+// product wraps when its float32 is at least 2³¹ − 512 (the float32 of a
+// product of 2³¹ or more is at least 2³¹ − 384, three roundings of 2⁻²⁴).
+// Then that term (the one axis's T) is the float32 sum of its values
+// instead, which the shader makes beside the integer one (`TgFix.v`):
+//
+//   T̃ = (ṽ(A) − ṽ(B)) + Σⱼ ṽ(Pⱼ)·ṽ(Gⱼ),  ṽ(V) = f32(W) + (k·2⁻²⁴ + r).
+//
+// Its leaves are f32(W), k·2⁻²⁴ and r of A and of B, and J products: 6 + J
+// leaves and 5 + J adds in any order. With Σw = |A| + |B| + 3 +
+// Σⱼ (|Pⱼ| + 1)·(|Gⱼ| + 1), the adds cost at most (5 + J)·u·Σw, the
+// conversions of A's and B's whole units u·Σw, and each product, with its
+// factors' three roundings each, 7u·(|P| + 1)·(|G| + 1), at most 7u·Σw in
+// all. So, wide:
+//
+//   |error| ≤ mw·u/(1 − mw·u) · Σw + (5 + 10J)·2⁻¹²⁶,  mw = 13 + J
+//
+// (`centerTermBound`, which decides wide as the shader does,
+// `centerTermWide`). At 3 × 10⁹ m apart, F(c) and the eye cost up to about
+// 2,300 m, against 2³² units (4.3 × 10⁹ m) if the whole units wrapped.
+//
+// The parts of the renderer's eye: `splitVec3` makes the high a whole
+// number of units below 2²⁴ and the nearest float32 above it, so the low
+// holds up to half a float32 ulp of the high, 64 units under 2³¹.
+// `tg_splitParts` rounds the low to its whole units and adds those to the
+// high's as integers, so the eye's k is under 2²³ in magnitude, as
+// `fixParts`' is. Its r is the low less its whole units and k·2⁻²⁴, which
+// float32 holds exactly.
 
 /** 2⁻²⁴, the unit of a value's third part. */
 const UNIT = 2 ** -24;
-/** At or past this many whole units, a value's parts fall back to float32 (`fixParts`). */
-export const EXACT_REACH = 2 ** 30;
+/**
+ * A value's whole units must be at least −`EXACT_REACH` and under it (an
+ * int32), or its parts fall back to float32 (`fixParts`).
+ */
+export const EXACT_REACH = 2 ** 31;
+/** A product of whole units whose float32 reaches this may wrap: the term is then wide. */
+const PRODUCT_REACH = 2 ** 31 - 512;
 
 /**
  * `v` as the center term's four parts, at `out[at … at + 3]`: the whole
  * units' high and low 16 bits (whole = high·65536 + low, low in
  * [0, 65536)), the rest in units of 2⁻²⁴ (at most 2²³ either way), and the
  * float32 of what is left (under 2⁻²⁵, and 0 where it would be subnormal).
- * Each part is exact in float32. At or past `EXACT_REACH` whole units, or
- * not finite, the value is the last part alone, as float32.
+ * Each part is exact in float32. With whole units outside int32's range
+ * (`EXACT_REACH`), or not finite, the value is the last part alone, as
+ * float32.
  */
 export function fixParts(v: number, out: Float32Array, at: number): void {
   const whole = Math.round(v);
-  if (!Number.isFinite(v) || Math.abs(whole) >= EXACT_REACH) {
+  if (!Number.isFinite(v) || whole < -EXACT_REACH || whole >= EXACT_REACH) {
     out[at] = 0;
     out[at + 1] = 0;
     out[at + 2] = 0;
@@ -187,14 +216,96 @@ export function centerTermExact(x: CenterInputs): number {
   return Number(sum) / 2 ** 300;
 }
 
+/** Whether s = a + b wrapped in int32: a and b share a sign that s doesn't. */
+const wraps = (a: number, b: number, s: number) => ((a ^ s) & (b ^ s)) < 0;
+
+/** `tg_whole`: a value's whole units as an int32. */
+const wholeOf = (v: PartsAt) =>
+  (Math.imul(v.p[v.at]! | 0, 65536) + (v.p[v.at + 1]! | 0)) | 0;
+
+/** `tg_wk`: (h·65536 + l)·k·2⁻²⁴ as int32 whole units and 2⁻²⁴ units. */
+function wk(h: number, l: number, k: number): [number, number] {
+  const kh = k >> 12;
+  const kl = k & 4095;
+  const a = Math.imul(h, kh);
+  const b = Math.imul(h, kl);
+  const c = Math.imul(l, kh);
+  const d = Math.imul(l, kl);
+  return [
+    (Math.imul(a, 16) + (b >> 8) + (c >> 12) + (d >> 24)) | 0,
+    (((b & 255) << 16) + ((c & 4095) << 12) + (d & 16777215)) | 0,
+  ];
+}
+
+/**
+ * Whether the shader takes the center term's float32 sum (`TgFix.v`) instead
+ * of its integer one: an int32 sum of whole units, or a product, wraps. The
+ * shader's integer steps, in the same order (`tg_diff`, `tg_addMul`,
+ * `tg_value`).
+ */
+export function centerTermWide(x: CenterInputs): boolean {
+  const aw = wholeOf(x.value);
+  const bw = wholeOf(x.eye);
+  let w = (aw - bw) | 0;
+  let wide = ((aw ^ bw) & (aw ^ w)) < 0;
+  let q = ((x.value.p[x.value.at + 2]! | 0) - (x.eye.p[x.eye.at + 2]! | 0)) | 0;
+  for (const [p, g] of x.terms) {
+    const [ph, pl, pk] = [
+      p.p[p.at]! | 0,
+      p.p[p.at + 1]! | 0,
+      p.p[p.at + 2]! | 0,
+    ];
+    const [gh, gl, gk] = [
+      g.p[g.at]! | 0,
+      g.p[g.at + 1]! | 0,
+      g.p[g.at + 2]! | 0,
+    ];
+    const pw = (Math.imul(ph, 65536) + pl) | 0;
+    const gw = (Math.imul(gh, 65536) + gl) | 0;
+    const [xw, xq] = wk(ph, pl, gk);
+    const [yw, yq] = wk(gh, gl, pk);
+    q = (q + xq + yq) | 0;
+    const c = q >> 24;
+    const pg = Math.imul(pw, gw);
+    const w0 = (w + pg) | 0;
+    const w1 = (w0 + xw) | 0;
+    const w2 = (w1 + yw) | 0;
+    const w3 = (w2 + c) | 0;
+    wide =
+      wide ||
+      Math.abs(Math.fround(Math.fround(pw) * Math.fround(gw))) >=
+        PRODUCT_REACH ||
+      wraps(w, pg, w0) ||
+      wraps(w0, xw, w1) ||
+      wraps(w1, yw, w2) ||
+      wraps(w2, c, w3);
+    w = w3;
+    q &= 16777215;
+  }
+  const c = ((q + 8388608) | 0) >> 24;
+  return wide || wraps(w, c, (w + c) | 0);
+}
+
 /**
  * The center term's worst-case error against the exact value `t` of its
- * parts, in its units: the bound derived above (tests and the readback).
+ * parts, in its units: the bound derived above, for the integer sum or,
+ * when the shader takes it (`centerTermWide`), the float32 one (tests and
+ * the readback).
  */
 export function centerTermBound(
   x: CenterInputs,
   t = centerTermExact(x),
 ): number {
+  const flushes = (5 + 10 * x.terms.length) * 2 ** -126;
+  if (centerTermWide(x)) {
+    const size = (v: PartsAt) => Math.abs(fromFixParts(v.p, v.at));
+    let sw = size(x.value) + size(x.eye) + 3;
+    for (const [p, g] of x.terms) {
+      sw += (size(p) + 1) * (size(g) + 1);
+    }
+    const mw = 13 + x.terms.length;
+    return ((mw * UNIT) / (1 - mw * UNIT)) * sw + flushes;
+  }
   const whole = (v: PartsAt) => Math.abs(65536 * v.p[v.at]! + v.p[v.at + 1]!);
   const rest = (v: PartsAt) => Math.abs(v.p[v.at + 3]!);
   const fraction = (v: PartsAt) =>
@@ -206,8 +317,7 @@ export function centerTermBound(
   const m = 6 + 3 * x.terms.length;
   const at = Math.abs(t);
   const sum = Math.min(at + 1 + 2 * s, 3 * at + 4 * s);
-  const flushes = 5 + 10 * x.terms.length;
-  return ((m * UNIT) / (1 - m * UNIT)) * sum + flushes * 2 ** -126;
+  return ((m * UNIT) / (1 - m * UNIT)) * sum + flushes;
 }
 
 /** The value `fixParts` wrote, in float64 (tests). */
@@ -225,29 +335,75 @@ export const CENTER_TERM_WGSL = `
 // A value is vec4f(h, l, k, r): whole units h·65536 + l, k units of 2^-24,
 // and r. A sum keeps its whole units and 2^-24 units as integers, which
 // relaxed math can't reassociate or fold; f holds the rests, each under 1.
+// v is the same sum in float32 alone, and wide says an integer sum or
+// product left int32's range: then v is the term (tg_value).
 struct TgFix {
   w: i32,
   q: i32,
   f: f32,
+  v: f32,
+  wide: bool,
+}
+
+// a + b, a - b and a·b modulo 2^32 (WGSL's i32 arithmetic wraps).
+fn tg_add(a: i32, b: i32) -> i32 {
+  return a + b;
+}
+
+fn tg_sub(a: i32, b: i32) -> i32 {
+  return a - b;
+}
+
+fn tg_mul(a: i32, b: i32) -> i32 {
+  return a * b;
+}
+
+// Whether s = a + b wrapped: a and b share a sign that s doesn't.
+fn tg_wraps(a: i32, b: i32, s: i32) -> bool {
+  return ((a ^ s) & (b ^ s)) < 0;
+}
+
+// Whether x is infinite or NaN, from its bits: relaxed math may assume no
+// float is, and drop a float comparison that tests for it.
+fn tg_notFinite(x: f32) -> bool {
+  return (bitcast<u32>(x) & 0x7f800000u) == 0x7f800000u;
 }
 
 fn tg_whole(v: vec4f) -> i32 {
   return i32(v.x) * 65536 + i32(v.y);
 }
 
-// A split position's high (whole units) and low (shaders/common.slang
-// SplitPosition, math/transforms.ts splitVec3) as a value's parts; at or
-// past 2^30 units, the value as float32 alone (fixParts' fallback).
-fn tg_splitParts(hi: f32, lo: f32) -> vec4f {
-  let w = i32(clamp(hi, -1073741824.0, 1073741824.0));
-  let k = round(lo * 16777216.0);
-  let parts = vec4f(f32(w >> 16u), f32(w & 65535), k, lo - k * ${UNIT_LITERAL});
-  return select(parts, vec4f(0.0, 0.0, 0.0, hi + lo), abs(hi) >= 1073741824.0);
+// A value's parts as one float32 (TgFix.v's terms).
+fn tg_float(v: vec4f) -> f32 {
+  return f32(tg_whole(v)) + (v.z * ${UNIT_LITERAL} + v.w);
 }
 
-// a - b.
+// A split position's high and low (shaders/common.slang SplitPosition,
+// math/transforms.ts splitVec3) as a value's parts: the low's whole units
+// added to the high's as integers. Whole units outside int32's range, or a
+// value that isn't finite, give the value as float32 alone (fixParts'
+// fallback). Every float is clamped before it is converted to an integer.
+fn tg_splitParts(hi: f32, lo: f32) -> vec4f {
+  let hc = clamp(hi, -1073741824.0, 1073741824.0);
+  let lw = round(lo);
+  let rest = lo - lw;
+  let k = round(rest * 16777216.0);
+  let a = i32(hc);
+  let b = i32(clamp(hi - hc, -1073741824.0, 1073741824.0)) + i32(clamp(lw, -16777216.0, 16777216.0));
+  let w = tg_add(a, b);
+  let parts = vec4f(f32(w >> 16u), f32(w & 65535), k, rest - k * ${UNIT_LITERAL});
+  let wide = tg_wraps(a, b, w) || abs(hi) > 2147483648.0 || abs(lo) > 16777216.0 || tg_notFinite(hi) || tg_notFinite(lo);
+  return select(parts, vec4f(0.0, 0.0, 0.0, hi + lo), wide);
+}
+
+// a - b. The whole units' difference wraps past int32's range: a's and b's
+// signs differ, and the difference's sign differs from a's.
 fn tg_diff(a: vec4f, b: vec4f) -> TgFix {
-  return TgFix(tg_whole(a) - tg_whole(b), i32(a.z) - i32(b.z), a.w - b.w);
+  let aw = tg_whole(a);
+  let bw = tg_whole(b);
+  let w = tg_sub(aw, bw);
+  let wide = ((aw ^ bw) & (aw ^ w)) < 0;
+  return TgFix(w, i32(a.z) - i32(b.z), a.w - b.w, tg_float(a) - tg_float(b), wide);
 }
 
 // (h·65536 + l)·k·2^-24 exactly, as whole units and 2^-24 units: 16-bit and
@@ -265,7 +421,8 @@ fn tg_wk(h: i32, l: i32, k: i32) -> vec2i {
   );
 }
 
-// s + p·g, for a separable parameter p and its derivative g.
+// s + p·g, for a separable parameter p and its derivative g. p·g wraps
+// only if its float32 is at least 2^31 - 384 (centerTerm.ts).
 fn tg_addMul(s: TgFix, p: vec4f, g: vec4f) -> TgFix {
   let ph = i32(p.x);
   let pl = i32(p.y);
@@ -278,21 +435,33 @@ fn tg_addMul(s: TgFix, p: vec4f, g: vec4f) -> TgFix {
   let x = tg_wk(ph, pl, gk);
   let y = tg_wk(gh, gl, pk);
   let q = s.q + x.y + y.y;
+  let c = q >> 24u;
   let pf = f32(pk) * ${UNIT_LITERAL} + p.w;
   let gf = f32(gk) * ${UNIT_LITERAL} + g.w;
+  let pg = tg_mul(pw, gw);
+  let w0 = tg_add(s.w, pg);
+  let w1 = tg_add(w0, x.x);
+  let w2 = tg_add(w1, y.x);
+  let w3 = tg_add(w2, c);
+  let wide = abs(f32(pw) * f32(gw)) >= 2147483136.0 || tg_wraps(s.w, pg, w0) || tg_wraps(w0, x.x, w1) || tg_wraps(w1, y.x, w2) || tg_wraps(w2, c, w3);
   return TgFix(
-    s.w + pw * gw + x.x + y.x + (q >> 24u),
+    w3,
     q & 16777215,
     s.f + (f32(pw) * g.w + p.w * f32(gw) + pf * gf),
+    s.v + tg_float(p) * tg_float(g),
+    s.wide || wide,
   );
 }
 
 // The sum in float32: a whole number plus a fraction in [-0.5, 0.5), so
-// the fraction's own rounding is under 2^-26.
+// the fraction's own rounding is under 2^-26; or v, if a sum was wide.
 fn tg_value(s: TgFix) -> f32 {
   let q = s.q + 8388608;
+  let c = q >> 24u;
+  let w = tg_add(s.w, c);
   let fraction = (q & 16777215) - 8388608;
-  return f32(s.w + (q >> 24u)) + (f32(fraction) * ${UNIT_LITERAL} + s.f);
+  let exact = f32(w) + (f32(fraction) * ${UNIT_LITERAL} + s.f);
+  return select(exact, s.v, s.wide || tg_wraps(s.w, c, w));
 }
 `;
 
@@ -302,29 +471,78 @@ export const CENTER_TERM_GLSL = `
 // A value is vec4(h, l, k, r): whole units h·65536 + l, k units of 2^-24,
 // and r. A sum keeps its whole units and 2^-24 units as integers, which
 // relaxed math can't reassociate or fold; f holds the rests, each under 1.
+// v is the same sum in float32 alone, and wide says an integer sum or
+// product left int32's range: then v is the term (tg_value).
 struct TgFix {
   int w;
   int q;
   float f;
+  float v;
+  bool wide;
 };
+
+// a + b, a - b and a·b modulo 2^32, through uint. GLSL ES 3.00 wraps int
+// arithmetic too, but a translation of it into a language where signed
+// overflow is undefined (ANGLE's Metal or HLSL) might not; uint wraps in
+// every one.
+int tg_add(int a, int b) {
+  return int(uint(a) + uint(b));
+}
+
+int tg_sub(int a, int b) {
+  return int(uint(a) - uint(b));
+}
+
+int tg_mul(int a, int b) {
+  return int(uint(a) * uint(b));
+}
+
+// Whether s = a + b wrapped: a and b share a sign that s doesn't.
+bool tg_wraps(int a, int b, int s) {
+  return ((a ^ s) & (b ^ s)) < 0;
+}
+
+// Whether x is infinite or NaN, from its bits: relaxed math may assume no
+// float is, and drop a float comparison that tests for it.
+bool tg_notFinite(float x) {
+  return (floatBitsToUint(x) & 0x7f800000u) == 0x7f800000u;
+}
 
 int tg_whole(vec4 v) {
   return int(v.x) * 65536 + int(v.y);
 }
 
-// A split position's high (whole units) and low (shaders/common.slang
-// SplitPosition, math/transforms.ts splitVec3) as a value's parts; at or
-// past 2^30 units, the value as float32 alone (fixParts' fallback).
-vec4 tg_splitParts(float hi, float lo) {
-  int w = int(clamp(hi, -1073741824.0, 1073741824.0));
-  float k = round(lo * 16777216.0);
-  vec4 parts = vec4(float(w >> 16), float(w & 65535), k, lo - k * ${UNIT_LITERAL});
-  return abs(hi) >= 1073741824.0 ? vec4(0.0, 0.0, 0.0, hi + lo) : parts;
+// A value's parts as one float32 (TgFix.v's terms).
+float tg_float(vec4 v) {
+  return float(tg_whole(v)) + (v.z * ${UNIT_LITERAL} + v.w);
 }
 
-// a - b.
+// A split position's high and low (shaders/common.slang SplitPosition,
+// math/transforms.ts splitVec3) as a value's parts: the low's whole units
+// added to the high's as integers. Whole units outside int32's range, or a
+// value that isn't finite, give the value as float32 alone (fixParts'
+// fallback). Every float is clamped before it is converted to an integer.
+vec4 tg_splitParts(float hi, float lo) {
+  float hc = clamp(hi, -1073741824.0, 1073741824.0);
+  float lw = round(lo);
+  float rest = lo - lw;
+  float k = round(rest * 16777216.0);
+  int a = int(hc);
+  int b = int(clamp(hi - hc, -1073741824.0, 1073741824.0)) + int(clamp(lw, -16777216.0, 16777216.0));
+  int w = tg_add(a, b);
+  vec4 parts = vec4(float(w >> 16), float(w & 65535), k, rest - k * ${UNIT_LITERAL});
+  bool wide = tg_wraps(a, b, w) || abs(hi) > 2147483648.0 || abs(lo) > 16777216.0 || tg_notFinite(hi) || tg_notFinite(lo);
+  return wide ? vec4(0.0, 0.0, 0.0, hi + lo) : parts;
+}
+
+// a - b. The whole units' difference wraps past int32's range: a's and b's
+// signs differ, and the difference's sign differs from a's.
 TgFix tg_diff(vec4 a, vec4 b) {
-  return TgFix(tg_whole(a) - tg_whole(b), int(a.z) - int(b.z), a.w - b.w);
+  int aw = tg_whole(a);
+  int bw = tg_whole(b);
+  int w = tg_sub(aw, bw);
+  bool wide = ((aw ^ bw) & (aw ^ w)) < 0;
+  return TgFix(w, int(a.z) - int(b.z), a.w - b.w, tg_float(a) - tg_float(b), wide);
 }
 
 // (h·65536 + l)·k·2^-24 exactly, as whole units and 2^-24 units: 16-bit and
@@ -341,7 +559,8 @@ ivec2 tg_wk(int h, int l, int k) {
     ((b & 255) << 16) + ((c & 4095) << 12) + (d & 16777215));
 }
 
-// s + p·g, for a separable parameter p and its derivative g.
+// s + p·g, for a separable parameter p and its derivative g. p·g wraps
+// only if its float32 is at least 2^31 - 384 (centerTerm.ts).
 TgFix tg_addMul(TgFix s, vec4 p, vec4 g) {
   int ph = int(p.x);
   int pl = int(p.y);
@@ -354,20 +573,32 @@ TgFix tg_addMul(TgFix s, vec4 p, vec4 g) {
   ivec2 x = tg_wk(ph, pl, gk);
   ivec2 y = tg_wk(gh, gl, pk);
   int q = s.q + x.y + y.y;
+  int c = q >> 24;
   float pf = float(pk) * ${UNIT_LITERAL} + p.w;
   float gf = float(gk) * ${UNIT_LITERAL} + g.w;
+  int pg = tg_mul(pw, gw);
+  int w0 = tg_add(s.w, pg);
+  int w1 = tg_add(w0, x.x);
+  int w2 = tg_add(w1, y.x);
+  int w3 = tg_add(w2, c);
+  bool wide = abs(float(pw) * float(gw)) >= 2147483136.0 || tg_wraps(s.w, pg, w0) || tg_wraps(w0, x.x, w1) || tg_wraps(w1, y.x, w2) || tg_wraps(w2, c, w3);
   return TgFix(
-    s.w + pw * gw + x.x + y.x + (q >> 24),
+    w3,
     q & 16777215,
-    s.f + (float(pw) * g.w + p.w * float(gw) + pf * gf));
+    s.f + (float(pw) * g.w + p.w * float(gw) + pf * gf),
+    s.v + tg_float(p) * tg_float(g),
+    s.wide || wide);
 }
 
 // The sum in float32: a whole number plus a fraction in [-0.5, 0.5), so
-// the fraction's own rounding is under 2^-26.
+// the fraction's own rounding is under 2^-26; or v, if a sum was wide.
 float tg_value(TgFix s) {
   int q = s.q + 8388608;
+  int c = q >> 24;
+  int w = tg_add(s.w, c);
   int fraction = (q & 16777215) - 8388608;
-  return float(s.w + (q >> 24)) + (float(fraction) * ${UNIT_LITERAL} + s.f);
+  float exact = float(w) + (float(fraction) * ${UNIT_LITERAL} + s.f);
+  return s.wide || tg_wraps(s.w, c, w) ? s.v : exact;
 }
 `;
 
@@ -377,19 +608,27 @@ float tg_value(TgFix s) {
  * can fold as before; the parts it writes are what the center term reads.
  * Past 2²⁴ the low part holds whole units, so the high's and the low's whole
  * units are each converted to i32 and added as integers: a float32 add of
- * the two would round once |w| passes 2²⁴ (2 m off at 4.2 × 10⁷ m). At or
- * past 2³⁰ units the value falls back to float32, as `fixParts` does.
+ * the two would round once |w| passes 2²⁴ (2 m off at 4.2 × 10⁷ m). With
+ * whole units outside int32's range (the sum's sign test, as
+ * `tg_splitParts` makes it), or a value that isn't finite, the value falls
+ * back to float32, as `fixParts` does.
  */
 export const CENTER_PARTS_WGSL = `
-// A df64 value as the center term's parts (centerTerm.ts fixParts).
+// A df64 value as the center term's parts (centerTerm.ts fixParts). Every
+// float is clamped before it is converted to an integer.
 fn tgc_parts(x: vec2f) -> vec4f {
   let w = round(x.x);
   let t = (x.x - w) + x.y;
   let tw = round(t);
   let rest = t - tw;
   let k = round(rest * 16777216.0);
-  let wi = i32(w) + i32(tw);
+  let wc = clamp(w, -1073741824.0, 1073741824.0);
+  let a = i32(wc);
+  let b = i32(clamp(w - wc, -1073741824.0, 1073741824.0)) + i32(clamp(tw, -16777216.0, 16777216.0));
+  let wi = a + b;
   let parts = vec4f(f32(wi >> 16u), f32(wi & 65535), k, rest - k * ${UNIT_LITERAL});
-  return select(parts, vec4f(0.0, 0.0, 0.0, x.x + x.y), abs(w) >= 1073741824.0);
+  let exponent = 0x7f800000u;
+  let wide = ((a ^ wi) & (b ^ wi)) < 0 || abs(w) > 2147483648.0 || abs(tw) > 16777216.0 || (bitcast<u32>(x.x) & exponent) == exponent || (bitcast<u32>(x.y) & exponent) == exponent;
+  return select(parts, vec4f(0.0, 0.0, 0.0, x.x + x.y), wide);
 }
 `;

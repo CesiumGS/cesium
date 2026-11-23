@@ -566,24 +566,48 @@ export function routeCases(): RouteCase[] {
     inputs: { abs: INPUTS.abs, rel: 2 ** -24 },
     jacobian: JACOBIAN,
   });
-  // F(c) and the eye on either side of the origin, past 2³⁰ m: F(c) less
-  // the eye is 3 × 10⁹ m on x and y, past 2³¹, which as whole units would
-  // wrap. Every value at or past 2³⁰ falls back to float32, so none does. On
-  // z, F(c) (1.2 × 10⁹ m) falls back and the eye (−8 × 10⁸ m) is exact.
+  // F(c) and the eye on either side of the origin, 1.5 × 10⁹ m out: F(c)
+  // less the eye is 3 × 10⁹ m on x and y, past 2³¹ units, which as whole
+  // units would wrap. Each value is exact; tg_diff's sign test makes those
+  // two terms wide (the float32 sum). On z, F(c) (1.2 × 10⁹ m) less the eye
+  // (−8 × 10⁸ m) is 2 × 10⁹ m, under 2³¹, and exact.
   const sides = unitOf(builtinRoute(far), [7.5e8 + 1.5, -3e9 + 2, 1 - 8e8]);
   const sidesEyes = [
     [0, 0, 0],
     [1234.5678, -0.25, 17.125],
   ].map((d): Vec3 => [-1.5e9 + d[0]!, 1.5e9 + d[1]!, -8e8 + d[2]!]);
   out.push({
-    name: "route: scaleAbout, F(c) and the eye either side of the origin past 2^30 m",
+    name: "route: scaleAbout, F(c) and the eye either side of the origin, 3 × 10^9 m apart",
     units: far.units,
     routes: [sides],
     rows: sidesEyes.map((): Vec3 => [0, 0, 0]),
     eyes: sidesEyes,
     position: POSITION,
     center: CENTER,
-    inputs: { abs: INPUTS.abs, rel: 2 ** -24 },
+    inputs: INPUTS,
+    jacobian: JACOBIAN,
+  });
+  // F(c) and the eye near 1.5 × 10⁹ m, under 2³¹ units, where a float32 of
+  // each would be 128 m apart (CS-921's round-3 review): F(c) is
+  // (1.5 × 10⁹ + 63, 1.5 × 10⁹ + 63, 1.5 × 10⁹ + 62.5) m, and the eye
+  // 1.5 × 10⁹ + 0.5 m on each axis, so the term is 62.5 m, 62.5 m and 62 m,
+  // exactly. Then the eye at the image, and an eye whose terms (−1,172 m,
+  // 63.25 m and 45.375 m) are float32s too, so every row reads back exactly.
+  const near = unitOf(builtinRoute(far), [750000033, 3000000128, -1000000040]);
+  const nearEyes: Vec3[] = [
+    [1.5e9 + 0.5, 1.5e9 + 0.5, 1.5e9 + 0.5],
+    [near.image[0]!, near.image[1]!, near.image[2]!],
+    [1.5e9 + 1234.5, 1.5e9 - 0.25, 1.5e9 + 17.125],
+  ];
+  out.push({
+    name: "route: scaleAbout, F(c) and the eye near 1.5 × 10^9 m, 62.5 m apart",
+    units: far.units,
+    routes: [near],
+    rows: nearEyes.map((): Vec3 => [0, 0, 0]),
+    eyes: nearEyes,
+    position: POSITION,
+    center: CENTER,
+    inputs: INPUTS,
     jacobian: JACOBIAN,
   });
   const twist = BUILTINS.find((b) => b.name === "twist")!;
