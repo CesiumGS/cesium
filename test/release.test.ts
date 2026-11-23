@@ -4,6 +4,7 @@
 // (scripts/release/changesetCheck.mjs), the staging order
 // (scripts/release/stage.mjs), and the repository's Changesets config.
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -822,6 +823,51 @@ describe("a release record as release:version writes it", () => {
     expect(no(base, () => true)).toBe(false);
     git(root, "tag", "v2.1.0");
     expect(no(base)).toBe(false);
+  });
+  it("moves pnpm's lockfile with the versions, in a pnpm workspace (CS-1091)", () => {
+    const { root } = workspace("2.0.0", changesets);
+    roots.push(root);
+    // The workspace as this repository has it since CS-1091: pnpm's
+    // workspace file and lockfile, no package-lock.json, and the pnpm the
+    // repository pins (so corepack, where it runs pnpm, needs no download).
+    rmSync(join(root, "package-lock.json"));
+    writeFileSync(
+      join(root, "pnpm-workspace.yaml"),
+      'packages:\n  - "packages/*"\nlinkWorkspacePackages: true\n',
+    );
+    const rootManifest = JSON.parse(
+      readFileSync(join(root, "package.json"), "utf8"),
+    );
+    rootManifest.packageManager = JSON.parse(
+      readFileSync(join(repo, "package.json"), "utf8"),
+    ).packageManager;
+    writeFileSync(
+      join(root, "package.json"),
+      `${JSON.stringify(rootManifest, null, 2)}\n`,
+    );
+    const pnpm = (cwd: string) =>
+      execFileSync("pnpm", ["install", "--lockfile-only", "--ignore-scripts"], {
+        cwd,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    pnpm(root);
+    const specifiers = () =>
+      [
+        ...readFileSync(join(root, "pnpm-lock.yaml"), "utf8").matchAll(
+          /'@x\/(core|next)':\n {8}specifier: (\S+)/g,
+        ),
+      ].map(([, name, version]) => `${name} ${version}`);
+    expect(specifiers()).toContain("core 2.0.0");
+    expect(writeReleaseRecord(root, { log: () => {} })).toEqual({
+      before: "2.0.0",
+      after: "2.1.0",
+    });
+    // Every workspace specifier moved with the versions, through pnpm, and
+    // npm wrote no lockfile of its own.
+    expect(specifiers().length).toBeGreaterThan(0);
+    expect(specifiers().every((s) => s.endsWith(" 2.1.0"))).toBe(true);
+    expect(existsSync(join(root, "package-lock.json"))).toBe(false);
   });
   it("fails a record with one changeset put back (a partial consumption)", () => {
     const { root, base } = workspace("2.0.0", changesets);

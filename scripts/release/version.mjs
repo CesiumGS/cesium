@@ -67,6 +67,18 @@ function workspaceFolders(root, manifest) {
 }
 
 /**
+ * The environment for `changeset version`. Under pnpm (CS-1091), Changesets
+ * formats the changelogs with `pnpm exec prettier`, and pnpm checks the
+ * dependencies before an exec and installs when they look out of date. The
+ * plan's scratch copy links the tree's node_modules, so that install would
+ * act on the tree's own folder (it asks to remove it). This turns the check
+ * off for these runs, whatever pnpm-workspace.yaml says.
+ */
+function changesetEnv() {
+  return { ...process.env, pnpm_config_verify_deps_before_run: "false" };
+}
+
+/**
  * The version `changeset version` would give the stable group, found by
  * running it in a scratch copy of the root's manifests, lockfile and
  * `.changeset/` (the tree itself is left alone).
@@ -88,7 +100,11 @@ export function planRelease(root, changeset) {
     }
     // Changesets loads its changelog writer from the config, by name.
     symlinkSync(join(root, "node_modules"), join(scratch, "node_modules"), "dir");
-    execFileSync(changeset, ["version"], { cwd: scratch, stdio: ["ignore", "pipe", "pipe"] });
+    execFileSync(changeset, ["version"], {
+      cwd: scratch,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: changesetEnv(),
+    });
     return { before: stableVersion(root), after: stableVersion(scratch) };
   } finally {
     rmSync(scratch, { recursive: true, force: true });
@@ -123,7 +139,7 @@ export function writeReleaseRecord(root, options = {}) {
     throw new Error(refused);
   }
   log(`release:version: the stable packages go from ${plan.before} to ${plan.after}`);
-  execFileSync(changeset, ["version"], { cwd: root, stdio: "inherit" });
+  execFileSync(changeset, ["version"], { cwd: root, stdio: "inherit", env: changesetEnv() });
   const { stable, packages, rootManifest } = repositoryPackages(root);
   const changed = applyPaired(packages, { dir: root, manifest: rootManifest });
   log(
@@ -135,6 +151,8 @@ export function writeReleaseRecord(root, options = {}) {
   if (problems.length > 0) {
     throw new Error(`the version lines after versioning:\n  ${problems.join("\n  ")}`);
   }
+  // Both branches run the command by its bare name, so on Windows, where
+  // the installers are pnpm.cmd and npm.cmd, this step doesn't run as is.
   if (lockfile && existsSync(join(root, "pnpm-lock.yaml"))) {
     execFileSync("pnpm", ["install", "--lockfile-only", "--ignore-scripts"], {
       cwd: root,
