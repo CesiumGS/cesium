@@ -12,7 +12,7 @@
 
 | Item         | Value                                                                                                                                                                                                                        |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Machine      | Apple M2, 8 cores, 24 GiB, macOS (Darwin 27.2.0), APFS, a shared machine: other sessions ran builds, tests and parity suites during the runs                                                                                 |
+| Machine      | A shared Apple-silicon Mac with APFS: other sessions ran builds, tests and parity suites during the runs                                                                                                                     |
 | Node         | 24.19.0                                                                                                                                                                                                                      |
 | npm          | 11.17.0                                                                                                                                                                                                                      |
 | pnpm         | 11.12.0, the one already installed (a corepack shim). Nothing was installed or enabled. An extra data set with pnpm 12.21.0 is described below.                                                                              |
@@ -53,7 +53,7 @@ All times are wall seconds from `/usr/bin/time -p`, with the 1-minute load avera
 | 3      |        9.21 | 10.27 |         2.39 | 5.85 |
 | Median |    **7.74** |       |     **2.59** |      |
 
-pnpm is about 2.0 times faster cold and 3.0 times faster warm. The warm case is the usual one for hitld, which sets up a worktree for every dispatch while the user's cache is full. The cold spread is wide on both sides: npm's three runs differ by 31 percent, pnpm's by 28 percent, and the load fell from run to run. The ordering is the same in every pair, so the conclusion holds, but the exact ratio does not.
+pnpm is about 2.0 times faster cold and 3.0 times faster warm. The warm case is the usual one for hitld, which sets up a worktree for every dispatch while the user's cache is full. The cold spread is wide on both sides: npm's three runs differ by 31 percent and pnpm's by 39 percent, both against the fastest run, and the load fell from run to run. The loads weren't matched (pnpm's warm runs ran at lower load than npm's), so the ratios are approximate. The ordering is the same in every pair, so the conclusion holds, but the exact ratio does not.
 
 **Two extra data sets.**
 
@@ -87,14 +87,14 @@ The pnpm total for a first worktree, 1,006 + 173 + 21 = 1,200 MiB by parts, matc
 - pnpm: 1,179 + 21 × N (store 1,006, metadata 173).
 - npm with an APFS clone of a ready `node_modules` (below): 322 + 1,084 + 15 × (N − 1).
 
-| N                             | npm, MiB | pnpm, MiB | npm with clone, MiB |
-| ----------------------------- | -------: | --------: | ------------------: |
-| 1                             |    1,406 |     1,200 |               1,406 |
-| 5                             |    5,742 |     1,284 |               1,466 |
-| 10                            |   11,162 |     1,389 |               1,541 |
-| 26 (the worktrees here today) |   28,506 |     1,725 |               1,957 |
+| N                   | npm, MiB | pnpm, MiB | npm with clone, MiB |
+| ------------------- | -------: | --------: | ------------------: |
+| 1                   |    1,406 |     1,200 |               1,406 |
+| 5                   |    5,742 |     1,284 |               1,466 |
+| 10                  |   11,162 |     1,389 |               1,541 |
+| 26 (a busy machine) |   28,506 |     1,725 |               1,781 |
 
-The machine holds 26 worktrees with a `node_modules` today. At npm's rate that is about 28 GiB, on a volume with 103 GiB free (89 percent used).
+The row for 26 worktrees is an illustration of a busy development machine: at npm's rate that is about 28 GiB.
 
 **Two cheaper ways to the same disk win, measured.**
 
@@ -105,7 +105,7 @@ pnpm's disk win depends on the store and the worktree being on one volume. If a 
 
 ## Correctness under pnpm
 
-The build ran in `-pnpm1` (pnpm 11.12.0, installed with `--ignore-scripts` as `worktree_setup` does), behind the plain heavy-job gate. The full test suite, `test:data` and the type checks ran later, run by the orchestrator in `-pnpm1` behind the plain gate, after the nightly measurement that had held it (2026-11-22, 22:58 to 23:01 local, load averages 6 to 21). One test file fails under pnpm, and only under pnpm: `test/dynoBin.test.ts`, whose two cases run `npx --no-install @cesium/dyno` and get exit 127 (`dyno: command not found`). The same file under npm in `-npm1` passes 11 of 11. It is the bin that "Resolves differently" names, and declaring `@cesium/dyno` in the root `devDependencies` fixes it.
+The build ran in the first pnpm worktree (pnpm 11.12.0, installed with `--ignore-scripts` as `worktree_setup` does), behind the plain heavy-job gate. The full test suite, `test:data` and the type checks ran later in the same pnpm worktree, behind the same gate. One test file fails under pnpm, and only under pnpm: `test/dynoBin.test.ts`, whose two cases run `npx --no-install @cesium/dyno` and get exit 127 (`dyno: command not found`). The same file under npm passes 11 of 11. It is the bin that "Resolves differently" names, and declaring `@cesium/dyno` in the root `devDependencies` fixes it.
 
 | Step                                | Result under pnpm                                                                                                                                       |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -159,7 +159,7 @@ So pnpm probably supports both, and this is unproven for the combination CS-613 
 
 **The fallback needs no pnpm publish.** Keep `npm pack` for the tarballs and `npm stage publish` for staging. They don't read `node_modules` and work on a pnpm-installed tree: `pnpm run build` ran the packed checks, which call `npm pack`, and exited 0. The release pipeline installs nothing in its `publish` job, so its steps stay as they are under a move. Only the pack job's `npm ci` changes.
 
-**`pnpm pack` against `npm pack`, for the seven packages** (in `-pnpm1`, after the build):
+**`pnpm pack` against `npm pack`, for the seven packages** (in the pnpm worktree, after the build):
 
 | Check                                                  | Result                                                                                                         |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
@@ -181,32 +181,32 @@ Sizes are small (S, one or two lines), medium (M, a file or two), or large (L, m
 | `spikes/core-ir/package.json`                                                                                      | Declare `onnxruntime-web`.                                                                                                                                                                                                                  | S    | no         |
 | `.human-in-the-lead/policy.json`, `env.worktree_setup`                                                             | `npm ci --ignore-scripts --no-audit --no-fund --prefer-offline` becomes `pnpm install --frozen-lockfile --ignore-scripts --prefer-offline`. One line. hitld needs pnpm on `PATH` in every dispatch's environment (the shim is there today). | S    | yes        |
 | Gate scripts (`heavy-job-gate.sh`, `quiet-watch.sh`, `merge-gates.sh`, `gate-chain.sh`, `next-slot.sh`)            | Only `npx --no-install @cesium/dyno status` needs the dyno bin to resolve (the root declares it) or `pnpm exec dyno`. The `npm run …` and `npx vitest/tsc/hitld` lines keep working.                                                        | S    | no         |
-| `.github/workflows/ci.yml` and `release.yml`                                                                       | Replace `npm ci --ignore-scripts --no-audit --no-fund` (7 places in `ci.yml`, 1 in `release.yml`) and `setup-node`'s `cache: npm` (5 places). Add a pnpm setup step: a new action pinned by SHA, or corepack.                               | M    | yes        |
+| `.github/workflows/ci.yml` and `release.yml`                                                                       | Replace `npm ci --ignore-scripts --no-audit --no-fund` (6 places in `ci.yml`, 1 in `release.yml`) and `setup-node`'s `cache: npm` (6 places). Add a pnpm setup step: a new action pinned by SHA, or corepack.                               | M    | yes        |
 | `.github/dependabot.yml`                                                                                           | No npm entry exists yet. CS-894's grouped updates need one, and Dependabot's support for pnpm 11's lockfile format must be checked before the move (I did not).                                                                             | S    | yes        |
 | `scripts/release/version.mjs`                                                                                      | One call, `npm install --package-lock-only`, becomes `pnpm install --lockfile-only`. The other release scripts call `npm view`, `npm pack` and `npm stage` and stay.                                                                        | S    | no         |
 | `scripts/packSet.mjs`, `scripts/build/pack.mjs`, `scripts/release/stage*.mjs`                                      | None needed (`npm pack` and `npm stage publish` work on a pnpm tree). Only the recorded `npm` version in `packSet.mjs`'s manifest stays npm's.                                                                                              | 0    | no         |
 | `.changeset/config.json`                                                                                           | None. Changesets reads the workspace from `pnpm-workspace.yaml` and `package.json`. (Not run here.)                                                                                                                                         | 0    | no         |
-| Docs: `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `docs/hosts/packed-builds.md`, `.claude/skills/*`, the handbook | About 60 files mention `npm run`, `npm ci` or `npx`. Most `npm run` lines stay valid. The install line, the "Node 24" setup, and the dyno command change in a handful.                                                                      | L    | partly     |
+| Docs: `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `docs/hosts/packed-builds.md`, `.claude/skills/*`, the handbook | An estimate: about 60 files mention `npm run`, `npm ci` or `npx`. Most `npm run` lines stay valid. The install line, the "Node 24" setup, and the dyno command change in a handful.                                                         | L    | partly     |
 | The hosts guide (`docs/hosts/packed-builds.md`, CS-949)                                                            | None for a host: a host installs tarballs with its own manager. The guide's `npm pack` steps are unchanged.                                                                                                                                 | 0    | no         |
 | Contributors and agents                                                                                            | Everyone needs pnpm 11.12.0 or newer, through corepack. pnpm 12 is out; its warm install is faster still, but it's a major version the repository would have to pin.                                                                        | M    | no         |
 
-A move is therefore one change with about ten files in it, and four of those are owner paths. It also reopens CS-894: the committed `package-lock.json` becomes `pnpm-lock.yaml`, the nightly fresh-ranges test and the grouped Dependabot updates need re-pointing, and "`npm ci` everywhere" stops being true.
+A move is therefore one change with about ten files in it (an estimate), and four of those are owner paths. It also reopens CS-894: the committed `package-lock.json` becomes `pnpm-lock.yaml`, the nightly fresh-ranges test and the grouped Dependabot updates need re-pointing, and "`npm ci` everywhere" stops being true.
 
 ## Costs and risks of each choice
 
 **Move to pnpm.**
 
-- Gains: 2.0 times faster cold and 3.0 times faster warm installs on this machine; about 21 MiB per extra worktree instead of 1.1 GiB (28 GiB against 1.7 GiB for today's 26 worktrees); a strict layout that already named three undeclared imports.
+- Gains: 2.0 times faster cold and 3.0 times faster warm installs on this machine; about 21 MiB per extra worktree instead of 1.1 GiB (28 GiB against 1.7 GiB for 26 worktrees); a strict layout that already named three undeclared imports.
 - Costs: the ten-file change above, four owner paths among them; CS-894 reopened; every contributor and every executor needs pnpm of the right version; a new action or corepack step in CI; pnpm's separate settings surface (`pnpm-workspace.yaml`) in place of `package.json` and `.npmrc`.
 - Risks: pnpm's APFS speed and disk win holds only with the store and the worktrees on one volume; `pnpm stage publish` under OIDC is unproven (the fallback holds); Dependabot's pnpm 11 support is unchecked; the dyno bin and the root-link difference break the project's own commands until the root declares what it uses; pnpm's strict install security checks (script allowlist, release-age and trust policy) can block an install in ways npm doesn't; the 11.x and 12.x lines both exist, so a version pin is part of the move.
 
 **Stay on npm.**
 
 - Gains: nothing changes; CS-613's pipeline and CS-894's answer stand while alpha.1's release path is new.
-- Costs: about 1.1 GiB and 7.7 s for every worktree, 28 GiB today; installs are twice as slow cold; no strict layout, so a missing declaration shows up only when a script runs.
+- Costs: about 1.1 GiB and 7.7 s for every worktree, 28 GiB for 26 worktrees; installs are twice as slow cold; no strict layout, so a missing declaration shows up only when a script runs.
 - Risks: the disk grows with every worktree; the three undeclared dependencies stay hidden until someone declares them.
 
-**Middle option: stay on npm and clone `node_modules`.** Change `worktree_setup` to `cp -cR` a ready worktree's `node_modules`, and fall back to `npm ci` when there's none. Same speed as today's warm install, 15 MiB per extra worktree, 1,957 MiB for 26 worktrees. It is one line in an owner path. It fails safe, since `npm ci` replaces `node_modules` anyway, but it needs a donor on the same lockfile and volume.
+**Middle option: stay on npm and clone `node_modules`.** Change `worktree_setup` to `cp -cR` a ready worktree's `node_modules`, and fall back to `npm ci` when there's none. Same speed as today's warm install, 15 MiB per extra worktree, 1,781 MiB for 26 worktrees. It is one line in an owner path. It fails safe, since `npm ci` replaces `node_modules` anyway, but it needs a donor on the same lockfile and volume.
 
 **Middle option: pnpm for installs, npm for packing and staging.** The pipeline already works that way (the pack and stage steps don't read `node_modules`). It takes the install and disk gains and keeps CS-613's release path exactly as built. It still costs the lockfile swap and the CI change.
 
@@ -224,11 +224,11 @@ The reason to wait and not move now is timing, not the numbers. pnpm's gains are
 
 ## The decision asked
 
-Move to pnpm, stay on npm, or take a middle option? The draft item is in the report that came with this write-up. It lists the three options, what each does, and the recommendation above.
+Move to pnpm, stay on npm, or take a middle option? The owner's decision is CS-1090. The owner chose A: move to pnpm once the test runs pass, against this write-up's recommendation to stay. CS-1091 does the move. The full test suite then fails only `test/dynoBin.test.ts`, which the move fixes by declaring `@cesium/dyno` at the root.
 
 ## How the numbers were made
 
-- Worktrees: four, detached at `2dc8e86d05`, named for the item and the side; the pnpm ones got the two trial files copied in, uncommitted. At the end I removed `-npm2`, `-pnpm2` and the trial worktree with `git worktree remove`, and deleted the spike folder's npm cache, logs and scratch files after recording the sizes above. `-pnpm1` and `-npm1` stay, with the pnpm store and metadata cache, so the two open test steps can run against them. The orchestrator removes them afterward.
+- Worktrees: four, detached at `2dc8e86d05`, named for the item and the side; the pnpm ones got the two trial files copied in, uncommitted. Each was removed with `git worktree remove`, and the caches and stores deleted, after the sizes above were recorded.
 - Trial branch: `hitld/CS-951-pnpm-trial` holds `pnpm-workspace.yaml` and `pnpm-lock.yaml`, in one commit. It never merges. It was cut from the claim commit.
 - No `package.json` was edited, on either branch. The three undeclared dependencies and the dyno link are described, not fixed.
 - The strictness scan is a throwaway script (not committed): `git ls-files`, a regular expression for the four import forms, and Node's `findPackageJSON` from each file's own folder.
