@@ -20,6 +20,45 @@ import Rectangle from "./Rectangle.js";
 /** @import Occluder from "./Occluder.js"; */
 
 /**
+ * Returns an upper bound on the largest stretch (largest singular value)
+ * of the upper 3x3 of a 4x4 matrix.
+ *
+ * Matrix4.getMaximumScale is the length of the longest column, which is
+ * the largest stretch only when the columns are orthogonal. For a sheared
+ * matrix the true largest stretch is bigger, so a bounding sphere sized
+ * with it is too small and frustum culling can drop primitives that are
+ * still partly on screen. Bound the largest stretch from above with
+ * Gershgorin circles on the column Gram matrix: every eigenvalue of the
+ * Gram matrix is at most its largest row sum, so the square root of that
+ * sum is never smaller than the true largest stretch, and it equals the
+ * longest column length when the columns are orthogonal, so rotations
+ * and non-uniform scales are unchanged.
+ *
+ * @param {Matrix4} matrix The matrix whose largest stretch to bound.
+ * @returns {number} An upper bound on the largest singular value of the
+ * upper 3x3 of the matrix.
+ * @private
+ */
+function maximumStretch(matrix) {
+  const xx =
+    matrix[0] * matrix[0] + matrix[1] * matrix[1] + matrix[2] * matrix[2];
+  const yy =
+    matrix[4] * matrix[4] + matrix[5] * matrix[5] + matrix[6] * matrix[6];
+  const zz =
+    matrix[8] * matrix[8] + matrix[9] * matrix[9] + matrix[10] * matrix[10];
+  const xy = Math.abs(
+    matrix[0] * matrix[4] + matrix[1] * matrix[5] + matrix[2] * matrix[6],
+  );
+  const xz = Math.abs(
+    matrix[0] * matrix[8] + matrix[1] * matrix[9] + matrix[2] * matrix[10],
+  );
+  const yz = Math.abs(
+    matrix[4] * matrix[8] + matrix[5] * matrix[9] + matrix[6] * matrix[10],
+  );
+  return Math.sqrt(Math.max(xx + xy + xz, yy + xy + yz, zz + xz + yz));
+}
+
+/**
  * A bounding sphere with a center and a radius.
  *
  * @see AxisAlignedBoundingBox
@@ -1091,7 +1130,7 @@ class BoundingSphere {
       sphere.center,
       result.center,
     );
-    result.radius = Matrix4.getMaximumScale(transform) * sphere.radius;
+    result.radius = maximumStretch(transform) * sphere.radius;
 
     return result;
   }
