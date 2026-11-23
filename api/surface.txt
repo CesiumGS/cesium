@@ -319,9 +319,11 @@ entry	name	kind	tier
 .	SdfGeometryOptions	interface	-
 .	SectionClient	class	-
 .	SectionClientOptions	interface	-
+.	SectionMessage	type	-
 .	SectionOptions	interface	-
 .	SectionOutcome	interface	-
 .	SectionPlaneInput	interface	-
+.	SectionReply	type	-
 .	SectionReport	interface	-
 .	SectionRequest	interface	-
 .	SectionResult	interface	-
@@ -1210,9 +1212,11 @@ ui	zoneOf	function	-
 @cesium/core	SdfGeometryOptions	interface	-
 @cesium/core	SectionClient	class	-
 @cesium/core	SectionClientOptions	interface	-
+@cesium/core	SectionMessage	type	-
 @cesium/core	SectionOptions	interface	-
 @cesium/core	SectionOutcome	interface	-
 @cesium/core	SectionPlaneInput	interface	-
+@cesium/core	SectionReply	type	-
 @cesium/core	SectionReport	interface	-
 @cesium/core	SectionRequest	interface	-
 @cesium/core	SectionResult	interface	-

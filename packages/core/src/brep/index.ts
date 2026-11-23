@@ -37,7 +37,9 @@ export {
 } from "./section.ts";
 export {
   runSection,
+  type SectionMessage,
   type SectionOutcome,
+  type SectionReply,
   type SectionRequest,
   type SectionRunner,
 } from "./sectionHost.ts";
