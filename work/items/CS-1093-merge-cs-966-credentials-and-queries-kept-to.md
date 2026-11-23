@@ -2,10 +2,14 @@
 id: CS-1093
 title: Merge CS-966, credentials and queries kept to their own origins
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-191
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge; the Minors go to a follow-up item."
+answered_at: 2026-11-23T20:29:00.427Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
