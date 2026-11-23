@@ -6,9 +6,11 @@
 // The project's `.npmrc` points the @cesium scope at an address nothing
 // listens on, so an @cesium package fetched from a registry (where
 // `@cesium/core` is 1.x's package) fails the install instead of passing. The
-// install runs with `--offline`: third-party dependencies come from the npm
-// cache, and one that isn't cached fails with a message saying so, never by
-// reaching out.
+// install runs with `--offline` and never reaches out. Its third-party
+// dependencies come as tarballs packed from the checkout's own installed
+// tree (CS-1091), pinned by `file:` overrides, so it needs nothing in npm's
+// cache: pnpm installs the checkout and never fills that cache, and a fresh
+// CI runner has none.
 //
 // A host lists only what it imports, so two more installs list one package
 // each (the umbrella, then `@cesium/measure`). Their siblings resolve only
@@ -26,13 +28,14 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   truncateSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { packageDirs } from "../scripts/build/declarations.mjs";
@@ -93,6 +96,94 @@ const packages = packageDirs().map((dir) => ({
   ) as Manifest,
 }));
 
+/** Where the host keeps the third-party tarballs, beside the set's folder. */
+const THIRD_PARTY_FOLDER = "third-party";
+
+/** A package's `dependencies`, read from its folder. */
+function dependenciesOf(dir: string): Record<string, string> {
+  return (
+    (
+      JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as {
+        dependencies?: Record<string, string>;
+      }
+    ).dependencies ?? {}
+  );
+}
+
+/** The folder Node would load `name` from, looking up from `from`. */
+function installedFolder(from: string, name: string): string {
+  for (let dir = from; ; dir = dirname(dir)) {
+    const candidate = join(dir, "node_modules", ...name.split("/"));
+    if (existsSync(join(candidate, "package.json"))) {
+      return realpathSync(candidate);
+    }
+    if (dirname(dir) === dir) {
+      throw new Error(
+        `${name} isn't installed where ${from} would find it: run pnpm install at the repository root`,
+      );
+    }
+  }
+}
+
+/**
+ * The set's third-party dependencies and theirs, each packed into `out`
+ * from the folder the checkout installed (pnpm checked each against
+ * pnpm-lock.yaml's sha512 when it installed it), with no lifecycle script.
+ * Returns the overrides that pin each one to its tarball in a host, which
+ * holds them in its THIRD_PARTY_FOLDER. One version per name, since an
+ * override pins one; a second version stops the test, naming both.
+ */
+function packThirdParty(out: string): Record<string, string> {
+  mkdirSync(out, { recursive: true });
+  const folders = new Map<string, string>();
+  const pending = packages.map(({ dir }) => dir);
+  while (pending.length > 0) {
+    const from = pending.pop()!;
+    for (const name of Object.keys(dependenciesOf(from))) {
+      if (name.startsWith("@cesium/")) {
+        continue;
+      }
+      const folder = installedFolder(from, name);
+      const seen = folders.get(name);
+      if (seen !== undefined && seen !== folder) {
+        throw new Error(`two versions of ${name}: ${seen} and ${folder}`);
+      }
+      if (seen === undefined) {
+        folders.set(name, folder);
+        pending.push(folder);
+      }
+    }
+  }
+  const overrides: Record<string, string> = {};
+  for (const [name, folder] of [...folders].sort()) {
+    const [packed] = JSON.parse(
+      execFileSync(
+        "npm",
+        [
+          "pack",
+          folder,
+          "--pack-destination",
+          out,
+          "--ignore-scripts",
+          "--json",
+        ],
+        {
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+          env: childEnv(),
+        },
+      ),
+    ) as { filename: string }[];
+    overrides[name] =
+      `file:./${THIRD_PARTY_FOLDER}/${basename(packed!.filename)}`;
+  }
+  return overrides;
+}
+
+/** The third-party tarballs, packed once for every host (beforeAll). */
+let thirdPartyDir = "";
+let thirdParty: Record<string, string> = {};
+
 interface Lock {
   packages: Record<string, { resolved?: string; integrity?: string }>;
 }
@@ -105,9 +196,11 @@ interface InstallResult {
 
 /**
  * A host in its own folder: the set copied into it, `dependencies` and
- * `overrides` as given, the @cesium scope pointed at an address nothing
- * listens on, and `npm install` run offline. A failure is returned, except
- * one that is the test's own setup (a third-party package that isn't cached).
+ * `overrides` as given, the third-party tarballs pinned by overrides of
+ * their own (always, so a control without the set's overrides still finds
+ * them), the @cesium scope pointed at an address nothing listens on, and
+ * `npm install` run offline. A failure is returned, except one that is the
+ * test's own setup (a third-party package that isn't pinned).
  */
 function installHost(
   setDir: string,
@@ -120,6 +213,13 @@ function installHost(
   for (const { tarball } of manifest.packages) {
     copyFileSync(join(setDir, tarball), join(project, HOST_FOLDER, tarball));
   }
+  mkdirSync(join(project, THIRD_PARTY_FOLDER));
+  for (const file of readdirSync(thirdPartyDir)) {
+    copyFileSync(
+      join(thirdPartyDir, file),
+      join(project, THIRD_PARTY_FOLDER, file),
+    );
+  }
   writeFileSync(
     join(project, "package.json"),
     JSON.stringify(
@@ -129,7 +229,7 @@ function installHost(
         version: "1.0.0",
         type: "module",
         dependencies,
-        ...(overrides ? { overrides } : {}),
+        overrides: { ...thirdParty, ...overrides },
       },
       null,
       2,
@@ -153,7 +253,7 @@ function installHost(
       !output.includes("@cesium")
     ) {
       throw new Error(
-        `a third-party dependency isn't in the npm cache, and this test doesn't reach out for it. The checkout installs with pnpm, which doesn't fill npm's cache: add the packages' third-party dependencies to it with \`npm cache add <name>@<version>\`:\n${output}`,
+        `a third-party dependency isn't pinned to a tarball packed from the checkout (packThirdParty), and this test doesn't reach out for it:\n${output}`,
         { cause: error },
       );
     }
@@ -198,6 +298,8 @@ describe("a packed set, installed by file: path", () => {
       requireClean: false,
       log: () => {},
     });
+    thirdPartyDir = join(root, THIRD_PARTY_FOLDER);
+    thirdParty = packThirdParty(thirdPartyDir);
 
     // The host lists every package, as the fragment gives them.
     const { project: dir, failure } = installHost(
