@@ -2,10 +2,14 @@
 id: CS-1094
 title: "Merge CS-977's first part: engine internals leave core's public entry"
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge; CS-977 stays open for the adapters."
+answered_at: 2026-11-23T20:47:02.780Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
