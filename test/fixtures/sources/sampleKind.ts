@@ -93,6 +93,8 @@ export class SampleSource implements ContentSource {
   version: string | undefined;
   /** Its next this many updates throw, after recording their tick. */
   throwOnUpdate = 0;
+  /** What a throwing update says. */
+  failure = "the sample's update failed";
   /** Its `destroy` ran. */
   destroyed = false;
   private lastPoll = -Infinity;
@@ -148,7 +150,7 @@ export class SampleSource implements ContentSource {
     });
     if (this.throwOnUpdate > 0) {
       this.throwOnUpdate--;
-      throw new Error("the sample's update failed");
+      throw new Error(this.failure);
     }
     const track = this.options.track;
     if (track) {

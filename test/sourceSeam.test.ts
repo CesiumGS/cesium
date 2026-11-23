@@ -4,6 +4,7 @@
 // the apply phase on a fake stepped clock, the edit layer, and CS-831's
 // change sets. The sample source (test/fixtures/sources/sampleKind.ts) is in
 // memory: no network, no timer.
+import { types as nodeTypes } from "node:util";
 import { Worker as NodeWorker } from "node:worker_threads";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -49,6 +50,7 @@ import {
   changeSetFromJson,
   changeSetToJson,
   isReadOnly,
+  type ChangeOp,
   type ChangeSet,
 } from "../packages/core/src/source/editing.ts";
 import { EditLayer } from "../packages/core/src/source/editLayer.ts";
@@ -60,12 +62,16 @@ import {
 import { urlName } from "../packages/core/src/source/registry.ts";
 import { ContentRows } from "../packages/core/src/source/sinks.ts";
 import type { SourceClock } from "../packages/core/src/source/types.ts";
+import { ModelServer, ModelSource } from "./fixtures/sources/modelKind.ts";
 import { SUM, SampleSource } from "./fixtures/sources/sampleKind.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
 const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
 const LAYERED = new URL("./fixtures/sources/layeredKind.ts", import.meta.url);
+const MODEL = new URL("./fixtures/sources/modelKind.ts", import.meta.url);
+const ECHO = new URL("./fixtures/sources/echoKind.ts", import.meta.url);
+const ECHO_B = new URL("./fixtures/sources/echoKindB.ts", import.meta.url);
 
 /** A plain bigint as a `StableId`, as test/identity.test.ts does. */
 const asId = (n: bigint) => n as StableId;
@@ -2831,7 +2837,11 @@ describe("edits, draws and two opens of one source in one world (CS-847)", () =>
   });
 });
 
-describe("the seam's invariants (CS-1087 A, CS-1085 A, CS-1084 A, CS-1088 A)", () => {
+// The seam's invariants, each against an oracle that doesn't read the
+// engine's own tables (CS-1100 to CS-1103; the second architecture review's
+// T1 to T5): a generator over every inlet, a seeded one so every run sees
+// the same cases, and a mutation set that includes the findings it is for.
+describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
   /** A seeded generator (mulberry32): every run sees the same cases. */
   function random(seed: number): () => number {
     let s = seed | 0;
@@ -2874,385 +2884,988 @@ describe("the seam's invariants (CS-1087 A, CS-1085 A, CS-1084 A, CS-1088 A)", (
     });
   }
 
-  /** The longest substring `a` and `b` share. */
-  function shared(a: string, b: string): string {
-    let best = "";
-    let prev = new Array<number>(b.length + 1).fill(0);
-    for (let i = 0; i < a.length; i++) {
-      const row = new Array<number>(b.length + 1).fill(0);
-      for (let j = 0; j < b.length; j++) {
-        if (a[i] === b[j]) {
-          row[j + 1] = prev[j]! + 1;
-          if (row[j + 1]! > best.length) {
-            best = a.slice(i - row[j + 1]! + 1, i + 1);
-          }
-        }
-      }
-      prev = row;
-    }
-    return best;
-  }
-
   const text = (value: unknown) =>
     JSON.stringify(value, (_, v: unknown) =>
       typeof v === "bigint" ? String(v) : v,
     );
 
-  /** Every Map and Set a content keeps, in it, its rows and its edits. */
-  function tables(content: SourceContent): [string, number][] {
-    const out: [string, number][] = [];
-    const scan = (where: string, o: object) => {
-      for (const [name, value] of Object.entries(o)) {
-        if (value instanceof Map || value instanceof Set) {
-          out.push([`${where}.${name}`, value.size]);
+  /** Whether `run` was refused: it threw an `Error`. */
+  function refused(run: () => unknown): boolean {
+    try {
+      run();
+      return false;
+    } catch (error) {
+      if (error instanceof Error) {
+        return true;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Everything reachable from `roots` by reflection, not walking into what
+   * `stop` holds (the world, the engine, the worker pool, the source's own
+   * object) nor functions and proxies: the entries of every Map, Set and
+   * array by where they were found (`[*]` for an element), and every string
+   * and property name. It needs no list of tables, so a new one can't hide.
+   */
+  function reach(
+    roots: Readonly<Record<string, unknown>>,
+    stop: ReadonlySet<unknown>,
+  ): { sizes: Map<string, number>; strings: Set<string> } {
+    const sizes = new Map<string, number>();
+    const strings = new Set<string>();
+    const seen = new Set<object>();
+    const count = (path: string, n: number) =>
+      sizes.set(path, (sizes.get(path) ?? 0) + n);
+    const visit = (value: unknown, path: string): void => {
+      if (typeof value === "string") {
+        strings.add(value);
+        return;
+      }
+      if (typeof value !== "object" || value === null) {
+        return;
+      }
+      if (stop.has(value) || seen.has(value) || nodeTypes.isProxy(value)) {
+        return;
+      }
+      seen.add(value);
+      if (
+        ArrayBuffer.isView(value) ||
+        value instanceof ArrayBuffer ||
+        value instanceof URL ||
+        value instanceof Promise ||
+        value instanceof WeakMap ||
+        value instanceof WeakSet
+      ) {
+        return;
+      }
+      expect(seen.size, "the walk stays in the seam").toBeLessThan(500_000);
+      if (value instanceof Map) {
+        count(path, value.size);
+        for (const [k, v] of value) {
+          visit(k, `${path}[*]`);
+          visit(v, `${path}[*]`);
+        }
+        return;
+      }
+      if (value instanceof Set) {
+        count(path, value.size);
+        for (const v of value) {
+          visit(v, `${path}[*]`);
+        }
+        return;
+      }
+      if (Array.isArray(value)) {
+        count(path, value.length);
+        value.forEach((v) => visit(v, `${path}[*]`));
+        return;
+      }
+      for (const name of Object.getOwnPropertyNames(value)) {
+        strings.add(name);
+        const d = Object.getOwnPropertyDescriptor(value, name);
+        if (d && "value" in d) {
+          visit(d.value, `${path}.${name}`);
         }
       }
     };
-    scan("content", content);
-    scan("rows", content.rows);
-    scan("edits", content.edits);
-    for (const [feature, map] of content.rows.custom) {
-      out.push([`rows.custom.${feature}`, map.size]);
+    for (const [name, root] of Object.entries(roots)) {
+      visit(root, name);
+    }
+    return { sizes, strings };
+  }
+
+  /** Where two walks' entry counts differ, as `path: before → after`. */
+  function grown(
+    before: ReadonlyMap<string, number>,
+    after: ReadonlyMap<string, number>,
+  ): string[] {
+    const out: string[] = [];
+    for (const path of new Set([...before.keys(), ...after.keys()])) {
+      const a = before.get(path) ?? 0;
+      const b = after.get(path) ?? 0;
+      if (a !== b) {
+        out.push(`${path}: ${a} → ${b}`);
+      }
     }
     return out;
   }
 
-  /** What is resident now: the source's batches and their rows, the feed's own rows, images and draws. */
-  function resident(content: SourceContent): number {
-    let n = content.rows.feed.size + content.drawCount;
-    for (const map of [
-      content.rows.features,
-      content.rows.points,
-      ...content.rows.custom.values(),
-    ]) {
-      for (const held of (
-        map as Map<string, { batch: { count: number } }>
-      ).values()) {
-        n += 1 + held.batch.count;
-      }
-    }
-    return n + content.rows.images.size;
-  }
-
-  it("no locator text in identity: no substring of a URL longer than its origin reaches an ID input, a change set, a StableKey, a report or a message", async () => {
+  it("T1, return to baseline: after any sequence over fresh keys, undoing what the host and the source own leaves what was reachable before, and no canary", async () => {
     const engine = await fakeEngine();
     try {
       const world = engine.createWorld();
-      engine.addView({ target: new OffscreenTarget(64, 48), world });
       engine.sources.registerKind({ id: "sample", module: SAMPLE });
-      engine.sources.registerKind({ id: "layered", module: LAYERED });
-      const reports: string[] = [];
-      engine.errors.on((e) => reports.push(e.message));
-      // A host's resolver that declares no name: the engine names it.
-      engine.sources.addResolver({
-        id: "bare",
-        accepts: (ref) => "resolver" in ref && ref.resolver === "bare",
-        resolve: (ref) =>
-          Promise.resolve({
-            kind: "layered",
-            url: new URL("id" in ref ? ref.id : ""),
-            credits: [],
-          }),
-      });
-      for (const href of locators(24)) {
-        reports.length = 0;
-        const said: string[] = [];
-        const content = await engine.open({ url: href, kind: "layered" });
-        // A second open of one URL without an id: reported, with an ordinal.
-        const second = await engine.open({ url: href, kind: "layered" });
-        const item = world.add(content);
-        engine.sources.tick();
-        engine.sources.tick();
-        // A kind that refuses it, and a change set for other content.
-        await engine
-          .open({ url: href, kind: "sample" })
-          .catch((e: Error) => said.push(e.message));
-        try {
-          second.resolve({ id: "x", source: "other", ops: [] });
-        } catch (e) {
-          said.push((e as Error).message);
+      const jobs = engine.scene.workers.jobs;
+      jobs.phased = true; // pushes wait for the apply phase, so a queue can overflow
+      const content = await engine.open(
+        { url: "https://data.test/base.sample", options: { keys: [] } },
+        { id: "base" },
+      );
+      world.add(content);
+      const settle = () => {
+        for (let i = 0; i < 3; i++) {
+          jobs.apply(Infinity);
+          engine.sources.tick();
         }
-        const bare = await engine.open({ resolver: "bare", id: href });
-        expect(bare.source).toBe(content.source);
-        const box = world.identity.identify(content.featureId("a/box"))!;
-        const inputs = [
-          content.source,
-          content.id,
-          second.id,
-          bare.id,
-          item.key,
-          text(box.key),
-          text(world.identities.identityOfDraw(box.draw!.index)),
-          changeSetToJson(
-            content.resolve({
-              id: "cs-1",
-              source: content.source,
-              ops: [
-                { op: "delete", key: "road-0" },
-                { op: "insert", key: "new", feature: {} },
-              ],
-            }),
-          ),
-          ...reports,
-          ...said,
-        ];
-        const origin = new URL(href).origin;
-        for (const input of inputs) {
-          const common = shared(input, href);
-          expect(
-            common.length,
-            `"${common}" of ${href} in ${input}`,
-          ).toBeLessThanOrEqual(origin.length);
+        jobs.apply(Infinity);
+      };
+      settle();
+      const source = sourceOf(content);
+      const { sinks } = source.host;
+      sinks.custom("test:splats"); // its one render feature, made once
+      const mesh = sinks.draws.addMesh(createBox());
+      const stop = new Set<unknown>([
+        engine,
+        world,
+        source,
+        engine.scene.workers,
+        (world.identities as unknown as { world: unknown }).world,
+      ]);
+      const roots = {
+        content,
+        runtime: engine.sources,
+        identity: world.identities,
+      };
+      const before = reach(roots, stop);
+
+      const r = random(1101);
+      let fresh = 0;
+      const canary = () => `CANARY${word(r, 10)}${fresh++}`;
+      const key = () => (r() < 0.2 ? canary() : `f${fresh++}`);
+      const batches: string[] = [];
+      const resident: string[] = [];
+      const draws: DrawHandle[] = [];
+      const labeled = new Set<string>();
+      const push = (ops: ChangeSet["ops"], step: number) =>
+        source.push({
+          kind: "features",
+          changes: { id: `cs-${step}`, source: content.source, ops },
+        });
+      const op = (step: number): ChangeSet["ops"][number] => {
+        const k = r() < 0.5 && resident.length > 0 ? pick(r, resident) : key();
+        const kind = pick(r, ["insert", "update", "delete"] as const);
+        return kind === "insert"
+          ? { op: kind, key: k, feature: { properties: { speed: step } } }
+          : kind === "update"
+            ? { op: kind, key: k, patch: { properties: { speed: step } } }
+            : { op: kind, key: k };
+      };
+      for (let step = 0; step < 2500; step++) {
+        const roll = r();
+        if (roll < 0.2) {
+          const count = 1 + Math.floor(r() * 3);
+          const names = Array.from({ length: count }, () =>
+            r() < 0.3 && resident.length > 0 ? pick(r, resident) : key(),
+          );
+          const batch = key();
+          sinks.points.put({
+            key: batch,
+            crs: "EPSG:4978",
+            count,
+            positions: new Float64Array(count * 3),
+            names,
+            properties: { speed: new Float64Array(count) },
+          });
+          batches.push(batch);
+          resident.push(...names);
+        } else if (roll < 0.27 && batches.length > 0) {
+          sinks.points.remove(pick(r, batches));
+        } else if (roll < 0.35) {
+          if (r() < 0.5 && draws.length > 0) {
+            sinks.draws.removeDraw(draws.splice(r() * draws.length, 1)[0]!);
+          } else {
+            draws.push(
+              sinks.draws.addDraw({
+                mesh,
+                id: key(),
+                origin: Float64Array.of(0, 0, 0),
+              }),
+            );
+          }
+        } else if (roll < 0.48) {
+          const k =
+            r() < 0.5 && resident.length > 0 ? pick(r, resident) : key();
+          const edit = r();
+          if (edit < 0.3) {
+            content.edits.hide(k);
+          } else if (edit < 0.55) {
+            content.edits.replace({ key: k }, { properties: { n: step } });
+          } else if (edit < 0.8) {
+            content.edits.insert(k, { properties: { n: step } });
+          } else {
+            content.edits.clear(k);
+          }
+        } else if (roll < 0.54) {
+          const k =
+            r() < 0.5 && resident.length > 0 ? pick(r, resident) : key();
+          content.setLabels(k, "kind", [pick(r, ["a", "b", "c"])]);
+          labeled.add(k);
+        } else if (roll < 0.88) {
+          push(
+            Array.from({ length: 1 + Math.floor(r() * 3) }, () => op(step)),
+            step,
+          );
+        } else if (roll < 0.94) {
+          source.push(
+            r() < 0.7 && batches.length > 0
+              ? { kind: "invalidate", keys: [pick(r, batches)] }
+              : { kind: "invalidate" },
+          );
+        } else {
+          // Reads: a cache of keys would show up in the walk.
+          const k =
+            r() < 0.5 && resident.length > 0 ? pick(r, resident) : key();
+          content.keyOf(content.featureId(k));
+          content.feature(content.featureId(k));
+          Array.from(content.features());
         }
-        expect(said).toHaveLength(2);
-        expect(
-          reports.some((m) => m.includes("is open or drawn already")),
-        ).toBe(true);
-        content.destroy();
-        second.destroy();
-        bare.destroy();
+        if (step === 1200) {
+          // An overflow: more than the queue's bound between ticks.
+          for (let i = 0; i <= MAX_QUEUED_CHANGES + 5; i++) {
+            push([op(step)], step * 100_000 + i);
+          }
+        }
+        if (step % 40 === 39) {
+          settle();
+        }
       }
+      // Undo what the host and the source own: every batch and draw, every
+      // edit and label; then the queue drains.
+      settle();
+      for (const batch of batches) {
+        sinks.points.remove(batch);
+      }
+      for (const handle of draws) {
+        sinks.draws.removeDraw(handle);
+      }
+      content.edits.clearAll();
+      for (const k of labeled) {
+        content.setLabels(k, "kind", undefined);
+      }
+      settle();
+      const after = reach(roots, stop);
+      expect.soft(grown(before.sizes, after.sizes)).toEqual([]);
+      expect
+        .soft([...after.strings].filter((s) => s.includes("CANARY")))
+        .toEqual([]);
+      expect(fresh).toBeGreaterThan(2000);
     } finally {
       engine.destroy();
     }
   });
 
-  it("bounded state: after any sequence of puts, removes, edits and feed ops, no table is larger than the resident rows plus the host's edits", async () => {
-    const { rt, place } = runtime();
-    const content = await rt.open({ url: "https://data.test/city.sample" });
+  it("T2, convergence against a model: after any commits pushed as change sets, with or without invalidations, overflowing or malformed, every resident tile shows the model", async () => {
+    const { rt, jobs, place } = runtime({ phased: true });
+    rt.registerKind({ id: "model", module: MODEL });
+    const r = random(1102);
+    const tiles = ["t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7"];
+    const resident = tiles.slice(0, 5);
+    const server = new ModelServer(`model-${word(r, 8)}`, resident);
+    let fresh = 0;
+    const insert = (): ChangeOp => {
+      const key = `k${fresh++}`;
+      const feature = {
+        tile: pick(r, tiles),
+        value: Math.floor(r() * 1000),
+        label: word(r, 4),
+      };
+      server.features.set(key, feature);
+      return {
+        op: "insert",
+        key,
+        feature: { properties: { value: feature.value, label: feature.label } },
+      };
+    };
+    for (let i = 0; i < 60; i++) {
+      insert();
+    }
+    const content = await rt.open({
+      url: "https://model.test/city.model",
+      options: { server: server.id },
+    });
     place(content);
-    rt.tick();
-    rt.tick();
-    const { sinks } = sourceOf(content).host;
-    const r = random(1085);
-    const keys = Array.from({ length: 40 }, (_, i) => `f${i}`);
-    const draws = new Map<string, DrawHandle>();
-    for (let step = 0; step < 3000; step++) {
-      const roll = r();
-      if (roll < 0.25) {
-        const count = 1 + Math.floor(r() * 4);
-        sinks.points.put({
-          key: `t${Math.floor(r() * 6)}`,
-          crs: "EPSG:4978",
-          count,
-          positions: new Float64Array(count * 3),
-          names: Array.from({ length: count }, () => pick(r, keys)),
-          properties: { speed: new Float64Array(count) },
-        });
-      } else if (roll < 0.4) {
-        sinks.points.remove(`t${Math.floor(r() * 6)}`);
-      } else if (roll < 0.5) {
-        const id = `d${Math.floor(r() * 5)}`;
-        const was = draws.get(id);
-        if (was) {
-          sinks.draws.removeDraw(was);
-          draws.delete(id);
+    const source = ModelSource.made.at(-1)!;
+    const quiet = () => {
+      for (let i = 0; i < 4; i++) {
+        jobs.apply(Infinity);
+        rt.tick();
+      }
+      jobs.apply(Infinity);
+    };
+    quiet();
+    /** A commit on the model, as its change set's ops, and the tiles its inserts went to. */
+    const commit = (kinds: readonly ("insert" | "update" | "delete")[]) => {
+      const ops: ChangeOp[] = [];
+      const tilesOf = new Set<string>();
+      for (let n = 1 + Math.floor(r() * 3); n > 0; n--) {
+        const kind = pick(r, kinds);
+        const keys = [...server.features.keys()];
+        if (kind === "insert" || keys.length === 0) {
+          const op = insert();
+          ops.push(op);
+          tilesOf.add(server.features.get(op.key)!.tile);
+        } else if (kind === "update") {
+          const key = pick(r, keys);
+          const was = server.features.get(key)!;
+          const value = Math.floor(r() * 1000);
+          const label = r() < 0.5 ? word(r, 4) : was.label;
+          server.features.set(key, { ...was, value, label });
+          ops.push({
+            op: "update",
+            key,
+            patch: {
+              properties: { value, ...(label !== was.label ? { label } : {}) },
+            },
+          });
         } else {
-          draws.set(
-            id,
-            sinks.draws.addDraw({
-              mesh: sinks.draws.addMesh(createBox()),
-              id,
-              origin: Float64Array.of(0, 0, 0),
-            }),
-          );
+          const key = pick(r, keys);
+          tilesOf.add(server.features.get(key)!.tile);
+          server.features.delete(key);
+          ops.push({ op: "delete", key });
         }
-      } else if (roll < 0.7) {
-        const key = pick(r, keys);
-        const edit = r();
-        if (edit < 0.3) {
-          content.edits.hide(key);
-        } else if (edit < 0.5) {
-          content.edits.replace({ key }, { properties: { n: step } });
-        } else if (edit < 0.65) {
-          content.edits.insert(key, {});
-        } else {
-          content.edits.clear(key);
+      }
+      return { ops, tiles: tilesOf };
+    };
+    const pushSet = (ops: ChangeOp[], malformed = false) =>
+      source.push({
+        kind: "features",
+        changes: {
+          id: `cs-${fresh++}`,
+          source: content.source,
+          ops: malformed
+            ? [...ops, { op: "rename", key: "k0" } as unknown as ChangeOp]
+            : ops,
+        },
+      });
+    const idKeys = new Map<bigint, string>();
+    const check = (round: number, kind: string) => {
+      const expected: [string, unknown][] = [];
+      for (const [key, f] of server.features) {
+        idKeys.set(content.featureId(key), key);
+        if (resident.includes(f.tile)) {
+          expected.push([key, { label: f.label, value: f.value }]);
+        }
+      }
+      const shown: [string, unknown][] = [];
+      for (const { id, feature } of content.features()) {
+        shown.push([idKeys.get(id) ?? `unknown ${id}`, feature.properties]);
+      }
+      const order = (a: [string, unknown], b: [string, unknown]) =>
+        a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0;
+      expect
+        .soft(shown.sort(order), `round ${round} (${kind})`)
+        .toEqual(expected.sort(order));
+    };
+    check(-1, "loaded");
+    for (let round = 0; round < 60; round++) {
+      const kind =
+        round % 10 === 4 ? "burst" : round % 10 === 7 ? "malformed" : "mixed";
+      if (kind === "burst") {
+        // Updates only, more than the queue's bound between ticks.
+        for (let i = 0; i <= MAX_QUEUED_CHANGES + 10; i++) {
+          pushSet(commit(["update"]).ops);
+        }
+      } else if (kind === "malformed") {
+        // Change sets whose good ops the model took, one of them refused.
+        for (let i = 0; i < 5; i++) {
+          pushSet(commit(["update", "delete"]).ops, i === 2);
         }
       } else {
-        const key = pick(r, keys);
-        const op = pick(r, ["insert", "update", "delete"] as const);
-        sourceOf(content).push({
-          kind: "features",
-          changes: {
-            id: `cs-${step}`,
-            source: content.source,
-            ops: [
-              op === "insert"
-                ? { op, key, feature: { properties: { n: step } } }
-                : op === "update"
-                  ? { op, key, patch: { properties: { speed: step } } }
-                  : { op, key },
-            ],
-          },
-        });
-      }
-      if (step % 50 === 0) {
-        rt.tick(); // its source reloads what the feed invalidated
-      }
-      const bound = resident(content) + content.edits.size;
-      for (const [name, size] of tables(content)) {
-        expect(size, `${name} at step ${step}`).toBeLessThanOrEqual(bound);
-      }
-    }
-    expect(content.edits.size).toBeGreaterThan(0);
-    expect(content.rows.feed.size).toBeGreaterThan(0);
-  });
-
-  it("one-way projection: no table maps an ID back to a key, and keyOf answers only from a resident row, a draw or an edit record", async () => {
-    const { rt, place } = runtime();
-    const content = await rt.open({ url: "https://data.test/city.sample" });
-    place(content);
-    rt.tick();
-    rt.tick();
-    // The tables the restructuring deleted are gone.
-    for (const name of [
-      "nameIds",
-      "idNames",
-      "keys",
-      "instances",
-      "pending",
-      "feed",
-      "strays",
-      "noteKeys",
-      "forgetKeys",
-      "editFeatureOf",
-      "countStrays",
-      "takeStrayEdits",
-      "holdPending",
-      "knows",
-    ]) {
-      expect(name in content, `content.${name}`).toBe(false);
-    }
-    for (const name of ["nameIds", "idNames"]) {
-      expect(name in content.rows, `rows.${name}`).toBe(false);
-    }
-    const { sinks } = sourceOf(content).host;
-    const r = random(952);
-    const keys = Array.from({ length: 30 }, (_, i) => `k${i}`);
-    const seen = new Set(keys.map((k) => content.featureId(k)));
-    for (let step = 0; step < 1500; step++) {
-      const roll = r();
-      const key = pick(r, keys);
-      if (roll < 0.3) {
-        sinks.points.put({
-          key: `t${Math.floor(r() * 4)}`,
-          crs: "EPSG:4978",
-          count: 2,
-          positions: new Float64Array(6),
-          names: [key, pick(r, keys)],
-        });
-      } else if (roll < 0.45) {
-        sinks.points.remove(`t${Math.floor(r() * 4)}`);
-      } else if (roll < 0.65) {
-        if (r() < 0.6) {
-          content.edits.hide(key);
-        } else {
-          content.edits.clear(key);
-        }
-      } else {
-        sourceOf(content).push({
-          kind: "features",
-          changes: {
-            id: `cs-${step}`,
-            source: content.source,
-            ops: [
-              r() < 0.5
-                ? { op: "insert", key, feature: {} }
-                : { op: "delete", key },
-            ],
-          },
-        });
-      }
-      // No Map anywhere from a bigint to a string.
-      for (const o of [content, content.rows, content.edits]) {
-        for (const [name, value] of Object.entries(o)) {
-          if (value instanceof Map) {
-            for (const [k, v] of value as Map<unknown, unknown>) {
-              expect(typeof k === "bigint" && typeof v === "string", name).toBe(
-                false,
-              );
+        let deferred: string[] = [];
+        for (let i = 0; i < 1 + Math.floor(r() * 12); i++) {
+          const { ops, tiles: touched } = commit([
+            "insert",
+            "update",
+            "delete",
+          ]);
+          pushSet(ops);
+          if (deferred.length > 0) {
+            source.push({ kind: "invalidate", keys: deferred });
+            deferred = [];
+          }
+          // The source invalidates what holds an insert (CS-1102 A): in this
+          // push or the next. Updates and deletes, sometimes.
+          const inserts = ops.some((o) => o.op === "insert");
+          if ((inserts || r() < 0.3) && touched.size > 0) {
+            if (r() < 0.5) {
+              source.push({ kind: "invalidate", keys: [...touched] });
+            } else {
+              deferred = [...touched];
             }
           }
         }
+        if (deferred.length > 0) {
+          source.push({ kind: "invalidate", keys: deferred });
+        }
       }
-      // keyOf is exactly what a row, the feed's row, a draw or an edit holds.
-      for (const id of seen) {
-        const row = content.rows.addressOf(id);
-        const expected =
-          content.edits.keyOf(id) ??
-          (row?.row === undefined ? row?.key : undefined);
-        expect(content.keyOf(id), `step ${step}`).toBe(expected);
-      }
+      quiet();
+      check(round, kind);
     }
-    // With nothing resident and no edits, it answers for none.
-    for (const key of ["t0", "t1", "t2", "t3", "a"]) {
-      sinks.points.remove(key);
-      sinks.features.remove(key);
-    }
-    for (const id of seen) {
-      content.edits.clear(id);
-    }
-    rt.tick();
-    sourceOf(content).push({
-      kind: "features",
-      changes: {
-        id: "cs-end",
-        source: content.source,
-        ops: keys.map((key) => ({ op: "delete" as const, key })),
-      },
-    });
-    expect([...seen].filter((id) => content.keyOf(id) !== undefined)).toEqual(
-      [],
-    );
   });
 
-  it("names decide identity: one name, the same feature IDs whatever its URLs; two names, different ones; a version only when the name holds it", async () => {
+  it("T3, the canary matrix: a canary in every inlet reaches only the outlets its table allows, and a careless resolver's open is refused", async () => {
+    const engine = await fakeEngine();
+    try {
+      const world = engine.createWorld();
+      engine.sources.registerKind({ id: "sample", module: SAMPLE });
+      engine.sources.registerKind({ id: "layered", module: LAYERED });
+      const reports: string[] = [];
+      engine.errors.on((e) => reports.push(e.message));
+      const r = random(1101);
+      type Inlet =
+        | "user"
+        | "password"
+        | "path"
+        | "queryName"
+        | "queryValue"
+        | "fragment"
+        | "optionKey"
+        | "optionValue"
+        | "credentialQuery"
+        | "credentialHeader"
+        | "declaredName"
+        | "contentKey"
+        | "rowName"
+        | "feedOpKey"
+        | "sourceError";
+      type Outlet =
+        | "reports"
+        | "thrown"
+        | "source"
+        | "id"
+        | "itemKey"
+        | "stableKey"
+        | "collisions"
+        | "changeSet";
+      /** Which inlet may reach which outlet: nothing from the URL, its options or its credential reaches any. */
+      const ALLOWED: Readonly<Partial<Record<Inlet, readonly Outlet[]>>> = {
+        // The declarer's own words, handed back (CS-1101 A), never in the engine's text.
+        declaredName: ["source", "id", "itemKey", "stableKey", "changeSet"],
+        // A source's keys: the feature's address in a change set, and its key.
+        rowName: ["stableKey", "changeSet"],
+        feedOpKey: ["stableKey", "changeSet"],
+        // An unnamed row's address is its batch's key and index.
+        contentKey: ["stableKey"],
+        // A source's own words, relayed after the engine's label.
+        sourceError: ["reports"],
+      };
+      const canaries = new Map<string, Inlet>();
+      const c = (inlet: Inlet) => {
+        const canary = `Q${word(r, 12)}Z`;
+        canaries.set(canary, inlet);
+        return canary;
+      };
+      const outlets: [Outlet, string][] = [];
+      const thrown = async (run: () => unknown) => {
+        try {
+          await run();
+          return false;
+        } catch (error) {
+          outlets.push(["thrown", (error as Error).message]);
+          return true;
+        }
+      };
+      const url = new URL(
+        `https://${c("user")}:${c("password")}@data.test/${c("path")}/${c("path")}/tiles.layers?${c("queryName")}=${c("queryValue")}&key=${c("queryValue")}&layer=${c("queryValue")}#${c("fragment")}`,
+      );
+      const options = {
+        [c("optionKey")]: c("optionValue"),
+        style: c("optionValue"),
+      };
+      const credential = () =>
+        new Credential({
+          query: { token: c("credentialQuery") },
+          headers: { Authorization: `Bearer ${c("credentialHeader")}` },
+        });
+      const declared = `datasets:${c("declaredName")}`;
+      /** Names careless resolvers declare: each is URL text. */
+      const careless: Record<string, (u: URL) => string> = {
+        href: (u) => u.href,
+        search: (u) => u.search,
+        pathname: (u) => u.pathname,
+        originPath: (u) => `${u.origin}${u.pathname}`,
+        encoded: (u) => encodeURIComponent(u.href),
+      };
+      engine.sources.addResolver({
+        id: "t3",
+        accepts: (ref) => "resolver" in ref && ref.resolver === "t3",
+        resolve: (ref) => {
+          const how = "id" in ref ? ref.id : "";
+          const name =
+            how === "declared"
+              ? declared
+              : how in careless
+                ? careless[how]!(url)
+                : undefined;
+          return Promise.resolve({
+            kind: how === "refused" ? "sample" : "layered",
+            url,
+            credits: [],
+            options,
+            credentials: credential(),
+            ...(name !== undefined ? { name } : {}),
+          });
+        },
+      });
+      const opened: SourceContent[] = [];
+      // Derived names: a plain URL with options, twice (an ordinal, reported),
+      // and a resolver's asset with a credential.
+      opened.push(
+        await engine.open({ url: url.href, kind: "layered", options }),
+      );
+      opened.push(
+        await engine.open({ url: url.href, kind: "layered", options }),
+      );
+      opened.push(await engine.open({ resolver: "t3", id: "bare" }));
+      // A declared name, twice (an ordinal, reported).
+      opened.push(await engine.open({ resolver: "t3", id: "declared" }));
+      opened.push(await engine.open({ resolver: "t3", id: "declared" }));
+      // A kind that refuses it.
+      expect(
+        await thrown(() => engine.open({ resolver: "t3", id: "refused" })),
+      ).toBe(true);
+      // Every careless resolver's open is refused.
+      for (const how of Object.keys(careless)) {
+        let accepted: SourceContent | undefined;
+        expect
+          .soft(
+            await thrown(async () => {
+              accepted = await engine.open({ resolver: "t3", id: how });
+            }),
+            `a name from url.${how} is refused`,
+          )
+          .toBe(true);
+        if (accepted) {
+          outlets.push(["source", accepted.source], ["id", accepted.id]);
+        }
+      }
+      for (const content of opened) {
+        const item = world.add(content);
+        engine.sources.tick();
+        engine.sources.tick();
+        const source = sourceOf(content);
+        const { sinks, budget } = source.host;
+        const contentKey = c("contentKey");
+        const rowName = c("rowName");
+        const feedOpKey = c("feedOpKey");
+        // A source's rows, named and unnamed, and a draw keyed by its key.
+        sinks.points.put({
+          key: contentKey,
+          crs: "EPSG:4978",
+          count: 2,
+          positions: new Float64Array(6),
+          names: [rowName, undefined],
+        });
+        const drawKey = c("rowName");
+        sinks.draws.addDraw({
+          mesh: sinks.draws.addMesh(createBox()),
+          id: drawKey,
+          origin: Float64Array.of(0, 0, 0),
+        });
+        // What a sink and the budget refuse, with keys in hand.
+        await thrown(() =>
+          sinks.points.put({
+            key: c("contentKey"),
+            crs: "EPSG:4978",
+            count: 2,
+            positions: new Float64Array(3),
+            names: [c("rowName"), c("rowName")],
+          }),
+        );
+        budget.settle(c("contentKey"));
+        budget.want({
+          key: c("contentKey"),
+          class: "now",
+          benefit: 1,
+          cost: { bytes: 2 ** 40 },
+          origin: "https://data.test",
+        });
+        // Its feed: an insert, an update, a delete, a malformed set and one
+        // whose ID isn't its key's.
+        const feed = (ops: unknown[]) =>
+          source.push({
+            kind: "features",
+            changes: {
+              id: `cs-${word(r, 6)}`,
+              source: content.source,
+              ops: ops as ChangeSet["ops"],
+            },
+          });
+        feed([
+          { op: "insert", key: feedOpKey, feature: { properties: { n: 1 } } },
+          { op: "update", key: rowName, patch: { properties: { n: 2 } } },
+          { op: "delete", key: c("feedOpKey") },
+        ]);
+        feed([{ op: "rename", key: c("feedOpKey") }]);
+        feed([{ op: "delete", key: c("feedOpKey"), id: 1n }]);
+        // Its own failure, relayed.
+        source.failure = `the update failed: ${c("sourceError")}`;
+        source.throwOnUpdate = 1;
+        engine.sources.tick();
+        engine.sources.tick();
+        // A change set for other content, refused.
+        await thrown(() =>
+          content.resolve({ id: "x", source: `other-${word(r, 4)}`, ops: [] }),
+        );
+        // The outlets.
+        outlets.push(["source", content.source], ["id", content.id]);
+        outlets.push(["itemKey", item.key]);
+        const box = world.identity.identify(content.featureId(drawKey))!;
+        outlets.push(["stableKey", text(box.key)]);
+        outlets.push([
+          "stableKey",
+          text(world.identities.identityOfDraw(box.draw!.index)),
+        ]);
+        outlets.push([
+          "changeSet",
+          changeSetToJson(
+            content.resolve({
+              id: "cs-out",
+              source: content.source,
+              ops: [
+                { op: "delete", key: rowName },
+                { op: "insert", key: feedOpKey, feature: {} },
+              ],
+            }),
+          ),
+        ]);
+      }
+      for (const [id, keys] of world.identities.collisions) {
+        outlets.push(["collisions", `${id} ${keys.join(" ")}`]);
+      }
+      outlets.push(...reports.map((m): [Outlet, string] => ["reports", m]));
+      const reached: string[] = [];
+      for (const [outlet, value] of outlets) {
+        for (const [canary, inlet] of canaries) {
+          if (value.includes(canary) && !ALLOWED[inlet]?.includes(outlet)) {
+            reached.push(`${inlet} → ${outlet}: ${value.slice(0, 160)}`);
+          }
+        }
+      }
+      expect(reached).toEqual([]);
+      // The matrix was exercised: reports and refusals were read.
+      expect(reports.length).toBeGreaterThan(5);
+      expect(outlets.filter(([o]) => o === "thrown").length).toBeGreaterThan(5);
+      expect(
+        outlets.some(
+          ([o, v]) =>
+            o === "reports" && [...canaries.keys()].some((k) => v.includes(k)),
+        ),
+        "a source's own error is relayed",
+      ).toBe(true);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it("T4, different content, different namespace: opens that differ in one thing a kind receives get different feature IDs, unless only the declared credential differs or one name is declared for both", async () => {
     const { rt, place } = runtime();
-    rt.registerKind({ id: "layered", module: LAYERED });
-    const r = random(1087);
-    const urls = locators(12);
-    let version = "1";
+    rt.registerKind({ id: "echo", module: ECHO });
+    rt.registerKind({ id: "echo-b", module: ECHO_B });
+    interface Spec {
+      kind: "echo" | "echo-b";
+      query: Record<string, string>;
+      options: Record<string, string>;
+      /** The declared credential's value (`token`), in the URL too when `inUrl`. */
+      credential?: string;
+      inUrl?: boolean;
+      name?: string;
+    }
+    const specs = new Map<string, Spec>();
     rt.addResolver({
-      id: "named",
-      accepts: (ref) => "resolver" in ref && ref.resolver === "named",
+      id: "t4",
+      accepts: (ref) => "resolver" in ref && ref.resolver === "t4",
       resolve: (ref) => {
-        const [url, name] = ("id" in ref ? ref.id : "").split(" ");
+        const spec = specs.get("id" in ref ? ref.id : "")!;
+        const url = new URL("https://svc.test/maps/data");
+        for (const [name, value] of Object.entries(spec.query)) {
+          url.searchParams.set(name, value);
+        }
+        if (spec.credential !== undefined && spec.inUrl) {
+          url.searchParams.set("token", spec.credential);
+        }
         return Promise.resolve({
-          kind: "layered",
-          url: new URL(url!),
+          kind: spec.kind,
+          url,
           credits: [],
-          name: name!,
-          version,
+          options: spec.options,
+          ...(spec.credential !== undefined
+            ? {
+                credentials: new Credential({
+                  query: { token: spec.credential },
+                }),
+              }
+            : {}),
+          ...(spec.name !== undefined ? { name: spec.name } : {}),
         });
       },
     });
-    const ids = async (url: string, name: string) => {
-      const content = await rt.open({
-        resolver: "named",
-        id: `${url} ${name}`,
-      });
+    const open = async (spec: Spec) => {
+      const id = `s${specs.size}`;
+      specs.set(id, spec);
+      const content = await rt.open({ resolver: "t4", id });
       place(content);
       rt.tick();
       rt.tick();
-      const out = [
-        ...content.rows.features.get("a")!.ids,
-        ...content.rows.points.get("a")!.ids,
-        content.featureId("a/box"),
-      ];
+      const rows = [...content.features()];
+      expect(rows).toHaveLength(1);
+      const out = {
+        id: content.featureId("x"),
+        content: rows[0]!.feature.properties!.content,
+      };
       content.destroy();
       return out;
     };
-    for (let i = 0; i < 6; i++) {
-      const name = `datasets:${word(r, 8)}`;
-      const a = await ids(urls[i]!, name);
-      version = String(i + 2); // a new version, not in the name
-      const b = await ids(urls[i + 6]!, name);
-      expect(b, `${name} under two URLs`).toEqual(a);
-      const other = await ids(urls[i]!, `${name}@${version}`);
-      for (let k = 0; k < a.length; k++) {
-        expect(other[k]).not.toBe(a[k]);
+    const r = random(1100);
+    const PARAMETERS = ["key", "policy", "st", "layer", "sig", "auth"];
+    const base = (): Spec => ({
+      kind: pick(r, ["echo", "echo-b"] as const),
+      query: Object.fromEntries(PARAMETERS.map((p) => [p, word(r, 5)])),
+      options: { style: word(r, 5), depth: word(r, 2) },
+    });
+    const differing = [
+      "kind",
+      "query",
+      "option",
+      "credential",
+      "name",
+      "one name",
+    ] as const;
+    const failures: string[] = [];
+    for (let i = 0; i < 48; i++) {
+      const what = differing[i % differing.length]!;
+      const a = base();
+      const b: Spec = {
+        ...a,
+        query: { ...a.query },
+        options: { ...a.options },
+      };
+      if (what === "kind") {
+        b.kind = a.kind === "echo" ? "echo-b" : "echo";
+      } else if (what === "query") {
+        b.query[pick(r, PARAMETERS)] = word(r, 6);
+      } else if (what === "option") {
+        b.options[pick(r, ["style", "depth"])] = word(r, 6);
+      } else if (what === "credential") {
+        a.credential = word(r, 16);
+        b.credential = word(r, 16);
+        a.inUrl = b.inUrl = r() < 0.5;
+      } else if (what === "name") {
+        a.name = `datasets:${word(r, 8)}`;
+        b.name = `datasets:${word(r, 8)}`;
+      } else {
+        // One name for both, and something else differs.
+        a.name = b.name = `datasets:${word(r, 8)}`;
+        b.kind = a.kind === "echo" ? "echo-b" : "echo";
+        b.query.layer = word(r, 6);
+        b.options.style = word(r, 6);
       }
+      const x = await open(a);
+      const y = await open(b);
+      // The oracle: from the fixture's content and the declarations only.
+      const same =
+        a.name !== undefined ? a.name === b.name : x.content === y.content;
+      if ((x.id === y.id) !== same) {
+        failures.push(
+          `${what}: content ${x.content === y.content ? "equal" : "differs"}, names ${a.name ?? "-"} / ${b.name ?? "-"}, feature IDs ${x.id === y.id ? "equal" : "differ"}`,
+        );
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it("T5, hostile keys: keys like __proto__ at every inlet change neither Object.prototype nor Array.prototype, and each reads back as written", async () => {
+    const HOSTILE = [
+      "__proto__",
+      "constructor",
+      "toString",
+      "hasOwnProperty",
+      "",
+      "0",
+      "\ud800",
+      "x".repeat(100_000),
+    ];
+    const prototypes = () =>
+      [Object.prototype, Array.prototype, Object, Function.prototype].map((o) =>
+        Reflect.ownKeys(o).map(String).sort(),
+      );
+    const before = prototypes();
+    const record = <T>(value: (name: string) => T) =>
+      Object.fromEntries(HOSTILE.map((name) => [name, value(name)]));
+    const engine = await fakeEngine();
+    const broken: string[] = [];
+    try {
+      const world = engine.createWorld();
+      engine.sources.registerKind({ id: "sample", module: SAMPLE });
+      const content = await engine.open({
+        url: "https://data.test/hostile.sample",
+        options: { keys: [], ...record(() => "v") },
+      });
+      if (
+        !HOSTILE.every(
+          (name) =>
+            Object.hasOwn(content.asset.options!, name) &&
+            content.asset.options![name] === "v",
+        )
+      ) {
+        broken.push("option keys");
+      }
+      world.add(content);
+      engine.sources.tick();
+      const source = sourceOf(content);
+      const { sinks } = source.host;
+      const mesh = sinks.draws.addMesh(createBox());
+      /** What row `name` shows now, found through `features()` and `keyOf`. */
+      const row = (name: string) =>
+        [...content.features()].find((f) => content.keyOf(f.id) === name)
+          ?.feature;
+      const reads = (
+        name: string,
+        properties: Record<string, unknown>,
+        where: string,
+      ) => {
+        const shown = row(name)?.properties ?? {};
+        for (const [property, value] of Object.entries(properties)) {
+          if (!Object.hasOwn(shown, property) || shown[property] !== value) {
+            broken.push(
+              `${where}: row ${JSON.stringify(name.slice(0, 16))}'s ${JSON.stringify(property.slice(0, 16))}`,
+            );
+          }
+        }
+      };
+      HOSTILE.forEach((name, i) => {
+        const key = name.length > 0 ? name : `batch-${i}`;
+        // A batch whose row names and columns are hostile, beside a plain one.
+        const put = () =>
+          sinks.points.put({
+            key,
+            crs: "EPSG:4978",
+            count: 2,
+            positions: new Float64Array(6),
+            names: [name, `other-${i}`],
+            properties: record(() => Float64Array.of(1, 2)),
+          });
+        if (refused(put)) {
+          broken.push(`a batch with row ${i}`);
+          return;
+        }
+        sinks.points.put({
+          key: `plain-${i}`,
+          crs: "EPSG:4978",
+          count: 1,
+          positions: new Float64Array(3),
+          names: [`plain-${i}`],
+          properties: { speed: Float64Array.of(0) },
+        });
+        sinks.custom("test:splats").put({
+          key,
+          count: 1,
+          columns: record(() => Float32Array.of(0.5)),
+          names: [`splat-${i}`],
+        });
+        reads(
+          name,
+          record(() => 1),
+          "a put",
+        );
+        reads(
+          `splat-${i}`,
+          record(() => 0.5),
+          "custom rows",
+        );
+        // Samples by hostile value names: on the hostile row, and on a row
+        // whose batch has none of those columns.
+        for (const target of [name, `plain-${i}`]) {
+          source.push({
+            kind: "samples",
+            samples: {
+              times: Float64Array.of(0),
+              names: [target],
+              values: record(() => Float64Array.of(7)),
+            },
+          });
+        }
+        reads(
+          name,
+          record(() => 7),
+          "samples",
+        );
+        reads(`plain-${i}`, { speed: 0 }, "samples on a plain row");
+        // The feed: a patch by hostile property names, then a delete of the
+        // other row, which puts the batch again without it.
+        source.push({
+          kind: "features",
+          changes: {
+            id: `cs-${i}`,
+            source: content.source,
+            ops: [
+              ...(name.length > 0
+                ? [
+                    {
+                      op: "update" as const,
+                      key: name,
+                      patch: { properties: record(() => 9) },
+                    },
+                  ]
+                : []),
+              { op: "delete", key: `other-${i}` },
+            ],
+          },
+        });
+        if (name.length > 0) {
+          reads(
+            name,
+            record(() => 9),
+            "a feed patch",
+          );
+        }
+        // Edits and labels by hostile keys.
+        if (name.length > 0) {
+          content.edits.replace(name, { properties: record(() => "e") });
+          reads(
+            name,
+            record(() => "e"),
+            "an edit",
+          );
+          content.edits.clear(name);
+          sinks.draws.addDraw({
+            mesh,
+            id: name,
+            origin: Float64Array.of(0, 0, 0),
+          });
+          refused(() =>
+            content.setLabels(name, "kind", [
+              ...HOSTILE.filter((h) => h.length > 0),
+            ]),
+          );
+          const labels = world.identity.identify(
+            content.featureId(name),
+          )?.labels;
+          if (!labels?.kind?.includes(name)) {
+            broken.push(`labels on ${JSON.stringify(name.slice(0, 16))}`);
+          }
+        }
+        for (const taxonomy of HOSTILE) {
+          refused(() => content.setLabels(`plain-${i}`, taxonomy, ["a"]));
+        }
+      });
+      expect.soft(broken).toEqual([]);
+    } finally {
+      // What a hostile key added to a prototype, taken back off before the
+      // next test runs, then reported.
+      const after = prototypes();
+      [Object.prototype, Array.prototype, Object, Function.prototype].forEach(
+        (o, i) => {
+          for (const key of after[i]!) {
+            if (!before[i]!.includes(key)) {
+              delete (o as Record<string, unknown>)[key];
+            }
+          }
+        },
+      );
+      engine.destroy();
+      expect(after).toEqual(before);
     }
   });
 
@@ -3294,49 +3907,5 @@ describe("the seam's invariants (CS-1087 A, CS-1085 A, CS-1084 A, CS-1088 A)", (
       expect(id).not.toBe(0n);
     }
     expect(made.length).toBeGreaterThan(1000);
-  });
-
-  it("feeds hold nothing for unloaded keys (CS-1085 A): ops on keys nothing resident holds leave nothing, and the key loads as its source writes it", async () => {
-    const { rt, place } = runtime();
-    const content = await rt.open({ url: "https://data.test/city.sample" });
-    place(content);
-    rt.tick();
-    rt.tick();
-    const before = tables(content);
-    const r = random(1085);
-    const keys = Array.from({ length: 200 }, (_, i) => `ghost-${i}`);
-    for (let step = 0; step < 2000; step++) {
-      const key = pick(r, keys);
-      sourceOf(content).push({
-        kind: "features",
-        changes: {
-          id: `cs-${step}`,
-          source: content.source,
-          ops: [
-            r() < 0.5
-              ? { op: "update", key, patch: { properties: { speed: step } } }
-              : { op: "delete", key },
-          ],
-        },
-      });
-    }
-    expect(tables(content)).toEqual(before);
-    expect(content.rows.feed.size).toBe(0);
-    for (const key of keys) {
-      expect(content.keyOf(content.featureId(key))).toBeUndefined();
-      expect(content.feature(content.featureId(key))).toBeUndefined();
-    }
-    // When one loads, it shows what its source wrote, no patch held.
-    sourceOf(content).host.sinks.points.put({
-      key: "late",
-      crs: "EPSG:4978",
-      count: 1,
-      positions: new Float64Array(3),
-      names: ["ghost-7"],
-      properties: { speed: Float64Array.of(1) },
-    });
-    expect(content.feature(content.featureId("ghost-7"))?.properties).toEqual({
-      speed: 1,
-    });
   });
 });
