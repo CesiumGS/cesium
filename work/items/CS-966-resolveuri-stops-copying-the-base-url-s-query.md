@@ -2,7 +2,7 @@
 id: CS-966
 title: resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-191
 claimed_by: orch-11-CS-966

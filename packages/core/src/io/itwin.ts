@@ -2,7 +2,8 @@
  * iTwin Platform mesh export: resolves an iModel to the tileset.json of its
  * latest complete 3D Tiles export, as 1.x `ITwinData.createTilesetFromIModelId`.
  * The export link is signed (its query is the credential, valid about an
- * hour), and `resolveUri` carries that query to every resource under it.
+ * hour), and `resolveUri` carries that query to every resource under it on
+ * the export's own origin (and to no other server: CS-966).
  */
 
 import { engineFetch } from "./fetchProvider.ts";

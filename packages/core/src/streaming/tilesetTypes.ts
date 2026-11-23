@@ -67,7 +67,11 @@ export interface TilesetOptions extends BudgetedOptions {
    * reproduces CesiumJS 1.x for parity tests.
    */
   policy?: "stepwise" | "budgeted";
-  /** Headers for every request (e.g. ion authorization). */
+  /**
+   * Headers for the tileset's requests (e.g. ion authorization): only to
+   * the root tileset's origin, unless they are a `Credential`'s that lists
+   * its `origins`. Content on another server gets none of them.
+   */
   headers?: Record<string, string>;
   /** Content cache budget in bytes (1.x cacheBytes default: 512 MiB). */
   cacheBytes?: number;

@@ -1213,7 +1213,9 @@ export class Engine {
 
   /**
    * Fetches and decodes a glTF, GLB or b3dm in a worker. Upload it with
-   * `uploadModel`. `headers` go with every request (e.g. ion authorization).
+   * `uploadModel`. `headers` go with every request to the model's origin
+   * (e.g. ion authorization); a buffer or image on another server gets
+   * none of them, unless they are a `Credential`'s that lists its origins.
    */
   loadGltf(
     url: string | URL,

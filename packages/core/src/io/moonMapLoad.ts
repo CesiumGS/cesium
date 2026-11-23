@@ -1,5 +1,6 @@
 // The Moon map worker's built URL (`?worker&url`, as WorkerPool's).
 import moonMapWorkerUrl from "./moonMapWorker.ts?worker&url";
+import { bindToSource } from "./fetchProvider.ts";
 import { type Attribution, type IonOptions, resolveIonAsset } from "./ion.ts";
 import { CESIUM_MOON_TERRAIN } from "./moonMap.ts";
 import type { MoonMapReply, MoonMapRequest } from "./moonMapWorker.ts";
@@ -87,7 +88,7 @@ export function composeInWorker(
   script ??= workerStart(new URL(moonMapWorkerUrl, import.meta.url));
   const worker = new Worker(script, { type: "module" });
   const server = new WorkerFetchServer(worker);
-  server.open(0, headers);
+  server.open(0, bindToSource(headers, request.url));
   let timer: ReturnType<typeof setTimeout> | undefined;
   let onAbort: (() => void) | undefined;
   return new Promise<{ image: ImageBitmap; warnings: string[]; mean: number }>(

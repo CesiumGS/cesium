@@ -4,6 +4,7 @@ import { Globe } from "../globe/Globe.ts";
 import { GlobeImagery } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
 import { TerrainSource } from "../globe/TerrainSource.ts";
+import { bindToSource } from "../io/fetchProvider.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { CustomShader } from "./CustomShader.ts";
@@ -32,11 +33,14 @@ export function loadGltfFile(
   url: string | URL,
   options: { headers?: Record<string, string>; signal?: AbortSignal } = {},
 ): Promise<GltfAsset> {
+  const href = new URL(url, globalThis.location?.href).href;
   return engine.scene.workers.request<GltfAsset>(
     "gltf",
     {
-      url: new URL(url, globalThis.location?.href).href,
-      headers: options.headers,
+      url: href,
+      // Its buffers and images on other servers get none of them, and a
+      // tile's content keeps its tileset's binding (fetchProvider.ts).
+      headers: bindToSource(options.headers, href),
       // KTX2/Basis textures are transcoded to the engine's path: a block
       // format this device samples, else RGBA8.
       textureTarget: engine.ctx.paths.textureTranscode,

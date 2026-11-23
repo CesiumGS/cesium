@@ -14,8 +14,16 @@
  *    added after it, so a hook gets nothing the host didn't give it there.
  * 3. **The source's headers**: a tileset's, terrain's or imagery's
  *    `headers`. When they are a `Credential`'s `headers`, its values are
- *    read now (so a rotated token takes effect on the next request), only
- *    for the origins it is scoped to, with its query parameters.
+ *    read now (so a rotated token takes effect on the next request), with
+ *    its query parameters. They go only to the source's own origin
+ *    (CS-966): a source binds its headers to its URL (`bindToSource`: a
+ *    tileset's root JSON, a terrain's `layer.json`, a model's URL), and a
+ *    request to any other origin, which only content can name, carries
+ *    none of them. A `Credential` that lists `origins` goes to those
+ *    origins instead, and to no other, its source's included. Headers
+ *    passed to a request directly, with no source bound, have that request
+ *    as their source. This is the one place it is checked: every request,
+ *    on the page or for a worker, comes through here.
  * 4. **The proxy**: the rule's, else the provider's (`DefaultProxy`, 1.x's
  *    prefix form; `ForwardingProxy`, a host's endpoint; or any
  *    `RequestProxy`). The engine's own files (kind `"engine"`) skip the
@@ -95,13 +103,17 @@ export interface CredentialOptions {
   refresh?: () => Promise<CredentialValue | undefined>;
   /**
    * The origins it is sent to (`"https://assets.example.com"`); requests
-   * to any other origin go without it. Default: every origin, as plain
-   * headers are.
+   * to any other origin go without it, its source's too. Default: its
+   * source's own origin only, as for plain headers (the origin of the
+   * tileset, terrain or model URL it was given with; for a request made
+   * with it directly, that request's).
    */
   origins?: readonly string[];
 }
 
 const registry = new WeakMap<object, Credential>();
+/** Credentials that list their `origins`. */
+const listsOrigins = new WeakSet<Credential>();
 
 /**
  * Renewable request credentials: an access token, a signed key. A source
@@ -124,6 +136,9 @@ export class Credential {
     private readonly options: CredentialOptions = {},
   ) {
     this.origins = options.origins ? new Set(options.origins) : undefined;
+    if (this.origins) {
+      listsOrigins.add(this);
+    }
     this.assign(value);
     registry.set(this.headers, this);
   }
@@ -143,7 +158,10 @@ export class Credential {
     return this.options.refresh !== undefined;
   }
 
-  /** Whether requests to `origin` carry it. */
+  /**
+   * Whether its `origins` admit `origin`: always, when it lists none (the
+   * provider then sends it only to its source's origin).
+   */
   appliesTo(origin: string | undefined): boolean {
     return !this.origins || (origin !== undefined && this.origins.has(origin));
   }
@@ -310,7 +328,9 @@ export interface ProviderRequestInit {
   kind?: RequestKind;
   /**
    * The source's headers: a plain record, or a `Credential`'s `headers`
-   * (then a 401 renews it and the request is made once more).
+   * (then a 401 renews it and the request is made once more). They go
+   * only to the source's origin: the engine's sources bind theirs to their
+   * URL; unbound, this request is their source.
    */
   headers?: Readonly<Record<string, string>> | undefined;
   /** This request's `Accept` header. */
@@ -342,7 +362,8 @@ export class FetchProvider {
     input: string | URL,
     init: ProviderRequestInit = {},
   ): Promise<Response> {
-    const credential = Credential.of(init.headers);
+    const source = init.headers ? sources.get(init.headers) : undefined;
+    const credential = Credential.of(source?.headers ?? init.headers);
     let retried = false;
     for (;;) {
       const generation = credential?.generation ?? 0;
@@ -350,6 +371,7 @@ export class FetchProvider {
         String(input),
         init,
         credential,
+        source,
       );
       // Only a credential that was sent can be what the server refused: a
       // proxy that wasn't allowed it gets no renewal and no fallback.
@@ -375,6 +397,7 @@ export class FetchProvider {
     input: string,
     init: ProviderRequestInit,
     credential: Credential | undefined,
+    source: BoundSource | undefined,
   ): Promise<{ response: Response; sentCredential: boolean }> {
     const kind = init.kind ?? "other";
     const rule = this.ruleFor(originOf(input));
@@ -401,7 +424,7 @@ export class FetchProvider {
     let headers: Record<string, string> = { ...outgoing.headers };
     let url = target;
     let sentCredential = false;
-    if (init.headers && (!credential || credential.appliesTo(origin))) {
+    if (init.headers && carries(origin, credential, source)) {
       for (const [name, value] of Object.entries(init.headers)) {
         setHeader(headers, name, value);
       }
@@ -481,6 +504,53 @@ export class FetchProvider {
       originMatches(rule.origin, origin),
     );
   }
+}
+
+/** A source's headers, bound to its origin (`bindToSource`). */
+interface BoundSource {
+  /** The headers as the source was given them (a `Credential`'s record). */
+  readonly headers: Readonly<Record<string, string>>;
+  /** The source URL's origin; undefined for an opaque one. */
+  readonly origin: string | undefined;
+}
+
+const sources = new WeakMap<object, BoundSource>();
+
+/**
+ * @internal A source's headers, bound to the source at `url` (a tileset's
+ * root JSON, a terrain's `layer.json`, a model's URL): the provider sends
+ * them, and a `Credential` among them that lists no `origins`, only with
+ * requests to that URL's origin, wherever the content later points
+ * (CS-966). The result reads `headers` live, so a credential's rotation
+ * shows, and passes for them everywhere a record of headers goes; binding
+ * bound headers again keeps their first source (a tile's content keeps
+ * its tileset's).
+ */
+export function bindToSource<
+  T extends Readonly<Record<string, string>> | undefined,
+>(headers: T, url: string | URL): T {
+  if (!headers || sources.has(headers)) {
+    return headers;
+  }
+  const view = new Proxy(headers, {});
+  sources.set(view, { headers, origin: originOf(String(url)) });
+  return view;
+}
+
+/**
+ * Whether a request to `origin` carries the source's headers: those of a
+ * credential that lists its origins, when it lists `origin`; any others
+ * only on the source's own origin.
+ */
+function carries(
+  origin: string | undefined,
+  credential: Credential | undefined,
+  source: BoundSource | undefined,
+): boolean {
+  if (credential && listsOrigins.has(credential)) {
+    return credential.appliesTo(origin);
+  }
+  return source === undefined || origin === source.origin;
 }
 
 /** Makes an engine request through `FetchProvider.default`. */

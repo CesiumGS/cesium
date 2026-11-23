@@ -474,8 +474,9 @@ export function Architecture() {
             Failed tiles get another chance after cool-downs, and ion tokens
             refresh once per generation. Request options reach 1.x's parity: a
             proxy (a prefix or a function), query parameters and headers
-            inherited by derived requests, credentials for trusted origins, and
-            an app hook that refreshes authorization.
+            inherited by derived requests on the source's own origin (content
+            that names another server gets neither), credentials for trusted
+            origins, and an app hook that refreshes authorization.
           </li>
           <li>
             <strong>Cesium IR, MaterialX and a WebGL 2 renderer</strong> are

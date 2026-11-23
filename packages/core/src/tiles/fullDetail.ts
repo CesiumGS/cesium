@@ -4,7 +4,7 @@
  * transforms accumulated and external tilesets followed. A stand-in for the
  * parity page and the viewer until M2's streaming and tile selection.
  */
-import { engineFetch } from "../io/fetchProvider.ts";
+import { bindToSource, engineFetch } from "../io/fetchProvider.ts";
 import * as m4 from "../math/mat4.ts";
 import { resolveUri } from "../io/resolveUri.ts";
 
@@ -28,6 +28,8 @@ export async function collectFullDetailContents(
   out: TileContent[],
   warnings: Set<string>,
 ): Promise<void> {
+  // The root's origin only; an external tileset keeps the root's binding.
+  headers = bindToSource(headers, url);
   const response = await engineFetch(url, { kind: "tileset", headers });
   if (!response.ok) {
     throw new Error(`tileset JSON request failed (${response.status})`);

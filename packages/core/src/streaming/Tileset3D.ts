@@ -48,6 +48,7 @@ import {
   type SceneItemHost,
   type SceneItemOptions,
 } from "../scene/SceneItem.ts";
+import { bindToSource } from "../io/fetchProvider.ts";
 import type { Attribution } from "../io/ion.ts";
 import type { GlobeImagery } from "../globe/GlobeImagery.ts";
 import {
@@ -570,7 +571,9 @@ export class Tileset3D implements TileTree {
     this.state.origin = this.originOf(url);
     this.useOrigin(this.state.origin);
     this.state.uploadsPerFrame = options.uploadsPerFrame ?? 8;
-    this.state.headers = options.headers;
+    // Bound to the root's origin: content that names another server gets
+    // none of them (fetchProvider.ts, CS-966).
+    this.state.headers = bindToSource(options.headers, url);
     this.stats.budget = this.state.cacheBytes;
     this.stats.overflow = this.state.overflowBytes;
     this.stats.adaptive = this.fixedWindow === undefined;
