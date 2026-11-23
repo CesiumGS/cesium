@@ -1430,7 +1430,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 37 of 54 done, 3 ready, 0 blocked, 14 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 38 of 54 done, 2 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1486,7 +1486,7 @@ No milestone
 - [?] [CS-1076](./items/CS-1076-api-surface-txt-and-engine-ts-are-shared-by.md) api/surface.txt and Engine.ts are shared by many ready items. Proposed. Needs nothing.
 - [?] [CS-1077](./items/CS-1077-what-alpha-1-must-not-foreclose-for-beta-1.md) What alpha.1 must not foreclose for beta.1. Proposed. Needs nothing.
 - [x] [CS-1090](./items/CS-1090-the-pnpm-spike-s-decision-move-2-0-from-npm-to.md) decision: The pnpm spike's decision: move 2.0 from npm to pnpm, stay on npm, or take a middle option?. Done.
-- [ ] [CS-1091](./items/CS-1091-2-0-installs-with-pnpm-pnpm-lock-yaml-pnpm-in.md) 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A). Needs CS-951 and CS-1090.
+- [x] [CS-1091](./items/CS-1091-2-0-installs-with-pnpm-pnpm-lock-yaml-pnpm-in.md) 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A). Done.
 - [x] [CS-1092](./items/CS-1092-merge-cs-951-the-pnpm-spike-s-write-up.md) decision: Merge CS-951, the pnpm spike's write-up. Done.
 - [x] [CS-1105](./items/CS-1105-merge-cs-1091-2-0-installs-with-pnpm.md) decision: Merge CS-1091, 2.0 installs with pnpm. Done.
 - [ ] [CS-1124](./items/CS-1124-cesium-navigation-camera-utilities-transitions.md) @cesium/navigation: camera utilities, transitions and flights, and orbit, globe and inspect controllers, on core's public API. Needs CS-1123 (Content sources and formats).

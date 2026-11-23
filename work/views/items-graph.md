@@ -1014,7 +1014,7 @@ graph LR
     CS_1076["CS-1076 api/surface.txt and Engine.ts are shared by many ready items"]:::proposed
     CS_1077["CS-1077 What alpha.1 must not foreclose for beta.1"]:::proposed
     CS_1090["CS-1090 The pnpm spike's decision: move 2.0 from npm to pnpm, stay on "]:::done
-    CS_1091["CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup"]:::open
+    CS_1091["CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup"]:::done
     CS_1092["CS-1092 Merge CS-951, the pnpm spike's write-up"]:::done
     CS_1105["CS-1105 Merge CS-1091, 2.0 installs with pnpm"]:::done
     CS_1124["CS-1124 @cesium/navigation: camera utilities, transitions and flights,"]:::open

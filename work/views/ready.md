@@ -310,11 +310,10 @@ CS-18 The work tracker
 
 CS-609 A clean 2.0 branch and a modern build
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
-  CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
   CS-1124  @cesium/navigation: camera utilities, transitions and flights, and orbit, globe and inspect controllers, on core's public API
 
 CS-197 Ray queries and path tracing
   CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
 
-245 ready
+244 ready
 ```

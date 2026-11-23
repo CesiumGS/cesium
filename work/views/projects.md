@@ -120,7 +120,7 @@ CS-596 Trust and evals [Planned], led by owner
   waits on: CS-195 Benchmarks, parity and image regression (1)
   waited on by: CS-18 The work tracker (3)
 CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
-  37 of 54 done, 3 ready, 0 blocked, 14 proposed
+  38 of 54 done, 2 ready, 0 blocked, 14 proposed
   waits on: CS-615 Packaging and package names (1)
   waited on by: CS-18 The work tracker (3); CS-389 Dyno as the development harness (1)
 CS-615 Packaging and package names [Planned], led by owner
