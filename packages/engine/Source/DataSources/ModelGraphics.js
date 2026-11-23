@@ -369,6 +369,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.incrementallyLoadTextures = this.incrementallyLoadTextures;
   result.runAnimations = this.runAnimations;
   result.clampAnimations = this.clampAnimations;
+  result.shadows = this.shadows;
   result.heightReference = this._heightReference;
   result.silhouetteColor = this.silhouetteColor;
   result.silhouetteSize = this.silhouetteSize;
