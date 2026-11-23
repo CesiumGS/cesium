@@ -80,6 +80,17 @@ function createCullingVolume(area, minimumHeight, maximumHeight) {
 }
 
 /**
+ * Returns the geometric error of a tile.
+ *
+ * @param {Cesium3DTile} tile The tile.
+ * @returns {number} The tile's geometric error.
+ * @private
+ */
+function geometricErrorMeasure(tile) {
+  return tile.geometricError;
+}
+
+/**
  * A function that returns how coarse a tile is. Larger values mean coarser.
  *
  * @callback Cesium3DTilesetAreaSelectionMeasureCallback
@@ -96,6 +107,17 @@ function createCullingVolume(area, minimumHeight, maximumHeight) {
  * @property {Cesium3DTilesetAreaSelectionMeasureCallback} measure The function that returns how coarse a tile is.
  * @property {number} minimumMeasure The fine bound. Tiles at or below this measure are not refined.
  * @property {number} maximumMeasure The coarse bound. Tiles above this measure are always refined.
+ * @property {boolean} [show=true] Whether the area is active.
+ */
+
+/**
+ * @typedef {object} Cesium3DTilesetAreaSelectionGeometricErrorOptions
+ * @property {Rectangle|OrientedBoundingBox|BoundingSphere} area The volume the area covers.
+ * @property {number} [minimumHeight=-1000.0] The minimum height, in meters, when area is a Rectangle.
+ * @property {number} [maximumHeight=10000.0] The maximum height, in meters, when area is a Rectangle.
+ * @property {number} [geometricError] The geometric error, in meters, to select in the area. Use instead of a range.
+ * @property {number} [minimumGeometricError] The fine bound, in meters. Tiles at or below this geometric error are not refined.
+ * @property {number} [maximumGeometricError] The coarse bound, in meters. Tiles above this geometric error are always refined.
  * @property {boolean} [show=true] Whether the area is active.
  */
 
@@ -169,12 +191,62 @@ class Cesium3DTilesetAreaSelection {
     this._minimumMeasure = minimumMeasure;
     this._maximumMeasure = maximumMeasure;
     this._show = options.show ?? true;
+    this._collection = undefined;
 
     this._cullingVolume = createCullingVolume(
       this._area,
       minimumHeight,
       maximumHeight,
     );
+  }
+
+  /**
+   * Creates an area that selects tiles by their geometric error. Pass either
+   * <code>geometricError</code> for a fixed level of detail, or both
+   * <code>minimumGeometricError</code> and <code>maximumGeometricError</code>
+   * for a range.
+   * <p>
+   * The bounds are compared with the tile's geometric error after it is scaled
+   * by the tile's transform and the tileset's model matrix.
+   * </p>
+   *
+   * @param {Cesium3DTilesetAreaSelectionGeometricErrorOptions} options
+   * @returns {Cesium3DTilesetAreaSelection} The new area.
+   * @exception {DeveloperError} Either options.geometricError or both options.minimumGeometricError and options.maximumGeometricError are required.
+   *
+   * @example
+   * const areaSelection = Cesium.Cesium3DTilesetAreaSelection.fromGeometricError({
+   *   area: Cesium.Rectangle.fromDegrees(-75.2, 39.9, -75.1, 40.0),
+   *   minimumGeometricError: 2.0,
+   *   maximumGeometricError: 16.0,
+   * });
+   */
+  static fromGeometricError(options = Frozen.EMPTY_OBJECT) {
+    const hasFixed = defined(options.geometricError);
+    const hasMinimum = defined(options.minimumGeometricError);
+    const hasMaximum = defined(options.maximumGeometricError);
+
+    const isFixed = hasFixed && !hasMinimum && !hasMaximum;
+    const isRange = !hasFixed && hasMinimum && hasMaximum;
+    if (!isFixed && !isRange) {
+      throw new DeveloperError(
+        "Either options.geometricError or both options.minimumGeometricError and options.maximumGeometricError are required.",
+      );
+    }
+
+    return new Cesium3DTilesetAreaSelection({
+      area: options.area,
+      minimumHeight: options.minimumHeight,
+      maximumHeight: options.maximumHeight,
+      show: options.show,
+      measure: geometricErrorMeasure,
+      minimumMeasure: isFixed
+        ? options.geometricError
+        : options.minimumGeometricError,
+      maximumMeasure: isFixed
+        ? options.geometricError
+        : options.maximumGeometricError,
+    });
   }
 
   /**
@@ -237,6 +309,17 @@ class Cesium3DTilesetAreaSelection {
    */
   get maximumMeasure() {
     return this._maximumMeasure;
+  }
+
+  /**
+   * The fine bound in use. It equals {@link Cesium3DTilesetAreaSelection#minimumMeasure} unless the tileset is reducing detail to save memory.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get effectiveMinimumMeasure() {
+    const relaxation = this._collection?._relaxation ?? 1.0;
+    return Math.min(this._minimumMeasure * relaxation, this._maximumMeasure);
   }
 
   /**

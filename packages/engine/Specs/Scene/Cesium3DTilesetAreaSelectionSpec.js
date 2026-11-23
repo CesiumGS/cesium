@@ -249,12 +249,27 @@ describe("Scene/Cesium3DTilesetAreaSelection", () => {
     expect(areaSelection.maximumMeasure).toBe(Infinity);
   });
 
-  it("accepts equal minimum and maximum measures", () => {
+  it("accepts equal minimumMeasure and maximumMeasure", () => {
     const areaSelection = new Cesium3DTilesetAreaSelection(
       createOptions({ minimumMeasure: 8.0, maximumMeasure: 8.0 }),
     );
     expect(areaSelection.minimumMeasure).toBe(8.0);
     expect(areaSelection.maximumMeasure).toBe(8.0);
+  });
+
+  it("uses minimumMeasure as the effective minimum without a collection", () => {
+    const areaSelection = new Cesium3DTilesetAreaSelection(createOptions());
+    expect(areaSelection.effectiveMinimumMeasure).toBe(2.0);
+  });
+
+  it("relaxes the effective minimum and clamps it at maximumMeasure", () => {
+    const areaSelection = new Cesium3DTilesetAreaSelection(createOptions());
+
+    areaSelection._collection = { _relaxation: 4.0 };
+    expect(areaSelection.effectiveMinimumMeasure).toBe(8.0);
+
+    areaSelection._collection._relaxation = 10.0;
+    expect(areaSelection.effectiveMinimumMeasure).toBe(16.0);
   });
 
   it("builds a culling volume for a Rectangle", () => {
@@ -282,5 +297,88 @@ describe("Scene/Cesium3DTilesetAreaSelection", () => {
     expect(cullingVolume.computeVisibility(probeAt(-2000.0))).toBe(
       Intersect.OUTSIDE,
     );
+  });
+
+  describe("fromGeometricError", () => {
+    it("creates a fixed level of detail", () => {
+      const areaSelection = Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        geometricError: 4.0,
+      });
+      expect(areaSelection.minimumMeasure).toBe(4.0);
+      expect(areaSelection.maximumMeasure).toBe(4.0);
+    });
+
+    it("creates a range", () => {
+      const areaSelection = Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        minimumGeometricError: 2.0,
+        maximumGeometricError: 16.0,
+      });
+      expect(areaSelection.minimumMeasure).toBe(2.0);
+      expect(areaSelection.maximumMeasure).toBe(16.0);
+    });
+
+    it("passes the other options through", () => {
+      const areaSelection = Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        minimumHeight: 100.0,
+        maximumHeight: 200.0,
+        minimumGeometricError: 2.0,
+        maximumGeometricError: 16.0,
+        show: false,
+      });
+      expect(areaSelection.minimumHeight).toBe(100.0);
+      expect(areaSelection.maximumHeight).toBe(200.0);
+      expect(areaSelection.show).toBe(false);
+    });
+
+    it("uses the tile's geometric error as the measure", () => {
+      const areaSelection = Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        geometricError: 4.0,
+      });
+      const tile = { geometricError: 5.0 };
+      expect(areaSelection.measure(tile, 0)).toBe(5.0);
+    });
+
+    it("shares one measure between areas", () => {
+      const first = Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        geometricError: 4.0,
+      });
+      const second = Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        minimumGeometricError: 2.0,
+        maximumGeometricError: 16.0,
+      });
+      expect(first.measure).toBe(second.measure);
+    });
+
+    it("throws without a geometric error", () => {
+      expect(() =>
+        Cesium3DTilesetAreaSelection.fromGeometricError({ area: rectangle }),
+      ).toThrowDeveloperError();
+    });
+
+    it("throws with both a geometric error and a range", () => {
+      expect(() =>
+        Cesium3DTilesetAreaSelection.fromGeometricError({
+          area: rectangle,
+          geometricError: 4.0,
+          minimumGeometricError: 2.0,
+          maximumGeometricError: 16.0,
+        }),
+      ).toThrowDeveloperError();
+    });
+
+    it("throws with only one end of the range", () => {
+      expect(() =>
+        Cesium3DTilesetAreaSelection.fromGeometricError({
+          area: rectangle,
+          minimumGeometricError: 2.0,
+        }),
+      ).toThrowDeveloperError();
+    });
   });
 });
