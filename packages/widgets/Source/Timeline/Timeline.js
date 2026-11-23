@@ -93,6 +93,15 @@ const timelineMonthNames = [
 ];
 
 /**
+ * The earliest date the timeline can display. {@link JulianDate#toGregorianDate}
+ * cannot represent years before 1 (see {@link GregorianDate}), so a timeline
+ * window starting any earlier throws an uncaught DeveloperError when the tics
+ * are built. {@link Timeline#zoomTo} clamps the window to start here.
+ * @private
+ */
+const minimumTimelineDate = JulianDate.fromIso8601("0001-01-01T00:00:00Z");
+
+/**
  * The Timeline is a widget for displaying and controlling the current scene time.
  * @alias Timeline
  * @constructor
@@ -328,6 +337,30 @@ Timeline.prototype.zoomTo = function (startTime, stopTime) {
         this._startJulian,
       );
     }
+  }
+
+  // The timeline labels are Gregorian dates, which cannot represent years
+  // before 1, so a window starting earlier throws an uncaught DeveloperError
+  // when the tics are built (see #13769). Shift the window so it starts at
+  // the earliest representable date, keeping the visible span unchanged.
+  if (JulianDate.lessThan(this._startJulian, minimumTimelineDate)) {
+    const shift = JulianDate.secondsDifference(
+      minimumTimelineDate,
+      this._startJulian,
+    );
+    this._startJulian = JulianDate.clone(
+      minimumTimelineDate,
+      new JulianDate(),
+    );
+    this._endJulian = JulianDate.addSeconds(
+      this._endJulian,
+      shift,
+      new JulianDate(),
+    );
+    this._timeBarSecondsSpan = JulianDate.secondsDifference(
+      this._endJulian,
+      this._startJulian,
+    );
   }
 
   this._makeTics();
