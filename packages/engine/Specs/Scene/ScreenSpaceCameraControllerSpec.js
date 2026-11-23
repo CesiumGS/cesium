@@ -461,6 +461,46 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
   });
 
+  it("zoom in 2D targets the wrapped copy under the cursor", function () {
+    setUp2D();
+    scene.globe = new MockGlobe(Ellipsoid.WGS84);
+
+    // Put the camera over the wrapped copy of the map, one full map width
+    // plus half a map width east of the prime meridian, so the point under
+    // the cursor is longitude 90 degrees on the wrapped copy.
+    const maxCoordX = controller._maxCoord.x;
+    const startX = 2.5 * maxCoordX;
+    camera.position = new Cartesian3(
+      startX,
+      0.0,
+      Ellipsoid.WGS84.maximumRadius,
+    );
+
+    const frustumDiff = camera.frustum.right - camera.frustum.left;
+    // Zoom in with the cursor right of center, so the zoom target is
+    // east of the camera on the wrapped copy.
+    const startPosition = new Cartesian2(
+      (canvas.clientWidth * 3) / 4,
+      canvas.clientHeight / 2,
+    );
+    const endPosition = new Cartesian2(
+      (canvas.clientWidth * 3) / 4,
+      (canvas.clientHeight * 3) / 4,
+    );
+
+    moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+    updateController();
+
+    // The zoom ran (the frustum narrowed) and the camera moved toward
+    // the point under the cursor on the same wrapped copy, so its
+    // longitude increased. Before the fix the zoom target was picked on
+    // the central copy instead and the camera moved the other way.
+    expect(frustumDiff).toBeGreaterThan(
+      camera.frustum.right - camera.frustum.left,
+    );
+    expect(camera.position.x).toBeGreaterThan(startX);
+  });
+
   it("zoom out in 2D with wheel", function () {
     setUp2D();
 
