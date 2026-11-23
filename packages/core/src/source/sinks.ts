@@ -509,17 +509,22 @@ export class ContentRows {
 
 /** `base` with `patch`'s properties set or removed (null) and its geometry, if any. */
 export function patched(base: FeatureData, patch: FeaturePatch): FeatureData {
-  const properties: Record<string, PlainValue> = { ...base.properties };
+  // A map, then own properties: a name like `__proto__` is a name.
+  const properties = new Map<string, PlainValue>(
+    Object.entries(base.properties ?? {}),
+  );
   for (const [name, value] of Object.entries(patch.properties ?? {})) {
     if (value === null) {
-      delete properties[name];
+      properties.delete(name);
     } else {
-      properties[name] = value;
+      properties.set(name, value);
     }
   }
   const geometry = patch.geometry ?? base.geometry;
   return {
-    ...(Object.keys(properties).length > 0 ? { properties } : {}),
+    ...(properties.size > 0
+      ? { properties: Object.fromEntries(properties) }
+      : {}),
     ...(geometry ? { geometry } : {}),
   };
 }
@@ -542,7 +547,8 @@ function writeRow(
   const text = "text" in batch ? batch.text : undefined;
   const writes: (() => void)[] = [];
   for (const [name, value] of Object.entries(patch.properties ?? {})) {
-    const column = columns[name];
+    // An own column only: a name like `__proto__` reaches nothing.
+    const column = Object.hasOwn(columns, name) ? columns[name] : undefined;
     if (name === "text" && text && !column) {
       if (typeof value !== "string") {
         return false;
@@ -553,7 +559,7 @@ function writeRow(
         return false;
       }
       writes.push(() => ((column as (string | null)[])[index] = value));
-    } else if (column) {
+    } else if (column && ArrayBuffer.isView(column)) {
       const typed = column as Exclude<PropertyColumn, readonly unknown[]>;
       const Same = typed.constructor as new (values: number[]) => typeof typed;
       if (typeof value !== "number" || new Same([value])[0] !== value) {

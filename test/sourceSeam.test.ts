@@ -2596,6 +2596,37 @@ describe("the feed as base: resident rows, the feed's own batch, the budget (CS-
     engine.sources.tick(); // and writes it again
     expect(content.rows.features.has("a")).toBe(true);
     expect(reports.filter((m) => m.includes("features change"))).toEqual([]);
+    // A property named for a prototype reaches no column and no prototype.
+    const hostile = changeSetFromJson(
+      JSON.stringify({
+        format: CHANGE_SET_FORMAT,
+        version: CHANGE_SET_VERSION,
+        changeSet: {
+          id: "cs-4",
+          source: content.source,
+          ops: [
+            {
+              op: "update",
+              key: "road-1",
+              patch: { properties: JSON.parse('{"__proto__": 7}') },
+            },
+            { op: "insert", key: "proto", feature: { properties: {} } },
+            {
+              op: "update",
+              key: "proto",
+              patch: { properties: JSON.parse('{"__proto__": 7}') },
+            },
+          ],
+        },
+      }),
+    );
+    sourceOf(content).push({ kind: "features", changes: hostile });
+    engine.scene.workers.jobs.apply(Infinity);
+    expect((Object.prototype as Record<number, unknown>)[1]).toBeUndefined();
+    expect(Object.getPrototypeOf({})).toBe(Object.prototype);
+    const proto = content.feature(content.featureId("proto"))!;
+    expect(Object.getPrototypeOf(proto.properties)).toBe(Object.prototype);
+    expect(Object.hasOwn(proto.properties!, "__proto__")).toBe(true);
   });
 
   it("counts the feed's own rows by the budget, until its delete or the source's own row", async () => {
