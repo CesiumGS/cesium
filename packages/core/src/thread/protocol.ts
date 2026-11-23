@@ -120,7 +120,7 @@ const TABLE: Record<string, EntryTable> = {
       IncomingResponse OriginRule OutgoingRequest ProviderRequestInit
       RequestKind
       LoadProgress LodTransitions MaterialOptions MeasureIn MeasureInOptions
-      MeshCapGeometry MeshCapHit MeshCapPlane MeshCapRegion MeshCapReport
+      MeshCapHit MeshCapRegion MeshCapReport
       MeshCapSurface MeshCapSurfaceHit MeshCapTile MeshCapsOptions
       MeshCapsReport MeshData MeshGeometryOptions MeshHandle MeshSource
       ModelGeometry ModelInstances ModelResourceOptions ModelUsage MoonMap
@@ -146,7 +146,7 @@ const TABLE: Record<string, EntryTable> = {
       Step SupportReport
       StandingQuery StyleExpression StyleField StyleLayer StyleParameter
       StyleScale SubmissionMode SurfaceIdentity SurfacePatch SurfaceSample
-      TerrainQueryOptions TerrainRayOptions TerrainRayPatch TerrainRayResult
+      TerrainQueryOptions TerrainRayPatch
       TerrainRayTile TerrainRegion TerrainRegionOptions TerrainRegionPosition
       TerrainRegionRectangle TerrainRegionShape TessellateOptions
       TextureHandle TextureSetOptions TextureSource TextureUniform TileContent
@@ -159,22 +159,22 @@ const TABLE: Record<string, EntryTable> = {
       mat4.Mat4 vec3.Vec3
     `,
     local: `
-      AEROSOLS BASE_BINDING_LIMITS BASE_CAPACITY_LIMITS BREP_CAP_NAME
+      AEROSOLS BREP_CAP_NAME
       BingImagery BrepBuilder CESIUM_MOON_TERRAIN CapacityError CustomShader
       DAYLIGHT_EXPOSURE DAYLIGHT_SUN_ILLUMINANCE DEFAULT_CAP_COLOR
       DEFAULT_CLIP_CAP_COLOR DEFAULT_IMAGERY_SLICES DEFAULT_SECTION_LINE_COLOR
       DEFAULT_SKY EARTH EYE Ellipsoid Emitter EngineErrors FeatureStyle
-      FrameUnavailableError IonTmsImagery LEVEL_ZERO_ERROR MAX_ANCHORS
+      FrameUnavailableError IonTmsImagery MAX_ANCHORS
       MAX_CLIP_FRAGMENT_EDGES MAX_CLIP_POLYGON_VERTICES MAX_CLIP_SETS
       MAX_CLIP_SHAPES MAX_TERRAIN_CLIPS MAX_TERRAIN_CLIP_VERTICES
       MAX_WORLD_CLIPS MESH_CAP_LINE_NAME MESH_CAP_NAME MOON MOON_ALBEDO
       MaterialFlags NO_ACCELERATION PLACEMENT_MONOMIALS PLACEMENT_TERMS
-      PostStageError REQUEST_PURPOSES STAGES SectionJob SurfaceKind
+      PostStageError REQUEST_PURPOSES STAGES SurfaceKind
       TICK_REASONS TerrainRegionError TilesetBodyError UNITLESS_EXPOSURE
       UNITLESS_SKY DEFAULT_TAXONOMY canonicalSource parseStableId stableIdOf stableIdToHex
       UNITLESS_SUN_ILLUMINANCE UrlTemplateImagery accuracyAlong
-      assembleMeshCaps bend brepGeometry bump cameraGlare cameraObserver
-      capPlanes cartographic castTerrainRay clipFilter clipSetDistance
+      bend brepGeometry bump cameraGlare cameraObserver
+      capPlanes cartographic clipFilter clipSetDistance
       clipSetKeeps clipSetsOf collectFullDetailContents compileVectorStyle
       corridorUnroll createBillboard createBox createSurfacePatch
       eastNorthUpToFixedFrame edgeCount enuBasis ev100ToScale evaluateCurve2
@@ -187,15 +187,15 @@ const TABLE: Record<string, EntryTable> = {
       mat4.perspectiveReverseZInfinite mat4.setTranslation
       mat4.transformDirection mat4.transformPoint mat4.transformVec4
       mat4.viewRotation maxDisplacement measureIn memorySlangCache
-      meshGeometry meshPlane nurbsCurveToSegments nurbsSurfaceToPatches
+      meshGeometry nurbsCurveToSegments nurbsSurfaceToPatches
       observerPointSpread orbitBasis orbitPose placePosition pointIn
-      radialDistortion rayHitRegions readBrepExtension readWithProgress
-      resamplable resolveITwinIModel resolveIonAsset resolveUri runBulk
-      runSection scaleAboutEdge scaleAlongAxes scaleToEv100 sdfGeometry
-      secondDerivativeBound sectionBrep sectionTile slangPostShader
-      summarizeContent surfaceCount taper tessellateBrep tileBounds
+      radialDistortion readBrepExtension readWithProgress
+      resamplable resolveITwinIModel resolveIonAsset runBulk
+      scaleAboutEdge scaleAlongAxes scaleToEv100 sdfGeometry
+      secondDerivativeBound sectionBrep slangPostShader
+      summarizeContent surfaceCount taper tessellateBrep
       tileHeaderKey timeSlices transverseMercator
-      transverseMercatorToGeographic triangulateRegion twist utm
+      transverseMercatorToGeographic twist utm
       utmToGeographic validateBrep vec3 vec3.add vec3.copy vec3.cross
       vec3.distance vec3.dot vec3.length vec3.mul vec3.negate vec3.normalize
       vec3.scale vec3.scaleAndAdd vec3.set vec3.sub vec3.vec3 velocityModel
@@ -211,7 +211,7 @@ const TABLE: Record<string, EntryTable> = {
       GraphStageBuilder ImageryProvider InspectController LiveEdge MeshCaps
       ModelPlacement ModelPool ModelResource OffscreenTarget OrbitController
       PointSource PostStage QueryHost RayBackend RayTarget RenderTarget
-      SceneClock SceneItem SectionRunner SlicePool SliceScheduler SliceUser
+      SceneClock SceneItem SectionRunner SliceScheduler SliceUser
       SpatialQueries StepwiseSelection TerrainRayTarget TextureBinding Tile
       Tileset3D TransformNode VectorLayer View ViewLink World
       astrophotoCurveStage blend createPostStage createSpatialQueries
@@ -872,20 +872,6 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     SectionRunner: {
       query: `
         run
-      `,
-    },
-    SlicePool: {
-      snapshot: `
-        capacity ceiling mipLevelCount resizing size
-      `,
-      command: `
-        demand give release
-      `,
-      "sync-read": `
-        asked share static.usage take
-      `,
-      "cannot-cross": `
-        static.acquire texture
       `,
     },
     SliceScheduler: {
