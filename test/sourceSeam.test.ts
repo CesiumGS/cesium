@@ -27,8 +27,10 @@ import {
 } from "../packages/core/src/render/layout.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
-  FeatureNamespace,
+  ContentName,
+  namespaceOf,
   parseStableId,
+  type FeatureNamespace,
   stableIdOf,
   stableIdToHex,
   type StableId,
@@ -59,7 +61,7 @@ import {
   MAX_QUEUED_CHANGES,
   SourceRuntime,
 } from "../packages/core/src/source/runtime.ts";
-import { urlName } from "../packages/core/src/source/registry.ts";
+import { derivedName } from "../packages/core/src/source/registry.ts";
 import { ContentRows } from "../packages/core/src/source/sinks.ts";
 import type { SourceClock } from "../packages/core/src/source/types.ts";
 import { ModelServer, ModelSource } from "./fixtures/sources/modelKind.ts";
@@ -81,7 +83,11 @@ const sourceOf = (content: SourceContent) =>
 
 /** A content's draw's instance ID: CS-815's draw key, hashed in its content's namespace. */
 const instanceIdOf = (key: StableKey & { kind: "draw" }) =>
-  FeatureNamespace.of(key.source).instanceId(key);
+  namespaceOf(ContentName.parse(key.source)!).instanceId(key);
+
+/** A namespace for a test's rows: a declared name's. */
+const namespaceNamed = (name: string) =>
+  namespaceOf(ContentName.declared(name));
 
 /** A source's clock: scene time `seconds`, and wall time apart (the same unless given). */
 function sourceClock(
@@ -129,6 +135,8 @@ function runtime(
   });
   jobs.phased = options.phased ?? false;
   const reports: string[] = [];
+  /** The notice `open` gives content with no declared name (CS-1100 A), kept apart. */
+  const notices: string[] = [];
   const rt = new SourceRuntime({
     pool: {
       jobs,
@@ -138,13 +146,16 @@ function runtime(
     fetch: () => options.fetch ?? FetchProvider.default,
     clock: options.clock ?? (() => sourceClock(0)),
     budget: { slotsPerOrigin: options.slots ?? 16 },
-    report: (message) => reports.push(message),
+    report: (message) =>
+      (message.includes("has no declared name") ? notices : reports).push(
+        message,
+      ),
   });
   rt.registerKind({ id: "sample", module: SAMPLE });
   const { world, visible } = stubWorld();
   const place = (content: SourceContent) =>
     content.addItem(world, { key: content.id }, {}, () => {});
-  return { rt, jobs, posted, reports, world, visible, place };
+  return { rt, jobs, posted, reports, notices, world, visible, place };
 }
 
 describe("kinds by module reference, and decoders on the pool's workers", () => {
@@ -222,7 +233,7 @@ describe("kinds by module reference, and decoders on the pool's workers", () => 
     place(content);
     expect(() =>
       sourceOf(content).host.jobs.submit({ type: "terrain", payload: {} }),
-    ).toThrow(/isn't one of the "sample" kind's decoders/);
+    ).toThrow(/isn't one of "sample" content \d+'s kind's decoders/);
     rt.registerKind({ id: "other", module: SAMPLE });
     await expect(rt.kinds.kind("other")).rejects.toThrow(
       /registered as "other" holds the kind "sample"/,
@@ -311,7 +322,7 @@ describe("Engine.open and World.add", () => {
   it("refuses a URL no kind accepts, and a relative URL without a page", async () => {
     await expect(
       engine.open({ url: "https://data.test/x.json" }),
-    ).rejects.toThrow(/no registered kind accepts "url:[0-9a-f]{32}"/);
+    ).rejects.toThrow("open: no registered kind accepts the asset.");
     await expect(engine.open({ url: "city.sample" })).rejects.toThrow(
       /neither absolute nor relative to a page/,
     );
@@ -459,7 +470,7 @@ describe("the budget arbiter", () => {
         cost: { bytes: 1 },
         origin,
       }),
-    ).toThrow(/class "soon"/);
+    ).toThrow(/a want's class is "now", "refine" or "prefetch"/);
     expect(() =>
       c.want({
         key: "k",
@@ -551,7 +562,7 @@ describe("push on a stepped clock", () => {
       samples: { times: Float64Array.of(1, 2), names: ["car-1"] },
     });
     expect(reports).toEqual([
-      "the \"sample\" source's samples threw: times, names, positions and values don't agree in length; dropped.",
+      "\"sample\" content 1's samples threw: times, names, positions and values don't agree in length; dropped.",
     ]);
   });
 });
@@ -634,7 +645,7 @@ describe("a source polling its own server (CS-863)", () => {
     place(silent);
     sourceOf(silent).push({ kind: "invalidate" });
     expect(reports).toEqual([
-      'the "sample" source\'s push threw: it declares pushes: false; dropped.',
+      '"sample" content 3\'s push threw: it declares pushes: false; dropped.',
     ]);
   });
 });
@@ -791,8 +802,8 @@ describe("the edit layer (CS-865)", () => {
     expect(content.feature(car0)).toBeDefined();
     expect(content.feature(road0)?.properties).toEqual({ lanes: 1 }); // mine still
     expect(reports).toEqual([
-      'the "sample" source\'s change set is refused, and becomes an invalidation of everything, so its source loads committed state again: change set: its id is a non-empty string.',
-      "the \"sample\" source's change set is refused, and becomes an invalidation of everything, so its source loads committed state again: change set: op 1: its id isn't its key's feature ID in this content.",
+      '"sample" content 1\'s change set is refused, and becomes an invalidation of everything, so its source loads committed state again: change set: its id is a non-empty string.',
+      "\"sample\" content 1's change set is refused, and becomes an invalidation of everything, so its source loads committed state again: change set: op 1: its id isn't its key's feature ID in this content.",
     ]);
   });
 });
@@ -1158,7 +1169,7 @@ describe("a grant is never lost when a source's update throws", () => {
     source.throwOnUpdate = 1;
     rt.tick(); // its grant arrives, and its update throws
     expect(reports).toEqual([
-      "the \"sample\" source's update threw: the sample's update failed",
+      "\"sample\" content 1's update threw: the sample's update failed",
     ]);
     expect(rt.budget.inFlight("https://data.test")).toBe(0);
     rt.tick(); // it wants "a" again; granted again
@@ -1188,10 +1199,10 @@ describe("the budget refuses what it can't read", () => {
     expect(arbiter.inFlight(origin)).toBe(0);
     expect(reports).toHaveLength(3);
     expect(reports[0]).toMatch(
-      /settled at NaN bytes; it takes a finite number from 0/,
+      /settled a key at NaN bytes; it takes a finite number from 0/,
     );
-    expect(reports[1]).toMatch(/settled at -500 bytes/);
-    expect(reports[2]).toMatch(/settled at Infinity bytes/);
+    expect(reports[1]).toMatch(/settled a key at -500 bytes/);
+    expect(reports[2]).toMatch(/settled a key at Infinity bytes/);
     load("fine", 50); // loading goes on, within the budget
     expect(arbiter.resident).toBe(350);
     // A class that is an Object member, and a decode time it can't read.
@@ -1204,7 +1215,7 @@ describe("the budget refuses what it can't read", () => {
         origin,
         ...want,
       });
-    expect(ask({ class: "toString" })).toThrow(/class "toString"/);
+    expect(ask({ class: "toString" })).toThrow(/a want's class is/);
     expect(ask({ cost: { bytes: 1, decodeMs: Number.NaN } })).toThrow(
       /cost\.decodeMs is NaN/,
     );
@@ -1325,8 +1336,8 @@ describe("pushes under bounds and the apply phase's budget", () => {
       },
     });
     expect(reports.slice(-2)).toEqual([
-      'the "sample" source\'s samples threw: 1 of 3 have no finite time; those dropped.',
-      'the "sample" source\'s sample threw: one sample failed',
+      '"sample" content 1\'s samples threw: 1 of 3 have no finite time; those dropped.',
+      '"sample" content 1\'s sample threw: one sample failed',
     ]);
     // The first sample's apply threw; the third applied all the same.
     expect([...content.rows.points.get("a")!.batch.properties!.speed!]).toEqual(
@@ -1353,7 +1364,10 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     const second = await rt.open({ url: "https://data.test/city.sample" });
     // Its name, the URL's digest, is its ID when none is given.
     expect(first.id).toBe(first.source);
-    expect(first.id).toBe(urlName(new URL("https://data.test/city.sample")));
+    expect(first.id).toBe(
+      derivedName("sample", { url: new URL("https://data.test/city.sample") })
+        .text,
+    );
     expect(second.id).toBe(`${first.source}#2`);
     expect(reports).toEqual([
       expect.stringContaining("is open or drawn already; without an id"),
@@ -1361,25 +1375,25 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     await rt.open({ url: "https://data.test/a.sample" }, { id: "mine" });
     await expect(
       rt.open({ url: "https://data.test/b.sample" }, { id: "mine" }),
-    ).rejects.toThrow(/the id "mine" is open already/);
+    ).rejects.toThrow(/an open content has this id already/);
     // Their feature IDs are one name's: the same (CS-1087 A).
     const road = (content: SourceContent) => content.featureId("road-0");
     expect(road(first)).toBe(road(second));
   });
 
-  it("names a data URI by its name, a digest, never its payload, when no kind accepts it", async () => {
+  it("names neither a data URI's payload nor its name when no kind accepts it", async () => {
     const { rt } = runtime();
     const error = await rt
       .open({ url: "data:text/plain,secret-payload" })
       .catch((e: Error) => e.message);
-    expect(error).toMatch(/no registered kind accepts "url:[0-9a-f]{32}"/);
+    expect(error).toBe("open: no registered kind accepts the asset.");
     expect(error).not.toContain("secret-payload");
   });
 });
 
 describe("what the sinks, the edit layer and the change sets refuse", () => {
   it("refuses offsets that don't increase from 0, and holes outside their feature", () => {
-    const { features } = new ContentRows(FeatureNamespace.of("s")).sinks();
+    const { features } = new ContentRows(namespaceNamed("s")).sinks();
     const lines = (offsets: number[], holes?: number[][]) => ({
       key: "k",
       geometry: "polygon" as const,
@@ -1404,7 +1418,7 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
   });
 
   it("the edit layer refuses negative IDs, IDs wider than 64 bits, and an ID nothing loaded can give a key", () => {
-    const namespace = FeatureNamespace.of("s");
+    const namespace = namespaceNamed("s");
     const max = asId((1n << 64n) - 1n);
     const layer = new EditLayer({
       idOf: ({ key, row }) => namespace.featureId(key, row),
@@ -1510,7 +1524,7 @@ describe("a want larger than the whole budget", () => {
       expect(arbiter.takeGrant(b).keys).toEqual([`extra-${tick}`]);
     }
     expect(reports).toEqual([
-      'BudgetClient.want: "huge" asks 5000 bytes, more than the whole budget of 3000; refused.',
+      "BudgetClient.want: a source wants a key of 5000 bytes, more than the whole budget of 3000; refused.",
     ]);
     // Wanted again after a tick without it: news again.
     arbiter.arbitrate();
@@ -1528,10 +1542,11 @@ describe("a want larger than the whole budget", () => {
   it("reports a settle for a key that isn't in flight, so a load done twice is seen", () => {
     const reports: string[] = [];
     const arbiter = new BudgetArbiter({ bytes: 3000 }, (m) => reports.push(m));
-    const c = arbiter.client();
+    const c = arbiter.client('"sample" content 7');
     c.settle("never");
+    // The content's label, never its key (CS-1101 A).
     expect(reports).toEqual([
-      'BudgetClient.settle: "never" isn\'t in flight (never granted, settled already or released); ignored.',
+      'BudgetClient.settle: "sample" content 7 settled a key that isn\'t in flight (never granted, settled already or released); ignored.',
     ]);
     expect(arbiter.resident).toBe(0);
     c.want({
@@ -1579,7 +1594,7 @@ describe("a throwing update, destroy or open loses nothing and stops nothing", (
     sourceOf(second).push({ kind: "invalidate" });
     expect(() => rt.destroy()).not.toThrow();
     expect(reports).toEqual([
-      "the \"sample\" source's destroy threw: the sample's destroy failed",
+      "\"sample\" content 1's destroy threw: the sample's destroy failed",
     ]);
     expect(first.destroyed).toBe(true);
     expect(second.destroyed).toBe(true);
@@ -1645,7 +1660,7 @@ describe("the bounds turn what doesn't fit into an invalidation, and say what th
     expect(reports).toEqual([]);
     source.push({ kind: "features", changes: many(5_000, 6_000) });
     expect(reports).toEqual([
-      `the "sample" source's push threw: more than ${MAX_QUEUED_CHANGES} ops queued between ticks: its queue, change sets included, collapses into one invalidation of everything, and its source loads committed state again.`,
+      `"sample" content 1's push threw: more than ${MAX_QUEUED_CHANGES} ops queued between ticks: its queue, change sets included, collapses into one invalidation of everything, and its source loads committed state again.`,
     ]);
     // Covered until it applies: queued for nothing, said once.
     source.push({ kind: "features", changes: set(1, "road-0") });
@@ -1730,20 +1745,21 @@ describe("content and tileset items take one ordinal rule", () => {
     engine.destroy();
   });
 
-  it("gives content opened after a tileset item of its URL an ordinal", async () => {
+  it("gives content opened after a tileset item that holds its name an ordinal", async () => {
     const tileset = await engine.loadTileset(URL_);
-    const tilesetItem = world.add(tileset);
-    expect(tilesetItem.identity.key).toBe(URL_);
-    // Named as the tileset's item key is: so the two meet.
-    const content = await engine.open({ url: URL_ }, { name: URL_ });
-    expect(content.id).toBe(`${URL_}#2`);
+    const tilesetItem = world.add(tileset, { id: "datasets:site" });
+    expect(tilesetItem.identity.key).toBe("datasets:site");
+    // Named as the tileset's item key is: so the two meet. (A URL is never
+    // a name, CS-1101 A.)
+    const content = await engine.open({ url: URL_ }, { name: "datasets:site" });
+    expect(content.id).toBe("datasets:site#2");
     const item = world.add(content);
-    expect(item.identity.key).toBe(`${URL_}#2`);
+    expect(item.identity.key).toBe("datasets:site#2");
   });
 
   it("gives a tileset item added after content of its URL an ordinal, even while the content isn't placed", async () => {
-    // Named as the tileset's item key is: so the two meet.
-    const content = await engine.open({ url: URL_ }, { name: URL_ });
+    // Its id is the tileset's item key: so the two meet.
+    const content = await engine.open({ url: URL_ }, { id: URL_ });
     expect(content.id).toBe(URL_);
     const tileset = await engine.loadTileset(URL_);
     expect(world.add(tileset).identity.key).toBe(`${URL_}#2`);
@@ -2288,13 +2304,19 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
     return { content, item };
   }
 
-  it("gives one source opened twice, in two worlds, the same feature IDs and their own instance IDs; a query token changes nothing", async () => {
+  it("gives one source opened twice, in two worlds, the same feature IDs and their own instance IDs; a token nobody declared splits its name, and never shows in it", async () => {
     const other = engine.createWorld();
     engine.addView({ target: new OffscreenTarget(64, 48), world: other });
     const a = await placed(CITY, "a");
-    const b = await placed(`${CITY}?token=s3cret-key`, "b", other);
+    const b = await placed(CITY, "b", other);
     expect(b.content.source).toBe(a.content.source);
-    expect(b.content.source).not.toContain("s3cret");
+    // CS-1100 A: an undeclared token is part of what its kind receives.
+    const token = await engine.open(
+      { url: `${CITY}?token=s3cret-key` },
+      { id: "token" },
+    );
+    expect(token.source).not.toBe(a.content.source);
+    expect(token.source).not.toContain("s3cret");
     expect(a.content.id).not.toBe(b.content.id);
     for (const key of ["road-0", "road-1", "a/box"]) {
       expect(b.content.featureId(key)).toBe(a.content.featureId(key));
@@ -2382,20 +2404,24 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
     for (const key of ["road-0", "a/box"]) {
       expect(other.featureId(key)).not.toBe(city.featureId(key));
     }
-    // A plain URL's name keeps its query but credentials: ion's `v` gives
-    // a new version new IDs; its token, none.
+    // A derived name keeps the whole query: ion's `v` gives a new version
+    // new IDs, and so would a token nobody declared (CS-1100 A).
     engine.sources.registerKind({ id: "layered", module: LAYERED });
     const ion = "https://assets.ion.cesium.com/96188/tileset.json";
     const v1 = await engine.open(
-      { url: `${ion}?v=1&access_token=x`, kind: "layered" },
+      { url: `${ion}?v=1`, kind: "layered" },
       { id: "v1" },
     );
     const v2 = await engine.open(
       { url: `${ion}?v=2`, kind: "layered" },
       { id: "v2" },
     );
-    expect(v1.source).toBe(urlName(new URL(`${ion}?v=1`)));
-    expect(v2.source).toBe(urlName(new URL(`${ion}?v=2`)));
+    expect(v1.source).toBe(
+      derivedName("layered", { url: new URL(`${ion}?v=1`) }).text,
+    );
+    expect(v2.source).toBe(
+      derivedName("layered", { url: new URL(`${ion}?v=2`) }).text,
+    );
     expect(v2.featureId("road-0")).not.toBe(v1.featureId("road-0"));
     expect(v1.featureId("road-0")).toBe(
       stableIdOf({ kind: "feature", source: v1.source, key: "road-0" }),
@@ -2403,7 +2429,7 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
   });
 });
 
-describe("named content: a declared name, else a plain URL's digest (CS-1087 A, CS-1080 A, CS-1084 A)", () => {
+describe("named content: a declared name, else a name derived from what its kind receives (CS-1087 A, CS-1100 A, CS-1101 A, CS-1084 A)", () => {
   let engine: Engine;
   let world: World;
   beforeEach(async () => {
@@ -2425,7 +2451,9 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
     return content;
   }
 
-  it("names a plain URL by a digest of it: ?layer=roads and ?layer=buildings apart, ?a=1&b=2 and ?b=2&a=1 one", async () => {
+  it("derives a plain URL's name from a digest: ?layer=roads and ?layer=buildings apart, ?a=1&b=2 and ?b=2&a=1 one, and says so once at open", async () => {
+    const reports: string[] = [];
+    engine.errors.on((e) => reports.push(e.message));
     const roads = await placed(
       { url: "https://api.test/features.sample?layer=roads" },
       { id: "roads" },
@@ -2434,7 +2462,11 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
       { url: "https://api.test/features.sample?layer=buildings" },
       { id: "buildings" },
     );
-    expect(roads.source).toMatch(/^url:[0-9a-f]{32}$/);
+    expect(roads.source).toMatch(/^derived:[0-9a-f]{32}$/);
+    expect(reports.filter((m) => m.includes("has no declared name"))).toEqual([
+      'open: "sample" content 1 has no declared name (OpenOptions.name, ResolvedAsset.name): its name is derived from its kind, URL and options, so its feature IDs last only as long as those do.',
+      'open: "sample" content 2 has no declared name (OpenOptions.name, ResolvedAsset.name): its name is derived from its kind, URL and options, so its feature IDs last only as long as those do.',
+    ]);
     expect(buildings.source).not.toBe(roads.source);
     expect(buildings.featureId("road-0")).not.toBe(roads.featureId("road-0"));
     // Their labels and change sets don't cross.
@@ -2449,7 +2481,8 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
         ops: [{ op: "delete", key: "road-0" }],
       }),
     ).toThrow(/isn't this content's name/);
-    const name = (url: string) => urlName(new URL(url));
+    const name = (url: string) =>
+      derivedName("sample", { url: new URL(url) }).text;
     expect(name("https://api.test/f.sample?b=2&a=1")).toBe(
       name("https://api.test/f.sample?a=1&b=2"),
     );
@@ -2458,67 +2491,99 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
     );
   });
 
-  it("lets no credential or signature parameter, in any case, nor a credential's own, change a plain URL's name", () => {
-    // Its own list, so an emptied CREDENTIAL_PARAMETERS fails here.
-    const credentials = [
-      "access_token",
-      "token",
-      "key",
-      "apikey",
-      "api_key",
-      "X-Amz-Signature",
-      "X-Amz-Credential",
-      "X-Amz-Security-Token",
-      "X-Amz-Date",
-      "X-Amz-Expires",
-      "sig",
-      "se",
-      "st",
-      "sp",
-      "sv",
-      "sr",
-      "X-Goog-Signature",
-      "X-Goog-Credential",
-      "X-Goog-Date",
-      "Signature",
-      "Expires",
-      "Key-Pair-Id",
-      "Policy",
-      "api-key",
-      "subscription-key",
-      "access_key",
-      "client_secret",
-      "password",
-      "auth",
-      "jwt",
-      // Off the list, by the AWS and Google prefixes.
-      "X-Amz-Algorithm",
-      "X-Goog-SignedHeaders",
-    ];
+  it("lets only the declared credential's own parameters out of a derived name: any other parameter, a likely credential's included, splits it, and so do the kind and the options (CS-1100 A)", () => {
     const plain = "https://api.test/f.json?layer=roads";
-    const name = (url: string, credential?: Credential) =>
-      urlName(new URL(url), credential);
-    for (const spelled of credentials.flatMap((n) => [
-      n,
-      n.toLowerCase(),
-      n.toUpperCase(),
-    ])) {
-      expect(name(`${plain}&${spelled}=s3cret`), spelled).toBe(name(plain));
-      expect(name(`${plain}&${spelled}=other`), spelled).toBe(name(plain));
+    const name = (
+      url: string,
+      credential?: Credential,
+      options?: Record<string, string>,
+      kind = "sample",
+    ) =>
+      derivedName(kind, {
+        url: new URL(url),
+        ...(credential ? { credentials: credential } : {}),
+        ...(options ? { options } : {}),
+      }).text;
+    // No list of likely credential names: ?key=roads and ?key=rivers apart.
+    for (const parameter of [
+      "key",
+      "policy",
+      "st",
+      "sig",
+      "token",
+      "X-Amz-Signature",
+    ]) {
+      expect(name(`${plain}&${parameter}=a`), parameter).not.toBe(name(plain));
+      expect(name(`${plain}&${parameter}=a`), parameter).not.toBe(
+        name(`${plain}&${parameter}=b`),
+      );
     }
+    // The declared credential's own, in any case, never enters.
     const signed = new Credential({ query: { Session: "s1" } });
-    expect(name(`${plain}&session=s1`, signed)).toBe(name(plain));
+    expect(name(`${plain}&session=s1`, signed)).toBe(name(plain, signed));
+    expect(name(`${plain}&SESSION=s2`, signed)).toBe(name(plain, signed));
     expect(name(`${plain}&session=s1`)).not.toBe(name(plain));
+    // User information and the fragment never enter.
+    expect(name("https://u:p@api.test/f.json?layer=roads#x")).toBe(name(plain));
+    // The kind and the options do, the options in any key order.
+    expect(name(plain, undefined, undefined, "layered")).not.toBe(name(plain));
+    expect(name(plain, undefined, { style: "a" })).not.toBe(name(plain));
+    expect(name(plain, undefined, { a: "1", b: "2" })).toBe(
+      name(plain, undefined, { b: "2", a: "1" }),
+    );
   });
 
   it("names a data URI by its bytes' digest, with no query read, and marks a blob URL as for this session only", () => {
-    const a = urlName(new URL("data:text/plain,a?b=1&token=x"));
-    expect(a).toMatch(/^url:[0-9a-f]{32}$/);
-    expect(urlName(new URL("data:text/plain,a?b=1&token=x"))).toBe(a);
-    expect(urlName(new URL("data:text/plain,a?b=1&token=y"))).not.toBe(a);
-    expect(urlName(new URL("blob:https://app.test/0b5e"))).toMatch(
+    const name = (url: string) =>
+      derivedName("sample", { url: new URL(url) }).text;
+    const a = name("data:text/plain,a?b=1&token=x");
+    expect(a).toMatch(/^derived:[0-9a-f]{32}$/);
+    expect(name("data:text/plain,a?b=1&token=x")).toBe(a);
+    expect(name("data:text/plain,a?b=1&token=y")).not.toBe(a);
+    expect(name("blob:https://app.test/0b5e")).toMatch(
       /^session:[0-9a-f]{32}$/,
     );
+  });
+
+  it("refuses a declared name outside the grammar no URL satisfies, at open, naming no value (CS-1101 A)", async () => {
+    const url = "https://u:secret@api.test/a/b.sample?token=t0k3n#frag";
+    const parsed = new URL(url);
+    for (const bad of [
+      parsed.href,
+      parsed.search,
+      parsed.pathname,
+      `${parsed.origin}${parsed.pathname}`,
+      encodeURIComponent(parsed.href),
+      "",
+      "a//b",
+      "/a",
+      "a/",
+      "has space",
+      "a=b",
+      "a&b",
+      "100%",
+      "x".repeat(129),
+      "derived:0123456789abcdef0123456789abcdef",
+      "session:x",
+    ]) {
+      const refused = await engine
+        .open({ url }, { name: bad })
+        .then(() => undefined)
+        .catch((e: Error) => e);
+      expect(refused, JSON.stringify(bad)).toBeInstanceOf(TypeError);
+      expect(refused!.message).not.toContain("t0k3n");
+      expect(refused!.message).not.toContain("secret");
+    }
+    for (const good of [
+      "datasets:roads",
+      "acme/roads@3",
+      "a.b_c~d:e@f+g-h",
+      "x".repeat(128),
+    ]) {
+      const content = await engine.open({ url }, { name: good, id: good });
+      expect(content.source).toBe(good);
+      content.destroy();
+    }
   });
 
   it("gives one declared name one set of feature IDs whatever its URL, and a version new IDs only when the name holds it (CS-1084 A)", async () => {
@@ -2561,7 +2626,7 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
     expect(pinned.featureId("road-0")).not.toBe(v1.featureId("road-0"));
     await expect(
       engine.open({ url: "https://data.test/city.sample" }, { name: "" }),
-    ).rejects.toThrow(/a content's name is a non-empty string/);
+    ).rejects.toThrow(/a declared name is 1 to 128 characters/);
   });
 });
 
@@ -3889,8 +3954,10 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     const made: StableId[] = [];
     for (let i = 0; i < 200; i++) {
       const name =
-        i % 2 ? `datasets:${word(r, 8)}` : urlName(new URL(pick(r, urls)));
-      const namespace = FeatureNamespace.of(name);
+        i % 2
+          ? ContentName.declared(`datasets:${word(r, 8)}`)
+          : derivedName("layered", { url: new URL(pick(r, urls)) });
+      const namespace = namespaceOf(name);
       const key = word(r, 1 + (i % 12));
       made.push(
         namespace.featureId(key),
@@ -3899,10 +3966,10 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
         namespace.instanceId({
           kind: "draw",
           item: key,
-          source: name,
+          source: name.text,
           content: String(i),
         }),
-        stableIdOf({ kind: "feature", source: name, key }),
+        stableIdOf({ kind: "feature", source: name.text, key }),
       );
     }
     // And what a loaded content's rows and draws hold.

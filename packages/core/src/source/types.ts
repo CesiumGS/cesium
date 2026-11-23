@@ -202,9 +202,13 @@ export interface ResolvedAsset {
    * the same feature IDs whatever its URL. A dataset's ID, a service and
    * its layer; ion's resolver names an asset with its version, since its
    * keys can be positional (CS-1084 A). No URL text: a name is the content's
-   * identity, and the URL is how it is fetched. Absent, the engine names it
-   * as it names a plain URL (`urlName`: a digest, `url:` and 32 hexadecimal
-   * digits). `OpenOptions.name` wins over it.
+   * identity, and the URL is how it is fetched. So it is 1 to 128
+   * characters from ASCII letters, digits and `. _ ~ : @ + -`, with single
+   * `/` between parts and not at either end, and `open` refuses anything
+   * else, a URL, its query or its path included (CS-1101 A). Absent, the
+   * engine derives one from the kind, the URL and the options
+   * (`derived:` and 32 hexadecimal digits, CS-1100 A), reported at `open`.
+   * `OpenOptions.name` wins over it.
    */
   readonly name?: string;
   /**

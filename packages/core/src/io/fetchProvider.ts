@@ -858,10 +858,10 @@ function setHeader(
  * AWS S3's and Google Cloud Storage's signed URLs (V4; every `X-Amz-` and
  * `X-Goog-` parameter, `CREDENTIAL_PREFIX`); Azure's shared access
  * signatures; CloudFront's signed URLs (`Signature`, `Expires`,
- * `Key-Pair-Id`, `Policy`); and other common secrets. The engine's one list
- * (CS-1080 A): stripped, with a credential's own, from a URL a proxy wasn't
- * allowed credentials for, and left out of a plain URL's name
- * (`urlName`), so a re-signed URL keeps its name.
+ * `Key-Pair-Id`, `Policy`); and other common secrets. The fetch provider's
+ * alone (CS-1100 A): stripped, with a credential's own, from a URL a proxy
+ * wasn't allowed credentials for. It never enters identity, so it may grow
+ * for security without merging two contents' names.
  * @internal
  */
 export const CREDENTIAL_PARAMETERS: ReadonlySet<string> = new Set(

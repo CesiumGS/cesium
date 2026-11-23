@@ -74,9 +74,13 @@ export class ContentRows {
   /** Its source can write: every row must then be named (CS-831's S7). */
   writable = false;
   private closed = false;
+  /** Its content's namespace, what its rows' feature IDs are projected in: never handed out. */
+  readonly #namespace: FeatureNamespace;
 
-  /** `namespace`: its content's, what its rows' feature IDs are projected in. */
-  constructor(private readonly namespace: FeatureNamespace) {}
+  /** `namespace`: its content's. */
+  constructor(namespace: FeatureNamespace) {
+    this.#namespace = namespace;
+  }
 
   /** The sinks a source writes, over these rows. */
   sinks(): {
@@ -290,7 +294,7 @@ export class ContentRows {
     let applied = 0;
     const touched: StableId[] = [];
     for (let s = from; s < to; s++) {
-      const id = this.namespace.featureId(samples.names[s]!);
+      const id = this.#namespace.featureId(samples.names[s]!);
       for (const at of this.rowsOf(id)) {
         const held = this.batchAt(at) as HeldRows<PointBatch | FeatureBatch>;
         if (samples.positions && "positions" in held.batch) {
@@ -404,7 +408,7 @@ export class ContentRows {
 
   private idsOf(batch: FeatureBatch | PointBatch | CustomRows): BigUint64Array {
     const ids = new BigUint64Array(batch.count);
-    const namespace = this.namespace;
+    const namespace = this.#namespace;
     for (let i = 0; i < batch.count; i++) {
       const name = batch.names?.[i];
       if (name !== undefined) {

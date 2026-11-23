@@ -18,6 +18,12 @@
  *   wait until their world's scene time reaches them, so a replayed feed
  *   gives the same rows.
  *   The engine never polls a source (CS-863: a source may poll its own server).
+ * - **Names and labels** (CS-1100 A, CS-1101 A): a content's name is
+ *   declared, in a grammar no URL satisfies, or derived from everything its
+ *   kind receives but its declared credential (`derivedName`); a derived
+ *   one is reported once at `open`. The engine's own text names a content
+ *   by a label it mints, its kind and an ordinal (`labelOf`), never by its
+ *   name, a content key or a row key.
  * - **Two outcomes** (CS-1102 A): a pushed change is applied to what is
  *   resident, or turned into an invalidation; the engine keeps nothing else
  *   of it. An op for a key nothing resident holds, a peer's insert included,
@@ -36,7 +42,8 @@
  * - **Close:** destroying content cancels its source's jobs, and its sinks
  *   and `jobs.submit` throw from then on; its pushes are dropped.
  */
-import type { Credential, FetchProvider } from "../io/fetchProvider.ts";
+import type { FetchProvider } from "../io/fetchProvider.ts";
+import { ContentName } from "../scene/identity.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
 import { SourceContent } from "./content.ts";
@@ -44,8 +51,8 @@ import { checkChangeSet, type ChangeOp, type ChangeSet } from "./editing.ts";
 import {
   SourceKinds,
   UrlResolver,
+  derivedName,
   moduleHref,
-  urlName,
   type KindRef,
   type ModuleLoader,
 } from "./registry.ts";
@@ -117,8 +124,12 @@ export interface OpenOptions {
   /**
    * The content's name, its dataset's (CS-1087 A): what its feature IDs
    * are projected from and its change sets name it by. It wins over its
-   * resolver's (`ResolvedAsset.name`). Default: the resolver's, else its
-   * URL's digest (`urlName`).
+   * resolver's (`ResolvedAsset.name`). 1 to 128 characters from ASCII
+   * letters, digits and `. _ ~ : @ + -`, with single `/` between parts and
+   * not at either end (CS-1101 A): `open` refuses a URL, its query or its
+   * path. Default: the resolver's, else a name the engine derives from the
+   * kind, the URL and the options (CS-1100 A), whose feature IDs last only
+   * as long as those do, reported at `open`.
    */
   readonly name?: string;
   /**
@@ -171,6 +182,8 @@ export class SourceRuntime {
   private readonly resolvers: AssetResolver[] = [];
   private readonly url = new UrlResolver();
   private readonly opened: Opened[] = [];
+  /** Contents opened so far, by kind: the ordinals labels take. */
+  private readonly ordinals = new Map<string, number>();
   /**
    * Changes waiting for the apply phase, in arrival order (samples aside),
    * from `queueHead` on: applied ones are skipped, not shifted out.
@@ -263,14 +276,27 @@ export class SourceRuntime {
       this.options.pool.loadDecoder(decoder.type, moduleHref(decoder.module));
       types.add(decoder.type);
     }
-    const name = nameOf(options.name ?? asset.name, asset);
+    const declared = options.name ?? asset.name;
+    const name =
+      declared === undefined
+        ? derivedName(kind.id, asset)
+        : declaredName(declared);
+    const ordinal = (this.ordinals.get(kind.id) ?? 0) + 1;
+    this.ordinals.set(kind.id, ordinal);
+    const label = labelOf(kind.id, ordinal);
     const content = new SourceContent(
-      this.contentId(options.id, name),
+      this.contentId(options.id, name.text, label),
       asset,
       kind.id,
       name,
+      label,
     );
-    const client = this.budget.client();
+    if (!name.declared) {
+      this.reportMessage(
+        `open: ${label} has no declared name (OpenOptions.name, ResolvedAsset.name): its name is derived from its kind, URL and options, so its feature IDs last only as long as those do.`,
+      );
+    }
+    const client = this.budget.client(label);
     const opened: Opened = {
       content,
       client,
@@ -289,12 +315,12 @@ export class SourceRuntime {
       try {
         content.destroy();
       } catch (destroyError) {
-        this.report(`the "${kind.id}" content's destroy`, destroyError);
+        this.report(`${label}'s destroy`, destroyError);
       }
       try {
         source?.destroy(); // opened, then refused (`attach`): the content never held it
       } catch (destroyError) {
-        this.report(`the "${kind.id}" source's destroy`, destroyError);
+        this.report(`${label}'s source's destroy`, destroyError);
       }
       throw error;
     }
@@ -332,7 +358,7 @@ export class SourceRuntime {
         // its invalidations: its next update sees them again.
         this.budget.returnGrant(opened.client, grant.keys);
         content.restoreInvalidated(invalidated);
-        this.report(`the "${content.kind}" source's update`, error);
+        this.report(`${content.label}'s update`, error);
       }
     }
     const granted = this.budget.arbitrate();
@@ -357,7 +383,7 @@ export class SourceRuntime {
       try {
         opened.content.destroy();
       } catch (error) {
-        this.report(`the "${opened.content.kind}" source's destroy`, error);
+        this.report(`${opened.content.label}'s destroy`, error);
       }
     }
     this.queue = [];
@@ -375,7 +401,7 @@ export class SourceRuntime {
         }
         if (!types.has(spec.type)) {
           throw new Error(
-            `SourceJobs.submit: "${spec.type}" isn't one of the "${opened.content.kind}" kind's decoders.`,
+            `SourceJobs.submit: "${spec.type}" isn't one of ${opened.content.label}'s kind's decoders.`,
           );
         }
         const job = pool.submit<R, A>(spec as JobSpec<R, A>);
@@ -425,7 +451,7 @@ export class SourceRuntime {
     }
     if (!opened.content.capabilities.pushes) {
       this.report(
-        `the "${opened.content.kind}" source's push`,
+        `${opened.content.label}'s push`,
         new Error("it declares pushes: false; dropped."),
       );
       return;
@@ -472,7 +498,7 @@ export class SourceRuntime {
     opened.queued = 1;
     opened.collapsed = true;
     this.report(
-      `the "${opened.content.kind}" source's push`,
+      `${opened.content.label}'s push`,
       new Error(
         `more than ${MAX_QUEUED_CHANGES} ops queued between ticks: its queue, change sets included, collapses into one invalidation of everything, and its source loads committed state again.`,
       ),
@@ -486,7 +512,7 @@ export class SourceRuntime {
    * dropped at the bound, once). Returns whether any sample was buffered.
    */
   private bufferSamples(opened: Opened, samples: SampleBatch): boolean {
-    const where = `the "${opened.content.kind}" source's samples`;
+    const where = `${opened.content.label}'s samples`;
     const count = samples?.times?.length;
     const lengthsAgree =
       typeof count === "number" &&
@@ -596,10 +622,7 @@ export class SourceRuntime {
         }
         // Other kinds are ignored: the union is open (CS-831's S5).
       } catch (error) {
-        this.report(
-          `the "${opened.content.kind}" source's ${change.kind} change`,
-          error,
-        );
+        this.report(`${opened.content.label}'s ${change.kind} change`, error);
       }
     }
     this.queue = [];
@@ -621,7 +644,7 @@ export class SourceRuntime {
         s.opened.content.rows.applySamples(s.samples, s.index, s.index + 1);
       } catch (error) {
         // One sample's failure doesn't lose the others.
-        this.report(`the "${s.opened.content.kind}" source's sample`, error);
+        this.report(`${s.opened.content.label}'s sample`, error);
       }
     }
     this.compactSamples();
@@ -707,7 +730,7 @@ export class SourceRuntime {
       ops = content.resolveOps(changes.ops);
     } catch (error) {
       this.reportMessage(
-        `the "${content.kind}" source's change set is refused, and becomes an invalidation of everything, so its source loads committed state again: ${messageOf(error)}`,
+        `${content.label}'s change set is refused, and becomes an invalidation of everything, so its source loads committed state again: ${messageOf(error)}`,
       );
       this.invalidate(opened, { kind: "invalidate" });
       return;
@@ -747,7 +770,11 @@ export class SourceRuntime {
    * A `derived` one also skips the keys worlds' items hold: content and
    * tileset items take one ordinal rule.
    */
-  private contentId(explicit: string | undefined, derived: string): string {
+  private contentId(
+    explicit: string | undefined,
+    derived: string,
+    label: string,
+  ): string {
     const taken = new Set(this.opened.map((o) => o.content.id));
     if (explicit !== undefined) {
       if (typeof explicit !== "string" || explicit.length === 0) {
@@ -755,7 +782,7 @@ export class SourceRuntime {
       }
       if (taken.has(explicit)) {
         throw new Error(
-          `open: content with the id "${explicit}" is open already: each content's id is its own.`,
+          "open: an open content has this id already: each content's id is its own.",
         );
       }
       return explicit;
@@ -769,7 +796,7 @@ export class SourceRuntime {
     }
     if (ordinal > 1) {
       this.reportMessage(
-        `open: "${derived}" is open or drawn already; without an id this content's ID, and its items' instance IDs, take the ordinal #${ordinal}, which depends on the order it was opened (its feature IDs don't). Give each content an id (OpenOptions.id).`,
+        `open: ${label}'s name is open or drawn already; without an id its content ID, and its items' instance IDs, take the ordinal #${ordinal}, which depends on the order it was opened (its feature IDs don't). Give each content an id (OpenOptions.id).`,
       );
     }
     return idOf(ordinal);
@@ -789,20 +816,23 @@ export class SourceRuntime {
 }
 
 /**
- * A content's name: `declared` (its host's or its resolver's) when it is a
- * non-empty string, else its URL's (`urlName`).
+ * A declared name (`OpenOptions.name`, `ResolvedAsset.name`), refused at
+ * `open` outside the grammar no URL satisfies (CS-1101 A).
  */
-function nameOf(
-  declared: unknown,
-  asset: { readonly url: URL; readonly credentials?: Credential },
-): string {
-  if (declared === undefined) {
-    return urlName(asset.url, asset.credentials);
+function declaredName(declared: unknown): ContentName {
+  try {
+    return ContentName.declared(declared);
+  } catch (error) {
+    throw new TypeError(`open: ${messageOf(error)}`, { cause: error });
   }
-  if (typeof declared !== "string" || declared.length === 0) {
-    throw new TypeError("open: a content's name is a non-empty string.");
-  }
-  return declared;
+}
+
+/**
+ * What the engine's own text names content by (CS-1101 A): its kind and an
+ * ordinal, minted at `open`. The one function that builds it.
+ */
+function labelOf(kind: string, ordinal: number): string {
+  return `"${kind}" content ${ordinal}`;
 }
 
 /** What `error` says: its message, the source's own words. */

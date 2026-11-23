@@ -578,7 +578,7 @@ export function hashKey(text: string): StableId {
  */
 export function stableIdOf(key: StableKey): StableId {
   return key.kind === "feature"
-    ? FeatureNamespace.of(key.source).featureId(key.key, key.row)
+    ? namespaceFor(key.source).featureId(key.key, key.row)
     : hashKey(canonicalKey(key));
 }
 
@@ -589,8 +589,13 @@ export function digestHex(text: string): string {
     .join("");
 }
 
-/** Held by this module alone: only `FeatureNamespace.of` makes a namespace. */
+/** Held by this module alone: only `namespaceFor` makes a namespace. */
 const NAMESPACE_TOKEN = Symbol("FeatureNamespace");
+
+/** The namespace of the content named `text`: this module's alone (CS-1101 A). */
+function namespaceFor(text: string): FeatureNamespace {
+  return new FeatureNamespace(NAMESPACE_TOKEN, text);
+}
 
 /**
  * @internal A content's name (`SourceContent.source`, CS-1087 A), hashed
@@ -603,7 +608,7 @@ const NAMESPACE_TOKEN = Symbol("FeatureNamespace");
 export class FeatureNamespace {
   readonly #bytes = new Uint8Array(16);
 
-  /** Use `FeatureNamespace.of`. */
+  /** Only this module makes one (`ContentName`, `stableIdOf`). */
   constructor(
     token: symbol,
     /** The content's name. */
@@ -616,11 +621,6 @@ export class FeatureNamespace {
     murmur3x86x128(ENCODER.encode(JSON.stringify(["namespace", name]))).forEach(
       (word, i) => view.setUint32(i * 4, word, true),
     );
-  }
-
-  /** The namespace of the content named `name`. */
-  static of(name: string): FeatureNamespace {
-    return new FeatureNamespace(NAMESPACE_TOKEN, name);
   }
 
   /** Whether `value` is a namespace the engine made. */
@@ -661,6 +661,129 @@ export class FeatureNamespace {
       ),
     );
   }
+}
+
+/** Held by this module alone: only it makes a content's name. */
+const NAME_TOKEN = Symbol("ContentName");
+
+/** A declared name's grammar (CS-1101 A): no URL, nor a part of one, satisfies it. */
+const DECLARED_NAME = /^[A-Za-z0-9._~:@+-]+(?:\/[A-Za-z0-9._~:@+-]+)*$/;
+
+/** The most characters a declared name has. */
+const MAX_NAME = 128;
+
+/** A derived name's text: its scope and a digest. */
+const DERIVED_NAME = /^(?:derived|session):[0-9a-f]{32}$/;
+
+/** Reads a name's namespace: set once, in `ContentName`'s static block. */
+let namespaceOfName: (name: ContentName) => FeatureNamespace;
+
+/**
+ * @internal A content's name (CS-1087 A, CS-1100 A, CS-1101 A): what its
+ * feature IDs are projected from, and what its change sets, its
+ * `SourceContent.source` and its `StableKey`s carry. A value, made only
+ * here, and it says which it is:
+ *
+ * - **Declared** by a host or a resolver (`OpenOptions.name`,
+ *   `ResolvedAsset.name`): 1 to 128 characters from ASCII letters, digits
+ *   and `. _ ~ : @ + -`, with single `/` between parts and not at either
+ *   end. No `?`, `#`, `&`, `=`, `%`, whitespace or `//`, so no URL, query,
+ *   path or encoded URL is one, by shape and with no list of secrets. Two
+ *   opens with one declared name share feature IDs, on purpose.
+ * - **Derived** by the engine when none is declared: `derived:` and a
+ *   digest of everything its kind receives but its declared credential
+ *   (`derivedName` in source/registry.ts), or `session:` and a digest for
+ *   what lasts one page's life (a blob URL). A declared name doesn't take
+ *   either prefix.
+ *
+ * The engine's own text (reports, errors) never holds one: it names a
+ * content by a label it mints (CS-1101 A).
+ */
+export class ContentName {
+  readonly #text: string;
+  readonly #declared: boolean;
+  readonly #namespace: FeatureNamespace;
+
+  static {
+    namespaceOfName = (name) => name.#namespace;
+  }
+
+  /** Only this module makes one: `declared`, `derived`, `parse`. */
+  constructor(token: symbol, text: string, declared: boolean) {
+    if (token !== NAME_TOKEN) {
+      throw new TypeError("ContentName: only the engine makes one.");
+    }
+    this.#text = text;
+    this.#declared = declared;
+    this.#namespace = namespaceFor(text);
+  }
+
+  /** Its text, as change sets and `StableKey`s carry it. */
+  get text(): string {
+    return this.#text;
+  }
+
+  /** Whether a host or a resolver declared it (else the engine derived it). */
+  get declared(): boolean {
+    return this.#declared;
+  }
+
+  /**
+   * A declared name, refused (`TypeError`, naming no value) outside the
+   * grammar: so a URL, its search, its path, an origin with a path or an
+   * encoded URL is refused by shape.
+   */
+  static declared(text: unknown): ContentName {
+    if (
+      typeof text !== "string" ||
+      text.length > MAX_NAME ||
+      !DECLARED_NAME.test(text) ||
+      /^(?:derived|session):/.test(text)
+    ) {
+      throw new TypeError(
+        `a declared name is 1 to ${MAX_NAME} characters from ASCII letters, digits and . _ ~ : @ + -, with single / between parts, and doesn't start with derived: or session: (CS-1101 A). A URL, its query or its path isn't one.`,
+      );
+    }
+    return new ContentName(NAME_TOKEN, text, true);
+  }
+
+  /**
+   * A derived name: `scope`, then the digest of `canonical`, the canonical
+   * text of what its content's kind receives. Only the digest is kept.
+   */
+  static derived(
+    canonical: string,
+    scope: "derived" | "session" = "derived",
+  ): ContentName {
+    return new ContentName(
+      NAME_TOKEN,
+      `${scope}:${digestHex(canonical)}`,
+      false,
+    );
+  }
+
+  /** A name as change sets and `StableKey`s carry it: declared or derived text, else undefined. */
+  static parse(text: unknown): ContentName | undefined {
+    if (typeof text !== "string") {
+      return undefined;
+    }
+    if (DERIVED_NAME.test(text)) {
+      return new ContentName(NAME_TOKEN, text, false);
+    }
+    try {
+      return ContentName.declared(text);
+    } catch {
+      return undefined;
+    }
+  }
+}
+
+/**
+ * @internal The namespace `name`'s feature IDs are projected in: for the
+ * engine's content alone (source/content.ts), never handed to a host.
+ */
+export function namespaceOf(name: ContentName): FeatureNamespace {
+  return namespaceOfName(name);
 }
 
 const HEX16 = /^[0-9a-fA-F]{16}$/;

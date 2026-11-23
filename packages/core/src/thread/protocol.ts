@@ -608,8 +608,9 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
       "cannot-cross": `
         addItem asset attach baseFeature contentSource drawCount drawSink
-        hasBase noteInvalidated onDestroy placedDraws refreshDraws resolveOps
-        restoreInvalidated rows shown showsBase takeInvalidated viewMask
+        hasBase label noteInvalidated onDestroy placedDraws refreshDraws
+        resolveOps restoreInvalidated rows shown showsBase takeInvalidated
+        viewMask
       `,
     },
     SourceHost: {

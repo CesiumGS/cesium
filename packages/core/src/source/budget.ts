@@ -75,6 +75,8 @@ class Client implements BudgetClient {
   constructor(
     readonly order: number,
     private readonly arbiter: BudgetArbiter,
+    /** What the engine's own text names its content by: never a key (CS-1101 A). */
+    readonly label: string,
   ) {}
 
   want(want: Want): void {
@@ -94,7 +96,7 @@ class Client implements BudgetClient {
       // Never granted, or released (a grant its update threw on goes back):
       // ignored, and said, since a load it settles this way runs twice.
       this.arbiter.report(
-        `BudgetClient.settle: "${key.slice(0, 64)}" isn't in flight (never granted, settled already or released); ignored.`,
+        `BudgetClient.settle: ${this.label} settled a key that isn't in flight (never granted, settled already or released); ignored.`,
       );
       return;
     }
@@ -104,7 +106,7 @@ class Client implements BudgetClient {
       // negative value would enlarge the budget. It settles at what its
       // grant reserved, so its slot frees.
       this.arbiter.report(
-        `BudgetClient.settle: "${key.slice(0, 64)}" settled at ${String(bytes)} bytes; it takes a finite number from 0. Counted at the ${flight.bytes} bytes its want asked.`,
+        `BudgetClient.settle: ${this.label} settled a key at ${Number(bytes)} bytes; it takes a finite number from 0. Counted at the ${flight.bytes} bytes its want asked.`,
       );
       held = flight.bytes;
     }
@@ -174,9 +176,9 @@ export class BudgetArbiter {
     this.agingTicks = positive(options.agingTicks ?? 30, "agingTicks");
   }
 
-  /** A new source's client. */
-  client(): BudgetClient {
-    const client = new Client(this.nextOrder++, this);
+  /** A new source's client: `label` names its content in messages (CS-1101 A). */
+  client(label = "a source"): BudgetClient {
+    const client = new Client(this.nextOrder++, this, label);
     this.clients.push(client);
     return client;
   }
@@ -224,7 +226,7 @@ export class BudgetArbiter {
           // holds back nothing else (it never makes the bytes busy).
           if (!client.oversized.has(want.key)) {
             this.report(
-              `BudgetClient.want: "${want.key.slice(0, 64)}" asks ${want.cost.bytes} bytes, more than the whole budget of ${this.bytes}; refused.`,
+              `BudgetClient.want: ${client.label} wants a key of ${want.cost.bytes} bytes, more than the whole budget of ${this.bytes}; refused.`,
             );
           }
           oversized.add(want.key);
@@ -338,7 +340,7 @@ function checkWant(want: Want): void {
   }
   if (!Object.hasOwn(CLASS_RANK, want.class)) {
     throw new RangeError(
-      `BudgetClient.want: class "${String(want.class)}"; it takes "now", "refine" or "prefetch".`,
+      'BudgetClient.want: a want\'s class is "now", "refine" or "prefetch".',
     );
   }
   if (!(want.benefit >= 0) || !Number.isFinite(want.benefit)) {

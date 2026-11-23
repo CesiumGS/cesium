@@ -1153,3 +1153,196 @@ describe("the content-source seam", () => {
     ).toEqual(["1: World from @cesium/core"]);
   });
 });
+
+/**
+ * A program over the source modules, for the checks that need types; with
+ * `virtual`, one more file held in memory (a detector's planted bypass).
+ */
+function sourceProgram(
+  paths: readonly string[],
+  virtual?: { readonly path: string; readonly text: string },
+): ts.Program {
+  const options: ts.CompilerOptions = {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.Bundler,
+    allowImportingTsExtensions: true,
+    noEmit: true,
+    strict: true,
+    skipLibCheck: true,
+    lib: ["lib.es2023.d.ts", "lib.dom.d.ts"],
+  };
+  const host = ts.createCompilerHost(options);
+  if (virtual) {
+    const getSourceFile = host.getSourceFile.bind(host);
+    const fileExists = host.fileExists.bind(host);
+    host.getSourceFile = (name, language, ...rest) =>
+      name === virtual.path
+        ? ts.createSourceFile(name, virtual.text, language, true)
+        : getSourceFile(name, language, ...rest);
+    host.fileExists = (name) => name === virtual.path || fileExists(name);
+  }
+  return ts.createProgram(
+    [...paths, ...(virtual ? [virtual.path] : [])],
+    options,
+    host,
+  );
+}
+
+/**
+ * Rule 3 of the content-source seam (CS-1101 A): the engine's own text (an
+ * error it throws, a report, a budget message) names a content by the
+ * label it mints (`labelOf`: its kind and an ordinal), never by its name, a
+ * content key or a row key. A message may hold a label (`label`, `x.label`),
+ * `where` or `message` (itself a message, checked where it is built), a source's own
+ * error text (`messageOf`), a number, a boolean, a union of the engine's
+ * literal words, and what this table lists, each with its reason; the line
+ * of anything else is named. A message is an `…Error`'s argument, a
+ * `report…` call's first, or a `where` or `message` variable's value.
+ */
+const SOURCE_MESSAGE_ALLOWED: Readonly<Record<string, string>> = {
+  "budget.ts: name": "an option's name, a literal at each call",
+  "editing.ts: name":
+    "a change set's meta field's name: names the field it refuses, never a value",
+  "editing.ts: JSON.stringify(name.slice(0, 64))":
+    "a change set's field name, cut to 64 characters: names the field it refuses, never a value",
+  "registry.ts: String(module).slice(0, 80)":
+    "a kind's module reference, the host's code, cut to 80 characters",
+  "registry.ts: ref.id": "a kind's ID, which the host registers",
+  "registry.ts: id": "a kind's ID, which the host registers",
+  "registry.ts: kind.id": "a kind's ID, which the host registers",
+  "registry.ts: asset.kind": "a kind's ID, as a resolver names it",
+  "runtime.ts: resolver.id": "a resolver's ID, which the host adds",
+  "runtime.ts: spec.type": "a decoder's job type, its kind's code",
+  "sinks.ts: sink":
+    "a sink's name: features, points, or a render feature's ID, its kind's",
+  "sinks.ts: name": "a column's name, the source's schema: never a key",
+};
+
+export function sourceMessageLeaks(
+  program: ts.Program,
+  file: string,
+): string[] {
+  const checker = program.getTypeChecker();
+  const source = program.getSourceFile(file)!;
+  const name = relative(join(src, "source"), file).replaceAll("\\", "/");
+  const out: string[] = [];
+  const seen = new Set<ts.Node>();
+  const words = (type: ts.Type): boolean =>
+    (type.flags &
+      (ts.TypeFlags.NumberLike |
+        ts.TypeFlags.BigIntLike |
+        ts.TypeFlags.BooleanLike |
+        ts.TypeFlags.StringLiteral |
+        ts.TypeFlags.Undefined |
+        ts.TypeFlags.Null)) !==
+      0 ||
+    (type.isUnion() && type.types.every(words));
+  const check = (e: ts.Expression) => {
+    if (seen.has(e)) {
+      return;
+    }
+    seen.add(e);
+    const text = e.getText(source);
+    if (
+      /(?:^|\.)label$/.test(text) ||
+      text === "where" ||
+      text === "message" ||
+      /^messageOf\(/.test(text) ||
+      words(checker.getTypeAtLocation(e)) ||
+      Object.hasOwn(SOURCE_MESSAGE_ALLOWED, `${name}: ${text}`)
+    ) {
+      return;
+    }
+    const line = source.getLineAndCharacterOfPosition(e.getStart(source)).line;
+    out.push(`${line + 1}: ${text}`);
+  };
+  const isPlus = (n: ts.Node): n is ts.BinaryExpression =>
+    ts.isBinaryExpression(n) &&
+    n.operatorToken.kind === ts.SyntaxKind.PlusToken;
+  /** A message: its text's every interpolated or concatenated part. */
+  const message = (n: ts.Expression): void => {
+    if (ts.isParenthesizedExpression(n)) {
+      message(n.expression);
+    } else if (ts.isTemplateExpression(n)) {
+      n.templateSpans.forEach((span) => check(span.expression));
+    } else if (isPlus(n)) {
+      message(n.left);
+      message(n.right);
+    } else if (ts.isConditionalExpression(n)) {
+      message(n.whenTrue);
+      message(n.whenFalse);
+    } else if (!ts.isStringLiteralLike(n)) {
+      check(n);
+    }
+  };
+  const visit = (n: ts.Node) => {
+    if (
+      ts.isNewExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      /Error$/.test(n.expression.text) &&
+      n.arguments?.[0]
+    ) {
+      message(n.arguments[0]);
+    } else if (ts.isCallExpression(n) && n.arguments[0]) {
+      const callee = n.expression;
+      const called = ts.isIdentifier(callee)
+        ? callee.text
+        : ts.isPropertyAccessExpression(callee)
+          ? callee.name.text
+          : "";
+      if (/^report/.test(called)) {
+        message(n.arguments[0]);
+      }
+    } else if (
+      ts.isVariableDeclaration(n) &&
+      ts.isIdentifier(n.name) &&
+      /^(?:where|message)$/.test(n.name.text) &&
+      n.initializer
+    ) {
+      message(n.initializer);
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(source);
+  return out;
+}
+
+describe("the content-source seam's own text names content by its label (CS-1101 A)", () => {
+  it("no message under src/source/ interpolates a name, a content key or a row key", () => {
+    const paths = files(join(src, "source"), /\.ts$/);
+    expect(paths.length).toBeGreaterThanOrEqual(8);
+    const program = sourceProgram(paths);
+    const found = paths.flatMap((path) =>
+      sourceMessageLeaks(program, path).map(
+        (hit) => `${relative(repo, path).replaceAll("\\", "/")}:${hit}`,
+      ),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it("its detector flags each leak by line: a key, a name, a URL, in a template, a concatenation or a variable", () => {
+    const path = join(src, "source", "planted.ts");
+    const text = [
+      'import type { SourceContent } from "./content.ts";',
+      "declare const content: SourceContent;",
+      "declare const key: string;",
+      "declare const count: number;",
+      'declare const kind: "a" | "b";',
+      "export function f(report: (m: string) => void, error: unknown) {",
+      "  report(`${content.label} holds ${count} rows of ${kind}`);",
+      "  report(`the key ${key} is gone`);",
+      '  report("the content " + content.source);',
+      "  const where = `${content.asset.url.href}'s push`;",
+      "  throw new TypeError(key);",
+      "}",
+    ].join("\n");
+    const program = sourceProgram([path], { path, text });
+    expect(sourceMessageLeaks(program, path)).toEqual([
+      "8: key",
+      "9: content.source",
+      "10: content.asset.url.href",
+      "11: key",
+    ]);
+  });
+});

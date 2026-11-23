@@ -36,7 +36,9 @@
  * so a source's own `destroy` can free what it made.
  */
 import {
-  FeatureNamespace,
+  namespaceOf,
+  type ContentName,
+  type FeatureNamespace,
   type ItemIdentity,
   type StableKey,
 } from "../scene/identity.ts";
@@ -167,7 +169,7 @@ export class SourceContent {
   readonly rows: ContentRows;
   /** How its edit layers name features: the projection, and what is loaded. */
   private readonly addressing: EditAddressing = {
-    idOf: (address) => this.namespace.featureId(address.key, address.row),
+    idOf: (address) => this.#namespace.featureId(address.key, address.row),
     loaded: (id) => this.loadedAddress(id),
   };
   /**
@@ -179,14 +181,22 @@ export class SourceContent {
    */
   readonly edits = new EditLayer(this.addressing);
   /**
-   * Its name (CS-1087 A): `OpenOptions.name`, else its resolver's
-   * (`ResolvedAsset.name`), else its URL's digest (`urlName`). Its feature
-   * IDs are its source's keys projected in this name's namespace, and its
-   * change sets name it (`ChangeSet.source`). Never URL text.
+   * Its name's text (CS-1087 A, CS-1101 A): `OpenOptions.name`, else its
+   * resolver's (`ResolvedAsset.name`), each in the grammar no URL satisfies;
+   * else a name the engine derives, `derived:` and a digest of its kind,
+   * URL and options (CS-1100 A). Its feature IDs are its source's keys
+   * projected in this name's namespace, and its change sets name it
+   * (`ChangeSet.source`). The engine's own messages never print it.
    */
   readonly source: string;
-  /** Its name, hashed once: what its feature IDs are projected in. */
-  private readonly namespace: FeatureNamespace;
+  /**
+   * @internal What the engine's own text names it by (CS-1101 A): its kind
+   * and an ordinal the runtime mints, never its name, a content key or a
+   * row key.
+   */
+  readonly label: string;
+  /** Its name, hashed once: what its feature IDs are projected in. Never handed out. */
+  readonly #namespace: FeatureNamespace;
   private source_: ContentSource | undefined;
   private world_: ContentWorld | undefined;
   private readonly items_: ContentItem[] = [];
@@ -208,11 +218,14 @@ export class SourceContent {
     readonly asset: ResolvedAsset,
     readonly kind: string,
     /** Its name (`source`). */
-    name: string,
+    name: ContentName,
+    /** What the engine's own text names it by (`label`). */
+    label: string,
   ) {
-    this.source = name;
-    this.namespace = FeatureNamespace.of(name);
-    this.rows = new ContentRows(this.namespace);
+    this.source = name.text;
+    this.label = label;
+    this.#namespace = namespaceOf(name);
+    this.rows = new ContentRows(this.#namespace);
     this.drawSink = this.makeDrawSink();
     this.edits.onChange((ids) => this.refreshDraws(ids));
   }
@@ -255,7 +268,7 @@ export class SourceContent {
     const writable = !isReadOnly(source.capabilities.write);
     if (writable && !source.writer) {
       throw new Error(
-        `open: the "${this.kind}" source declares write capabilities but has no writer.`,
+        `open: ${this.label}'s source declares write capabilities but has no writer.`,
       );
     }
     const polls = source.capabilities.polls;
@@ -267,12 +280,12 @@ export class SourceContent {
       )
     ) {
       throw new RangeError(
-        `open: the "${this.kind}" source polls every ${polls.intervalSeconds} s; a declared interval is at least ${MIN_POLL_SECONDS} s (CS-863).`,
+        `open: ${this.label}'s source polls every ${polls.intervalSeconds} s; a declared interval is at least ${MIN_POLL_SECONDS} s (CS-863).`,
       );
     }
     if (polls !== undefined && !source.capabilities.pushes) {
       throw new Error(
-        `open: the "${this.kind}" source polls but doesn't push: what it learns reaches the engine only as pushes (CS-863).`,
+        `open: ${this.label}'s source polls but doesn't push: what it learns reaches the engine only as pushes (CS-863).`,
       );
     }
     this.source_ = source;
@@ -317,7 +330,7 @@ export class SourceContent {
         "SourceContent.featureId: a key is the source's own, a non-empty string.",
       );
     }
-    return this.namespace.featureId(key);
+    return this.#namespace.featureId(key);
   }
 
   /**
@@ -658,7 +671,7 @@ export class SourceContent {
         set: options.features ? 0 : -1,
         scope: "tile",
         item: item.identity,
-        namespace: this.namespace,
+        namespace: this.#namespace,
       },
     });
     draw.placed.set(item, handle);
