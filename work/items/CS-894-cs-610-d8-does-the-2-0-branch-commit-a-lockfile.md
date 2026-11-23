@@ -27,3 +27,7 @@ Recommended: A, the design's recommendation. It blocks CS-611's first step and C
 ## Answer
 
 The owner, 2026-11-21: A. A committed lockfile, `npm ci` everywhere, Dependabot grouped updates, and a nightly fresh-ranges test.
+
+## Note (2026-11-23)
+
+CS-1090 A moves 2.0 to pnpm once CS-951's test runs pass, so `pnpm-lock.yaml` replaces this decision's npm lockfile (CS-1091).
