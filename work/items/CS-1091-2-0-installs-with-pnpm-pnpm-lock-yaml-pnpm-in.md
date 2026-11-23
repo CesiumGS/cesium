@@ -12,7 +12,7 @@ needs: [CS-951, CS-1090]
 
 ## Done when
 
-- CS-951's full test suites under pnpm pass: `test`, `test:data`, `typecheck` and `tsc -p .`. If they don't, this item stops and reports.
+- First commit: declare `@cesium/dyno` at the root, then rerun the full suites under pnpm (`test`, `test:data`, `typecheck`, `tsc -p .`). Go ahead only if everything is green; otherwise stop and report (the owner's clarification on CS-1090, 2026-11-23).
 - `pnpm-lock.yaml` replaces `package-lock.json`, imported from it, and pins pnpm 11.12.0 or later through corepack (`packageManager`).
 - The three undeclared dependencies are declared: playwright and sharp at the root, onnxruntime-web in `spikes/core-ir`. `@cesium/dyno` resolves for `npx --no-install`.
 - `worktree_setup` in `.human-in-the-lead/policy.json`, the gate scripts, the CI workflows, Dependabot, `scripts/packSet.mjs`, the hosts guide and the docs use pnpm.

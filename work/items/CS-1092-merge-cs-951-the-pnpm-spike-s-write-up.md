@@ -2,10 +2,14 @@
 id: CS-1092
 title: Merge CS-951, the pnpm spike's write-up
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main, regenerates the views and logs the merge. CS-951 is done, and CS-1091 can take a slot."
+answered_at: 2026-11-23T20:25:10.573Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

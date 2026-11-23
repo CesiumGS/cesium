@@ -36,3 +36,7 @@ Recommended: B and C now. Ask about A again when CI's install time or cache beco
 ## Answer
 
 Open.
+
+## The owner's clarification (2026-11-23)
+
+Under pnpm, everything passed except `test/dynoBin.test.ts` (2 of 6,912 tests): `dyno` isn't on the path under pnpm's strict layout, because `@cesium/dyno` isn't declared. Asked whether that counts, the owner said yes, if the move fixes it. CS-1091 declares `@cesium/dyno` in its first commit and reruns the full suite under pnpm. It goes ahead only if everything is green, and otherwise stops and reports.
