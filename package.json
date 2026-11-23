@@ -109,7 +109,7 @@
   "engines": {
     "node": ">=22.17.0"
   },
-  "packageManager": "pnpm@11.12.0",
+  "packageManager": "pnpm@11.12.0+sha512.820a6fbd0d9f04c226638002aead1e45340a9139dd5dc077c1d83ef44aa2481c8eb6637b4c9aa696a3c7e35ba818e49cf27213e5f2b91138d09b7a3e26e898ba",
   "workspaces": [
     "packages/*",
     "apps/*",

@@ -10,6 +10,8 @@ node_modules/
 npm-debug.log
 npm-debug.log.*
 yarn.lock
+# pnpm installs (CS-1091): a stray `npm install` would write this.
+package-lock.json
 
 # WebStorm user-specific
 .idea/workspace.xml

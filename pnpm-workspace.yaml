@@ -9,11 +9,12 @@ packages:
 overrides:
   protobufjs: "^8.8.0"
   "onnxruntime-web>protobufjs": "^7.6.4"
-  "use-resize-observer>react": "^19.0.0"
-  "use-resize-observer>react-dom": "^19.0.0"
 # Link a workspace package whose name and version match a plain range
 # ("@cesium/core": "2.0.0-poc.0"), as npm does, without "workspace:" ranges.
 linkWorkspacePackages: true
+# `pnpm run` and `pnpm exec` never install on their own, as `npm run` never
+# did: installing is pnpm install's job (worktree setup, CI, by hand).
+verifyDepsBeforeRun: false
 # Dependencies' install scripts, reviewed (CS-1091). pnpm 11 stops an install
 # until each is named here. None runs, as with `--ignore-scripts` in worktree
 # setup and CI: esbuild's platform binary comes as an optional dependency,

@@ -7,8 +7,6 @@ settings:
 overrides:
   protobufjs: ^8.8.0
   onnxruntime-web>protobufjs: ^7.6.4
-  use-resize-observer>react: ^19.0.0
-  use-resize-observer>react-dom: ^19.0.0
 
 importers:
 
@@ -2592,7 +2590,7 @@ packages:
     hasBin: true
 
   human-in-the-lead@https://codeload.github.com/arobison/human-in-the-lead/tar.gz/fe7827458429217e9fb9ed0943a1602d385f8551:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/arobison/human-in-the-lead/tar.gz/fe7827458429217e9fb9ed0943a1602d385f8551}
+    resolution: {gitHosted: true, integrity: sha512-cCryjTmS3he+QLxkOTM12wlXp58Dq0G0cYCBUo+S11c1zGIOtxyI5rzu5Z/Z99nkVHeTcXrLW9VndmkovzLBIQ==, tarball: https://codeload.github.com/arobison/human-in-the-lead/tar.gz/fe7827458429217e9fb9ed0943a1602d385f8551}
     version: 0.1.0-rc.1
     engines: {node: '>=22.13'}
     hasBin: true
