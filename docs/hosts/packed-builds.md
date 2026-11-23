@@ -6,7 +6,7 @@ Nothing here depends on any host. The command only writes to its output folder.
 
 ## Make a set
 
-In any 2.0 checkout or worktree, at the commit you want:
+In any 2.0 checkout or worktree, at the commit you want, installed with `pnpm install` (the repository installs with pnpm; the set is still packed with `npm pack`, and a host installs it with its own package manager, npm below):
 
 ```sh
 node scripts/packSet.mjs

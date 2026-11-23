@@ -241,7 +241,9 @@ function outsideLinks(dir) {
  * on them (those nested under a workspace package through a link to the
  * worktree's folder); otherwise the snapshot installs its own with `install`
  * (`npm ci --ignore-scripts` by default, run in `dir`), once per lockfile,
- * and a failed install stops the run. Before an install it removes the
+ * and a failed install stops the run. When either side has pnpm-lock.yaml,
+ * it always installs its own: `pnpm install --frozen-lockfile` for a
+ * snapshot with pnpm's lockfile, `npm ci` for one without. Before an install it removes the
  * links it made (recorded in node_modules/.bench-deps.json), and it
  * refuses to install while any node_modules under `dir` is still a link
  * out of it, or to work at all when `dir`'s own node_modules is a link:

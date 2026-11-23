@@ -49,7 +49,7 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
 ## Repository practice
 
 - Commit by path only: `git add -- <paths>`, then `git commit -- <paths>`. Never `git add -A`, `git stash`, `git reset` or `git checkout --` on files you didn't change. Several people or agents may share a checkout.
-- Git hooks: every worktree runs the main checkout's hooks in `.husky/`: lint-staged (eslint, markdownlint, prettier) and human-in-the-lead's commit guard. A worktree points at them with `git config --worktree core.hooksPath "$(git rev-parse --path-format=absolute --git-common-dir)/../.husky/_"`, run once in it; a root `npm install` resets only the main checkout's setting.
+- Git hooks: every worktree runs the main checkout's hooks in `.husky/`: lint-staged (eslint, markdownlint, prettier) and human-in-the-lead's commit guard. A worktree points at them with `git config --worktree core.hooksPath "$(git rev-parse --path-format=absolute --git-common-dir)/../.husky/_"`, run once in it; a root `pnpm install` (which runs husky's `prepare`) resets only the main checkout's setting.
 - lint-staged runs with `--no-stash`, because every worktree shares one stash list and its backup stash once swept other people's work into commits. Without the backup, it rewrites staged files in place, and a partly staged file goes in whole. So when several people or agents are working at once:
   - Work in your own `git worktree` whenever you can, and don't leave stashes behind.
   - In a shared checkout, check that `git diff --cached --name-only` is empty first, stage and commit in one command, and never leave files staged.
@@ -58,13 +58,13 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
 - Never commit screenshots, downloaded data, or secrets. Data lives in the setup store outside the repo (`npm run setup`; `FRAMES_DATA_DIR`). One exception: images under `handbook/` that the handbook embeds in its single HTML file. Keep them small, and check by eye that none shows a token or anything from an account.
 - A sky data pack (`npm run sky`) is derived data and never ships: it stays in the store outside the repo, and nothing made from one (an image, a binary, a base64 string, a `/sky-pack/` URL) goes in a commit, a build or the handbook. The guard in `scripts/build/vitePluginSkyPack.ts` refuses it in builds.
 - Never write an ion token into code, logs, URLs, test output, screenshots or builds. Examples get theirs from Dyno's token setting, or from `.env.local` in development only.
-- Node 24 (`engines`).
+- Node 24 (`engines`) and pnpm 11.12.0 or later, the version `packageManager` names, through corepack. pnpm installs; packing and staging a release stay npm's (`npm pack`, `npm stage publish`).
 
 ## Testing cadence
 
 - While iterating, run focused tests: `npx vitest run <files>`.
 - Before committing, run the full `npm test` once.
-- A fresh clone builds and tests with one command: `npm ci && npm run build && npm test`.
+- A fresh clone builds and tests with one command: `pnpm install --frozen-lockfile && pnpm run build && pnpm test`.
 - Run `npm run test:data` (it needs the setup store) when you change code under `packages/frames`, `packages/time` or `packages/crs`.
 - Before the full suite, a build or a measurement, run `dyno status`: while it says `busy` or `waiting-for-quiet`, a measurement runs or waits, so start no heavy work. `dyno` is Dyno's command line (`npx @cesium/dyno`: the scoped name can only be this workspace package, so a missing link fails instead of downloading an unrelated public package); the `dyno` skill says which suite a change needs and how to read a verdict.
 - Run the browser parity suites (`dyno lab <suite>`) when you change rendering. Compare against the previous commit as well as a base commit. Metal's compiler can reorder a float sum when a kernel's code changes, so explain any pixel difference before accepting it.
