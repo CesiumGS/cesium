@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-16
-needs: [CS-146]
+needs: [CS-146, CS-554]
 touches: [packages/next/src/streaming/tileRetry.ts, packages/next/src/io/backoff.ts, packages/next/src/streaming/tilesetLoad.ts, packages/next/src/streaming/tilesetState.ts, packages/next/src/streaming/Tile.ts, packages/next/src/streaming/tilesetTypes.ts, packages/next/src/streaming/Tileset3D.ts]
 ---
 
@@ -22,3 +22,7 @@ Retries for 3D Tiles content (episodes owned by the tile).
 ## Plan
 
 `docs/superpowers/plans/2026-11-13-streaming-robustness.md`, its milestone table.
+
+## Note (2026-11-22)
+
+Under CS-995 A (the seam lands first where the two chains touch the same code), this item now also needs CS-554. It reworks the same streaming or globe loading code as the seam's 3D Tiles and globe items (the Fable critical-path review, finding 8).

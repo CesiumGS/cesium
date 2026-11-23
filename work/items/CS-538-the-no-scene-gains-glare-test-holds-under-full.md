@@ -15,3 +15,7 @@ tier_override: 1
 
 - The cause is named: what differs between a loaded run and a lone one.
 - The test passes the full suite 20 times in a row on this Mac, and still fails when a look stage changes a byte of the scene.
+
+## Note (2026-11-22)
+
+The cause, found by CS-966's executor: the test compares the view block without zeroing `View.transition` (word 104, from the engine's clock), so it fails under load. A one-line fix zeroes that word before the comparison.
