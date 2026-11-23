@@ -15,3 +15,4 @@ needs: [CS-971]
 - Every buffer index read from data is clamped, in and outside loops, in every kernel under `packages/core/src/**/*.slang`.
 - `unclampedIndices` in `test/boundedLoops.test.ts` covers every entry point, and fails on a planted unclamped index.
 - `npm run shaders:check` passes. The Metal output of each changed kernel is read with `scripts/dumpMsl.mjs` before its first browser run, and parity shows no pixel moved.
+- Two more from CS-971's review: close the gaps in the bounded-loop test, where four loops that never end would pass, and clamp the unclamped writes in `curvilinearFitGpu` (lines 330 to 357), which sit outside loops.

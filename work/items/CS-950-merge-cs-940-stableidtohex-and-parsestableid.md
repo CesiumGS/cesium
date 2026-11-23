@@ -2,7 +2,7 @@
 id: CS-950
 title: Merge CS-940, stableIdToHex and parseStableId
 kind: decision
-state: planned
+state: dropped
 created: 2026-11-22
 project: CS-437
 decider: owner
@@ -28,4 +28,4 @@ If unanswered by 2026-11-25T12:00:00Z: Hold it.
 
 ## Answer
 
-Recorded in the front matter once answered.
+Superseded by CS-1083 (2026-11-22). CS-940 changed after this question was filed: StableId became branded under CS-997 B, so CS-1083 asks about the new tip. Nobody answered this question. The chief of staff dropped it as a duplicate, which was housekeeping, not a decision.
