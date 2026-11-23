@@ -1324,7 +1324,14 @@ be one.
   - The toolbar: scene (or every scene's geometric mean), along x, lines
     by, panels by, an "at" choice for each axis left over, and the
     metric group. Image metrics come first when the run has reference
-    images; otherwise tiles and requests.
+    images; otherwise tiles and triangles.
+  - The answer first: above the image charts, per region (the whole
+    image, each crop), how many points are within noise of their
+    reference, and which are not, in words ("Exaggeration factor 10,
+    error exponent 0.5, shadows off (25% of pixels)"). Each crop's pixels
+    changed come before its FLIP. Beside reference images, the FLIP
+    against the run's baseline configuration is left out: in a sweep
+    that configuration is one of its own points.
   - Each metric: its heading with its unit, one line naming the x axis
     and keying the lines, the panels, and a "Table" twin with every
     point's value and its notes ("reference", "within noise", "not
@@ -1341,9 +1348,9 @@ be one.
     Its value is in the band's hover title and under the table. Without
     repeated references there is no band, and words never claim "within
     noise": "4.1% of pixels (no noise floor)".
-  - The images: per panel, a table with lines down and x across; each
-    thumbnail says its difference in words ("Within noise", "25% of
-    pixels", "Reference"). Over every scene, an "Images of" choice picks
+  - The images: per panel, a table with lines down and x across, the
+    panels side by side where they fit; each thumbnail says its
+    difference in words ("Within noise", "25% of pixels", "Reference"). Over every scene, an "Images of" choice picks
     the scene, since images belong to one.
   - Compare: a dialog with the Images view's modes (`ImageCompare` in
     `Images.tsx`), opening on the swipe: side by side, swipe, flicker

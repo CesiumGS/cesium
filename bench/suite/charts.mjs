@@ -79,7 +79,10 @@ export function compact(v) {
       ? `${(v / 1e3).toFixed(a >= 1e4 ? 0 : 1)}K`
       : a >= 10 || a === 0
         ? v.toFixed(0)
-        : v.toFixed(a >= 1 ? 1 : 2);
+        : a >= 1
+          ? v.toFixed(1)
+          : // Two significant digits, so close ticks of small values differ.
+            String(Number(v.toPrecision(2)));
 }
 
 /** A stat tile: label, value, and an optional delta line with an icon. */

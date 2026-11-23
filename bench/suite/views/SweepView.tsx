@@ -31,6 +31,7 @@ import {
   isImageMetric,
   metricGroups,
   moveDimension,
+  noiseSummary,
   type Layout,
   type Line,
   type Panel,
@@ -296,6 +297,9 @@ function SweepBody({
             .filter(Boolean)
             .join(" ")}
         >
+          {group.id === "image" ? (
+            <NoiseAnswer s={s} model={model} record={record} scene={scene} />
+          ) : null}
           <div
             className={layout.panels ? "sweep-metrics" : "sweep-metrics-grid"}
           >
@@ -349,6 +353,62 @@ function SweepBody({
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The image answer first: per region, how many points are within noise
+ * of their reference, and which are not, in words.
+ */
+function NoiseAnswer({
+  s,
+  model,
+  record,
+  scene,
+}: {
+  s: Summary;
+  model: SweepModel;
+  record: ReferenceRecord | undefined;
+  scene: string;
+}) {
+  const answer = noiseSummary(record, s, model, scene);
+  if (!answer) {
+    return null;
+  }
+  if (!answer.floor) {
+    return (
+      <Typography variant="body-md" render={<p />} className="sweep-answer">
+        No noise floor: each reference point was captured once, so no difference
+        can be called within noise. Run with <code>--reference-reps 3</code> for
+        one.
+      </Typography>
+    );
+  }
+  const several = model.scenes.length > 1 && scene === ALL;
+  const where = (config: string, sceneId: string) => {
+    const p = model.points.find((x) => x.config === config);
+    const title = s.scenes.find((c) => c.scene === sceneId)?.title ?? sceneId;
+    return `${p ? sentence(coordsWords(model, p.coords)) : config}${several ? ` in ${title}` : ""}`;
+  };
+  return (
+    <ul className="sweep-answer">
+      {answer.regions
+        .filter((r) => r.compared)
+        .map((r) => (
+          <li key={r.region}>
+            <Typography variant="body-md" render={<span />}>
+              <b>
+                {r.region === WHOLE ? "Whole image" : `Crop “${r.region}”`}:
+              </b>{" "}
+              {r.within === r.compared
+                ? `${r.compared === 1 ? "the one compared point is" : r.compared === 2 ? "both compared points are" : `all ${r.compared} compared points are`} within noise of their reference.`
+                : `${r.within} of ${r.compared} points are within noise; beyond it: ${r.beyond
+                    .map((b) => `${where(b.config, b.scene)} (${b.words})`)
+                    .join("; ")}.`}
+            </Typography>
+          </li>
+        ))}
+    </ul>
   );
 }
 
@@ -642,7 +702,7 @@ function TableTwin({
               {lineDim ? <th scope="col">{sentence(lineDim.label)}</th> : null}
               {x.names.map((n) => (
                 <th key={n} scope="col">
-                  {x.label} {n}
+                  {sentence(`${x.label} ${n}`)}
                 </th>
               ))}
             </tr>
@@ -773,117 +833,119 @@ function ImageGrid({
           its results file couldn't be read).
         </Typography>
       ) : (
-        panels.map((panel, pi) => (
-          <div key={pi} className="sweep-grid-panel">
-            {panel.name ? (
-              <Typography
-                variant="body-md"
-                render={<h4 />}
-                className="sweep-grid-title"
+        <div className="sweep-grid-panels">
+          {panels.map((panel, pi) => (
+            <div key={pi} className="sweep-grid-panel">
+              {panel.name ? (
+                <Typography
+                  variant="body-md"
+                  render={<h4 />}
+                  className="sweep-grid-title"
+                >
+                  {sentence(panelDim!.label)} {panel.name}
+                  {panel.reference ? " (reference)" : ""}
+                </Typography>
+              ) : null}
+              <div
+                className="sweep-grid-scroll"
+                tabIndex={0}
+                role="region"
+                aria-label={`Images${panel.name ? `, ${panelDim!.label} ${panel.name}` : ""}`}
               >
-                {sentence(panelDim!.label)} {panel.name}
-                {panel.reference ? " (reference)" : ""}
-              </Typography>
-            ) : null}
-            <div
-              className="sweep-grid-scroll"
-              tabIndex={0}
-              role="region"
-              aria-label={`Images${panel.name ? `, ${panelDim!.label} ${panel.name}` : ""}`}
-            >
-              <table className="sweep-grid">
-                <thead>
-                  <tr>
-                    {lineDim ? (
-                      <th scope="col">{sentence(lineDim.label)}</th>
-                    ) : null}
-                    {x.names.map((n) => (
-                      <th key={n} scope="col">
-                        {x.label} {n}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {panel.lines.map((line, li) => (
-                    <tr key={li}>
-                      {lineDim ? <th scope="row">{line.name}</th> : null}
-                      {line.points.map((p, xi) => {
-                        const src =
-                          p &&
-                          imageOf(
-                            results,
+                <table className="sweep-grid">
+                  <thead>
+                    <tr>
+                      {lineDim ? (
+                        <th scope="col">{sentence(lineDim.label)}</th>
+                      ) : null}
+                      {x.names.map((n) => (
+                        <th key={n} scope="col">
+                          {sentence(`${x.label} ${n}`)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {panel.lines.map((line, li) => (
+                      <tr key={li}>
+                        {lineDim ? <th scope="row">{line.name}</th> : null}
+                        {line.points.map((p, xi) => {
+                          const src =
+                            p &&
+                            imageOf(
+                              results,
+                              record,
+                              cell.scene,
+                              scenario,
+                              p.config,
+                            );
+                          if (!p || !src) {
+                            return (
+                              <td key={xi} className="sweep-grid-empty">
+                                {p ? "no image" : "not run"}
+                              </td>
+                            );
+                          }
+                          const words = record
+                            ? pointWords(record, cell.scene, scenario, p.config)
+                            : undefined;
+                          const against = referencePoint(
                             record,
                             cell.scene,
                             scenario,
                             p.config,
-                          );
-                        if (!p || !src) {
+                          )?.against;
+                          const where = coordsWords(model, p.coords);
                           return (
-                            <td key={xi} className="sweep-grid-empty">
-                              {p ? "no image" : "not run"}
+                            <td key={xi}>
+                              <button
+                                type="button"
+                                className="sweep-thumb"
+                                onClick={() =>
+                                  onOpen({
+                                    scene: cell.scene,
+                                    scenario,
+                                    ...(against ? { a: against } : {}),
+                                    b: p.config,
+                                  })
+                                }
+                                aria-label={`Compare ${where}${words ? ` (${words})` : ""}`}
+                              >
+                                <img src={src} alt="" loading="lazy" />
+                                <span className="sweep-thumb-words">
+                                  {words ? (
+                                    <span
+                                      className={
+                                        words === "within noise" ||
+                                        words === "reference"
+                                          ? ""
+                                          : "sweep-thumb-changed"
+                                      }
+                                    >
+                                      {sentence(words)}
+                                    </span>
+                                  ) : null}
+                                  {!p.settled ? (
+                                    <Badge
+                                      variant="inline"
+                                      size="small"
+                                      color="warning"
+                                      badgeContent="Not settled"
+                                    />
+                                  ) : null}
+                                </span>
+                              </button>
                             </td>
                           );
-                        }
-                        const words = record
-                          ? pointWords(record, cell.scene, scenario, p.config)
-                          : undefined;
-                        const against = referencePoint(
-                          record,
-                          cell.scene,
-                          scenario,
-                          p.config,
-                        )?.against;
-                        const where = coordsWords(model, p.coords);
-                        return (
-                          <td key={xi}>
-                            <button
-                              type="button"
-                              className="sweep-thumb"
-                              onClick={() =>
-                                onOpen({
-                                  scene: cell.scene,
-                                  scenario,
-                                  ...(against ? { a: against } : {}),
-                                  b: p.config,
-                                })
-                              }
-                              aria-label={`Compare ${where}${words ? ` (${words})` : ""}`}
-                            >
-                              <img src={src} alt="" loading="lazy" />
-                              <span className="sweep-thumb-words">
-                                {words ? (
-                                  <span
-                                    className={
-                                      words === "within noise" ||
-                                      words === "reference"
-                                        ? ""
-                                        : "sweep-thumb-changed"
-                                    }
-                                  >
-                                    {sentence(words)}
-                                  </span>
-                                ) : null}
-                                {!p.settled ? (
-                                  <Badge
-                                    variant="inline"
-                                    size="small"
-                                    color="warning"
-                                    badgeContent="Not settled"
-                                  />
-                                ) : null}
-                              </span>
-                            </button>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
     </Section>
   );

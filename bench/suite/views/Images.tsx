@@ -683,7 +683,7 @@ function Swipe({ a, b }: { a: ComparedImage; b: ComparedImage }) {
         getAriaValueText={(v) => `${v}% ${a.label}`}
       />
       <figcaption>
-        {a.label} on the left of the line, {b.label} on the right.
+        Left of the line: {a.label}. Right of it: {b.label}.
       </figcaption>
     </figure>
   );

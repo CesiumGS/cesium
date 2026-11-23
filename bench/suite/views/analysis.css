@@ -110,11 +110,26 @@
   font-size: var(--stratakit-font-size-caption-lg);
   color: var(--stratakit-color-text-neutral-secondary);
 }
+.sweep-answer {
+  margin: 0 0 var(--stratakit-space-500);
+  padding-inline-start: var(--stratakit-space-500);
+  max-width: 900px;
+}
+.sweep-answer li + li {
+  margin-block-start: var(--stratakit-space-100);
+}
 .sweep-zero {
   margin: 0 0 var(--stratakit-space-500);
   max-width: 900px;
 }
+.sweep-grid-panels {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--stratakit-space-800);
+}
 .sweep-grid-panel {
+  min-inline-size: 0;
+  max-inline-size: 100%;
   margin-block-end: var(--stratakit-space-500);
 }
 .sweep-grid-title {
@@ -187,4 +202,8 @@
   .sweep-thumb {
     inline-size: 150px;
   }
+}
+/* A readable line length for the sweep's section notes. */
+.sweep .section-header p {
+  max-width: 900px;
 }

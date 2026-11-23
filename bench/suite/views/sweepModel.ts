@@ -503,13 +503,30 @@ export const METRIC_GROUPS: Array<{
   {
     id: "image",
     label: "Image",
-    metrics: (keys) => [
-      ...["pixelDiffShare", "flipRef", "flipRefP95", "pixelDiffMean"].filter(
-        (k) => keys.includes(k),
-      ),
-      ...keys.filter((k) => /^(pixelDiffShare|flipRef)\./.test(k)).sort(),
-      ...["flipEnd", "motionFlip"].filter((k) => keys.includes(k)),
-    ],
+    metrics: (keys) =>
+      [
+        ...["pixelDiffShare", "flipRef", "flipRefP95", "pixelDiffMean"].filter(
+          (k) => keys.includes(k),
+        ),
+        // Each crop's pixels changed, then its FLIP.
+        ...[
+          ...new Set(
+            keys
+              .filter((k) => /^(pixelDiffShare|flipRef)\./.test(k))
+              .map((k) => k.slice(k.indexOf(".") + 1)),
+          ),
+        ]
+          .sort()
+          .flatMap((crop) =>
+            [`pixelDiffShare.${crop}`, `flipRef.${crop}`].filter((k) =>
+              keys.includes(k),
+            ),
+          ),
+        // Against the run's baseline configuration: in a sweep that is one
+        // of its own points, so only without reference images.
+        ...(keys.includes("pixelDiffShare") ? [] : ["flipEnd"]),
+        "motionFlip",
+      ].filter((k) => keys.includes(k)),
   },
   {
     id: "tiles",
@@ -585,4 +602,64 @@ export function metricGroups(s: Summary, model: SweepModel) {
 export function colorIndexes(lines: Line[]): number[] {
   let k = -1;
   return lines.map((l) => (l.companion ? Math.max(0, k) : ++k));
+}
+
+/**
+ * The image answer for the scenes shown: how many compared points are
+ * within the noise floor of their reference, by region, and which are
+ * not (with their words). Undefined without reference images.
+ */
+export function noiseSummary(
+  record: ReferenceRecord | undefined,
+  s: Summary,
+  model: SweepModel,
+  scene: string,
+):
+  | {
+      floor: boolean;
+      regions: Array<{
+        region: string;
+        compared: number;
+        within: number;
+        beyond: Array<{ config: string; scene: string; words: string }>;
+      }>;
+    }
+  | undefined {
+  if (!record) {
+    return undefined;
+  }
+  const cells = new Set(
+    s.scenes
+      .filter((c) => scene === ALL || cellKey(c) === scene)
+      .map((c) => `${c.scene}|${c.scenario ?? "cold-orbit"}`),
+  );
+  const configs = new Set(model.points.map((p) => p.config));
+  const points = record.points.filter(
+    (p) =>
+      !p.reference &&
+      p.regions &&
+      configs.has(p.config) &&
+      cells.has(`${p.scene}|${p.scenario}`),
+  );
+  const floors = record.floors.filter((f) =>
+    cells.has(`${f.scene}|${f.scenario}`),
+  );
+  const names = [...new Set(floors.flatMap((f) => f.regionNames ?? [WHOLE]))];
+  return {
+    floor: floors.length > 0 && floors.every((f) => !!f.regions),
+    regions: names.map((region) => {
+      const compared = points.filter((p) => p.regions![region]);
+      const beyond = compared.filter((p) => p.within?.[region] !== true);
+      return {
+        region,
+        compared: compared.length,
+        within: compared.length - beyond.length,
+        beyond: beyond.map((p) => ({
+          config: p.config,
+          scene: p.scene,
+          words: pointWords(record, p.scene, p.scenario, p.config, region),
+        })),
+      };
+    }),
+  };
 }

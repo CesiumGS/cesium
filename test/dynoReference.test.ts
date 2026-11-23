@@ -4,7 +4,7 @@
 // and the sweep view's model (bench/suite/views/sweepModel.ts). Images are
 // tiny RGBA arrays the tests make; nothing is read from disk.
 import { describe, expect, it } from "vitest";
-import { lineChart } from "../bench/suite/charts.mjs";
+import { compact, lineChart } from "../bench/suite/charts.mjs";
 import type { Summary } from "../bench/suite/data.ts";
 import {
   compareSweep,
@@ -30,6 +30,7 @@ import {
   floorOf,
   metricGroups,
   moveDimension,
+  noiseSummary,
   pointWords,
   sweepModelOf,
 } from "../bench/suite/views/sweepModel.ts";
@@ -511,6 +512,58 @@ describe("the sweep view's model", () => {
     expect(groups[0]!.keys).toContain("pixelDiffShare.cliff");
   });
 
+  it("puts each crop's pixels before its FLIP, and leaves out flipEnd beside reference images", async () => {
+    const { s, m } = await model();
+    // flipEnd is against the run's baseline configuration: in a sweep, one
+    // of its own points, so the reference metrics replace it.
+    s.scenes[0]!.metrics.flipEnd = {
+      median: 0.1,
+      low: 0.1,
+      high: 0.1,
+      values: [0.1],
+    };
+    const keys = metricGroups(s, m)[0]!.keys;
+    expect(keys.filter((k) => k.endsWith(".cliff"))).toEqual([
+      "pixelDiffShare.cliff",
+      "flipRef.cliff",
+    ]);
+    expect(keys).not.toContain("flipEnd");
+  });
+
+  it("states the answer: how many points are within noise, and which aren't", async () => {
+    const { s, m, record } = await model();
+    const answer = noiseSummary(record, s, m, ALL)!;
+    expect(answer.floor).toBe(true);
+    const [whole, cliff] = answer.regions;
+    // ×4 matches its reference but for noise; ×10 changes a row of pixels.
+    expect(whole).toMatchObject({ region: "whole", compared: 4, within: 2 });
+    expect(whole!.beyond.map((b) => b.words)).toEqual([
+      "25% of pixels",
+      "25% of pixels",
+    ]);
+    expect(whole!.beyond.every((b) => b.config.includes("param.x=10"))).toBe(
+      true,
+    );
+    expect(cliff).toMatchObject({ region: "cliff", compared: 4, within: 2 });
+    expect(cliff!.beyond[0]!.words).toBe("50% of pixels");
+    expect(noiseSummary(undefined, s, m, ALL)).toBeUndefined();
+  });
+
+  it("says there is no noise floor when references ran once", async () => {
+    const sweep = threeAxisSweep(1);
+    const record = (await compareSweep({
+      shots: shotsOf(sweep, 1),
+      sweep,
+      scenes,
+      compare,
+      ...io,
+    }))!;
+    const { s, m } = await model();
+    const answer = noiseSummary(record, s, m, ALL)!;
+    expect(answer.floor).toBe(false);
+    expect(answer.regions[0]!.within).toBe(0);
+  });
+
   it("reads an old one-axis sweep record", () => {
     const s = {
       name: "old.json",
@@ -536,6 +589,26 @@ describe("the sweep view's model", () => {
 });
 
 describe("the sweep view's charts", () => {
+  it("labels close ticks of small values apart", () => {
+    // FLIP and luminance differences are small: two decimals made
+    // 0.005 and 0.01 both read "0.01".
+    expect([0, 0.005, 0.01, 0.015].map(compact)).toEqual([
+      "0",
+      "0.005",
+      "0.01",
+      "0.015",
+    ]);
+    expect([0.0001, 0.0002, 0.25, 0.5, 1.5, 12, 2500].map(compact)).toEqual([
+      "0.0001",
+      "0.0002",
+      "0.25",
+      "0.5",
+      "1.5",
+      "12",
+      "2.5K",
+    ]);
+  });
+
   it("draws unsettled points hollow, the noise band, and no built-in twin", () => {
     const html = lineChart({
       title: "Pixels changed",
