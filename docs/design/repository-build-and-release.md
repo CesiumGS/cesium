@@ -13,7 +13,7 @@
 | Area        | The choice                                                                                                                                             | What it replaces                                                                                              | Current practice it follows or departs from                                                                      |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Layout      | One npm workspace. Published packages in `packages/<name>`, private apps in `apps/`, tools in `tools/`, the one test suite and the harness at the root | 1.x's `Source/`, `Specs/`, `packages/{core,engine,gltf,widgets}`; 2.0 nested in `packages/next`               | npm workspaces for installs and links. No pnpm switch, no Turborepo or Nx (below)                                |
-| Installs    | A committed `package-lock.json`, `npm ci` everywhere, grouped dependency updates, a nightly install from fresh ranges                                  | 1.x's `package-lock=false` (`.npmrc`) and its `.gitignore` entry: every install resolves ranges anew          | npm's own advice to commit the lockfile, which never publishes; OpenSSF's advice to also test what users resolve |
+| Installs    | A committed lockfile (`pnpm-lock.yaml` since CS-1091), a frozen install everywhere, grouped dependency updates, a nightly install from fresh ranges    | 1.x's `package-lock=false` (`.npmrc`) and its `.gitignore` entry: every install resolves ranges anew          | npm's own advice to commit the lockfile, which never publishes; OpenSSF's advice to also test what users resolve |
 | Build       | Vite 8 (Rolldown) library builds, one shared config, one per package; `tsc --build` with project references for declarations                           | gulp, esbuild and 1.x's build; 2.0's single `vite.lib.config.ts` and its `tsconfig.lib.widgets.json` paths    | Vite's library mode with multiple entries; declarations from `tsc`, per file, no rollup for alpha.1              |
 | Development | Exports carry a private `@cesium/source` condition that points at `src/`; the release strips it                                                        | Exports that point at `src/*.ts` in the published shape                                                       | Custom export conditions (`customConditions`, Vite's `resolve.conditions`); npm has no `publishConfig.exports`   |
 | Shaders     | Unchanged: Slang in core, `npm run shaders`, generated WGSL checked in, `shaders:check` in CI with the pinned `slangc`                                 | Nothing                                                                                                       | Generated output checked in, so a build needs no compiler                                                        |
@@ -30,7 +30,8 @@ The final layout, after CS-611 has taken 1.x out and CS-835 has moved 2.0:
 ```text
 /                                 the workspace root: private, named cesium-workspace, never published
   package.json                    workspaces: packages/*, apps/*, tools/*; the repository's scripts
-  package-lock.json               committed, the one lockfile for every workspace ("Installs and the lockfile")
+  pnpm-lock.yaml                  committed, the one lockfile for every workspace ("Installs and the lockfile"; package-lock.json until CS-1091)
+  pnpm-workspace.yaml             pnpm's packages globs and overrides (CS-1091)
   tsconfig.json                   the references to every package and to the harness
   tsconfig.base.json              compiler options every package shares (today's packages/next/tsconfig.json)
   vite.config.ts                  the dev server and Dyno's routes (today's packages/next/vite.config.ts)
@@ -67,6 +68,8 @@ The final layout, after CS-611 has taken 1.x out and CS-835 has moved 2.0:
 **What it departs from.** Most TypeScript monorepos written up in 2026 add a task runner, Turborepo or Nx, on top of the workspaces, for caching and affected-only runs (sources: Nx's comparison, the DEV write-ups). This design doesn't, for alpha.1. The per-package JavaScript builds are independent of each other (siblings are external, below), `tsc --build` orders the declarations, and the slow parts of this repository's checks (the GPU suites, `test:data`) aren't cacheable task outputs anyway. A runner is a later call if CI time says so. pnpm's stricter installs would catch undeclared dependencies; the import-boundary test catches them instead (below), and npm stays, because hitld's worktree setup, Dyno's release store (`npm pack`) and every script assume it.
 
 ## Installs and the lockfile
+
+**Update (CS-1091, 2026-11-23): pnpm installs, npm packs and stages.** The owner's answer to CS-1090 (A, after CS-951's spike, `docs/design/pnpm-spike.md`) moved every install to pnpm. `pnpm-lock.yaml` replaces `package-lock.json`, imported from it at the same versions, and the root's `packageManager` pins pnpm 11.12.0 through corepack. hitld's worktree setup, every CI job and the release workflow's `verify` job run `pnpm install --frozen-lockfile --ignore-scripts` (the worktree setup adds `--prefer-offline`), CI sets pnpm up with `pnpm/action-setup`, pinned by commit, and caches pnpm's store. Dyno's snapshots install their own tree with pnpm. Dependabot's `npm` entry covers the pnpm lockfile. The release path still packs with `npm pack` and stages with `npm stage publish`, unchanged: neither reads `node_modules`, and the `publish` job installs nothing. Where the text below says `npm ci`, read the frozen pnpm install; the rest of the design stands.
 
 **Today, no install is reproducible.** The root `.npmrc` says `package-lock=false` and `.gitignore` lists `package-lock.json`, 1.x's long-standing choice. Every `npm install`, in every worktree and every CI job, resolves the ranges in the `package.json` files anew. On 2026-11-21 a fresh worktree resolved `@playwright/test` (`^1.62.1`) to 1.65.1 while the main checkout has 1.64.1, so two checkouts of one commit ran different tools. Most of 2.0's own runtime dependencies are exact pins, but its dev dependencies (`vitest ^5.0.5`, `typescript ^6.0.2`, `ktx-parse ^2.0.0`, `meshoptimizer ^1.2.0`) and every transitive dependency float.
 
@@ -132,8 +135,8 @@ Nothing changes in how shaders build. Slang sources stay in `packages/core/src/*
 ### What the build replaces
 
 - 1.x's gulp tasks, its esbuild configuration, `Build/`, `index.cjs`, the zip, `build-ts` and `tsd-jsdoc`: removed with 1.x in CS-611. The root's `prepare` becomes `husky` alone. CS-612 removes what 2.0 itself has that the per-package build supersedes: `vite.lib.config.ts` (it becomes the umbrella's browser build), `tsconfig.lib.json` and `tsconfig.lib.widgets.json`.
-- hitld's worktree setup (`.human-in-the-lead/policy.json`, an owner path) becomes `npm ci --ignore-scripts --no-audit --no-fund` and nothing else: no gulp, no 1.x builds. Its merge gates' `cd packages/next && …` become root commands in CS-835.
-- A fresh clone builds and tests with `npm ci && npm run build && npm test` (CS-612's done-when). The data stores stay `npm run setup`.
+- hitld's worktree setup (`.human-in-the-lead/policy.json`, an owner path) becomes `npm ci --ignore-scripts --no-audit --no-fund` (since CS-1091, `pnpm install --frozen-lockfile --ignore-scripts --prefer-offline`) and nothing else: no gulp, no 1.x builds. Its merge gates' `cd packages/next && …` become root commands in CS-835.
+- A fresh clone builds and tests with `npm ci && npm run build && npm test` (CS-612's done-when; since CS-1091, `pnpm install --frozen-lockfile && pnpm run build && pnpm test`). The data stores stay `npm run setup`.
 
 ## Tests and gates
 
@@ -273,7 +276,7 @@ A release record is the change `npm run release:version` writes (`scripts/releas
 0. **The plan, with the tree untouched.** `changeset version` runs first in a scratch copy of the manifests, the lockfile and `.changeset/`. It stops, leaving the tree as it was, when the stable version it gives isn't new (a changeset naming only an experimental package would otherwise be swallowed by the paired number) or can't pair (a minor of 100 or more).
 1. `changeset version` consumes the pending changesets: it sets the stable group's one version in every stable package and in each sibling dependency (exact), updates the root's reference to the umbrella, and writes each package's `CHANGELOG.md` section.
 2. `scripts/release/lines.mjs`'s `applyPaired` writes the experimental line's paired version (below), then both lines are checked, the root's exact dev dependency on the umbrella included. Changesets 3.0.3 moves that dependency itself (a scratch copy, 2026-11-22, and `test/release.test.ts`); the check catches it if a later version doesn't.
-3. `npm install --package-lock-only --ignore-scripts` moves the lockfile's workspace versions with them, so `npm ci` still agrees.
+3. `pnpm install --lockfile-only --ignore-scripts` (CS-1091; `npm install --package-lock-only` before) moves the lockfile's workspace versions with them, so a frozen install still agrees.
 
 `npm run release:notes` prints the combined notes the GitHub release will carry, for the review.
 
