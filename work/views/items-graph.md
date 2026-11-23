@@ -28,6 +28,7 @@ graph LR
     CS_779["CS-779 Merge CS-23, support reports on Engine and View (view.support, "]:::done
     CS_971["CS-971 Every Slang loop is bounded by a constant, and a test enforces "]:::open
     CS_1029["CS-1029 User custom shaders (CustomShader WGSL and Slang, and CustomSh"]:::proposed
+    CS_1082["CS-1082 Clamp every data-derived buffer index outside loops, and exten"]:::proposed
   end
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
@@ -830,10 +831,10 @@ graph LR
     CS_935["CS-935 CS-815 Q3: rename cameraRecord to camera in PickPositionResult "]:::done
     CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::done
     CS_939["CS-939 PickPositionResult and CorePick say camera, not cameraRecord (C"]:::done
-    CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::open
+    CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::done
     CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::done
     CS_944["CS-944 CS-939: CorePick already has a camera field; how is CorePick na"]:::done
-    CS_950["CS-950 Merge CS-940, stableIdToHex and parseStableId"]:::decision
+    CS_950["CS-950 Merge CS-940, stableIdToHex and parseStableId"]:::dropped
     CS_974["CS-974 What does alpha.1 say about core's names that the package map m"]:::done
     CS_975["CS-975 Is the stability-tier sort its own pass before the name review?"]:::done
     CS_976["CS-976 One word for end of life: dispose or destroy?"]:::done
@@ -857,6 +858,7 @@ graph LR
     CS_1056["CS-1056 The surface file counts each export twice"]:::proposed
     CS_1079["CS-1079 Merge CS-939, the camera rename on pick results"]:::done
     CS_1081["CS-1081 Is StableKey's feature encoding, ['feature', source, key(, row"]:::decision
+    CS_1083["CS-1083 Merge CS-940, the StableId hex helpers with a branded StableId"]:::done
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -1947,6 +1949,7 @@ graph LR
   CS_1026 --> CS_1028
   CS_613 --> CS_1030
   CS_921 --> CS_1078
+  CS_971 --> CS_1082
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

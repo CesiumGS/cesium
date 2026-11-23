@@ -263,8 +263,6 @@ CS-437 The public API reviews
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-940  stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
-  CS-950  decision: Merge CS-940, stableIdToHex and parseStableId
   CS-977  Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
   CS-978  dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A)
   CS-985  A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
@@ -309,5 +307,5 @@ CS-609 A clean 2.0 branch and a modern build
   CS-951  A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
 
-240 ready
+238 ready
 ```

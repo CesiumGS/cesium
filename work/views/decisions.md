@@ -51,7 +51,6 @@ CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
-  CS-950  Merge CS-940, stableIdToHex and parseStableId (owner)
   CS-1081  Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs? (owner)
 
 CS-615 Packaging and package names
@@ -64,5 +63,5 @@ CS-199 Dyno hardening, packaging and CI
 CS-16 Streaming robustness
   CS-1032  Merge CS-144, the fault-injection harness (owner)
 
-20 open decision(s) for owner
+19 open decision(s) for owner
 ```

@@ -61,7 +61,7 @@ Generated from the item files by `npx hitld work views` (its marker keeps the ol
 
 ### Engine profiles
 
-[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 7 of 23 done, 10 ready, 3 blocked, 3 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
+[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 7 of 24 done, 10 ready, 3 blocked, 4 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why ([CS-466](./milestones/CS-466-each-view-knows-what-the-device-supports-and-why.md), Planned)
 
@@ -97,6 +97,7 @@ No milestone
 - [x] [CS-779](./items/CS-779-merge-cs-23-support-reports-on-engine-and-view.md) decision: Merge CS-23, support reports on Engine and View (view.support, view.effective, view.explain, strict). Done.
 - [ ] [CS-971](./items/CS-971-every-slang-loop-is-bounded-by-a-constant-and-a.md) Every Slang loop is bounded by a constant, and a test enforces it. Needs nothing.
 - [?] [CS-1029](./items/CS-1029-user-custom-shaders-customshader-wgsl-and-slang.md) User custom shaders (CustomShader WGSL and Slang, and CustomShader.fromSlang) pass the loop guard before they reach the GPU. Proposed. Needs nothing.
+- [?] [CS-1082](./items/CS-1082-clamp-every-data-derived-buffer-index-outside.md) Clamp every data-derived buffer index outside loops, and extend unclampedIndices to every entry point. Proposed. Needs CS-971.
 
 ### The WebGL 2 renderer
 
@@ -1219,7 +1220,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 32 of 62 done, 16 ready, 4 blocked, 10 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 34 of 62 done, 14 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1270,10 +1271,10 @@ No milestone
 - [x] [CS-935](./items/CS-935-cs-815-q3-rename-camerarecord-to-camera-in.md) decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Done.
 - [x] [CS-936](./items/CS-936-cs-815-q4-how-does-a-bigint-stableid-reach-json.md) decision: CS-815 Q4: how does a bigint StableId reach JSON?. Done.
 - [x] [CS-939](./items/CS-939-pickpositionresult-and-corepick-say-camera-not.md) PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Done.
-- [ ] [CS-940](./items/CS-940-stableidtohex-and-parsestableid-a-bigint.md) stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
+- [x] [CS-940](./items/CS-940-stableidtohex-and-parsestableid-a-bigint.md) stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Done.
 - [x] [CS-943](./items/CS-943-route-routestep-and-recordable-are-exported-so.md) Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Done.
 - [x] [CS-944](./items/CS-944-cs-939-corepick-already-has-a-camera-field-how.md) decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
-- [ ] [CS-950](./items/CS-950-merge-cs-940-stableidtohex-and-parsestableid.md) decision: Merge CS-940, stableIdToHex and parseStableId. Needs nothing. Decided by owner.
+- [-] [CS-950](./items/CS-950-merge-cs-940-stableidtohex-and-parsestableid.md) decision: Merge CS-940, stableIdToHex and parseStableId. Dropped: undefined
 - [x] [CS-974](./items/CS-974-what-does-alpha-1-say-about-core-s-names-that.md) decision: What does alpha.1 say about core's names that the package map moves elsewhere?. Done.
 - [x] [CS-975](./items/CS-975-is-the-stability-tier-sort-its-own-pass-before.md) decision: Is the stability-tier sort its own pass before the name review?. Done.
 - [x] [CS-976](./items/CS-976-one-word-for-end-of-life-dispose-or-destroy.md) decision: One word for end of life: dispose or destroy?. Done.
@@ -1297,6 +1298,7 @@ No milestone
 - [?] [CS-1056](./items/CS-1056-the-surface-file-counts-each-export-twice.md) The surface file counts each export twice. Proposed. Needs nothing.
 - [x] [CS-1079](./items/CS-1079-merge-cs-939-the-camera-rename-on-pick-results.md) decision: Merge CS-939, the camera rename on pick results. Done.
 - [ ] [CS-1081](./items/CS-1081-is-stablekey-s-feature-encoding-feature-source.md) decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?. Needs nothing. Decided by owner.
+- [x] [CS-1083](./items/CS-1083-merge-cs-940-the-stableid-hex-helpers-with-a.md) decision: Merge CS-940, the StableId hex helpers with a branded StableId. Done.
 
 ### Editing
 
