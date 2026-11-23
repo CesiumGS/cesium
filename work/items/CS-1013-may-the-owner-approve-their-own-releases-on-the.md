@@ -27,4 +27,4 @@ Recommended: A for alpha.1, B before 2.0.0.
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

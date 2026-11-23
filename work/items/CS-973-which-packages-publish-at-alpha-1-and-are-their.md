@@ -28,4 +28,4 @@ Recommended: C.
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

@@ -52,4 +52,4 @@ The owner, 2026-11-21: "let's sort it out for alpha.1." CS-833 (a SimReady scopi
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

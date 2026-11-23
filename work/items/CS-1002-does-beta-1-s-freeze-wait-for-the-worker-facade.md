@@ -28,4 +28,4 @@ Recommended: A where the plan allows, else B.
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

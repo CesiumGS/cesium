@@ -27,4 +27,4 @@ Recommended: A for the kinds, B for the report call.
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

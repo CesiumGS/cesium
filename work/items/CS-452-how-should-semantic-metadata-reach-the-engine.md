@@ -28,4 +28,4 @@ Recommendation: with the vector renderer's plan, since point clouds, vector tile
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

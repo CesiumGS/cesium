@@ -27,4 +27,4 @@ Recommended: A. CS-56 already reworks the residual's row window, so the goldens 
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).

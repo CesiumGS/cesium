@@ -31,4 +31,4 @@ The owner, 2026-11-21: design the write path through the seams first (CS-831), r
 
 ## Answer
 
-Open.
+Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).
