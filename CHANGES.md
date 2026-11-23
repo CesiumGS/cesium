@@ -47,6 +47,12 @@
 - Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
 
+### @cesium/widgets
+
+#### Fixes :wrench:
+
+- Fixed the Timeline throwing an uncaught DeveloperError when the visible window starts before year 1. The window is now clamped to start at the earliest representable Gregorian date. [#13769](https://github.com/CesiumGS/cesium/issues/13769)
+
 ## 1.147 - 2026-11-02
 
 ### @cesium/core
