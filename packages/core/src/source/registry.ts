@@ -6,7 +6,7 @@
  * URL("./csvSource.js", import.meta.url) }`. Its module's default export
  * is the `SourceKind`, imported the first time an asset needs it.
  */
-import { canonicalSource } from "../scene/identity.ts";
+import { assetSource } from "./sinks.ts";
 import type {
   AssetRef,
   AssetResolver,
@@ -119,7 +119,7 @@ export class SourceKinds {
  * data URI's hash rather than its payload. Long ones are cut.
  */
 function describe(asset: ResolvedAsset): string {
-  const source = canonicalSource(asset.url.href);
+  const source = assetSource(asset);
   return source.length > 200 ? `${source.slice(0, 200)}…` : source;
 }
 

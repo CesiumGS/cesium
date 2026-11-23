@@ -7,15 +7,20 @@
  * CS-555, features with CS-557, render features with CS-841's item).
  *
  * The override contract: a source keys everything by its own keys and never
- * sees overrides. A row's feature ID is made from its content (its content
- * ID and canonical source) and its batch's `names` entry (the source's own
- * key, the same at every level), or else from the batch's key and its index:
- * never from a scene item, so every item of the content shares it. A
+ * sees overrides. A row's feature ID is made from its content's canonical
+ * source (`canonicalSource`) and its batch's `names` entry (the source's own
+ * key, the same at every level), or else from the batch's key and its index,
+ * and nothing else (CS-1031 A): never from a scene item or the content's ID,
+ * so every item and every open of the content shares it, in every run. A
  * writable source must name every row (CS-831's S7). A source's keys are one
  * space: a row named `k` and a draw whose `DrawOptions.id` is `k` are one
  * feature.
  */
-import { stableIdOf, type StableId } from "../scene/identity.ts";
+import {
+  canonicalSource,
+  stableIdOf,
+  type StableId,
+} from "../scene/identity.ts";
 import type {
   ContentKey,
   CreditList,
@@ -23,6 +28,7 @@ import type {
   FeatureBatch,
   PointBatch,
   RasterImage,
+  ResolvedAsset,
   RowSink,
   SampleBatch,
 } from "./types.ts";
@@ -47,29 +53,29 @@ export interface RowAt {
   readonly index: number;
 }
 
-/** What makes the rows' feature IDs: the content's ID and canonical source. */
-export interface RowIdentityContext {
-  /** The content's ID (`SourceContent.id`). */
-  readonly content: string;
-  readonly source: string;
+/**
+ * A resolved asset's canonical source: what its content's feature IDs, and
+ * every message that names it, are made from (CS-1031 A). The one place the
+ * seam makes it: `canonicalSource` of the URL its resolver gave, so it has
+ * no credentials, query (a token or a key never enters it) or fragment,
+ * except a Cesium ion asset's version (`v`); a data URI becomes its bytes'
+ * hash. Two assets whose URLs differ only in their query or a token are one
+ * source, with one set of feature IDs.
+ */
+export function assetSource(asset: ResolvedAsset): string {
+  return canonicalSource(asset.url.href);
 }
 
 /**
- * The feature ID of what its source keys `key` in content `identity`
- * (`FeatureId`): a row it names `key`, or a draw without features whose
- * `DrawOptions.id` is `key`. Its key kind is `feature`, which has no item,
- * so it is never an instance ID (CS-957 A).
+ * The feature ID of what the source at canonical source `source`
+ * (`canonicalSource`) keys `key` (`FeatureId`): a row it names `key`, or a
+ * draw without features whose `DrawOptions.id` is `key`. A function of the
+ * two alone (CS-1031 A), so the same across opens, worlds and runs. Its key
+ * kind is `feature`, which has no item, so it is never an instance ID
+ * (CS-957 A).
  */
-export function featureIdOf(
-  identity: RowIdentityContext,
-  key: string,
-): StableId {
-  return stableIdOf({
-    kind: "feature",
-    content: identity.content,
-    source: identity.source,
-    key,
-  });
+export function featureIdOf(source: string, key: string): StableId {
+  return stableIdOf({ kind: "feature", source, key });
 }
 
 /**
@@ -92,7 +98,8 @@ export class ContentRows {
   writable = false;
   private closed = false;
 
-  constructor(private readonly identity: RowIdentityContext) {}
+  /** `source`: its content's canonical source, what its rows' feature IDs are made from. */
+  constructor(private readonly source: string) {}
 
   /** The sinks a source writes, over these rows. */
   sinks(): {
@@ -333,18 +340,17 @@ export class ContentRows {
 
   private idsOf(batch: FeatureBatch | PointBatch | CustomRows): BigUint64Array {
     const ids = new BigUint64Array(batch.count);
-    const { content, source } = this.identity;
+    const source = this.source;
     for (let i = 0; i < batch.count; i++) {
       const name = batch.names?.[i];
       if (name !== undefined) {
-        const id = featureIdOf(this.identity, name);
+        const id = featureIdOf(source, name);
         this.nameIds.set(name, id);
         this.idNames.set(id, name);
         ids[i] = id;
       } else {
         ids[i] = stableIdOf({
           kind: "feature",
-          content,
           source,
           key: batch.key,
           row: i,

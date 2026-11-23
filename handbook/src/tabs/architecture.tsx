@@ -632,11 +632,12 @@ export function Architecture() {
           </li>
           <li>
             Everything a source writes carries a stable ID in two parts: a
-            feature ID made from the content and the source's own key for the
-            feature, the same wherever the content is placed, which edits and
-            live updates key by; and an instance ID for each placement, which
-            its draws carry and which is never its feature ID. Labels and edits
-            set by feature ID reach every placement.
+            feature ID made from the source's canonical address and its own key
+            for the feature, the same wherever, however often and in whichever
+            run the source is opened, which edits and live updates key by; and
+            an instance ID for each placement, which its draws carry and which
+            is never its feature ID. Labels and edits set by feature ID reach
+            every placement.
           </li>
         </ul>
         <p>

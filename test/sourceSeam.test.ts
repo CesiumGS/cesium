@@ -248,11 +248,11 @@ describe("Engine.open and World.add", () => {
       "Roads",
       "Image a",
     ]);
-    // Feature IDs from the source's own names: the same in another run, and
-    // of their own key kind, with no item (CS-957 A).
+    // Feature IDs from the canonical source and the source's own names only:
+    // the same in another run, of their own key kind, with no item (CS-957 A,
+    // CS-1031 A).
     const road = stableIdOf({
       kind: "feature",
-      content: content.id,
       source: content.source,
       key: "road-1",
     });
@@ -623,12 +623,7 @@ describe("the edit layer (CS-865)", () => {
     rt.tick();
     rt.tick();
     const id = (key: string) =>
-      stableIdOf({
-        kind: "feature",
-        content: content.id,
-        source: content.source,
-        key,
-      });
+      stableIdOf({ kind: "feature", source: content.source, key });
     // The box's instance ID in its item: the edit layer takes it as its feature's.
     const drawId = stableIdOf({
       kind: "draw",
@@ -1334,9 +1329,9 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     await expect(
       rt.open({ url: "https://data.test/b.sample" }, { id: "mine" }),
     ).rejects.toThrow(/the id "mine" is open already/);
-    // Their rows' IDs differ.
+    // Their feature IDs are one source's: the same (CS-1031 A).
     const road = (content: SourceContent) => content.featureId("road-0");
-    expect(road(first)).not.toBe(road(second));
+    expect(road(first)).toBe(road(second));
   });
 
   it("names a data URI by its hash, never its payload, when no kind accepts it", async () => {
@@ -1353,7 +1348,7 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
 
 describe("what the sinks, the edit layer and the change sets refuse", () => {
   it("refuses offsets that don't increase from 0, and holes outside their feature", () => {
-    const { features } = new ContentRows({ content: "i", source: "s" }).sinks();
+    const { features } = new ContentRows("s").sinks();
     const lines = (offsets: number[], holes?: number[][]) => ({
       key: "k",
       geometry: "polygon" as const,
@@ -2027,7 +2022,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     // identify by the feature ID: as a placement that draws it shows it.
     expect(world.identity.identify(box)).toMatchObject({
       id: box,
-      key: { kind: "feature", content: "city", key: "a/box" },
+      key: { kind: "feature", source: content.source, key: "a/box" },
       feature: box,
       labels: { class: ["kiosk"] },
     });
@@ -2196,6 +2191,145 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     // An explicit id the tileset holds is still refused, naming it.
     expect(() => world.add(content, { id: "city" })).toThrow(
       /the id "city" is drawn already/,
+    );
+  });
+});
+
+describe("feature IDs from the canonical source and the key only (CS-1031 A)", () => {
+  let engine: Engine;
+  let world: World;
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+  });
+  afterEach(() => engine.destroy());
+
+  const CITY = "https://data.test/city.sample";
+  const instanceOf = (content: SourceContent, key: string) =>
+    stableIdOf({
+      kind: "draw",
+      item: key,
+      source: content.source,
+      content: "a/box",
+    });
+
+  /** Opens `url` with `id` and places it in `into`, loaded. */
+  async function placed(url: string, id: string, into: World = world) {
+    const content = await engine.open({ url }, { id });
+    const item = into.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    return { content, item };
+  }
+
+  it("gives one source opened twice, in two worlds, the same feature IDs and their own instance IDs; a query token changes nothing", async () => {
+    const other = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world: other });
+    const a = await placed(CITY, "a");
+    const b = await placed(`${CITY}?token=s3cret-key`, "b", other);
+    expect(b.content.source).toBe(a.content.source);
+    expect(b.content.source).not.toContain("s3cret");
+    expect(a.content.id).not.toBe(b.content.id);
+    for (const key of ["road-0", "road-1", "a/box"]) {
+      expect(b.content.featureId(key)).toBe(a.content.featureId(key));
+    }
+    expect([...b.content.rows.features.get("a")!.ids]).toEqual([
+      ...a.content.rows.features.get("a")!.ids,
+    ]);
+    // Each open's items have their own instance IDs, with one feature ID.
+    const boxA = instanceOf(a.content, a.item.key);
+    const boxB = instanceOf(b.content, b.item.key);
+    expect(boxA).not.toBe(boxB);
+    const box = a.content.featureId("a/box");
+    expect([boxA, boxB]).not.toContain(box);
+    expect(world.identity.identify(boxA)!.feature).toBe(box);
+    expect(other.identity.identify(boxB)!.feature).toBe(box);
+    // In another engine, another run, under another content ID: the same.
+    const second = await fakeEngine();
+    try {
+      second.sources.registerKind({ id: "sample", module: SAMPLE });
+      const c = await second.open({ url: CITY }, { id: "elsewhere" });
+      expect(c.featureId("road-1")).toBe(a.content.featureId("road-1"));
+    } finally {
+      second.destroy();
+    }
+  });
+
+  it("applies a key-only change set and a peer's change set carrying its feature IDs", async () => {
+    const mine = (await placed(CITY, "mine")).content;
+    const peer = await engine.open({ url: CITY }, { id: "peer" });
+    const feed = (changes: ChangeSet) => {
+      sourceOf(mine).push({ kind: "features", changes });
+      engine.scene.workers.jobs.apply(Infinity);
+    };
+    // Key only, from a server.
+    feed({
+      id: "cs-1",
+      source: mine.source,
+      ops: [{ op: "delete", key: "road-0" }],
+    });
+    expect(mine.feed.get(mine.featureId("road-0"))?.kind).toBe("hide");
+    // A peer's, with the IDs its own open filled: they are this open's too.
+    const theirs = peer.resolve({
+      id: "cs-2",
+      source: peer.source,
+      ops: [
+        { op: "update", key: "road-1", patch: { properties: { lanes: 9 } } },
+      ],
+    });
+    expect(theirs.ops[0]!.id).toBe(mine.featureId("road-1"));
+    feed(changeSetFromJson(changeSetToJson(theirs)));
+    expect(mine.feature(mine.featureId("road-1"))?.properties?.lanes).toBe(9);
+    // A peer's IDs for another source are refused whole.
+    const stranger = await engine.open(
+      { url: "https://data.test/other.sample" },
+      { id: "stranger" },
+    );
+    const foreign = stranger.resolve({
+      id: "cs-3",
+      source: stranger.source,
+      ops: [{ op: "delete", key: "car-0" }],
+    });
+    expect(() => mine.resolve({ ...foreign, source: mine.source })).toThrow(
+      /op 0: its id isn't its key's feature ID/,
+    );
+  });
+
+  it("applies labels saved by feature ID after the source is opened again", async () => {
+    const first = await placed(CITY, "first");
+    const saved = first.content.featureId("a/box");
+    world.identity.setLabels(saved, "class", ["kiosk"]);
+    first.content.destroy();
+    expect(world.identity.identify(saved)).toBeUndefined(); // nothing draws it
+    const again = await placed(CITY, "again");
+    expect(again.content.featureId("a/box")).toBe(saved);
+    const box = instanceOf(again.content, again.item.key);
+    expect(world.identity.identify(box)!.labels.class).toEqual(["kiosk"]);
+    expect(world.identity.identify(saved)!.labels.class).toEqual(["kiosk"]);
+  });
+
+  it("gives two sources with one key different feature IDs", async () => {
+    const city = (await placed(CITY, "city")).content;
+    const other = (await placed("https://data.test/other.sample", "other"))
+      .content;
+    for (const key of ["road-0", "a/box"]) {
+      expect(other.featureId(key)).not.toBe(city.featureId(key));
+    }
+    // An ion asset's version is part of its source: a new version, new IDs.
+    expect(
+      stableIdOf({
+        kind: "feature",
+        source: "https://assets.ion.cesium.com/1/tileset.json?v=1",
+        key: "k",
+      }),
+    ).not.toBe(
+      stableIdOf({
+        kind: "feature",
+        source: "https://assets.ion.cesium.com/1/tileset.json?v=2",
+        key: "k",
+      }),
     );
   });
 });

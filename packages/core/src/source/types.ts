@@ -60,15 +60,15 @@ export interface ModuleRef {
 export type ContentKey = string;
 
 /**
- * A feature's ID (CS-957 A): made from its content and the source's own key
- * for the feature (a row's `RowIdentity.names` entry, a draw's
- * `DrawOptions.id`), never from the scene item that places it, so it is the
- * same wherever the content is placed. Rows, the edit layer, change sets,
- * metadata and labels name it.
+ * A feature's ID (CS-957 A, CS-1031 A): made from its content's canonical
+ * source (`SourceContent.source`) and the source's own key for the feature
+ * (a row's `RowIdentity.names` entry, a draw's `DrawOptions.id`), and
+ * nothing else: never from the scene item that places it or the content's
+ * ID, so it is the same across opens, worlds and runs. Rows, the edit layer,
+ * change sets, metadata and labels name it.
  *
- * Its key kind is `feature` (`StableKey`): the content's ID
- * (`SourceContent.id`), its canonical source and the source's key, with no
- * item, so it is never an instance ID.
+ * Its key kind is `feature` (`StableKey`), which has no item, so it is never
+ * an instance ID.
  * @experimental
  */
 export type FeatureId = StableId;

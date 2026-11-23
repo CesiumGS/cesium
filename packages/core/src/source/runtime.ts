@@ -30,7 +30,6 @@
  */
 import type { FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
-import { canonicalSource } from "../scene/identity.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
 import { SourceContent } from "./content.ts";
 import {
@@ -46,6 +45,7 @@ import {
   type KindRef,
   type ModuleLoader,
 } from "./registry.ts";
+import { assetSource } from "./sinks.ts";
 import type {
   AssetRef,
   AssetResolver,
@@ -241,7 +241,7 @@ export class SourceRuntime {
       types.add(decoder.type);
     }
     const content = new SourceContent(
-      this.contentId(options.id, canonicalSource(asset.url.href)),
+      this.contentId(options.id, assetSource(asset)),
       asset,
       kind.id,
     );
@@ -775,8 +775,9 @@ export class SourceRuntime {
 
   /**
    * Content `explicit`'s ID, or `derived` (its canonical source) when none
-   * is given. Two open contents never share one, since their rows' IDs are
-   * made from it: a second `explicit` is refused, and a second `derived`
+   * is given. Two open contents never share one, since it is their first
+   * items' key, and so in their instance IDs (feature IDs never depend on
+   * it, CS-1031 A): a second `explicit` is refused, and a second `derived`
    * takes an ordinal (`#2`), reported, as a second item of a tileset does.
    * A `derived` one also skips the keys worlds' items hold: content and
    * tileset items take one ordinal rule.
@@ -803,7 +804,7 @@ export class SourceRuntime {
     }
     if (ordinal > 1) {
       this.reportMessage(
-        `open: ${derived} is open or drawn already; without an id this content's IDs take the ordinal #${ordinal}, which depends on the order it was opened. Give each content an id (OpenOptions.id).`,
+        `open: ${derived} is open or drawn already; without an id this content's ID, and its items' instance IDs, take the ordinal #${ordinal}, which depends on the order it was opened (its feature IDs don't). Give each content an id (OpenOptions.id).`,
       );
     }
     return idOf(ordinal);

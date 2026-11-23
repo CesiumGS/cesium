@@ -12,31 +12,30 @@
  * same place (CS-554 makes items general, with placement).
  *
  * Two IDs (CS-957 A):
- * - **Feature IDs** (`FeatureId`) are made from the content, its content ID
- *   (`SourceContent.id`) and canonical source, and the source's own key for
- *   the feature (a row's name, a draw's `DrawOptions.id`), never from an
- *   item. Their key kind is `feature`, which has no item. Rows, the edit
- *   layer, change sets and labels set on them name them; every item shows
- *   the same edits and labels.
+ * - **Feature IDs** (`FeatureId`) are made from the content's canonical
+ *   source (`SourceContent.source`) and the source's own key for the
+ *   feature (a row's name, a draw's `DrawOptions.id`), and nothing else
+ *   (CS-1031 A): never from an item or the content's ID, so one source
+ *   opened twice, placed in two worlds or opened in another run gives the
+ *   same ones. Their key kind is `feature`, which has no item. Rows, the
+ *   edit layer, change sets and labels set on them name them; every item
+ *   shows the same edits and labels.
  * - **Instance IDs** (`InstanceId`) add the item: each item's draws carry its
- *   identity, keyed by `ContentItem.key`, so one content placed twice gives
- *   two, and neither is ever its feature ID. A pick reports the instance ID;
+ *   identity, keyed by `ContentItem.key`, so one content placed twice, or
+ *   one source opened twice, gives two, and neither is ever its feature ID. A pick reports the instance ID;
  *   `World.identity.identify` gives its feature ID (`Identified.feature`),
  *   and the edit layer takes either.
  *
- * IDs don't change when an item is removed and the content placed again,
- * and two open contents never share feature IDs (`Engine.open` refuses or
- * numbers a second of one ID).
+ * IDs don't change when an item is removed and the content placed again.
+ * Two open contents of one source share feature IDs, and each keeps its own
+ * edits; their content IDs differ (`Engine.open` refuses or numbers a
+ * second of one ID), and so do their items' keys and instance IDs.
  *
  * Once destroyed, its sinks refuse writes (they throw), its source's jobs
  * are canceled and its pushes dropped; a draw sink's releases still pass,
  * so a source's own `destroy` can free what it made.
  */
-import {
-  canonicalSource,
-  stableIdOf,
-  type ItemIdentity,
-} from "../scene/identity.ts";
+import { stableIdOf, type ItemIdentity } from "../scene/identity.ts";
 import type { DrawHandle, DrawOptions } from "../scene/world/types.ts";
 import type { DrawSink } from "../streaming/DrawSink.ts";
 import {
@@ -47,7 +46,12 @@ import {
   type GeometryData,
 } from "./editing.ts";
 import { EditLayer } from "./editLayer.ts";
-import { ContentRows, featureIdOf, type HeldRows } from "./sinks.ts";
+import {
+  ContentRows,
+  assetSource,
+  featureIdOf,
+  type HeldRows,
+} from "./sinks.ts";
 import type {
   ContentSource,
   CreditList,
@@ -156,7 +160,11 @@ export class SourceContent {
   readonly edits = new EditLayer((id) => this.instances.get(id) ?? id);
   /** @internal Others' changes from the source's feed (`features` pushes), under `edits`. */
   readonly feed = new EditLayer();
-  /** The canonical reference its IDs are made from, without credentials or query tokens. */
+  /**
+   * Its canonical source (`assetSource`): what its feature IDs are made
+   * from, with the source's keys, and nothing else (CS-1031 A). No
+   * credentials, query tokens or keys.
+   */
   readonly source: string;
   private source_: ContentSource | undefined;
   private world_: ContentWorld | undefined;
@@ -181,8 +189,8 @@ export class SourceContent {
     readonly asset: ResolvedAsset,
     readonly kind: string,
   ) {
-    this.source = canonicalSource(asset.url.href);
-    this.rows = new ContentRows({ content: id, source: this.source });
+    this.source = assetSource(asset);
+    this.rows = new ContentRows(this.source);
     this.drawSink = this.makeDrawSink();
     const reapply = (ids: readonly FeatureId[]) => {
       this.refreshDraws(ids);
@@ -257,8 +265,8 @@ export class SourceContent {
   /**
    * The feature ID of the feature its source keys `key`: a row it names
    * `key` (`RowIdentity.names`), or a draw without features whose
-   * `DrawOptions.id` is `key`. The same in every item, and in every run that
-   * opens it with this ID.
+   * `DrawOptions.id` is `key`. The same in every item, every open of this
+   * source and every run (CS-1031 A).
    * @experimental
    */
   featureId(key: string): FeatureId {
@@ -267,7 +275,7 @@ export class SourceContent {
         "SourceContent.featureId: a key is the source's own, a non-empty string.",
       );
     }
-    return featureIdOf({ content: this.id, source: this.source }, key);
+    return featureIdOf(this.source, key);
   }
 
   /**
@@ -611,7 +619,7 @@ export class SourceContent {
         scope: "tile",
         item: item.identity,
         // Its features' feature IDs, beside the instance IDs (CS-957 A).
-        feature: { content: this.id, key: options.id! },
+        feature: { key: options.id! },
       },
     });
     draw.placed.set(item, handle);

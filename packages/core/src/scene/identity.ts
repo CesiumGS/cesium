@@ -84,11 +84,12 @@ export type Labels = Readonly<Record<string, readonly string[]>>;
  * - `draw`: content with no features.
  * - `host`: a host's own key (`DrawOptions.id`).
  * - `feature`: a content source's feature (`FeatureId`, CS-957 A): its
- *   content's ID (`SourceContent.id`), its canonical source and the source's
- *   own key for it (a row's name, a draw's `DrawOptions.id`). It has no
- *   item, so every placement of the content shares it, and it is never an
- *   instance ID. With `row`, it is row `row` of the batch keyed `key`, a row
- *   its source didn't name.
+ *   source's canonical reference and the source's own key for it (a row's
+ *   name, a draw's `DrawOptions.id`), and nothing else (CS-1031 A). It has
+ *   no item and no content ID, so every placement and every open of the
+ *   content shares it, in every run, and it is never an instance ID. With
+ *   `row`, it is row `row` of the batch keyed `key`, a row its source didn't
+ *   name.
  *
  * `item` is the scene item's key (`SceneItemOptions.id`, else the content's
  * source); `source` is the asset's canonical reference (`canonicalSource`),
@@ -119,7 +120,6 @@ export type StableKey =
   | { readonly kind: "host"; readonly item: string; readonly key: string }
   | {
       readonly kind: "feature";
-      readonly content: string;
       readonly source: string;
       readonly key: string;
       readonly row?: number;
@@ -547,8 +547,8 @@ export function canonicalKey(key: StableKey): string {
     case "feature":
       return JSON.stringify(
         key.row === undefined
-          ? ["feature", key.content, key.source, key.key]
-          : ["feature", key.content, key.source, key.key, key.row],
+          ? ["feature", key.source, key.key]
+          : ["feature", key.source, key.key, key.row],
       );
   }
 }
@@ -1056,12 +1056,12 @@ export interface DrawIdentity {
   /** Labels its content sets (3D Tiles content, tile and group metadata: CS-272). */
   readonly contentLabels?: Labels;
   /**
-   * A content source's draw (CS-957 A): its content's ID and the source's
-   * key for the draw, for its features' feature IDs, kept beside their
-   * instance IDs. A draw without features has one feature ID, from `key`; a
-   * named feature's is from its name. CS-961 gives the others theirs.
+   * A content source's draw (CS-957 A): the source's key for the draw, for
+   * its features' feature IDs (with `source`), kept beside their instance
+   * IDs. A draw without features has one feature ID, from `key`; a named
+   * feature's is from its name. CS-961 gives the others theirs.
    */
-  readonly feature?: { readonly content: string; readonly key: string };
+  readonly feature?: { readonly key: string };
 }
 
 /** One `EXT_mesh_features` feature-ID set of a primitive, as read (`GltfMesh.featureSets`). */
@@ -1412,12 +1412,7 @@ export class IdentityTable implements Identity {
     const key = entry.featured ? entry.names?.[local] : feature.key;
     return key === undefined
       ? undefined
-      : {
-          kind: "feature",
-          content: feature.content,
-          source: identity.source,
-          key,
-        };
+      : { kind: "feature", source: identity.source, key };
   }
 
   /** Indexes a content source's draw's slots by their feature IDs. */
