@@ -24,6 +24,7 @@ import type {
   FeatureBatch,
   PointBatch,
   RasterImage,
+  RowIdentity,
   RowSink,
   SampleBatch,
 } from "./types.ts";
@@ -215,9 +216,8 @@ export class ContentRows {
     let applied = 0;
     const touched: StableId[] = [];
     for (let s = from; s < to; s++) {
-      const name = samples.names[s]!;
-      const id = this.nameIds.get(name);
-      for (const at of id === undefined ? [] : this.rowsOf(id)) {
+      const id = this.namespace.featureId(samples.names[s]!);
+      for (const at of this.rowsOf(id)) {
         const held = this.batchAt(at) as HeldRows<PointBatch | FeatureBatch>;
         if (samples.positions && "positions" in held.batch) {
           const vertex =
@@ -235,7 +235,7 @@ export class ContentRows {
             (column as Float64Array)[at.index] = values[s]!;
           }
         }
-        touched.push(id!);
+        touched.push(id);
       }
       applied++;
     }
@@ -245,14 +245,24 @@ export class ContentRows {
     return applied;
   }
 
-  /** Every name's ID, for samples. */
-  private readonly nameIds = new Map<string, StableId>();
-  /** Every named row's name, by its ID: the source's key for a feature ID. */
-  private readonly idNames = new Map<StableId, string>();
+  /**
+   * Where feature `id` is, as its source keys it, while a row of it is held:
+   * the row's name, or its batch's key and its index for a row it didn't
+   * name. Read from the row itself: no other table maps an ID to a key.
+   */
+  addressOf(id: StableId): { key: string; row?: number } | undefined {
+    const at = this.byId.get(id)?.[0];
+    if (!at) {
+      return undefined;
+    }
+    const name = (this.batchAt(at)!.batch as RowIdentity).names?.[at.index];
+    return name !== undefined ? { key: name } : { key: at.key, row: at.index };
+  }
 
   /** The source's key for feature `id`, while a row it wrote and names so is held. */
   nameOf(id: StableId): string | undefined {
-    return this.idNames.get(id);
+    const address = this.addressOf(id);
+    return address?.row === undefined ? address?.key : undefined;
   }
 
   private *rowMaps(): Generator<
@@ -314,10 +324,7 @@ export class ContentRows {
     for (let i = 0; i < batch.count; i++) {
       const name = batch.names?.[i];
       if (name !== undefined) {
-        const id = namespace.featureId(name);
-        this.nameIds.set(name, id);
-        this.idNames.set(id, name);
-        ids[i] = id;
+        ids[i] = namespace.featureId(name);
       } else {
         ids[i] = namespace.featureId(batch.key, i);
       }
@@ -340,12 +347,6 @@ export class ContentRows {
       if (left.length === 0) {
         this.byId.delete(id);
         gone.push(id);
-        // Its name goes with its last row: `nameOf` answers only for rows held.
-        const named = this.idNames.get(id);
-        if (named !== undefined) {
-          this.idNames.delete(id);
-          this.nameIds.delete(named);
-        }
       } else {
         this.byId.set(id, left);
       }

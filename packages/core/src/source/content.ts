@@ -37,8 +37,6 @@
  */
 import {
   FeatureNamespace,
-  sourceDrawIdentity,
-  stableIdOf,
   type ItemIdentity,
   type StableKey,
 } from "../scene/identity.ts";
@@ -49,9 +47,14 @@ import {
   type ChangeOp,
   type ChangeSet,
   type FeatureData,
+  type FeatureRef,
   type GeometryData,
 } from "./editing.ts";
-import { EditLayer } from "./editLayer.ts";
+import {
+  EditLayer,
+  type EditAddressing,
+  type FeatureAddress,
+} from "./editLayer.ts";
 import { ContentRows, type HeldRows } from "./sinks.ts";
 import type {
   ContentSource,
@@ -59,7 +62,6 @@ import type {
   CustomRows,
   FeatureBatch,
   FeatureId,
-  InstanceId,
   InvalidateChange,
   PlainValue,
   PointBatch,
@@ -74,11 +76,16 @@ import type {
 export interface ContentWorld extends DrawSink {
   setVisible(handle: DrawHandle, visible: boolean): void;
   setViewMask(handle: DrawHandle, mask: number): void;
-  /** Its identity table (`World.identity`): what maps a pick's instance ID to its feature ID. */
+  /** Its identity table (`World.identity`): what maps a pick's instance ID to its feature ID, and holds labels. */
   readonly identity?: {
     identify(
       id: FeatureId,
     ): { readonly key: StableKey; readonly feature?: FeatureId } | undefined;
+    setLabels?(
+      id: FeatureId,
+      taxonomy: string,
+      labels: readonly string[] | undefined,
+    ): void;
   };
 }
 
@@ -165,15 +172,21 @@ interface SourceDraw {
 export class SourceContent {
   /** The rows its source wrote to the row sinks. @internal */
   readonly rows: ContentRows;
+  /** How its edit layers name features: the projection, and what is loaded. */
+  private readonly addressing: EditAddressing = {
+    idOf: (address) => this.namespace.featureId(address.key, address.row),
+    loaded: (id) => this.loadedAddress(id),
+  };
   /**
-   * The edit layer: hide, replace and insert by feature ID (CS-865,
-   * CS-957 A), over everything this content shows, in every item. It takes
-   * an instance ID of an item's draw too (a pick's), as its feature ID.
+   * The edit layer: hide, replace and insert by the source's key (CS-865,
+   * CS-952 A), over everything this content shows, in every item. It takes
+   * a loaded feature's ID too, and an instance ID of an item's draw (a
+   * pick's), as its feature's.
    * @experimental
    */
-  readonly edits = new EditLayer((id) => this.editFeatureOf(id));
+  readonly edits = new EditLayer(this.addressing);
   /** @internal Others' changes from the source's feed (`features` pushes), under `edits`. */
-  readonly feed = new EditLayer();
+  readonly feed = new EditLayer(this.addressing);
   /**
    * Its name (CS-1087 A): `OpenOptions.name`, else its resolver's
    * (`ResolvedAsset.name`), else its URL's digest (`urlName`). Its feature
@@ -189,8 +202,6 @@ export class SourceContent {
   /** By the source's handle (`index`, which only this content gives out). */
   private readonly draws = new Map<number, SourceDraw>();
   private readonly drawsById = new Map<FeatureId, Set<number>>();
-  /** Each item's instance ID of each draw without features, to its feature ID. */
-  private readonly instances = new Map<InstanceId, FeatureId>();
   private nextDraw = 1;
   private invalidated: InvalidateChange[] = [];
   private destroyed_ = false;
@@ -212,71 +223,34 @@ export class SourceContent {
     this.namespace = FeatureNamespace.of(name);
     this.rows = new ContentRows(this.namespace);
     this.drawSink = this.makeDrawSink();
-    const reapply = (ids: readonly FeatureId[]) => {
-      this.refreshDraws(ids);
-      this.forgetKeys(ids);
-    };
-    this.edits.onChange((ids) => {
-      this.countStrays(ids);
-      reapply(ids);
-    });
+    const reapply = (ids: readonly FeatureId[]) => this.refreshDraws(ids);
+    this.edits.onChange(reapply);
     this.feed.onChange(reapply);
   }
 
   /**
-   * The feature ID an edit given `id` is kept by: an instance ID of one of
-   * its items' draws without features, or one the world's identity table
-   * maps to a feature (a named feature of a draw with features), gives its
-   * feature's; any other ID is taken as a feature ID.
+   * Where feature `id` is, as its source keys it, while a row or a draw of
+   * its source holds it: read from the row or the draw. An instance ID of
+   * one of its items' draws gives its feature's, through the world's
+   * identity table (a draw too). Nothing else maps an ID back to a key.
    */
-  private editFeatureOf(id: FeatureId): FeatureId {
-    const instance = this.instances.get(id);
-    if (instance !== undefined) {
-      return instance;
-    }
-    // Its own rows' and draws' IDs, the common case, skip the lookup.
-    return this.hasBase(id)
-      ? id
-      : (this.world_?.identity?.identify(id)?.feature ?? id);
-  }
-
-  /**
-   * Whether feature `id` is this content's now: a row or a draw of its
-   * source, a feed override or a key it knows, or a feature of this source
-   * the world draws.
-   */
-  private knows(id: FeatureId): boolean {
-    if (this.hasBase(id) || this.feed.get(id) !== undefined) {
-      return true;
-    }
-    if (this.keys.has(id)) {
-      return true;
-    }
-    const key = this.world_?.identity?.identify(id)?.key;
-    return key?.kind === "feature" && key.source === this.source;
-  }
-
-  /** Edits set since the last `takeStrayEdits` on IDs it didn't know (`knows`). */
-  private strays = 0;
-
-  private countStrays(ids: readonly FeatureId[]): void {
-    for (const id of ids) {
-      if (this.edits.get(id) !== undefined && !this.knows(id)) {
-        this.strays++;
+  private loadedAddress(id: FeatureId): FeatureAddress | undefined {
+    const own = (feature: FeatureId): FeatureAddress | undefined => {
+      const row = this.rows.addressOf(feature);
+      if (row) {
+        return row;
       }
+      const draw = this.drawsById.get(feature)?.values().next().value;
+      const key =
+        draw === undefined ? undefined : this.draws.get(draw)?.options.id;
+      return key === undefined ? undefined : { key };
+    };
+    const found = own(id);
+    if (found) {
+      return found;
     }
-  }
-
-  /**
-   * @internal How many edits named an ID it holds nothing of, since last
-   * asked: the engine reports them, by count, once a tick. They are held,
-   * since a feature ID can name a feature not loaded yet; an instance ID of
-   * a removed item, or another content's ID, never loads.
-   */
-  takeStrayEdits(): number {
-    const n = this.strays;
-    this.strays = 0;
-    return n;
+    const feature = this.world_?.identity?.identify(id)?.feature;
+    return feature !== undefined && feature !== id ? own(feature) : undefined;
   }
 
   /** The open source. @internal */
@@ -358,19 +332,55 @@ export class SourceContent {
   }
 
   /**
-   * The source's own key for feature `id`: when a row or a draw its source
-   * wrote has it, or while an override of the source's feed holds it (an
-   * insert another client made). An insert of this client's edit layer has
-   * the key the host made its ID from (`featureId`).
+   * The source's own key for feature `id`, from what holds it: an edit
+   * record (which holds its key, loaded or not), a row the source names so,
+   * or a draw. No other table maps an ID back to a key, so for an ID none
+   * of those hold it is undefined.
    * @experimental
    */
   keyOf(id: FeatureId): string | undefined {
+    if (typeof id !== "bigint") {
+      return undefined;
+    }
     const draw = this.drawsById.get(id)?.values().next().value;
     return (
+      this.edits.keyOf(id) ??
+      this.feed.keyOf(id) ??
       this.rows.nameOf(id) ??
-      (draw === undefined ? undefined : this.draws.get(draw)?.options.id) ??
-      this.keys.get(id)
+      (draw === undefined ? undefined : this.draws.get(draw)?.options.id)
     );
+  }
+
+  /**
+   * Sets the host's labels in one taxonomy on the feature its source keys
+   * `target` (CS-815's `Identity.setLabels`, on its feature ID): every
+   * placement of it shows them, and they come back when it loads again.
+   * The content must be in a world (`World.add`).
+   * @experimental
+   */
+  setLabels(
+    target: string | FeatureRef,
+    taxonomy: string,
+    labels: readonly string[] | undefined,
+  ): void {
+    const key = typeof target === "string" ? target : target?.key;
+    const id = this.featureId(key);
+    if (
+      typeof target === "object" &&
+      target.id !== undefined &&
+      target.id !== id
+    ) {
+      throw new TypeError(
+        "SourceContent.setLabels: the FeatureRef's id isn't its key's feature ID in this content.",
+      );
+    }
+    const identity = this.world_?.identity;
+    if (!identity?.setLabels) {
+      throw new Error(
+        "SourceContent.setLabels: the content isn't in a world yet (World.add).",
+      );
+    }
+    identity.setLabels(id, taxonomy, labels);
   }
 
   /**
@@ -421,41 +431,6 @@ export class SourceContent {
   }
 
   /**
-   * @internal The feed applied `ops` (resolved): their keys are kept for
-   * `keyOf` while an override holds them, so `keys` holds no more entries
-   * than the overrides do.
-   */
-  noteKeys(ops: readonly ChangeOp[]): void {
-    for (const op of ops) {
-      const id = op.id!;
-      if (
-        this.rows.nameOf(id) === undefined &&
-        !this.drawsById.has(id) &&
-        (this.edits.get(id) !== undefined || this.feed.get(id) !== undefined)
-      ) {
-        this.keys.set(id, op.key);
-      }
-    }
-  }
-
-  /** Keys of IDs no override holds any more go, and so do their pending entries. */
-  private forgetKeys(ids: readonly FeatureId[]): void {
-    for (const id of ids) {
-      const o = this.feed.get(id);
-      if (o === undefined || o.kind === "insert") {
-        this.pending.delete(id);
-      }
-      if (
-        this.keys.has(id) &&
-        this.edits.get(id) === undefined &&
-        this.feed.get(id) === undefined
-      ) {
-        this.keys.delete(id);
-      }
-    }
-  }
-
-  /**
    * The feed's hides and replacements of features no row or draw had when
    * set, oldest first: what `holdPending` bounds.
    */
@@ -496,12 +471,6 @@ export class SourceContent {
     }
     return dropped;
   }
-
-  /**
-   * Keys of features no row or draw has, by feature ID: each while an
-   * override holds it (`noteKeys`).
-   */
-  private readonly keys = new Map<FeatureId, string>();
 
   /**
    * The credits of what it holds now: its source's own, then each piece
@@ -685,7 +654,6 @@ export class SourceContent {
       }
       this.draws.clear();
       this.drawsById.clear();
-      this.instances.clear();
       this.onDestroy?.();
     }
   }
@@ -751,21 +719,19 @@ export class SourceContent {
     const handle = world.addDraw({
       ...options,
       viewMask: item.viewMask,
-      // Its features' feature IDs, beside the instance IDs (CS-957 A): only
-      // an identity made here may carry them.
-      identity: sourceDrawIdentity({
+      // Its content's namespace (CS-957 A, CS-1087 A): its features'
+      // feature IDs, and its instance IDs, are projected in it, and only
+      // the engine makes one, so no host draw can take them.
+      identity: {
         source: this.source,
         content: options.id!,
         set: options.features ? 0 : -1,
         scope: "tile",
         item: item.identity,
-        feature: { key: options.id! },
-      }),
+        namespace: this.namespace,
+      },
     });
     draw.placed.set(item, handle);
-    if (draw.id !== undefined) {
-      this.instances.set(this.instanceOf(draw, item), draw.id);
-    }
     const w = world as unknown as Record<
       PropertyKey,
       (...args: unknown[]) => unknown
@@ -776,19 +742,6 @@ export class SourceContent {
     world.setVisible(handle, this.drawShows(draw, item));
   }
 
-  /**
-   * `item`'s instance ID of `draw`, a draw without features: the ID the
-   * world's identity table gives it (CS-815's `draw` key, with the item's key).
-   */
-  private instanceOf(draw: SourceDraw, item: ContentItem): InstanceId {
-    return stableIdOf({
-      kind: "draw",
-      item: item.key,
-      source: this.source,
-      content: draw.options.id!,
-    });
-  }
-
   /** Removes `item`'s draws from the world. */
   private unplace(item: ContentItem): void {
     const world = this.world_;
@@ -796,9 +749,6 @@ export class SourceContent {
       const handle = draw.placed.get(item);
       if (handle) {
         draw.placed.delete(item);
-        if (draw.id !== undefined) {
-          this.instances.delete(this.instanceOf(draw, item));
-        }
         world?.removeDraw(handle);
       }
     }
@@ -883,10 +833,7 @@ export class SourceContent {
         }
       }
       const w = this.world_;
-      for (const [item, placed] of draw.placed) {
-        if (draw.id !== undefined) {
-          this.instances.delete(this.instanceOf(draw, item));
-        }
+      for (const placed of draw.placed.values()) {
         w?.removeDraw(placed);
       }
       draw.placed.clear();

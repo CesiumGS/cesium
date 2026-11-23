@@ -28,6 +28,7 @@ import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   FeatureNamespace,
   stableIdOf,
+  type StableKey,
 } from "../packages/core/src/scene/identity.ts";
 import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
@@ -65,6 +66,10 @@ const LAYERED = new URL("./fixtures/sources/layeredKind.ts", import.meta.url);
 
 const sourceOf = (content: SourceContent) =>
   content.contentSource as unknown as SampleSource;
+
+/** A content's draw's instance ID: CS-815's draw key, hashed in its content's namespace. */
+const instanceIdOf = (key: StableKey & { kind: "draw" }) =>
+  FeatureNamespace.of(key.source).instanceId(key);
 
 /** A source's clock: scene time `seconds`, and wall time apart (the same unless given). */
 function sourceClock(
@@ -280,7 +285,7 @@ describe("Engine.open and World.add", () => {
       },
     });
     // The draw's ID is the one the world's identity table gives it.
-    const drawId = stableIdOf({
+    const drawId = instanceIdOf({
       kind: "draw",
       item: item.key,
       source: content.source,
@@ -631,27 +636,22 @@ describe("the edit layer (CS-865)", () => {
     rt.tick();
     const id = (key: string) =>
       stableIdOf({ kind: "feature", source: content.source, key });
-    // The box's instance ID in its item: the edit layer takes it as its feature's.
-    const drawId = stableIdOf({
-      kind: "draw",
-      item: item.identity.key,
-      source: content.source,
-      content: "a/box",
-    });
+    expect(item.key).toBe(content.id);
     const shown = () => [...content.features()].map((f) => f.id);
     expect(shown()).toHaveLength(2 + 3 + 1 + 1); // roads, cars, splat, the box
 
-    content.edits.hide(id("road-0"));
+    // By key, by a loaded feature's ID, and by a FeatureRef.
+    content.edits.hide("road-0");
     content.edits.replace(id("car-1"), { properties: { speed: 30 } });
-    const added = stableIdOf({
-      kind: "host",
-      item: content.id,
-      key: "new-pin",
-    });
-    content.edits.insert(added, {
-      geometry: { crs: "EPSG:4979", type: "Point", coordinates: [1, 2, 3] },
-    });
-    content.edits.hide(drawId);
+    content.edits.insert(
+      { key: "new-pin" },
+      {
+        geometry: { crs: "EPSG:4979", type: "Point", coordinates: [1, 2, 3] },
+      },
+    );
+    const added = content.featureId("new-pin");
+    expect(content.keyOf(added)).toBe("new-pin"); // the edit holds its key
+    content.edits.hide("a/box");
     expect(content.feature(id("road-0"))).toBeUndefined();
     expect(content.feature(id("car-1"))).toEqual({ properties: { speed: 30 } });
     expect(content.feature(added)?.geometry?.coordinates).toEqual([1, 2, 3]);
@@ -669,7 +669,7 @@ describe("the edit layer (CS-865)", () => {
     expect(content.feature(id("car-1"))).toEqual({ properties: { speed: 30 } });
     expect([...visible.values()].at(-1)).toBe(false); // the new draw starts hidden
 
-    content.edits.clear(drawId);
+    content.edits.clear("a/box");
     content.edits.clear(id("road-0"));
     expect([...visible.values()].at(-1)).toBe(true);
     expect(content.feature(id("road-0"))?.properties).toEqual({
@@ -689,7 +689,7 @@ describe("the edit layer (CS-865)", () => {
       const item = world.add(content);
       engine.sources.tick();
       engine.sources.tick();
-      const drawId = stableIdOf({
+      const drawId = instanceIdOf({
         kind: "draw",
         item: item.identity.key,
         source: content.source,
@@ -1379,12 +1379,23 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
     features.put(lines([0, 4, 8], [[2], []]));
   });
 
-  it("the edit layer refuses negative IDs and IDs wider than 64 bits", () => {
-    const layer = new EditLayer();
+  it("the edit layer refuses negative IDs, IDs wider than 64 bits, and an ID nothing loaded can give a key", () => {
+    const namespace = FeatureNamespace.of("s");
+    const max = (1n << 64n) - 1n;
+    const layer = new EditLayer({
+      idOf: ({ key, row }) => namespace.featureId(key, row),
+      loaded: (id) => (id === max ? { key: "max" } : undefined),
+    });
     expect(() => layer.hide(-1n)).toThrow(/unsigned 64-bit/);
     expect(() => layer.hide(1n << 64n)).toThrow(/unsigned 64-bit/);
-    layer.hide((1n << 64n) - 1n);
+    expect(() => layer.hide(5n)).toThrow(/name the feature by its key/);
+    expect(() => layer.hide("")).toThrow(/non-empty string/);
+    expect(() =>
+      layer.hide({ key: "k", id: namespace.featureId("other") }),
+    ).toThrow(/isn't its key's feature ID/);
+    layer.hide(max);
     expect(layer.size).toBe(1);
+    expect(layer.keyOf(namespace.featureId("max"))).toBe("max");
   });
 
   it("checks the op count before reading ops, refuses unknown fields and bad meta, numbers JSON can't carry, and echoes no version", () => {
@@ -1712,7 +1723,7 @@ describe("content and tileset items take one ordinal rule", () => {
       id: "late/box",
       origin: Float64Array.of(0, 0, 0),
     });
-    const late = stableIdOf({
+    const late = instanceIdOf({
       kind: "draw",
       item: "site",
       source: content.source,
@@ -1765,7 +1776,7 @@ describe("two IDs, change sets by the source's keys, and the scene clock (CS-957
     // Draws: the source wrote one; each item has its own, with its instance ID.
     expect(content.drawCount).toBe(1);
     const instanceOf = (key: string) =>
-      stableIdOf({
+      instanceIdOf({
         kind: "draw",
         item: key,
         source: content.source,
@@ -1979,7 +1990,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
   afterEach(() => engine.destroy());
 
   const instanceOf = (content: SourceContent, key: string) =>
-    stableIdOf({
+    instanceIdOf({
       kind: "draw",
       item: key,
       source: content.source,
@@ -2020,10 +2031,10 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     expect(world.identity.identify(eastBox)!.feature).toBe(box);
   });
 
-  it("shows labels set by feature ID on both placements, and finds a feature by its ID while one placement still draws it", async () => {
+  it("shows labels set by key on both placements, and finds a feature by its ID while one placement still draws it", async () => {
     const { content, west, westBox, eastBox, drawOf } = await twoItems();
     const box = content.featureId("a/box");
-    world.identity.setLabels(box, "class", ["kiosk"]);
+    content.setLabels("a/box", "class", ["kiosk"]);
     expect(world.identity.identify(westBox)!.labels.class).toEqual(["kiosk"]);
     expect(world.identity.identify(eastBox)!.labels.class).toEqual(["kiosk"]);
     // A label set on one placement's instance ID wins there, and only there.
@@ -2103,7 +2114,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
           {
             op: "delete",
             key: "a/box",
-            id: stableIdOf({
+            id: instanceIdOf({
               kind: "draw",
               item: "city",
               source: content.source,
@@ -2219,7 +2230,7 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
 
   const CITY = "https://data.test/city.sample";
   const instanceOf = (content: SourceContent, key: string) =>
-    stableIdOf({
+    instanceIdOf({
       kind: "draw",
       item: key,
       source: content.source,
@@ -2308,10 +2319,10 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
     );
   });
 
-  it("applies labels saved by feature ID after the source is opened again", async () => {
+  it("applies labels a host saved by key after the source is opened again (CS-1088 A)", async () => {
     const first = await placed(CITY, "first");
     const saved = first.content.featureId("a/box");
-    world.identity.setLabels(saved, "class", ["kiosk"]);
+    first.content.setLabels({ key: "a/box" }, "class", ["kiosk"]);
     first.content.destroy();
     expect(world.identity.identify(saved)).toBeUndefined(); // nothing draws it
     const again = await placed(CITY, "again");
@@ -2543,7 +2554,6 @@ describe("the feed's memory is bounded (CS-847)", () => {
     // What the content holds for keys and overrides (private, read here).
     const held = () => ({
       overrides: content.feed.size,
-      keys: content["keys"].size,
       pending: content["pending"].size,
     });
     return { content, feed, held };
@@ -2579,7 +2589,6 @@ describe("the feed's memory is bounded (CS-847)", () => {
     feed("cs-2", ghosts(MAX_PENDING_OVERRIDES, 5));
     expect(held()).toEqual({
       overrides: MAX_PENDING_OVERRIDES,
-      keys: MAX_PENDING_OVERRIDES,
       pending: MAX_PENDING_OVERRIDES,
     });
     expect(content.feed.get(content.featureId("ghost-4"))).toBeUndefined();
@@ -2595,13 +2604,32 @@ describe("the feed's memory is bounded (CS-847)", () => {
     expect(held().pending).toBe(MAX_PENDING_OVERRIDES);
   });
 
-  it("forgets a removed row's key, and keeps it while another batch names it", async () => {
+  it("answers keyOf from a row while one is held, from another batch that names it, and from an edit record once none is", async () => {
     const { content } = await city();
+    const { features } = sourceOf(content).host.sinks;
     const road = content.featureId("road-0");
     expect(content.keyOf(road)).toBe("road-0");
-    sourceOf(content).host.sinks.features.remove("a");
+    // A coarser tile names it too: removing one batch leaves the other's row.
+    features.put({
+      key: "coarse",
+      geometry: "point",
+      crs: "EPSG:4979",
+      count: 1,
+      positions: Float64Array.of(0, 0, 0),
+      names: ["road-0"],
+    });
+    features.remove("a");
+    expect(content.rows.rowsOf(road)).toHaveLength(1);
+    expect(content.keyOf(road)).toBe("road-0");
+    features.remove("coarse");
+    expect(content.rows.rowsOf(road)).toHaveLength(0);
     expect(content.keyOf(road)).toBeUndefined();
-    expect(content.rows.nameOf(road)).toBeUndefined();
+    // An edit holds its key, loaded or not.
+    content.edits.hide("road-0");
+    expect(content.keyOf(road)).toBe("road-0");
+    expect(content.edits.get(road)?.kind).toBe("hide");
+    content.edits.clear("road-0");
+    expect(content.keyOf(road)).toBeUndefined();
   });
 
   it("shows a feed's update of a key not loaded nowhere: feature and features agree", async () => {
@@ -2642,7 +2670,7 @@ describe("edits, draws and two opens of one source in one world (CS-847)", () =>
 
   const CITY = "https://data.test/city.sample";
   const boxOf = (content: SourceContent, item: string) =>
-    stableIdOf({
+    instanceIdOf({
       kind: "draw",
       item,
       source: content.source,
@@ -2661,52 +2689,72 @@ describe("edits, draws and two opens of one source in one world (CS-847)", () =>
     return { content, item };
   }
 
-  it("reports an edit naming an instance ID of a removed item, or another source's feature ID, by count", async () => {
+  it("refuses an edit by an ID nothing it holds can give a key: an instance ID of a removed item, another content's feature ID", async () => {
     const { content } = await placed("city");
     const east = world.add(content);
     engine.sources.tick();
     const eastBox = boxOf(content, east.key);
+    content.edits.hide(eastBox); // a pick on a placed item: its feature's
+    expect(content.edits.get(content.featureId("a/box"))?.kind).toBe("hide");
+    content.edits.clear("a/box");
     east.remove();
-    reports.length = 0;
-    content.edits.hide(eastBox);
-    content.edits.hide(
-      stableIdOf({
-        kind: "feature",
-        source: "https://elsewhere.test/x",
-        key: "k",
-      }),
+    expect(() => content.edits.hide(eastBox)).toThrow(
+      /name the feature by its key/,
     );
-    // Its own features are known: no report.
-    content.edits.hide(content.featureId("road-0"));
-    content.edits.hide(content.featureId("a/box"));
-    engine.sources.tick();
-    expect(reports.filter((m) => m.includes("content's edits"))).toEqual([
-      "the \"sample\" content's edits: 2 edits name IDs no row, draw or feature of it has now; held as overrides until a feature with those IDs loads, which an instance ID of a removed item, or another content's ID, never does.",
-    ]);
-    engine.sources.tick();
-    expect(reports.filter((m) => m.includes("content's edits"))).toHaveLength(
-      1,
+    expect(() =>
+      content.edits.hide(
+        stableIdOf({ kind: "feature", source: "elsewhere", key: "k" }),
+      ),
+    ).toThrow(/name the feature by its key/);
+    // By key, a feature not loaded is fine: the record holds its key.
+    content.edits.hide("not-loaded-yet");
+    expect(content.keyOf(content.featureId("not-loaded-yet"))).toBe(
+      "not-loaded-yet",
     );
+    expect(content.edits.size).toBe(1);
   });
 
-  it("refuses a host's own draw that sets DrawIdentity.feature", async () => {
-    const { content } = await placed("city");
+  it("refuses a host's own draw with a namespace the engine didn't make, and gives a host draw that copies a content's instance-ID inputs other IDs", async () => {
+    const { content, item } = await placed("city");
+    const inputs = {
+      source: content.source,
+      content: "a/box",
+      set: -1,
+      scope: "tile" as const,
+      item: { key: item.key },
+    };
     expect(() =>
       world.addDraw({
         mesh: world.addMesh(createBox()),
         origin: Float64Array.of(0, 0, 0),
         identity: {
-          source: content.source,
-          content: "a/box",
-          set: -1,
-          scope: "tile",
-          feature: { key: "a/box" },
+          ...inputs,
+          namespace: { name: content.source } as unknown as FeatureNamespace,
         },
       }),
-    ).toThrow(/DrawIdentity\.feature is set only for a content source's draws/);
+    ).toThrow(/DrawIdentity\.namespace is a content's/);
+    // The same strings without the namespace: a host's draw, with its own IDs.
+    world.addDraw({
+      mesh: world.addMesh(createBox()),
+      origin: Float64Array.of(0, 0, 0),
+      identity: inputs,
+    });
+    const copied = stableIdOf({
+      kind: "draw",
+      item: item.key,
+      source: content.source,
+      content: "a/box",
+    });
+    const own = boxOf(content, item.key);
+    expect(copied).not.toBe(own);
+    expect(world.identity.identify(copied)!.feature).toBeUndefined();
+    expect(world.identity.identify(own)!.feature).toBe(
+      content.featureId("a/box"),
+    );
     // So identify(featureId) still names the content's own draw.
     const found = world.identity.identify(content.featureId("a/box"))!;
     expect(found.key).toMatchObject({ kind: "feature", key: "a/box" });
+    expect(found.draw!.index).toBe(world.identity.identify(own)!.draw!.index);
   });
 
   it("serves two opens of one source in one world: identify, each content's own edits, and labels, after one is destroyed", async () => {

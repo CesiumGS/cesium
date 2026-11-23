@@ -579,7 +579,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         clear clearAll hide insert replace
       `,
       "sync-read": `
-        entries get showsBase
+        addressOf entries get keyOf showsBase
       `,
       event: `
         onChange
@@ -595,7 +595,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         capabilities destroyed id items kind source world
       `,
       command: `
-        destroy
+        destroy setLabels
       `,
       query: `
         ready
@@ -608,9 +608,9 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
       "cannot-cross": `
         addItem asset attach baseFeature contentSource drawCount drawSink feed
-        hasBase holdPending holds noteInvalidated noteKeys onDestroy
-        placedDraws refreshDraws resolveOps restoreInvalidated rows shown
-        showsBase takeInvalidated takeStrayEdits viewMask
+        hasBase holdPending holds noteInvalidated onDestroy placedDraws
+        refreshDraws resolveOps restoreInvalidated rows shown showsBase
+        takeInvalidated viewMask
       `,
     },
     SourceHost: {

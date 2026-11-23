@@ -633,6 +633,14 @@ export class FeatureNamespace {
   }
 
   /**
+   * An instance ID of one of its content's draws (`InstanceId`): `key`,
+   * CS-815's key of an item's draw, hashed in this namespace.
+   */
+  instanceId(key: StableKey): StableId {
+    return this.id(canonicalKey(key));
+  }
+
+  /**
    * The feature ID of what its content's source keys `key` (`FeatureId`),
    * or, with `row`, of row `row` of the batch keyed `key`, a row its source
    * didn't name.
@@ -1141,42 +1149,32 @@ export interface DrawIdentity {
   /** Labels its content sets (3D Tiles content, tile and group metadata: CS-272). */
   readonly contentLabels?: Labels;
   /**
-   * A content source's draw (CS-957 A): the source's key for the draw, for
-   * its features' feature IDs (with `source`), kept beside their instance
-   * IDs. A draw without features has one feature ID, from `key`; a named
-   * feature's is from its name. CS-961 gives the others theirs.
+   * A content source's draw (CS-957 A): its content's namespace, which only
+   * the engine makes (`FeatureNamespace`), so a host's draw can't carry one.
+   * Its features' feature IDs are their keys projected in it (`content`, the
+   * source's key for the draw, for a draw without features; a named
+   * feature's name), kept beside their instance IDs, which are hashed in it
+   * too. CS-961 gives the unnamed features of a draw with features theirs.
    */
-  readonly feature?: { readonly key: string };
-}
-
-/** Identities `SourceContent` made for its draws: the only ones whose `feature` is taken. */
-const SOURCE_DRAW_IDENTITIES = new WeakSet<DrawIdentity>();
-
-/**
- * @internal Marks `identity` as a content source's draw's, made by
- * `SourceContent` for one of its items: the identity table takes its
- * `feature` (CS-957 A). Returns it.
- */
-export function sourceDrawIdentity(identity: DrawIdentity): DrawIdentity {
-  SOURCE_DRAW_IDENTITIES.add(identity);
-  return identity;
+  readonly namespace?: FeatureNamespace;
 }
 
 /**
- * @internal Refuses a `DrawIdentity.feature` that `SourceContent` didn't
- * set: a host's own draw can't take a content's feature ID, and so its
- * labels and what `identify` says of it.
+ * @internal Refuses a `DrawIdentity.namespace` the engine didn't make: a
+ * host's own draw can't join a content's namespace, so it can't take that
+ * content's feature IDs or instance IDs, its labels, or what `identify`
+ * says of them.
  */
 export function checkDrawIdentity(
   identity: DrawIdentity | undefined,
   where: string,
 ): void {
   if (
-    identity?.feature !== undefined &&
-    !SOURCE_DRAW_IDENTITIES.has(identity)
+    identity?.namespace !== undefined &&
+    !FeatureNamespace.is(identity.namespace)
   ) {
     throw new TypeError(
-      `${where}: DrawIdentity.feature is set only for a content source's draws (Engine.open, World.add), never by a host.`,
+      `${where}: DrawIdentity.namespace is a content's, which only the engine makes (Engine.open, World.add), never a host.`,
     );
   }
 }
@@ -1486,7 +1484,7 @@ export class IdentityTable implements Identity {
     if (!entry.featured) {
       // One ID for every slot (a point set's points): one key, hashed once.
       const text = canonicalKey(this.keyOf(entry, 0));
-      const id = this.hash(text);
+      const id = this.idOf(entry, text);
       ids.fill(id);
       this.insert(entry, 0, id, text);
       entry.ids = ids;
@@ -1507,7 +1505,7 @@ export class IdentityTable implements Identity {
             : String(value);
       }
       const text = canonicalKey(this.keyOf(entry, local));
-      const id = this.hash(text);
+      const id = this.idOf(entry, text);
       ids[local] = id;
       this.insert(entry, local, id, text);
     }
@@ -1520,21 +1518,34 @@ export class IdentityTable implements Identity {
    * (CS-957 A): none for other draws, and none yet for an unnamed feature
    * of a draw with features (CS-961).
    */
-  private featureKeyOf(entry: DrawIds, local: number): StableKey | undefined {
+  private featureKeyOf(
+    entry: DrawIds,
+    local: number,
+  ): (StableKey & { readonly kind: "feature" }) | undefined {
     const identity = entry.identity;
-    const feature = identity?.feature;
-    if (!feature) {
+    if (!identity?.namespace) {
       return undefined;
     }
-    const key = entry.featured ? entry.names?.[local] : feature.key;
+    const key = entry.featured ? entry.names?.[local] : identity.content;
     return key === undefined
       ? undefined
       : { kind: "feature", source: identity.source, key };
   }
 
+  /**
+   * The ID of a key's canonical text in `entry`'s draw: hashed in its
+   * content's namespace for a content source's draw, so no other draw's
+   * key gives it; else the table's hash.
+   */
+  private idOf(entry: DrawIds, text: string): StableId {
+    const namespace = entry.identity?.namespace;
+    return namespace ? namespace.id(text) : this.hash(text);
+  }
+
   /** Indexes a content source's draw's slots by their feature IDs. */
   private indexFeatures(entry: DrawIds): void {
-    if (!entry.identity?.feature) {
+    const namespace = entry.identity?.namespace;
+    if (!namespace) {
       return;
     }
     // A draw without features has one feature: its first slot stands for it.
@@ -1545,7 +1556,7 @@ export class IdentityTable implements Identity {
       if (key === undefined) {
         continue;
       }
-      const id = stableIdOf(key);
+      const id = namespace.featureId(key.key);
       features[local] = id;
       let slots = this.featureSlots.get(id);
       if (!slots) {
