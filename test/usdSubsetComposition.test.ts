@@ -6,10 +6,14 @@
 // from OpenUSD's own run (2026-11-22T10-56-32-200Z-apple-metal-3).
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
+import { Worker } from "node:worker_threads";
 import { describe, expect, it } from "vitest";
 import {
   loadLayers,
+  MAX_ARC_DEPTH,
   MAX_LISTED,
+  MAX_NAMESPACE_DEPTH,
+  MAX_SITES,
   quoted,
   resolveAsset,
   Stage,
@@ -492,7 +496,9 @@ describe("bounds on untrusted input", () => {
     expect(stage.errors[0]).toBe(
       "Could not open asset @e/missing0.usda@ for reference introduced by @e/root.usda@</World/P0>.",
     );
-    expect(stage.errors.at(-1)).toBe("50 more composition errors not listed.");
+    expect(stage.errors.at(-1)).toBe(
+      "50 more composition errors not listed (a repeated one is counted each time).",
+    );
     expect(stage.counts.unresolved).toHaveLength(MAX_LISTED);
     expect(stage.counts.unresolvedOmitted).toBe(50);
   });
@@ -553,6 +559,257 @@ def Xform "X"
     expect(out.errors).toEqual([
       "Could not open asset @../../../x.usda@ for reference introduced by @d/root.usda@</World/Up>.",
     ]);
+  });
+});
+
+/** A stage over in-memory USDA layers, composed, and how long that took. */
+async function stageOf(sources: Record<string, string>, root: string) {
+  const bytes = files(sources);
+  const t0 = performance.now();
+  const layers = await loadLayers(root, {
+    read: (p) => Promise.resolve(bytes.get(p)),
+    exists: (p) => Promise.resolve(bytes.has(p)),
+  });
+  const stage = new Stage(layers, root);
+  const prim = stage.compose();
+  const paths: string[] = [];
+  const walk = (p: typeof prim): void => {
+    paths.push(p.path);
+    p.children.forEach(walk);
+  };
+  walk(prim);
+  return { stage, prim, paths, ms: performance.now() - t0 };
+}
+
+/** What a composition in a worker reports back. */
+interface Bounded {
+  ms: number;
+  heapMb: number;
+  prims: number;
+  paths: string[];
+  errors: string[];
+  counts: Stage["counts"];
+}
+
+/**
+ * Composes one USDA layer in a worker thread with a heap limit, and kills it
+ * at a deadline: a test's own timeout can't interrupt a synchronous loop, so
+ * a regression would hang the test instead of failing it.
+ */
+function composeBounded(
+  source: string,
+  { ms, heapMb }: { ms: number; heapMb: number },
+): Promise<Bounded> {
+  const code = `
+    const { parentPort, workerData } = require("node:worker_threads");
+    const { getHeapStatistics } = require("node:v8");
+    import(workerData.compose).then(async ({ loadLayers, Stage }) => {
+      const bytes = new TextEncoder().encode(workerData.source);
+      const t0 = performance.now();
+      const layers = await loadLayers("h/root.usda", {
+        read: (p) => Promise.resolve(p === "h/root.usda" ? bytes : undefined),
+        exists: (p) => Promise.resolve(p === "h/root.usda"),
+      });
+      const stage = new Stage(layers, "h/root.usda");
+      const prim = stage.compose();
+      const paths = [];
+      const walk = (p) => { paths.push(p.path); p.children.forEach(walk); };
+      walk(prim);
+      parentPort.postMessage({
+        ms: performance.now() - t0,
+        heapMb: getHeapStatistics().used_heap_size / 2 ** 20,
+        prims: paths.length,
+        paths: paths.slice(0, 1000),
+        errors: [...stage.errors],
+        counts: stage.counts,
+      });
+    });
+  `;
+  const compose = new URL("../spikes/usd-subset/compose.ts", import.meta.url)
+    .href;
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(code, {
+      eval: true,
+      workerData: { compose, source },
+      resourceLimits: { maxOldGenerationSizeMb: heapMb },
+    });
+    const timer = setTimeout(() => {
+      void worker.terminate();
+      reject(new Error(`composition took longer than ${ms} ms`));
+    }, ms);
+    worker.once("message", (m: Bounded) => {
+      clearTimeout(timer);
+      void worker.terminate();
+      resolve(m);
+    });
+    worker.once("error", (e) => {
+      clearTimeout(timer);
+      reject(e);
+    });
+  });
+}
+
+// Hostile files. The worst three compose in a worker with a deadline and a
+// heap limit, which they fail by being killed. The limits are several times
+// what this Mac takes (in brackets), to leave room for a busy machine.
+describe("hostile inputs stay bounded", () => {
+  it("arcs that fan out without a cycle stop at the site limit [0.8 s, about 100 MiB]", async () => {
+    // /L_i has two children that both reference /L_(i+1): 2^30 prims.
+    const levels = 30;
+    let src = `#usda 1.0\n(\n    defaultPrim = "L0"\n)\n`;
+    for (let i = 0; i < levels; i++) {
+      src += `def Xform "L${i}"\n{\n    def Xform "a" (\n        prepend references = </L${i + 1}>\n    )\n    {\n    }\n    def Xform "b" (\n        prepend references = </L${i + 1}>\n    )\n    {\n    }\n}\n`;
+    }
+    src += `def Xform "L${levels}" {}\n`;
+    expect(src.length).toBeLessThan(6000);
+    const r = await composeBounded(src, { ms: 10_000, heapMb: 512 });
+    expect(r.ms).toBeLessThan(5000);
+    expect(r.heapMb).toBeLessThan(512);
+    expect(r.paths).toContain("/L0/a/a");
+    expect(r.prims).toBeLessThan(MAX_SITES);
+    // One error, naming the limit and nothing from the file.
+    expect(r.errors).toEqual([
+      `Composition stopped at ${MAX_SITES} sites, the subset reader's limit; the rest of the stage is not composed.`,
+    ]);
+  }, 30_000);
+
+  it("one prim with 60,000 variant sets [0.3 s]", async () => {
+    const n = 60_000;
+    const sets = Array.from({ length: n }, (_, i) => `"v${i}"`).join(", ");
+    const sels = Array.from({ length: n }, (_, i) => `string v${i} = "x"`).join(
+      "\n        ",
+    );
+    const r = await composeBounded(
+      `${HEAD}def Xform "World" (\n    variants = {\n        ${sels}\n    }\n    prepend variantSets = [${sets}]\n)\n{\n}\n`,
+      { ms: 10_000, heapMb: 512 },
+    );
+    expect(r.ms).toBeLessThan(5000);
+    expect(r.counts.variantSelections).toBe(n);
+    expect(r.counts.selected).toHaveLength(MAX_LISTED);
+    expect(r.counts.selected[0]).toBe("v0=x");
+    expect(r.counts.selectedOmitted).toBe(n - MAX_LISTED);
+  }, 30_000);
+
+  it("one prim with 60,000 children [0.4 s]", async () => {
+    const n = 60_000;
+    const kids = Array.from(
+      { length: n },
+      (_, i) => `    def Scope "c${i}" {}\n`,
+    ).join("");
+    const r = await composeBounded(`${HEAD}def Xform "World"\n{\n${kids}}\n`, {
+      ms: 10_000,
+      heapMb: 512,
+    });
+    expect(r.ms).toBeLessThan(5000);
+    expect(r.prims).toBe(n + 2);
+    expect(r.paths.slice(0, 3)).toEqual(["/", "/World", "/World/c0"]);
+  }, 30_000);
+
+  it("keeps no error text past the cap", async () => {
+    const n = 5000;
+    const prims = Array.from(
+      { length: n },
+      (_, i) =>
+        `    def Xform "P${i}" (\n        prepend references = @./${"m".repeat(100)}${i}.usda@\n    )\n    {\n    }\n`,
+    ).join("");
+    const { stage } = await stageOf(
+      { "e/root.usda": `${HEAD}def Xform "World"\n{\n${prims}}\n` },
+      "e/root.usda",
+    );
+    expect(stage.errors).toHaveLength(MAX_LISTED + 1);
+    expect(stage.errors.at(-1)).toBe(
+      `${n - MAX_LISTED} more composition errors not listed (a repeated one is counted each time).`,
+    );
+    // Only the listed messages are kept.
+    const kept = (stage as unknown as { errorListed: Set<string> }).errorListed;
+    expect(kept.size).toBe(MAX_LISTED);
+  }, 30_000);
+
+  it("a chain of 12,000 sublayers composes without overflowing the stack", async () => {
+    const n = 12_000;
+    const sources: Record<string, string> = {};
+    for (let i = 0; i < n; i++) {
+      const next = i + 1 < n ? `\n    subLayers = [@./s${i + 1}.usda@]` : "";
+      sources[`k/s${i}.usda`] =
+        `#usda 1.0\n(\n    defaultPrim = "World"${next}\n)\n${
+          i === n - 1
+            ? `def Xform "World"\n{\n    def Scope "Deep" {}\n}\n`
+            : ""
+        }`;
+    }
+    const { stage, paths } = await stageOf(sources, "k/s0.usda");
+    expect(stage.counts.sublayers).toBe(n - 1);
+    expect(paths).toEqual(["/", "/World", "/World/Deep"]);
+    expect(stage.errors).toEqual([]);
+  }, 30_000);
+
+  it("reports a library's missing sublayer once, however many arcs use the library", async () => {
+    const refs = Array.from(
+      { length: 50 },
+      (_, i) =>
+        `    def Xform "U${i}" (\n        prepend references = @./lib.usda@\n    )\n    {\n    }\n`,
+    ).join("");
+    const { stage } = await stageOf(
+      {
+        "b/root.usda": `${HEAD}def Xform "World"\n{\n${refs}}\n`,
+        "b/lib.usda": `#usda 1.0\n(\n    defaultPrim = "Lib"\n    subLayers = [@./gone.usda@]\n)\ndef Xform "Lib" {}\n`,
+      },
+      "b/root.usda",
+    );
+    expect(stage.errors).toEqual([
+      "Could not load sublayer @b/gone.usda@ of layer @b/lib.usda@; skipping.",
+    ]);
+    expect(stage.counts.unresolved).toEqual(["./gone.usda"]);
+  });
+
+  it(`stops composing below ${MAX_NAMESPACE_DEPTH} prims of namespace, and says so`, async () => {
+    const depth = MAX_NAMESPACE_DEPTH + 20;
+    let src = "";
+    for (let i = 0; i < depth; i++) {
+      src += `def Scope "P"\n{\n`;
+    }
+    src += "}\n".repeat(depth);
+    const { stage, paths } = await stageOf(
+      { "n/root.usda": `#usda 1.0\n${src}` },
+      "n/root.usda",
+    );
+    const deepest = Math.max(...paths.map((p) => p.split("/").length - 1));
+    expect(deepest).toBe(MAX_NAMESPACE_DEPTH);
+    expect(stage.errors).toHaveLength(1);
+    expect(stage.errors[0]).toMatch(
+      new RegExp(
+        `^Namespace deeper than ${MAX_NAMESPACE_DEPTH} prims at </P/P/.*; its children are not composed\\.$`,
+      ),
+    );
+  });
+
+  it(`reports arcs nested deeper than ${MAX_ARC_DEPTH}`, async () => {
+    // /R0 references /R1, which references /R2, and so on: no cycle, but a
+    // chain longer than the composer follows.
+    let src = `#usda 1.0\n(\n    defaultPrim = "R0"\n)\n`;
+    for (let i = 0; i < 40; i++) {
+      src += `def Xform "R${i}" (\n    prepend references = </R${i + 1}>\n)\n{\n}\n`;
+    }
+    src += `def Xform "R40" {}\n`;
+    const { stage } = await stageOf({ "a/root.usda": src }, "a/root.usda");
+    expect(stage.errors).toContain(
+      `Arcs nested deeper than ${MAX_ARC_DEPTH} at @a/root.usda@</R${MAX_ARC_DEPTH + 1}>; not followed.`,
+    );
+  });
+
+  it("quotes only the path of an arc to a layer with no default prim", async () => {
+    const long = "y".repeat(400);
+    const { stage } = await stageOf(
+      {
+        "q/root.usda": `${HEAD}def Xform "World" (\n    prepend references = @./${long}.usda@\n)\n{\n}\n`,
+        [`q/${long}.usda`]: `#usda 1.0\ndef Xform "NotDefault" {}\n`,
+      },
+      "q/root.usda",
+    );
+    expect(stage.counts.unresolved).toHaveLength(1);
+    expect(stage.counts.unresolved[0]).toBe(
+      `./${"y".repeat(198)}… (407 characters) (no default prim)`,
+    );
   });
 });
 

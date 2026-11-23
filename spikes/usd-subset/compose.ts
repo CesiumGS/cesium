@@ -220,8 +220,9 @@ export interface ComposeCounts {
   specializes: number;
   sublayers: number;
   instanceable: number;
-  /** Variant sets and what was selected: "Physics=PhysX", or "Physics=(none)". */
+  /** Variant sets and what was selected: "Physics=PhysX", or "Physics=(none)": the first MAX_LISTED, then a count. */
   selected: string[];
+  selectedOmitted: number;
   /** Arcs that didn't resolve, as authored: the first MAX_LISTED, then a count. */
   unresolved: string[];
   unresolvedOmitted: number;
@@ -252,6 +253,17 @@ interface Site {
 export const MAX_LISTED = 100;
 /** The deepest namespace the composer descends into: a guard on untrusted input. */
 export const MAX_NAMESPACE_DEPTH = 256;
+/** The most arcs the composer follows from one site of a prim: a guard on untrusted input. */
+export const MAX_ARC_DEPTH = 32;
+/**
+ * The most sites the composer gathers for a whole stage, summed over its
+ * prims: a guard on untrusted input, where a few kilobytes of arcs that fan
+ * out without a cycle name 2^30 prims, all of which OpenUSD would build. The
+ * six SimReady samples gather 1 to 359 sites (at most 6.5 a prim), so this
+ * leaves room for an asset of about 38,000 prims composed as densely as the
+ * densest of them. A file that spends it all costs about a second.
+ */
+export const MAX_SITES = 250_000;
 /** The longest layer name or path an error message quotes in full. */
 const MAX_QUOTED = 200;
 
@@ -365,15 +377,22 @@ export class Stage {
     sublayers: 0,
     instanceable: 0,
     selected: [],
+    selectedOmitted: 0,
     unresolved: [],
     unresolvedOmitted: 0,
   };
-  /** Children by parent path, per layer. */
-  private readonly childIndex = new Map<string, Map<string, string[]>>();
-  private readonly propIndex = new Map<string, Map<string, string[]>>();
-  private readonly errorSeen = new Set<string>();
+  /** Children by parent path, per layer, in the order authored. */
+  private readonly childIndex = new Map<string, Map<string, Set<string>>>();
+  private readonly propIndex = new Map<string, Map<string, Set<string>>>();
+  /** The listed errors; past MAX_LISTED, errors are only counted. */
   private readonly errorList: string[] = [];
+  private readonly errorListed = new Set<string>();
   private errorsOmitted = 0;
+  private readonly selectedSeen = new Set<string>();
+  /** Layer stacks by root layer, computed once each. */
+  private readonly stacks = new Map<string, string[]>();
+  /** Sites left in MAX_SITES; at zero, composition stops. */
+  private sitesLeft = MAX_SITES;
 
   constructor(layers: Map<string, LoadedLayer>, root: string) {
     this.layers = layers;
@@ -382,8 +401,8 @@ export class Stage {
       if (!l.layer) {
         continue;
       }
-      const children = new Map<string, string[]>();
-      const props = new Map<string, string[]>();
+      const children = new Map<string, Set<string>>();
+      const props = new Map<string, Set<string>>();
       for (const [path, spec] of l.layer.specs) {
         if (spec.type === "prim") {
           const parent = parentOf(path);
@@ -408,58 +427,110 @@ export class Stage {
     return this.errorsOmitted
       ? [
           ...this.errorList,
-          `${this.errorsOmitted} more composition errors not listed.`,
+          `${this.errorsOmitted} more composition errors not listed (a repeated one is counted each time).`,
         ]
       : this.errorList;
   }
 
   private report(message: string): void {
-    if (this.errorSeen.has(message)) {
+    if (this.errorListed.has(message)) {
       return;
     }
-    this.errorSeen.add(message);
     if (this.errorList.length < MAX_LISTED) {
       this.errorList.push(message);
+      this.errorListed.add(message);
     } else {
+      // Nothing kept past the cap, so repeats can't be told apart.
       this.errorsOmitted++;
     }
   }
 
-  private unresolved(what: string): void {
+  /** An arc that didn't resolve: the path as authored, quoted, and what's wrong with it. */
+  private unresolved(path: string, note = ""): void {
     if (this.counts.unresolved.length < MAX_LISTED) {
-      this.counts.unresolved.push(quoted(what));
+      this.counts.unresolved.push(quoted(path) + note);
     } else {
       this.counts.unresolvedOmitted++;
     }
   }
 
-  /** A layer and its sublayers, strongest first. */
-  stack(id: string, seen = new Set<string>()): string[] {
-    if (seen.has(id)) {
-      return [];
+  private selected(setName: string, sel: string | undefined): void {
+    const label = `${quoted(setName)}=${sel === undefined ? "(none)" : quoted(sel)}`;
+    if (this.selectedSeen.has(label)) {
+      return;
     }
-    seen.add(id);
-    const out = [id];
-    const root = this.layer(id)?.specs.get("/");
-    for (const sub of listItems(root?.fields.get("subLayers"))) {
-      const r =
-        typeof sub === "string"
-          ? resolveAsset(this.anchor(id), sub)
-          : undefined;
-      if (r && this.layer(r)) {
-        this.counts.sublayers++;
-        out.push(...this.stack(r, seen));
-      } else if (typeof sub === "string") {
-        this.unresolved(sub);
-        // PcpErrorInvalidSublayerPath::ToString.
-        const why = r ? this.layers.get(r)?.error : undefined;
-        this.report(
-          `Could not load sublayer @${quoted(r ?? sub)}@ of layer @${quoted(id)}@${
-            why && why !== "missing" ? ` -- ${quoted(why)}` : ""
-          }; skipping.`,
-        );
+    if (this.counts.selected.length < MAX_LISTED) {
+      this.counts.selected.push(label);
+      this.selectedSeen.add(label);
+    } else {
+      this.counts.selectedOmitted++;
+    }
+  }
+
+  /** Spends one site of MAX_SITES; false, and reported once, when none are left. */
+  private spend(): boolean {
+    if (this.sitesLeft > 0) {
+      this.sitesLeft--;
+      return true;
+    }
+    if (this.sitesLeft === 0) {
+      this.sitesLeft = -1;
+      this.report(
+        `Composition stopped at ${MAX_SITES} sites, the subset reader's limit; the rest of the stage is not composed.`,
+      );
+    }
+    return false;
+  }
+
+  /** True once MAX_SITES is spent. */
+  get stopped(): boolean {
+    return this.sitesLeft < 0;
+  }
+
+  /** A layer and its sublayers, strongest first, depth first; computed once per layer. */
+  stack(id: string): string[] {
+    const cached = this.stacks.get(id);
+    if (cached) {
+      return cached;
+    }
+    const out: string[] = [];
+    const seen = new Set<string>();
+    // An explicit stack: a chain of thousands of sublayers mustn't overflow the call stack.
+    const todo = [id];
+    while (todo.length) {
+      const at = todo.pop()!;
+      if (seen.has(at)) {
+        continue;
+      }
+      seen.add(at);
+      out.push(at);
+      const next: string[] = [];
+      const root = this.layer(at)?.specs.get("/");
+      for (const sub of listItems(root?.fields.get("subLayers"))) {
+        if (typeof sub !== "string") {
+          continue;
+        }
+        const r = resolveAsset(this.anchor(at), sub);
+        if (r && this.layer(r)) {
+          this.counts.sublayers++;
+          next.push(r);
+        } else {
+          this.unresolved(sub);
+          // PcpErrorInvalidSublayerPath::ToString.
+          const why = r ? this.layers.get(r)?.error : undefined;
+          this.report(
+            `Could not load sublayer @${quoted(r ?? sub)}@ of layer @${quoted(at)}@${
+              why && why !== "missing" ? ` -- ${quoted(why)}` : ""
+            }; skipping.`,
+          );
+        }
+      }
+      // Strongest first: the first sublayer is visited next.
+      for (let i = next.length - 1; i >= 0; i--) {
+        todo.push(next[i]!);
       }
     }
+    this.stacks.set(id, out);
     return out;
   }
 
@@ -488,19 +559,29 @@ export class Stage {
     return out;
   }
 
-  /** The sites of one prim, strongest first, with every arc on them followed. */
+  /** The sites of one prim, strongest first, with every arc on them followed. `keys` holds out's sites, for finding repeats. */
   expand(
     site: Site,
     out: Site[],
     depth = 0,
     inherited: readonly Site[] = [],
+    keys = new Set(out.map(siteKey)),
   ): void {
-    if (
-      depth > 32 ||
-      out.some((s) => s.stack[0] === site.stack[0] && s.path === site.path)
-    ) {
+    const key = siteKey(site);
+    if (keys.has(key)) {
       return;
     }
+    if (depth > MAX_ARC_DEPTH) {
+      // Not OpenUSD's: a guard on untrusted input.
+      this.report(
+        `Arcs nested deeper than ${MAX_ARC_DEPTH} at @${quoted(site.stack[0]!)}@<${quoted(site.path)}>; not followed.`,
+      );
+      return;
+    }
+    if (!this.spend()) {
+      return;
+    }
+    keys.add(key);
     out.push(site);
     const specs = this.specsAt(site);
     const field = (name: string) =>
@@ -530,7 +611,7 @@ export class Stage {
     const follow = (s: Site | undefined): void => {
       // A variant selection isn't checked: /A{v=x} under /A is a branch, not a cycle.
       if (s && (s.arc === "variant" || !cycles(s))) {
-        this.expand(s, out, depth + 1, inherited);
+        this.expand(s, out, depth + 1, inherited, keys);
       }
     };
     /**
@@ -600,7 +681,7 @@ export class Stage {
       }
       const target = a.arc.primPath || this.defaultPrim(stack);
       if (!target) {
-        this.unresolved(`${a.authored} (no default prim)`);
+        this.unresolved(a.authored, " (no default prim)");
         return undefined;
       }
       return {
@@ -637,11 +718,8 @@ export class Stage {
         continue;
       }
       this.counts.variantSets++;
-      const sel = this.selection([...inherited, ...out], setName);
-      const label = `${setName}=${sel ?? "(none)"}`;
-      if (!this.counts.selected.includes(label)) {
-        this.counts.selected.push(label);
-      }
+      const sel = this.selection(setName, inherited, out);
+      this.selected(setName, sel);
       if (sel) {
         this.counts.variantSelections++;
         const vpath = `${site.path}{${setName}=${sel}}`;
@@ -662,20 +740,26 @@ export class Stage {
     }
   }
 
-  /** The strongest variant selection for a set among the sites gathered so far. */
-  selection(sites: readonly Site[], setName: string): string | undefined {
-    for (const s of sites) {
-      for (const { spec } of this.specsAt(s)) {
-        const sel = spec.fields.get("variantSelection");
-        if (
-          sel &&
-          typeof sel === "object" &&
-          !Array.isArray(sel) &&
-          !("kind" in sel)
-        ) {
-          const v = (sel as Record<string, Value>)[setName];
-          if (typeof v === "string" && v) {
-            return v;
+  /** The strongest variant selection for a set among the sites gathered so far: those inherited from the parent, then the prim's own. */
+  selection(
+    setName: string,
+    ...siteLists: readonly (readonly Site[])[]
+  ): string | undefined {
+    // No copy of the lists: one prim can hold thousands of variant sets.
+    for (const sites of siteLists) {
+      for (const s of sites) {
+        for (const { spec } of this.specsAt(s)) {
+          const sel = spec.fields.get("variantSelection");
+          if (
+            sel &&
+            typeof sel === "object" &&
+            !Array.isArray(sel) &&
+            !("kind" in sel)
+          ) {
+            const v = (sel as Record<string, Value>)[setName];
+            if (typeof v === "string" && v) {
+              return v;
+            }
           }
         }
       }
@@ -724,10 +808,11 @@ export class Stage {
     if (path === "/") {
       all.push(...sites);
     } else {
+      const keys = new Set<string>();
       for (const s of sites) {
         // The sites handed down from the parent are all stronger than any
         // arc this prim's own specs add, so a selection they hold wins.
-        this.expand(s, all, 0, sites);
+        this.expand(s, all, 0, sites, keys);
       }
     }
     const specs = all.flatMap((s) =>
@@ -756,13 +841,11 @@ export class Stage {
 
     // Properties.
     const props = new Map<string, Prop>();
-    const propNames: string[] = [];
+    const propNames = new Set<string>();
     for (const s of all) {
       for (const id of s.stack) {
         for (const n of this.propIndex.get(id)?.get(s.path) ?? []) {
-          if (!propNames.includes(n)) {
-            propNames.push(n);
-          }
+          propNames.add(n);
         }
       }
     }
@@ -814,25 +897,26 @@ export class Stage {
 
     // Children: the union over every site.
     // Pcp orders children weakest first and appends what stronger sites add.
-    const childNames: string[] = [];
+    const childNames = new Set<string>();
     for (const s of [...all].reverse()) {
       for (const id of [...s.stack].reverse()) {
         for (const n of this.childIndex.get(id)?.get(s.path) ?? []) {
-          if (!childNames.includes(n)) {
-            childNames.push(n);
-          }
+          childNames.add(n);
         }
       }
     }
     const children: Prim[] = [];
-    if (childNames.length && depth >= MAX_NAMESPACE_DEPTH) {
+    if (childNames.size && depth >= MAX_NAMESPACE_DEPTH) {
       // Not OpenUSD's: a guard on untrusted input, which no real asset reaches.
       this.report(
         `Namespace deeper than ${MAX_NAMESPACE_DEPTH} prims at <${quoted(path)}>; its children are not composed.`,
       );
-      childNames.length = 0;
+      childNames.clear();
     }
     for (const n of childNames) {
+      if (this.stopped) {
+        break;
+      }
       const childPath = path === "/" ? `/${n}` : `${path}/${n}`;
       // Each node of the parent's graph has a counterpart one name deeper.
       const childSites = all.map((s): Site => ({
@@ -893,15 +977,18 @@ function parentOf(path: string): string {
   return slash <= 0 ? "/" : path.slice(0, slash);
 }
 
-function push(map: Map<string, string[]>, key: string, v: string): void {
+function push(map: Map<string, Set<string>>, key: string, v: string): void {
   const a = map.get(key);
   if (a) {
-    if (!a.includes(v)) {
-      a.push(v);
-    }
+    a.add(v);
   } else {
-    map.set(key, [v]);
+    map.set(key, new Set([v]));
   }
+}
+
+/** A site's identity within one prim: its layer stack (by root layer) and path. */
+function siteKey(s: Site): string {
+  return `${s.stack[0]}\u0000${s.path}`;
 }
 
 /** Composes list ops from strongest to weakest into one list. */

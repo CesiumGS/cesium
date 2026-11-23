@@ -100,7 +100,13 @@ function summarize(c: Coverage): [string, string][] {
       "Arcs",
       `${c.counts.sublayers} sublayers, ${c.counts.references} references, ${c.counts.payloads} payloads, ${c.counts.inherits} inherits, ${c.counts.specializes} specializes`,
     ],
-    ["Variants", c.counts.selected.join(", ") || "none"],
+    [
+      "Variants",
+      (c.counts.selected.join(", ") || "none") +
+        (c.counts.selectedOmitted
+          ? `, and ${c.counts.selectedOmitted} more`
+          : ""),
+    ],
     [
       "Unresolved",
       (c.counts.unresolved.join(", ") || "none") +
