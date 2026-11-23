@@ -14,3 +14,12 @@ overrides:
 # Link a workspace package whose name and version match a plain range
 # ("@cesium/core": "2.0.0-poc.0"), as npm does, without "workspace:" ranges.
 linkWorkspacePackages: true
+# Dependencies' install scripts, reviewed (CS-1091). pnpm 11 stops an install
+# until each is named here. None runs, as with `--ignore-scripts` in worktree
+# setup and CI: esbuild's platform binary comes as an optional dependency,
+# onnxruntime-node's script downloads binaries its package doesn't bundle
+# (CUDA's, for one), and protobufjs's only checks versions.
+allowBuilds:
+  esbuild: false
+  onnxruntime-node: false
+  protobufjs: false
