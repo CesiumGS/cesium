@@ -2,10 +2,14 @@
 id: CS-1083
 title: Merge CS-940, the StableId hex helpers with a branded StableId
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge. CS-950 is closed as superseded."
+answered_at: 2026-11-23T05:52:46.557Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
