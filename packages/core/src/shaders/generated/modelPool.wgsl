@@ -197,6 +197,10 @@ fn claimSlots(@builtin(global_invocation_id) gid_2 : vec3<u32>)
     var _S13 : vec3<f32> = vec3<f32>(sin(h_0));
     var _S14 : vec3<f32> = vec3<f32>(scale_0);
     var _S15 : mat4x4<f32> = transpose(mat4x4<f32>(vec4<f32>((north_0 * _S12 + east_0 * _S13) * _S14, 0.0f), vec4<f32>((north_0 * _S13 - east_0 * _S12) * _S14, 0.0f), vec4<f32>(up_0 * _S14, 0.0f), vec4<f32>(_S10, 1.0f)));
+    var _S16 : vec2<u32> = vec2<u32>(arrayLength(&parts_1), 144);
+    var _S17 : u32 = _S16.x;
+    var _S18 : vec2<u32> = vec2<u32>(arrayLength(&instanceRows_0), 64);
+    var _S19 : u32 = _S18.x;
     var k_1 : u32 = u32(0);
     loop
     {
@@ -209,10 +213,23 @@ fn claimSlots(@builtin(global_invocation_id) gid_2 : vec3<u32>)
         }
         if((k_1 >= (pool_0.parts_0)))
         {
+            _S8 = true;
+        }
+        else
+        {
+            _S8 = (k_1 >= _S17);
+        }
+        if(_S8)
+        {
             break;
         }
         var m_0 : mat4x4<f32> = (((mat4x4<f32>(parts_1[k_1].local_0.data_0[i32(0)][i32(0)], parts_1[k_1].local_0.data_0[i32(1)][i32(0)], parts_1[k_1].local_0.data_0[i32(2)][i32(0)], parts_1[k_1].local_0.data_0[i32(3)][i32(0)], parts_1[k_1].local_0.data_0[i32(0)][i32(1)], parts_1[k_1].local_0.data_0[i32(1)][i32(1)], parts_1[k_1].local_0.data_0[i32(2)][i32(1)], parts_1[k_1].local_0.data_0[i32(3)][i32(1)], parts_1[k_1].local_0.data_0[i32(0)][i32(2)], parts_1[k_1].local_0.data_0[i32(1)][i32(2)], parts_1[k_1].local_0.data_0[i32(2)][i32(2)], parts_1[k_1].local_0.data_0[i32(3)][i32(2)], parts_1[k_1].local_0.data_0[i32(0)][i32(3)], parts_1[k_1].local_0.data_0[i32(1)][i32(3)], parts_1[k_1].local_0.data_0[i32(2)][i32(3)], parts_1[k_1].local_0.data_0[i32(3)][i32(3)])) * ((((_S15) * (mat4x4<f32>(parts_1[k_1].inverse_0.data_0[i32(0)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(0)], parts_1[k_1].inverse_0.data_0[i32(0)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(1)], parts_1[k_1].inverse_0.data_0[i32(0)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(2)], parts_1[k_1].inverse_0.data_0[i32(0)][i32(3)], parts_1[k_1].inverse_0.data_0[i32(1)][i32(3)], parts_1[k_1].inverse_0.data_0[i32(2)][i32(3)], parts_1[k_1].inverse_0.data_0[i32(3)][i32(3)])))))));
         var row_0 : u32 = parts_1[k_1].first_0 + slot_0;
+        if((row_0 >= _S19))
+        {
+            k_1 = k_1 + u32(1);
+            continue;
+        }
         instanceRows_0[row_0].row0_0 = m_0[i32(0)];
         instanceRows_0[row_0].row1_0 = m_0[i32(1)];
         instanceRows_0[row_0].row2_0 = m_0[i32(2)];
@@ -220,6 +237,11 @@ fn claimSlots(@builtin(global_invocation_id) gid_2 : vec3<u32>)
         k_1 = k_1 + u32(1);
     }
     return;
+}
+
+fn clampIndex_0( at_0 : u32,  count_1 : u32) -> u32
+{
+    return min(at_0, max(count_1, u32(1)) - u32(1));
 }
 
 @compute
@@ -232,13 +254,22 @@ fn hideRest(@builtin(global_invocation_id) gid_3 : vec3<u32>)
         return;
     }
     var slot_1 : u32 = j_0 % pool_0.slots_0;
-    var _S16 : u32 = atomicLoad(&(counters_0[u32(129)]));
-    if((slot_1 < (min(_S16, pool_0.slots_0))))
+    var _S20 : u32 = atomicLoad(&(counters_0[u32(129)]));
+    if((slot_1 < (min(_S20, pool_0.slots_0))))
     {
         return;
     }
-    var _S17 : u32 = j_0 / pool_0.slots_0;
-    instanceRows_0[parts_1[_S17].first_0 + slot_1].flags_0 = ((instanceRows_0[parts_1[_S17].first_0 + slot_1].flags_0) | (u32(1)));
+    var _S21 : vec2<u32> = vec2<u32>(arrayLength(&parts_1), 144);
+    var partCount_0 : u32 = _S21.x;
+    var _S22 : vec2<u32> = vec2<u32>(arrayLength(&instanceRows_0), 64);
+    var rowCount_0 : u32 = _S22.x;
+    var _S23 : u32 = j_0 / pool_0.slots_0;
+    var row_1 : u32 = parts_1[clampIndex_0(_S23, partCount_0)].first_0 + slot_1;
+    if((row_1 >= rowCount_0))
+    {
+        return;
+    }
+    instanceRows_0[row_1].flags_0 = ((instanceRows_0[row_1].flags_0) | (u32(1)));
     return;
 }
 

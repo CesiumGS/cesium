@@ -18,6 +18,7 @@
 // (depth equal to the cleared 0, reverse-Z). Output is pre-exposed linear
 // sRGB, like the opaque pass.
 import air;
+import bounds;
 
 struct Sky {
   // The camera, km, planet-centered: on the sphere's normal, or from above
@@ -294,11 +295,14 @@ void starCull(uint3 id : SV_DispatchThreadID) {
       && dot(stars.planes[3].xyz, cone.xyz) >= -cone.w) {
     uint low = 0u;
     uint high = uint(span.y);
+    // The cell's span is data: a probe past the stars reads the last one.
+    uint starRows, starStride;
+    starPoints.GetDimensions(starRows, starStride);
     [ForceUnroll]
     for (uint step = 0u; step < STAR_SEARCH_STEPS; step++) {
       if (low < high) {
         uint middle = (low + high) >> 1u;
-        if (starPoints[(first + middle) * 2u].w >= stars.minIlluminance) {
+        if (starPoints[clampIndex((first + middle) * 2u, starRows)].w >= stars.minIlluminance) {
           low = middle + 1u;
         } else {
           high = middle;

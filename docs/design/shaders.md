@@ -292,7 +292,20 @@ done:
   past it (`test/boundedLoopsCpu.test.ts`): a probe's march steps, a model
   pool's parts, a trim band's pieces (the face goes to the CPU mesh), a
   pixel's translucent list (a cut walk is read back and reported). Tint
-  still guards these loops (above): Slang writes them as `loop {}`.
+  still guards these loops (above): Slang writes them as `loop {}`. The
+  same test refuses a step that doesn't move or can wrap (`s -= 2u` on a
+  `uint`, `i <= 0xFFFFFFFFu`), a "constant" whose value is data, and the
+  loop variable passed to an `out` or `inout` parameter; it reads the
+  examples' and the parity pages' Slang too.
+- **Every buffer index in a loop that data reaches is clamped.**
+  `unclampedIndices` in the same test follows a buffer's or a uniform's
+  value through locals, fields, out parameters and calls, and refuses a
+  subscript in a loop body (or in a function called from one with data)
+  unless the index goes through `min`, `clamp` or `bounds.slang`'s
+  `clampIndex` and `clampSpan` against a length from `GetDimensions` or a
+  constant, or a check against such a length skips it. It can't see a
+  counter grown under a data-driven branch, or reads outside loops; Tint's
+  robust access still keeps those defined.
 - **Large struct loads are split per field at each use** (deferred buffer
   loads): raycast was 30% slower until it read its draw record's fields
   once. **Stores too (r60):** a struct read, changed and written back

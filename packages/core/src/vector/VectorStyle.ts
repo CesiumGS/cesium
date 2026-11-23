@@ -268,6 +268,15 @@ fn styleMark(k: u32, p: vec2f) -> f32 {
 }
 `;
 
+/**
+ * The most edges a symbol's path has. Its distance function walks every
+ * edge for every fragment of every point drawn with it, in a loop whose
+ * bound is this count (AGENTS.md, GPU safety): 256 is eight times a
+ * detailed icon's 32 and costs a fragment 256 segment distances at most.
+ * A path past it is refused, never cut.
+ */
+export const MAX_PATH_EDGES = 256;
+
 /** A straight-line path (M, L, H, V, Z, absolute or relative) as polygons. */
 function pathPolygons(
   path: string,
@@ -333,6 +342,12 @@ function pathPolygons(
   }
   if (!polygons.length) {
     throw new Error(`${where}: path "${path}" draws nothing`);
+  }
+  const edges = polygons.reduce((n, polygon) => n + polygon.length, 0);
+  if (edges > MAX_PATH_EDGES) {
+    throw new Error(
+      `${where}: the path has ${edges} edges, more than the ${MAX_PATH_EDGES} a symbol may have`,
+    );
   }
   return polygons;
 }

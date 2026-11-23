@@ -18,6 +18,7 @@
 // `latticeEval` reads a one-cell lattice's rows as placement.slang does, the
 // baseline a fitted curvilinear map costs per vertex. The kernels stand for the vertex
 // stage: a thread to a vertex, a model-space position in, the residual out.
+import bounds;
 import curvilinearFitDf64;
 
 struct DirectParams {
@@ -96,7 +97,10 @@ void directConstants(uint3 id : SV_DispatchThreadID) {
 }
 
 float3 directResidual(DirectParams p, uint draw, float3 m) {
-  uint at = draw * DRAW_ROWS;
+  // The vertex's draw is data: its rows are read from within the buffer.
+  uint drawRows, drawStride;
+  draws.GetDimensions(drawRows, drawStride);
+  uint at = clampSpan(draw * DRAW_ROWS, DRAW_ROWS, drawRows);
   float4 head = draws[at];
   if (p.kind == 2u) {
     return p.s1.xyz * (m - head.xyz);
@@ -161,7 +165,9 @@ void latticeEval(uint3 id : SV_DispatchThreadID) {
     return;
   }
   float4 v = vertices[id.x];
-  uint at = asuint(v.w) * LATTICE_ROWS;
+  uint latticeRows, latticeStride;
+  lattices.GetDimensions(latticeRows, latticeStride);
+  uint at = clampSpan(asuint(v.w) * LATTICE_ROWS, LATTICE_ROWS, latticeRows);
   float4 head = lattices[at];
   float3 u = (v.xyz - head.xyz) * head.w;
   float4 px = float4(1.0, u.x, u.x * u.x, u.x * u.x * u.x);

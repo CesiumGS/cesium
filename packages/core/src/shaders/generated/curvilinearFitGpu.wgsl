@@ -571,30 +571,45 @@ fn fitCells(@builtin(workgroup_id) group_0 : vec3<u32>, @builtin(local_invocatio
 
 var<workgroup> worst_0 : atomic<u32>;
 
+fn clampSpan_0( at_1 : u32,  width_0 : u32,  count_0 : u32) -> u32
+{
+    var _S51 : u32;
+    if((count_0 >= width_0))
+    {
+        _S51 = count_0 - width_0;
+    }
+    else
+    {
+        _S51 = u32(0);
+    }
+    return min(at_1, _S51);
+}
+
 @compute
 @workgroup_size(128, 1, 1)
 fn checkCells(@builtin(workgroup_id) group_1 : vec3<u32>, @builtin(local_invocation_index) t_2 : u32)
 {
-    var at_1 : u32 = group_1.y * u32(65535) + group_1.x;
-    if((at_1 >= (params_0.cellCount_0)))
+    var at_2 : u32 = group_1.y * u32(65535) + group_1.x;
+    if((at_2 >= (params_0.cellCount_0)))
     {
         return;
     }
-    var entry_1 : vec2<u32> = cellList_0[at_1];
-    var _S51 : TileJob_std430_0 = jobs_0[entry_1.x];
-    var _S52 : vec4<u32> = _S51.meta_0;
-    var _S53 : u32 = _S51.meta_0.y;
-    var body_1 : u32 = _S51.meta_0.x;
-    var _S54 : bool = t_2 == u32(0);
-    if(_S54)
+    var entry_1 : vec2<u32> = cellList_0[at_2];
+    var _S52 : TileJob_std430_0 = jobs_0[entry_1.x];
+    var _S53 : vec4<u32> = _S52.meta_0;
+    var _S54 : u32 = _S52.meta_0.y;
+    var body_1 : u32 = _S52.meta_0.x;
+    var _S55 : bool = t_2 == u32(0);
+    if(_S55)
     {
         atomicStore(&(worst_0), u32(0));
     }
     workgroupBarrier();
-    var _S55 : vec3<f32> = lattices_0[body_1 + u32(1)].xyz;
-    var _S56 : vec3<f32> = lattices_0[body_1 + u32(2)].xyz;
-    var _S57 : u32 = entry_1.y;
-    var _S58 : u32 = body_1 + u32(3) + _S57 * u32(20);
+    var _S56 : vec3<f32> = lattices_0[body_1 + u32(1)].xyz;
+    var _S57 : vec3<f32> = lattices_0[body_1 + u32(2)].xyz;
+    var _S58 : vec2<u32> = vec2<u32>(arrayLength(&lattices_0), 16);
+    var _S59 : u32 = entry_1.y;
+    var _S60 : u32 = clampSpan_0(body_1 + u32(3) + _S59 * u32(20), u32(20), _S58.x);
     var mine_0 : f32 = 0.0f;
     var s_10 : u32 = t_2;
     loop
@@ -607,19 +622,19 @@ fn checkCells(@builtin(workgroup_id) group_1 : vec3<u32>, @builtin(local_invocat
             break;
         }
         var v_1 : vec3<f32> = vec3<f32>(f32(s_10 % u32(9)), f32(s_10 / u32(9) % u32(9)), f32(s_10 / u32(81))) * vec3<f32>(0.25f) - vec3<f32>(1.0f);
-        var _S59 : f32 = v_1.x;
-        var _S60 : f32 = v_1.y;
-        var _S61 : f32 = v_1.z;
-        var _S62 : Df3_0 = evalAtCell_0(&(_S51), _S53, _S57, dfOf_0(_S59), dfOf_0(_S60), dfOf_0(_S61));
-        var _S63 : vec3<f32> = vec3<f32>(dfSub_0(_S62.x_0, vec2<f32>(_S55.x, _S56.x)).x, dfSub_0(_S62.y_0, vec2<f32>(_S55.y, _S56.y)).x, dfSub_0(_S62.z_0, vec2<f32>(_S55.z, _S56.z)).x);
-        var _S64 : f32 = _S59 * _S59;
-        var _S65 : vec4<f32> = vec4<f32>(1.0f, _S59, _S64, _S64 * _S59);
-        var _S66 : f32 = _S60 * _S60;
-        var _S67 : vec4<f32> = vec4<f32>(1.0f, _S60, _S66, _S66 * _S60);
-        var _S68 : f32 = _S61 * _S61;
-        var _S69 : vec4<f32> = vec4<f32>(1.0f, _S61, _S68, _S68 * _S61);
+        var _S61 : f32 = v_1.x;
+        var _S62 : f32 = v_1.y;
+        var _S63 : f32 = v_1.z;
+        var _S64 : Df3_0 = evalAtCell_0(&(_S52), _S54, _S59, dfOf_0(_S61), dfOf_0(_S62), dfOf_0(_S63));
+        var _S65 : vec3<f32> = vec3<f32>(dfSub_0(_S64.x_0, vec2<f32>(_S56.x, _S57.x)).x, dfSub_0(_S64.y_0, vec2<f32>(_S56.y, _S57.y)).x, dfSub_0(_S64.z_0, vec2<f32>(_S56.z, _S57.z)).x);
+        var _S66 : f32 = _S61 * _S61;
+        var _S67 : vec4<f32> = vec4<f32>(1.0f, _S61, _S66, _S66 * _S61);
+        var _S68 : f32 = _S62 * _S62;
+        var _S69 : vec4<f32> = vec4<f32>(1.0f, _S62, _S68, _S68 * _S62);
+        var _S70 : f32 = _S63 * _S63;
+        var _S71 : vec4<f32> = vec4<f32>(1.0f, _S63, _S70, _S70 * _S63);
         var k_4 : u32 = u32(0);
-        var r_6 : vec3<f32> = _S63;
+        var r_6 : vec3<f32> = _S65;
         loop
         {
             if((k_4 < u32(20)))
@@ -629,22 +644,22 @@ fn checkCells(@builtin(workgroup_id) group_1 : vec3<u32>, @builtin(local_invocat
             {
                 break;
             }
-            var r_7 : vec3<f32> = r_6 - lattices_0[_S58 + k_4].xyz * vec3<f32>((_S65[((POWERS_0[k_4]) & (u32(3)))] * _S67[((((POWERS_0[k_4]) >> (u32(2)))) & (u32(3)))] * _S69[((((POWERS_0[k_4]) >> (u32(4)))) & (u32(3)))]));
+            var r_7 : vec3<f32> = r_6 - lattices_0[_S60 + k_4].xyz * vec3<f32>((_S67[((POWERS_0[k_4]) & (u32(3)))] * _S69[((((POWERS_0[k_4]) >> (u32(2)))) & (u32(3)))] * _S71[((((POWERS_0[k_4]) >> (u32(4)))) & (u32(3)))]));
             k_4 = k_4 + u32(1);
             r_6 = r_7;
         }
-        var _S70 : f32 = max(mine_0, length(r_6));
+        var _S72 : f32 = max(mine_0, length(r_6));
         var s_11 : u32 = s_10 + u32(128);
-        mine_0 = _S70;
+        mine_0 = _S72;
         s_10 = s_11;
     }
-    var _S71 : u32 = atomicMax(&(worst_0), (bitcast<u32>((mine_0))));
+    var _S73 : u32 = atomicMax(&(worst_0), (bitcast<u32>((mine_0))));
     workgroupBarrier();
-    if(_S54)
+    if(_S55)
     {
-        var _S72 : u32 = _S52.z;
-        var _S73 : u32 = atomicLoad(&(worst_0));
-        var _S74 : u32 = atomicMax(&(errors_0[_S72]), _S73);
+        var _S74 : u32 = _S53.z;
+        var _S75 : u32 = atomicLoad(&(worst_0));
+        var _S76 : u32 = atomicMax(&(errors_0[_S74]), _S75);
     }
     return;
 }
@@ -653,15 +668,15 @@ fn checkCells(@builtin(workgroup_id) group_1 : vec3<u32>, @builtin(local_invocat
 @workgroup_size(64, 1, 1)
 fn evalDirect(@builtin(global_invocation_id) id_0 : vec3<u32>)
 {
-    var _S75 : u32 = id_0.x;
-    if((_S75 >= (params_0.cellCount_0)))
+    var _S77 : u32 = id_0.x;
+    if((_S77 >= (params_0.cellCount_0)))
     {
         return;
     }
-    var _S76 : TileJob_std430_0 = jobs_0[i32(0)];
-    var m_0 : vec3<f32> = points_0[_S75].xyz;
-    var _S77 : Df3_0 = evalAtModel_0(&(_S76), dfOf_0(m_0.x), dfOf_0(m_0.y), dfOf_0(m_0.z));
-    evaluated_0[_S75] = vec4<f32>(_S77.x_0.x, _S77.y_0.x, _S77.z_0.x, 0.0f);
+    var _S78 : TileJob_std430_0 = jobs_0[i32(0)];
+    var m_0 : vec3<f32> = points_0[_S77].xyz;
+    var _S79 : Df3_0 = evalAtModel_0(&(_S78), dfOf_0(m_0.x), dfOf_0(m_0.y), dfOf_0(m_0.z));
+    evaluated_0[_S77] = vec4<f32>(_S79.x_0.x, _S79.y_0.x, _S79.z_0.x, 0.0f);
     return;
 }
 

@@ -11,6 +11,7 @@
 // (CastOptions.anchor), and only draws under that anchor are candidates,
 // so a ray and a transform's origin share coordinates.
 
+import bounds;
 import common;
 
 struct Ray {
@@ -47,9 +48,19 @@ DrawRecord drawRecord(uint index) {
   return records[index];
 }
 
+// A vertex's stored position, and a triangle's index: offsets and indices
+// are data, so each read is kept inside its buffer (bounds.slang).
 float3 position(uint offset, uint index) {
-  uint b = offset + index * 3u;
+  uint vertexCount, vertexStride;
+  vertices.GetDimensions(vertexCount, vertexStride);
+  uint b = clampSpan(offset + index * 3u, 3u, vertexCount);
   return float3(vertices[b], vertices[b + 1u], vertices[b + 2u]);
+}
+
+uint indexAt(uint at) {
+  uint indexCount, indexStride;
+  indices.GetDimensions(indexCount, indexStride);
+  return indices[clampIndex(at, indexCount)];
 }
 
 [shader("compute")]
@@ -88,9 +99,9 @@ void main(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
     offset = float3(inst.row0.w, inst.row1.w, inst.row2.w);
   }
   uint first = firstIndex + triangle * 3u;
-  float3 a = mul(t.linear, mul(local, position(positionOffset, indices[first])) + offset);
-  float3 b = mul(t.linear, mul(local, position(positionOffset, indices[first + 1u])) + offset);
-  float3 c = mul(t.linear, mul(local, position(positionOffset, indices[first + 2u])) + offset);
+  float3 a = mul(t.linear, mul(local, position(positionOffset, indexAt(first))) + offset);
+  float3 b = mul(t.linear, mul(local, position(positionOffset, indexAt(first + 1u))) + offset);
+  float3 c = mul(t.linear, mul(local, position(positionOffset, indexAt(first + 2u))) + offset);
 
   float3 e1 = b - a;
   float3 e2 = c - a;
@@ -177,9 +188,9 @@ void rayFeature(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
     instanceFeature = inst.feature;
   }
   uint first = firstIndex + triangle * 3u;
-  float3 a = mul(t.linear, mul(local, position(positionOffset, indices[first])) + offset);
-  float3 b = mul(t.linear, mul(local, position(positionOffset, indices[first + 1u])) + offset);
-  float3 c = mul(t.linear, mul(local, position(positionOffset, indices[first + 2u])) + offset);
+  float3 a = mul(t.linear, mul(local, position(positionOffset, indexAt(first))) + offset);
+  float3 b = mul(t.linear, mul(local, position(positionOffset, indexAt(first + 1u))) + offset);
+  float3 c = mul(t.linear, mul(local, position(positionOffset, indexAt(first + 2u))) + offset);
 
   float3 e1 = b - a;
   float3 e2 = c - a;
@@ -216,7 +227,7 @@ void rayFeature(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
     // Clamped: a vertex past the arena reads its last word.
     uint vertexCount, vertexStride;
     vertices.GetDimensions(vertexCount, vertexStride);
-    uint at = min(r.featureIdOffset + indices[first], max(vertexCount, 1u) - 1u);
+    uint at = min(r.featureIdOffset + indexAt(first), max(vertexCount, 1u) - 1u);
     uint localFeature = asuint(vertices[at]);
     slot = localFeature == NONE ? 0u : r.featureId + localFeature;
   }
@@ -257,7 +268,7 @@ void pickTriangle() {
   }
   uint first = r.firstIndex + number * 3u;
   for (uint k = 0u; k < 3u; k++) {
-    float3 p = position(r.positionOffset, indices[first + k]);
+    float3 p = position(r.positionOffset, indexAt(first + k));
     pickResult[10u + k * 3u] = asuint(p.x);
     pickResult[11u + k * 3u] = asuint(p.y);
     pickResult[12u + k * 3u] = asuint(p.z);

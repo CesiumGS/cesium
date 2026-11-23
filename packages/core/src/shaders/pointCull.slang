@@ -170,6 +170,9 @@ void cullPoints(uint3 gid : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
           int x0 = int(floor(s.x - half - 0.5));
           int y0 = int(floor(s.y - half - 0.5));
           int2 center = int2(floor(s.xy));
+          // The viewport is a uniform: the target's own length bounds it again.
+          uint depthPixels, depthStride;
+          splatDepth.GetDimensions(depthPixels, depthStride);
           for (int dy = 0; dy < MAX_FOOTPRINT; dy++) {
             for (int dx = 0; dx < MAX_FOOTPRINT; dx++) {
               int2 px = int2(x0 + dx, y0 + dy);
@@ -178,8 +181,9 @@ void cullPoints(uint3 gid : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
                 continue;
               }
               float2 p = (float2(px) + 0.5 - s.xy) / half;
-              if (splatCoverage(i, distance, p, half, all(px == center)) > 0.0) {
-                splatDepth[uint(px.y * w + px.x)].max(bits);
+              uint at = uint(px.y * w + px.x);
+              if (at < depthPixels && splatCoverage(i, distance, p, half, all(px == center)) > 0.0) {
+                splatDepth[at].max(bits);
               }
             }
           }
@@ -232,6 +236,12 @@ void splatPoints(uint3 gid : SV_DispatchThreadID) {
   int x0 = int(floor(s.x - half - 0.5));
   int y0 = int(floor(s.y - half - 0.5));
   int2 center = int2(floor(s.xy));
+  // The viewport is a uniform: the targets' own lengths bound it again.
+  uint depthPixels, colorPixels, featurePixels, stride;
+  splatDepth.GetDimensions(depthPixels, stride);
+  splatColor.GetDimensions(colorPixels, stride);
+  splatFeature.GetDimensions(featurePixels, stride);
+  uint pixels = min(depthPixels, min(colorPixels, featurePixels));
   for (int dy = 0; dy < MAX_FOOTPRINT; dy++) {
     for (int dx = 0; dx < MAX_FOOTPRINT; dx++) {
       int2 px = int2(x0 + dx, y0 + dy);
@@ -241,6 +251,9 @@ void splatPoints(uint3 gid : SV_DispatchThreadID) {
       }
       float2 p = (float2(px) + 0.5 - s.xy) / half;
       uint at = uint(px.y * w + px.x);
+      if (at >= pixels) {
+        continue;
+      }
       float coverage = splatCoverage(i, distance, p, half, all(px == center));
       if (coverage > 0.0 && splatDepth[at].load() == bits) {
         // Its coverage of the pixel as alpha: the resolve blends by it.

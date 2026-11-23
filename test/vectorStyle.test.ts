@@ -99,6 +99,23 @@ describe("vector styles", () => {
     expect(shader.code).toContain("fn styleSymbol1(p: vec2f) -> f32");
   });
 
+  it("takes a symbol path of up to 256 edges and refuses one longer (GPU safety)", () => {
+    // A closed polygon of n points has n edges: its distance loop's bound.
+    const polygon = (n: number) =>
+      `M ${Array.from({ length: n }, (_, k) => {
+        const a = (2 * Math.PI * k) / n;
+        return `${Math.cos(a).toFixed(4)} ${Math.sin(a).toFixed(4)}`;
+      }).join(" L ")} Z`;
+    const style = (n: number): VectorStyleDocument => ({
+      resources: { ring: { kind: "symbol", path: polygon(n) } },
+      layers: [{ shape: "ring" }],
+    });
+    expect(shaderOf(style(256)).code).toContain("array<vec4f, 256>");
+    expect(() => compile(style(257))).toThrow(
+      /resources\.ring: the path has 257 edges, more than the 256 a symbol may have/,
+    );
+  });
+
   it("colors by a categorical scale over an enum", () => {
     const shader = shaderOf({
       scales: {

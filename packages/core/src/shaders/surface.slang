@@ -29,6 +29,7 @@
 // The run-time side reads the engine only through what is marked
 // `__extern_cpp` here (shaders/link SURFACE_BOUNDARY).
 
+import bounds;
 import common;
 import coverage;
 import patch;
@@ -498,18 +499,31 @@ export __extern_cpp uint routeViewBit() {
   return view.viewBit;
 }
 
+// The vertex arena's length in words. Its offsets, directories and
+// indices are data, so every read of it is kept inside it (bounds.slang).
+uint vertexWords() {
+  uint count, stride;
+  vertices.GetDimensions(count, stride);
+  return count;
+}
+
+// One word of the arena, at most its last.
+float vertexWord(uint at) {
+  return vertices[clampIndex(at, vertexWords())];
+}
+
 float2 read2(uint offset, uint index) {
-  uint b = offset + index * 2u;
+  uint b = clampSpan(offset + index * 2u, 2u, vertexWords());
   return float2(vertices[b], vertices[b + 1u]);
 }
 
 float3 read3(uint offset, uint index) {
-  uint b = offset + index * 3u;
+  uint b = clampSpan(offset + index * 3u, 3u, vertexWords());
   return float3(vertices[b], vertices[b + 1u], vertices[b + 2u]);
 }
 
 float4 read4(uint offset, uint index) {
-  uint b = offset + index * 4u;
+  uint b = clampSpan(offset + index * 4u, 4u, vertexWords());
   return float4(vertices[b], vertices[b + 1u], vertices[b + 2u], vertices[b + 3u]);
 }
 
@@ -526,14 +540,14 @@ export __extern_cpp float4 readNamed(uint directory, uint hash, uint vertexIndex
   if (directory == NO_STREAM) {
     return value;
   }
-  uint count = asuint(vertices[directory]);
+  uint count = asuint(vertexWord(directory));
   for (uint i = 0u; i < MAX_DIRECTORY_ENTRIES; i++) {
     if (i >= count) {
       break;
     }
     uint entry = directory + 1u + i * 3u;
-    if (asuint(vertices[entry]) == hash) {
-      uint components = asuint(vertices[entry + 2u]);
+    if (asuint(vertexWord(entry)) == hash) {
+      uint components = asuint(vertexWord(entry + 2u));
       // In a texture (layout.ts TEXTURE_PROPERTY): per fragment only.
       if (components >= 0x80000000u) {
         break;
@@ -548,12 +562,12 @@ export __extern_cpp float4 readNamed(uint directory, uint hash, uint vertexIndex
         row = feature;
         size = components & 0xffu;
       }
-      uint b = asuint(vertices[entry + 1u]) + row * size;
+      uint b = asuint(vertexWord(entry + 1u)) + row * size;
       for (uint c = 0u; c < 4u; c++) {
         if (c >= size) {
           break;
         }
-        value[c] = vertices[b + c];
+        value[c] = vertexWord(b + c);
       }
       break;
     }
@@ -573,20 +587,20 @@ export __extern_cpp uint4 readInstance(uint draw, uint instance, uint hash) {
   if (r.instanceDirectory == NO_STREAM || r.instanceStreams == NO_STREAM) {
     return bits;
   }
-  uint count = asuint(vertices[r.instanceDirectory]);
+  uint count = asuint(vertexWord(r.instanceDirectory));
   for (uint i = 0u; i < MAX_DIRECTORY_ENTRIES; i++) {
     if (i >= count) {
       break;
     }
     uint entry = r.instanceDirectory + 1u + i * 3u;
-    if (asuint(vertices[entry]) == hash) {
-      uint b = r.instanceStreams + instance * r.instanceStride + asuint(vertices[entry + 1u]);
-      uint components = asuint(vertices[entry + 2u]);
+    if (asuint(vertexWord(entry)) == hash) {
+      uint b = r.instanceStreams + instance * r.instanceStride + asuint(vertexWord(entry + 1u));
+      uint components = asuint(vertexWord(entry + 2u));
       for (uint c = 0u; c < 4u; c++) {
         if (c >= components) {
           break;
         }
-        bits[c] = asuint(vertices[b + c]);
+        bits[c] = asuint(vertexWord(b + c));
       }
       break;
     }
@@ -626,16 +640,16 @@ export __extern_cpp float4 readFragmentProperty(uint directory, uint hash, float
   if (directory == NO_STREAM) {
     return fallback;
   }
-  uint count = asuint(vertices[directory]);
+  uint count = asuint(vertexWord(directory));
   for (uint i = 0u; i < MAX_DIRECTORY_ENTRIES; i++) {
     if (i >= count) {
       break;
     }
     uint entry = directory + 1u + i * 3u;
-    if (asuint(vertices[entry]) != hash) {
+    if (asuint(vertexWord(entry)) != hash) {
       continue;
     }
-    uint info = asuint(vertices[entry + 2u]);
+    uint info = asuint(vertexWord(entry + 2u));
     if (info < 0x40000000u) {
       return fallback;
     }
@@ -644,23 +658,23 @@ export __extern_cpp float4 readFragmentProperty(uint directory, uint hash, float
       float4 value = float4(0.0);
       if (feature != 0xffffffffu) {
         uint size = info & 0xffu;
-        uint row = asuint(vertices[entry + 1u]) + feature * size;
+        uint row = asuint(vertexWord(entry + 1u)) + feature * size;
         for (uint c = 0u; c < 4u; c++) {
           if (c >= size) {
             break;
           }
-          value[c] = vertices[row + c];
+          value[c] = vertexWord(row + c);
         }
       }
       return value;
     }
-    uint b = asuint(vertices[entry + 1u]);
-    uint4 texel = propertyTexel(asuint(vertices[b]), uv);
-    uint channelCount = min(asuint(vertices[b + 1u]), 4u);
-    uint channels = asuint(vertices[b + 2u]);
-    uint kind = asuint(vertices[b + 3u]);
-    uint components = min(asuint(vertices[b + 4u]), 4u);
-    bool normalized = asuint(vertices[b + 5u]) != 0u;
+    uint b = asuint(vertexWord(entry + 1u));
+    uint4 texel = propertyTexel(asuint(vertexWord(b)), uv);
+    uint channelCount = min(asuint(vertexWord(b + 1u)), 4u);
+    uint channels = asuint(vertexWord(b + 2u));
+    uint kind = asuint(vertexWord(b + 3u));
+    uint components = min(asuint(vertexWord(b + 4u)), 4u);
+    bool normalized = asuint(vertexWord(b + 5u)) != 0u;
     uint bytes[4] = { 0u, 0u, 0u, 0u };
     for (uint k = 0u; k < 4u; k++) {
       if (k >= channelCount) {
@@ -695,7 +709,7 @@ export __extern_cpp float4 readFragmentProperty(uint directory, uint hash, float
       case 5u: v = float(asint(raw)); if (normalized) { v = max(v / 2147483647.0, -1.0); } break;
       default: v = asfloat(raw); break;
       }
-      value[c] = v * vertices[b + 10u + c] + vertices[b + 6u + c];
+      value[c] = v * vertexWord(b + 10u + c) + vertexWord(b + 6u + c);
     }
     return value;
   }
@@ -882,7 +896,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   out.color = unpackUnorm4x8ToFloat(p.tint) * vertexColor;
   uint localFeature = 0xffffffffu;
   if (r.featureIdOffset != NO_STREAM) {
-    localFeature = asuint(vertices[r.featureIdOffset + vertexIndex]);
+    localFeature = asuint(vertexWord(r.featureIdOffset + vertexIndex));
   }
   // The row of the draw's feature table this vertex reads: an instance's
   // feature (cull.slang makes it global), else the vertex's; a draw without
@@ -1059,7 +1073,7 @@ export __extern_cpp SurfaceVertex surfaceVertex(uint vertexIndex, uint item) {
 }
 export __extern_cpp SurfaceVertex surfacePointVertex(uint vertexIndex, uint item) {
   DrawRecord r = drawRecord(items[item].record);
-  uint point = asuint(vertices[r.uvOffset + vertexIndex / 6u]);
+  uint point = asuint(vertexWord(r.uvOffset + vertexIndex / 6u));
   return vertexOut(point * 6u + vertexIndex % 6u, item, true);
 }
 export __extern_cpp SurfaceVertex surfaceDepthVertex(uint vertexIndex, uint item) {
@@ -1136,6 +1150,14 @@ export __extern_cpp uint surfacePickTriangle() {
 
 // --- the opaque passes' fragments ---------------------------------------------
 
+// A row of the clip boxes' buffer, at most its last: a record's block and a
+// region's offsets, grid and edges are data (bounds.slang).
+float4 clipBoxRow(uint row) {
+  uint rows, stride;
+  clipBoxes.GetDimensions(rows, stride);
+  return clipBoxes[clampIndex(row, rows)];
+}
+
 // Bits of a record's `clipBlock` holding the block (layout.ts
 // `CLIP_BLOCK_BITS`); the box count above.
 static const uint CLIP_BLOCK_BITS = 28u;
@@ -1151,12 +1173,12 @@ bool insideClipBoxes(uint packed, float3 p) {
       break;
     }
     uint b = (block * CLIP_BOXES + i) * 5u;
-    float3 d = p - SplitPosition(clipBoxes[b].xyz, clipBoxes[b + 1u].xyz)
+    float3 d = p - SplitPosition(clipBoxRow(b).xyz, clipBoxRow(b + 1u).xyz)
                        .difference(SplitPosition(view.cameraHi, view.cameraLo));
     float3 u = abs(float3(
-        dot(clipBoxes[b + 2u].xyz, d),
-        dot(clipBoxes[b + 3u].xyz, d),
-        dot(clipBoxes[b + 4u].xyz, d)));
+        dot(clipBoxRow(b + 2u).xyz, d),
+        dot(clipBoxRow(b + 3u).xyz, d),
+        dot(clipBoxRow(b + 4u).xyz, d)));
     if (max(u.x, max(u.y, u.z)) <= 1.0) {
       return true;
     }
@@ -1234,7 +1256,7 @@ float terrainOpacity(uint mask, float3 p, uint which) {
     }
     uint slot = firstbitlow(mask);
     mask &= mask - 1u;
-    uint4 entry = asuint(clipBoxes[slot]);
+    uint4 entry = asuint(clipBoxRow(slot));
     float alpha = asfloat(entry.y);
     if (which == REGIONS_HOLES) {
       if (entry.w != 0u) {
@@ -1250,17 +1272,17 @@ float terrainOpacity(uint mask, float3 p, uint which) {
       continue;
     }
     uint o = entry.x;
-    float4 hi = clipBoxes[o];
-    float4 lo = clipBoxes[o + 1u];
+    float4 hi = clipBoxRow(o);
+    float4 lo = clipBoxRow(o + 1u);
     float3 d = p - SplitPosition(hi.xyz, lo.xyz).difference(camera);
-    float3 l = float3(dot(clipBoxes[o + 2u].xyz, d), dot(clipBoxes[o + 3u].xyz, d),
-                      dot(clipBoxes[o + 4u].xyz, d));
+    float3 l = float3(dot(clipBoxRow(o + 2u).xyz, d), dot(clipBoxRow(o + 3u).xyz, d),
+                      dot(clipBoxRow(o + 4u).xyz, d));
     float denominator = hi.w + l.z;
     if (denominator <= 0.0) {
       continue;
     }
     float2 q = l.xy * (hi.w / denominator);
-    float4 box = clipBoxes[o + 5u];
+    float4 box = clipBoxRow(o + 5u);
     if (q.x < box.x || q.y < box.y || q.x > box.z || q.y > box.w) {
       continue;
     }
@@ -1270,7 +1292,7 @@ float terrainOpacity(uint mask, float3 p, uint which) {
     uint edges = grid + size.x * size.y;
     float2 cell = max((box.zw - box.xy) / float2(size), float2(1e-6));
     uint2 at = min(uint2(max((q - box.xy) / cell, float2(0.0))), size - 1u);
-    float4 c = clipBoxes[grid + at.y * size.x + at.x];
+    float4 c = clipBoxRow(grid + at.y * size.x + at.x);
     uint start = asuint(c.x);
     uint word = asuint(c.y);
     uint count = min(word & 0x7fffffffu, min(MAX_CLIP_CELL_EDGES, budget));
@@ -1280,7 +1302,7 @@ float terrainOpacity(uint mask, float3 p, uint which) {
       if (j >= count) {
         break;
       }
-      float4 edge = clipBoxes[edges + start + j];
+      float4 edge = clipBoxRow(edges + start + j);
       if (segmentsCross(edge.xy, edge.zw, q, c.zw)) {
         inside = !inside;
       }

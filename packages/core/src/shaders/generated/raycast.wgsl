@@ -138,9 +138,35 @@ fn SplitPosition_difference_0( this_0 : SplitPosition_0,  b_0 : SplitPosition_0)
     return vec3<f32>(vec3<i32>(this_0.hi_0) - vec3<i32>(b_0.hi_0)) + (this_0.lo_0 - b_0.lo_0);
 }
 
+fn clampIndex_0( at_0 : u32,  count_0 : u32) -> u32
+{
+    return min(at_0, max(count_0, u32(1)) - u32(1));
+}
+
+fn indexAt_0( at_1 : u32) -> u32
+{
+    var _S3 : vec2<u32> = vec2<u32>(arrayLength(&indices_0), 4);
+    return indices_0[clampIndex_0(at_1, _S3.x)];
+}
+
+fn clampSpan_0( at_2 : u32,  width_0 : u32,  count_1 : u32) -> u32
+{
+    var _S4 : u32;
+    if((count_1 >= width_0))
+    {
+        _S4 = count_1 - width_0;
+    }
+    else
+    {
+        _S4 = u32(0);
+    }
+    return min(at_2, _S4);
+}
+
 fn position_0( offset_0 : u32,  index_0 : u32) -> vec3<f32>
 {
-    var b_1 : u32 = offset_0 + index_0 * u32(3);
+    var _S5 : vec2<u32> = vec2<u32>(arrayLength(&vertices_0), 4);
+    var b_1 : u32 = clampSpan_0(offset_0 + index_0 * u32(3), u32(3), _S5.x);
     return vec3<f32>(vertices_0[b_1], vertices_0[b_1 + u32(1)], vertices_0[b_1 + u32(2)]);
 }
 
@@ -150,44 +176,44 @@ fn main(@builtin(workgroup_id) wg_0 : vec3<u32>, @builtin(local_invocation_index
 {
     _S1 = _builtinWorkgroupCount_0;
     var jobIndex_0 : u32 = wg_0.y * WorkgroupCount_0().x + wg_0.x;
-    var _S3 : vec2<u32> = vec2<u32>(arrayLength(&jobs_0), 16);
-    if((jobIndex_0 >= (_S3.x)))
+    var _S6 : vec2<u32> = vec2<u32>(arrayLength(&jobs_0), 16);
+    if((jobIndex_0 >= (_S6.x)))
     {
         return;
     }
     var job_0 : Job_std430_0 = jobs_0[jobIndex_0];
-    var _S4 : u32 = job_0.record_0;
-    var firstIndex_1 : u32 = records_0[_S4].firstIndex_0;
-    var positionOffset_1 : u32 = records_0[_S4].positionOffset_0;
-    var _S5 : u32 = (job_0.firstTriangle_0 + lane_0) * u32(3);
-    if(((_S5 + u32(2)) >= (records_0[_S4].indexCount_0)))
+    var _S7 : u32 = job_0.record_0;
+    var firstIndex_1 : u32 = records_0[_S7].firstIndex_0;
+    var positionOffset_1 : u32 = records_0[_S7].positionOffset_0;
+    var _S8 : u32 = (job_0.firstTriangle_0 + lane_0) * u32(3);
+    if(((_S8 + u32(2)) >= (records_0[_S7].indexCount_0)))
     {
         return;
     }
-    var t_0 : Transform_std430_0 = transforms_0[records_0[_S4].transform_0];
+    var t_0 : Transform_std430_0 = transforms_0[records_0[_S7].transform_0];
     var ray_1 : Ray_std430_0 = rays_0[job_0.ray_0];
     var origin_0 : vec3<f32> = SplitPosition_difference_0(SplitPosition_x24init_0(ray_1.originHi_1, ray_1.originLo_1), SplitPosition_x24init_0(t_0.originHi_0, t_0.originLo_0));
-    var _S6 : mat3x3<f32> = mat3x3<f32>(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-    var _S7 : vec3<f32> = vec3<f32>(0.0f);
+    var _S9 : mat3x3<f32> = mat3x3<f32>(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    var _S10 : vec3<f32> = vec3<f32>(0.0f);
     var local_0 : mat3x3<f32>;
     var offset_1 : vec3<f32>;
     if((job_0.instance_0) != u32(4294967295))
     {
         var inst_0 : Instance_std430_0 = instanceTable_0[job_0.instance_0];
-        var _S8 : vec3<f32> = vec3<f32>(inst_0.row0_0.w, inst_0.row1_0.w, inst_0.row2_0.w);
+        var _S11 : vec3<f32> = vec3<f32>(inst_0.row0_0.w, inst_0.row1_0.w, inst_0.row2_0.w);
         local_0 = mat3x3<f32>(inst_0.row0_0.xyz, inst_0.row1_0.xyz, inst_0.row2_0.xyz);
-        offset_1 = _S8;
+        offset_1 = _S11;
     }
     else
     {
-        local_0 = _S6;
-        offset_1 = _S7;
+        local_0 = _S9;
+        offset_1 = _S10;
     }
-    var first_0 : u32 = firstIndex_1 + _S5;
-    var _S9 : mat3x3<f32> = mat3x3<f32>(t_0.linear_0.data_0[i32(0)][i32(0)], t_0.linear_0.data_0[i32(1)][i32(0)], t_0.linear_0.data_0[i32(2)][i32(0)], t_0.linear_0.data_0[i32(0)][i32(1)], t_0.linear_0.data_0[i32(1)][i32(1)], t_0.linear_0.data_0[i32(2)][i32(1)], t_0.linear_0.data_0[i32(0)][i32(2)], t_0.linear_0.data_0[i32(1)][i32(2)], t_0.linear_0.data_0[i32(2)][i32(2)]);
-    var a_0 : vec3<f32> = ((((((position_0(positionOffset_1, indices_0[first_0])) * (local_0))) + offset_1) * (_S9)));
-    var e1_0 : vec3<f32> = ((((((position_0(positionOffset_1, indices_0[first_0 + u32(1)])) * (local_0))) + offset_1) * (_S9))) - a_0;
-    var e2_0 : vec3<f32> = ((((((position_0(positionOffset_1, indices_0[first_0 + u32(2)])) * (local_0))) + offset_1) * (_S9))) - a_0;
+    var first_0 : u32 = firstIndex_1 + _S8;
+    var _S12 : mat3x3<f32> = mat3x3<f32>(t_0.linear_0.data_0[i32(0)][i32(0)], t_0.linear_0.data_0[i32(1)][i32(0)], t_0.linear_0.data_0[i32(2)][i32(0)], t_0.linear_0.data_0[i32(0)][i32(1)], t_0.linear_0.data_0[i32(1)][i32(1)], t_0.linear_0.data_0[i32(2)][i32(1)], t_0.linear_0.data_0[i32(0)][i32(2)], t_0.linear_0.data_0[i32(1)][i32(2)], t_0.linear_0.data_0[i32(2)][i32(2)]);
+    var a_0 : vec3<f32> = ((((((position_0(positionOffset_1, indexAt_0(first_0))) * (local_0))) + offset_1) * (_S12)));
+    var e1_0 : vec3<f32> = ((((((position_0(positionOffset_1, indexAt_0(first_0 + u32(1)))) * (local_0))) + offset_1) * (_S12))) - a_0;
+    var e2_0 : vec3<f32> = ((((((position_0(positionOffset_1, indexAt_0(first_0 + u32(2)))) * (local_0))) + offset_1) * (_S12))) - a_0;
     var p_0 : vec3<f32> = cross(ray_1.direction_0, e2_0);
     var det_0 : f32 = dot(e1_0, p_0);
     if(((abs(det_0)) < 9.999999960041972e-13f))
@@ -197,16 +223,16 @@ fn main(@builtin(workgroup_id) wg_0 : vec3<u32>, @builtin(local_invocation_index
     var inv_0 : f32 = 1.0f / det_0;
     var s_0 : vec3<f32> = origin_0 - a_0;
     var u_0 : f32 = dot(s_0, p_0) * inv_0;
-    var _S10 : bool;
+    var _S13 : bool;
     if((u_0 < 0.0f))
     {
-        _S10 = true;
+        _S13 = true;
     }
     else
     {
-        _S10 = (u_0 > 1.0f);
+        _S13 = (u_0 > 1.0f);
     }
-    if(_S10)
+    if(_S13)
     {
         return;
     }
@@ -214,28 +240,28 @@ fn main(@builtin(workgroup_id) wg_0 : vec3<u32>, @builtin(local_invocation_index
     var v_0 : f32 = dot(ray_1.direction_0, q_0) * inv_0;
     if((v_0 < 0.0f))
     {
-        _S10 = true;
+        _S13 = true;
     }
     else
     {
-        _S10 = ((u_0 + v_0) > 1.0f);
+        _S13 = ((u_0 + v_0) > 1.0f);
     }
-    if(_S10)
+    if(_S13)
     {
         return;
     }
     var d_0 : f32 = dot(e2_0, q_0) * inv_0;
     if((d_0 >= 0.0f))
     {
-        _S10 = (d_0 <= (ray_1.maxDistance_0));
+        _S13 = (d_0 <= (ray_1.maxDistance_0));
     }
     else
     {
-        _S10 = false;
+        _S13 = false;
     }
-    if(_S10)
+    if(_S13)
     {
-        var _S11 : u32 = atomicMin(&(hits_0[job_0.ray_0]), (bitcast<u32>((d_0))));
+        var _S14 : u32 = atomicMin(&(hits_0[job_0.ray_0]), (bitcast<u32>((d_0))));
     }
     return;
 }
@@ -245,34 +271,34 @@ fn main(@builtin(workgroup_id) wg_0 : vec3<u32>, @builtin(local_invocation_index
 fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation_index) lane_1 : u32)
 {
     var jobIndex_1 : u32 = wg_1.y * WorkgroupCount_0().x + wg_1.x;
-    var _S12 : vec2<u32> = vec2<u32>(arrayLength(&jobs_0), 16);
-    if((jobIndex_1 >= (_S12.x)))
+    var _S15 : vec2<u32> = vec2<u32>(arrayLength(&jobs_0), 16);
+    if((jobIndex_1 >= (_S15.x)))
     {
         return;
     }
     var job_1 : Job_std430_0 = jobs_0[jobIndex_1];
-    var _S13 : u32 = job_1.record_0;
-    var firstIndex_2 : u32 = records_0[_S13].firstIndex_0;
-    var positionOffset_2 : u32 = records_0[_S13].positionOffset_0;
-    var _S14 : u32 = (job_1.firstTriangle_0 + lane_1) * u32(3);
-    if(((_S14 + u32(2)) >= (records_0[_S13].indexCount_0)))
+    var _S16 : u32 = job_1.record_0;
+    var firstIndex_2 : u32 = records_0[_S16].firstIndex_0;
+    var positionOffset_2 : u32 = records_0[_S16].positionOffset_0;
+    var _S17 : u32 = (job_1.firstTriangle_0 + lane_1) * u32(3);
+    if(((_S17 + u32(2)) >= (records_0[_S16].indexCount_0)))
     {
         return;
     }
-    var _S15 : vec2<u32> = vec2<u32>(arrayLength(&rays_0), 48);
-    var rayCount_0 : u32 = _S15.x;
-    var _S16 : vec2<u32> = vec2<u32>(arrayLength(&hits_0), 4);
-    var hitCount_0 : u32 = _S16.x;
-    var _S17 : bool;
+    var _S18 : vec2<u32> = vec2<u32>(arrayLength(&rays_0), 48);
+    var rayCount_0 : u32 = _S18.x;
+    var _S19 : vec2<u32> = vec2<u32>(arrayLength(&hits_0), 4);
+    var hitCount_0 : u32 = _S19.x;
+    var _S20 : bool;
     if(((job_1.ray_0) >= rayCount_0))
     {
-        _S17 = true;
+        _S20 = true;
     }
     else
     {
-        _S17 = ((rayCount_0 + job_1.ray_0) >= hitCount_0);
+        _S20 = ((rayCount_0 + job_1.ray_0) >= hitCount_0);
     }
-    if(_S17)
+    if(_S20)
     {
         return;
     }
@@ -281,33 +307,33 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
     {
         return;
     }
-    var t_1 : Transform_std430_0 = transforms_0[records_0[_S13].transform_0];
+    var t_1 : Transform_std430_0 = transforms_0[records_0[_S16].transform_0];
     var ray_2 : Ray_std430_0 = rays_0[job_1.ray_0];
     var origin_1 : vec3<f32> = SplitPosition_difference_0(SplitPosition_x24init_0(ray_2.originHi_1, ray_2.originLo_1), SplitPosition_x24init_0(t_1.originHi_0, t_1.originLo_0));
-    var _S18 : mat3x3<f32> = mat3x3<f32>(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-    var _S19 : vec3<f32> = vec3<f32>(0.0f);
+    var _S21 : mat3x3<f32> = mat3x3<f32>(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    var _S22 : vec3<f32> = vec3<f32>(0.0f);
     var local_1 : mat3x3<f32>;
     var offset_2 : vec3<f32>;
     var instanceFeature_0 : u32;
     if((job_1.instance_0) != u32(4294967295))
     {
         var inst_1 : Instance_std430_0 = instanceTable_0[job_1.instance_0];
-        var _S20 : vec3<f32> = vec3<f32>(inst_1.row0_0.w, inst_1.row1_0.w, inst_1.row2_0.w);
+        var _S23 : vec3<f32> = vec3<f32>(inst_1.row0_0.w, inst_1.row1_0.w, inst_1.row2_0.w);
         local_1 = mat3x3<f32>(inst_1.row0_0.xyz, inst_1.row1_0.xyz, inst_1.row2_0.xyz);
-        offset_2 = _S20;
+        offset_2 = _S23;
         instanceFeature_0 = inst_1.feature_0;
     }
     else
     {
-        local_1 = _S18;
-        offset_2 = _S19;
+        local_1 = _S21;
+        offset_2 = _S22;
         instanceFeature_0 = u32(4294967295);
     }
-    var first_1 : u32 = firstIndex_2 + _S14;
-    var _S21 : mat3x3<f32> = mat3x3<f32>(t_1.linear_0.data_0[i32(0)][i32(0)], t_1.linear_0.data_0[i32(1)][i32(0)], t_1.linear_0.data_0[i32(2)][i32(0)], t_1.linear_0.data_0[i32(0)][i32(1)], t_1.linear_0.data_0[i32(1)][i32(1)], t_1.linear_0.data_0[i32(2)][i32(1)], t_1.linear_0.data_0[i32(0)][i32(2)], t_1.linear_0.data_0[i32(1)][i32(2)], t_1.linear_0.data_0[i32(2)][i32(2)]);
-    var a_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1])) * (local_1))) + offset_2) * (_S21)));
-    var e1_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(1)])) * (local_1))) + offset_2) * (_S21))) - a_1;
-    var e2_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(2)])) * (local_1))) + offset_2) * (_S21))) - a_1;
+    var first_1 : u32 = firstIndex_2 + _S17;
+    var _S24 : mat3x3<f32> = mat3x3<f32>(t_1.linear_0.data_0[i32(0)][i32(0)], t_1.linear_0.data_0[i32(1)][i32(0)], t_1.linear_0.data_0[i32(2)][i32(0)], t_1.linear_0.data_0[i32(0)][i32(1)], t_1.linear_0.data_0[i32(1)][i32(1)], t_1.linear_0.data_0[i32(2)][i32(1)], t_1.linear_0.data_0[i32(0)][i32(2)], t_1.linear_0.data_0[i32(1)][i32(2)], t_1.linear_0.data_0[i32(2)][i32(2)]);
+    var a_1 : vec3<f32> = ((((((position_0(positionOffset_2, indexAt_0(first_1))) * (local_1))) + offset_2) * (_S24)));
+    var e1_1 : vec3<f32> = ((((((position_0(positionOffset_2, indexAt_0(first_1 + u32(1)))) * (local_1))) + offset_2) * (_S24))) - a_1;
+    var e2_1 : vec3<f32> = ((((((position_0(positionOffset_2, indexAt_0(first_1 + u32(2)))) * (local_1))) + offset_2) * (_S24))) - a_1;
     var p_1 : vec3<f32> = cross(ray_2.direction_0, e2_1);
     var det_1 : f32 = dot(e1_1, p_1);
     if(((abs(det_1)) < 9.999999960041972e-13f))
@@ -319,13 +345,13 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
     var u_1 : f32 = dot(s_1, p_1) * inv_1;
     if((u_1 < 0.0f))
     {
-        _S17 = true;
+        _S20 = true;
     }
     else
     {
-        _S17 = (u_1 > 1.0f);
+        _S20 = (u_1 > 1.0f);
     }
-    if(_S17)
+    if(_S20)
     {
         return;
     }
@@ -333,26 +359,26 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
     var v_1 : f32 = dot(ray_2.direction_0, q_1) * inv_1;
     if((v_1 < 0.0f))
     {
-        _S17 = true;
+        _S20 = true;
     }
     else
     {
-        _S17 = ((u_1 + v_1) > 1.0f);
+        _S20 = ((u_1 + v_1) > 1.0f);
     }
-    if(_S17)
+    if(_S20)
     {
         return;
     }
     var d_1 : f32 = dot(e2_1, q_1) * inv_1;
     if((d_1 >= 0.0f))
     {
-        _S17 = (d_1 <= (ray_2.maxDistance_0));
+        _S20 = (d_1 <= (ray_2.maxDistance_0));
     }
     else
     {
-        _S17 = false;
+        _S20 = false;
     }
-    if(!_S17)
+    if(!_S20)
     {
         return;
     }
@@ -360,47 +386,47 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
     {
         return;
     }
-    var _S22 : u32 = records_0[_S13].featureId_0;
+    var _S25 : u32 = records_0[_S16].featureId_0;
     if(instanceFeature_0 != u32(4294967295))
     {
-        _S17 = _S22 != u32(0);
+        _S20 = _S25 != u32(0);
     }
     else
     {
-        _S17 = false;
+        _S20 = false;
     }
     var slot_0 : u32;
-    if(_S17)
+    if(_S20)
     {
-        slot_0 = _S22 + instanceFeature_0;
+        slot_0 = _S25 + instanceFeature_0;
     }
     else
     {
-        var _S23 : u32 = records_0[_S13].featureIdOffset_0;
-        if((records_0[_S13].featureIdOffset_0) != u32(4294967295))
+        var _S26 : u32 = records_0[_S16].featureIdOffset_0;
+        if((records_0[_S16].featureIdOffset_0) != u32(4294967295))
         {
-            var _S24 : vec2<u32> = vec2<u32>(arrayLength(&vertices_0), 4);
-            var localFeature_0 : u32 = (bitcast<u32>((vertices_0[min(_S23 + indices_0[first_1], max(_S24.x, u32(1)) - u32(1))])));
+            var _S27 : vec2<u32> = vec2<u32>(arrayLength(&vertices_0), 4);
+            var localFeature_0 : u32 = (bitcast<u32>((vertices_0[min(_S26 + indexAt_0(first_1), max(_S27.x, u32(1)) - u32(1))])));
             if(localFeature_0 == u32(4294967295))
             {
                 instanceFeature_0 = u32(0);
             }
             else
             {
-                instanceFeature_0 = _S22 + localFeature_0;
+                instanceFeature_0 = _S25 + localFeature_0;
             }
             slot_0 = instanceFeature_0;
         }
         else
         {
-            slot_0 = _S22;
+            slot_0 = _S25;
         }
     }
     if(slot_0 == u32(0))
     {
         return;
     }
-    var _S25 : u32 = atomicMin(&(hits_0[rayCount_0 + job_1.ray_0]), slot_0);
+    var _S28 : u32 = atomicMin(&(hits_0[rayCount_0 + job_1.ray_0]), slot_0);
     return;
 }
 
@@ -410,16 +436,16 @@ fn pickTriangle()
 {
     var draw_0 : u32 = pickResult_0[i32(0)];
     var number_0 : u32 = pickResult_0[i32(2)];
-    var _S26 : bool;
+    var _S29 : bool;
     if(pickResult_0[i32(0)] == u32(4294967295))
     {
-        _S26 = true;
+        _S29 = true;
     }
     else
     {
-        _S26 = number_0 == u32(4294967295);
+        _S29 = number_0 == u32(4294967295);
     }
-    if(_S26)
+    if(_S29)
     {
         return;
     }
@@ -427,7 +453,7 @@ fn pickTriangle()
     {
         return;
     }
-    var _S27 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
+    var _S30 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
     var k_0 : u32 = u32(0);
     loop
     {
@@ -438,11 +464,11 @@ fn pickTriangle()
         {
             break;
         }
-        var p_2 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indices_0[_S27 + k_0]);
-        var _S28 : u32 = k_0 * u32(3);
-        pickResult_0[u32(10) + _S28] = (bitcast<u32>((p_2.x)));
-        pickResult_0[u32(11) + _S28] = (bitcast<u32>((p_2.y)));
-        pickResult_0[u32(12) + _S28] = (bitcast<u32>((p_2.z)));
+        var p_2 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indexAt_0(_S30 + k_0));
+        var _S31 : u32 = k_0 * u32(3);
+        pickResult_0[u32(10) + _S31] = (bitcast<u32>((p_2.x)));
+        pickResult_0[u32(11) + _S31] = (bitcast<u32>((p_2.y)));
+        pickResult_0[u32(12) + _S31] = (bitcast<u32>((p_2.z)));
         k_0 = k_0 + u32(1);
     }
     pickResult_0[i32(9)] = u32(1);

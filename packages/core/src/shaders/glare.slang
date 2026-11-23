@@ -218,8 +218,15 @@ void glareSources() {
   // The color of a star through the air, against the same light outside it.
   float3 outside = fixedLight ? float3(1.0) : max(tableAt(1.0, 1.0), float3(1e-6));
   uint stars = min(uint(frame.starCount), GLARE_BRIGHT_STARS);
+  // The counts are uniforms: the buffers' own lengths bound them again (a
+  // star is two rows; a source's row follows the header's and the sun's).
+  uint starRows, starStride;
+  glareStars.GetDimensions(starRows, starStride);
+  uint sourceRows, sourceStride;
+  sources.GetDimensions(sourceRows, sourceStride);
   for (uint i = 0u; i < GLARE_BRIGHT_STARS; i++) {
-    if (i >= stars || count >= uint(frame.spriteCap) || pixels >= frame.spritePixels) {
+    if (i >= stars || count >= uint(frame.spriteCap) || pixels >= frame.spritePixels
+        || i * 2u + 1u >= starRows || count + 1u >= sourceRows) {
       break;
     }
     float4 a = glareStars[i * 2u];

@@ -14,6 +14,8 @@
 // in the caller). The float64 CPU twin is `evaluateSpan` there.
 module patch;
 
+import bounds;
+
 public static const uint SPAN_WORDS = 48u;
 
 // Word offsets within a span's record.
@@ -127,19 +129,34 @@ public PatchSpan unpackSpan(SpanWords w) {
   return s;
 }
 
+// The arena's length in words: a record's offsets are data, so every read
+// below is kept inside it (bounds.slang).
+uint arenaWords(StructuredBuffer<float> words) {
+  uint count, stride;
+  words.GetDimensions(count, stride);
+  return count;
+}
+
+float2 load2(StructuredBuffer<float> words, uint at) {
+  uint first = clampSpan(at, 2u, arenaWords(words));
+  return float2(words[first], words[first + 1u]);
+}
 float3 load3(StructuredBuffer<float> words, uint at) {
-  return float3(words[at], words[at + 1u], words[at + 2u]);
+  uint first = clampSpan(at, 3u, arenaWords(words));
+  return float3(words[first], words[first + 1u], words[first + 2u]);
 }
 float4 load4(StructuredBuffer<float> words, uint at) {
-  return float4(words[at], words[at + 1u], words[at + 2u], words[at + 3u]);
+  uint first = clampSpan(at, 4u, arenaWords(words));
+  return float4(words[first], words[first + 1u], words[first + 2u], words[first + 3u]);
 }
 
 // The span the vertex stage needs, read from the arena at `base`: not the
 // bounds and densities the dice used (they stay zero), and the frame only
 // for an analytic span, the patch's domain only for a Bézier one. A vertex
 // is read often, so each word not used is a read saved.
-public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
+public PatchSpan loadSpan(StructuredBuffer<float> words, uint at) {
   PatchSpan s;
+  uint base = clampSpan(at, SPAN_WORDS, arenaWords(words));
   uint k = asuint(words[base + SPAN_KIND]);
   s.kind = k & 255u;
   s.reversed = (k & SPAN_REVERSED_BIT) != 0u;
@@ -149,7 +166,7 @@ public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
   s.face = asuint(words[base + SPAN_FACE]);
   s.controls = asuint(words[base + SPAN_CONTROLS]);
   s.rect = load4(words, base + SPAN_RECT);
-  s.corner = float2(words[base + SPAN_CORNER], words[base + SPAN_CORNER + 1u]);
+  s.corner = load2(words, base + SPAN_CORNER);
   s.trim = asuint(words[base + SPAN_TRIM]);
   s.origin = float3(0.0);
   s.axisX = float3(0.0);
@@ -166,7 +183,7 @@ public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
     s.origin = load3(words, base + SPAN_ORIGIN);
     s.axisX = load3(words, base + SPAN_AXIS_X);
     s.axisY = load3(words, base + SPAN_AXIS_Y);
-    s.params = float2(words[base + SPAN_PARAMS], words[base + SPAN_PARAMS + 1u]);
+    s.params = load2(words, base + SPAN_PARAMS);
   }
   return s;
 }
@@ -174,7 +191,7 @@ public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
 // The face rect's widths in u and v, which the vertex stage reads only for
 // a draw that shows iso lines.
 public float2 loadFaceExtent(StructuredBuffer<float> words, uint base) {
-  return float2(words[base + SPAN_FACE_EXTENT], words[base + SPAN_FACE_EXTENT + 1u]);
+  return load2(words, base + SPAN_FACE_EXTENT);
 }
 
 // The analytic surfaces (form.ts, with x, y and z = x × y): a local point
@@ -418,8 +435,7 @@ public PatchPoint evaluateBezierSpan(PatchSpan sp, StructuredBuffer<float> words
   uint count = (sp.degreeU + 1u) * (sp.degreeV + 1u);
   for (uint n = 0u; n < 16u; n++) {
     if (n < count) {
-      uint at = base + sp.controls + n * 4u;
-      net[n] = float4(words[at], words[at + 1u], words[at + 2u], words[at + 3u]);
+      net[n] = load4(words, base + sp.controls + n * 4u);
     } else {
       net[n] = float4(0.0);
     }

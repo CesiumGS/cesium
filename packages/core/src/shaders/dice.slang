@@ -25,6 +25,7 @@
 // A placement adds error the constants don't hold: `jacobian` scales them and
 // `curvature` (its second derivative) adds D' += curvature · speeds² / 8,
 // both bounds the CPU computes per draw (scene/world/patches.ts).
+import bounds;
 import common;
 import cullTables;
 import patch;
@@ -76,7 +77,10 @@ void dicePatches(uint3 gid : SV_DispatchThreadID) {
   DrawRecord r = drawRecord(dice.record);
   float4x4 m = items[dice.record].relModel;
   SpanWords w;
-  uint base = r.positionOffset + index * SPAN_WORDS;
+  // The record's offset is data: its span is read from within the arena.
+  uint arenaWords, arenaStride;
+  arena.GetDimensions(arenaWords, arenaStride);
+  uint base = clampSpan(r.positionOffset + index * SPAN_WORDS, SPAN_WORDS, arenaWords);
   for (uint k = 0u; k < SPAN_WORDS; k++) {
     w.u[k] = asuint(arena[base + k]);
   }
@@ -134,8 +138,11 @@ void dicePatches(uint3 gid : SV_DispatchThreadID) {
   stats[0].add(1u);
   stats[1].add(nu * nv);
   uint first = countChunks(a, total);
+  // `capacity` is the list's, and the list's own length bounds it again.
+  uint chunkRows, chunkStride;
+  chunks.GetDimensions(chunkRows, chunkStride);
   for (uint c = 0u; c < MAX_SPAN_CHUNKS; c++) {
-    if (c >= total || first + c >= dice.capacity) {
+    if (c >= total || first + c >= dice.capacity || first + c >= chunkRows) {
       break;
     }
     uint i0 = (c % across) * CHUNK_CELLS;

@@ -128,19 +128,33 @@ struct View_std140_0
 
 @binding(2) @group(2) var<storage, read_write> chunks_0 : array<vec4<u32>>;
 
+fn clampSpan_0( at_0 : u32,  width_0 : u32,  count_0 : u32) -> u32
+{
+    var _S1 : u32;
+    if((count_0 >= width_0))
+    {
+        _S1 = count_0 - width_0;
+    }
+    else
+    {
+        _S1 = u32(0);
+    }
+    return min(at_0, _S1);
+}
+
 struct SpanWords_0
 {
      u_0 : array<u32, i32(48)>,
 };
 
-fn f3_0( w_0 : SpanWords_0,  at_0 : u32) -> vec3<f32>
+fn f3_0( w_0 : SpanWords_0,  at_1 : u32) -> vec3<f32>
 {
-    return vec3<f32>((bitcast<f32>((w_0.u_0[at_0]))), (bitcast<f32>((w_0.u_0[at_0 + u32(1)]))), (bitcast<f32>((w_0.u_0[at_0 + u32(2)]))));
+    return vec3<f32>((bitcast<f32>((w_0.u_0[at_1]))), (bitcast<f32>((w_0.u_0[at_1 + u32(1)]))), (bitcast<f32>((w_0.u_0[at_1 + u32(2)]))));
 }
 
-fn f4_0( w_1 : SpanWords_0,  at_1 : u32) -> vec4<f32>
+fn f4_0( w_1 : SpanWords_0,  at_2 : u32) -> vec4<f32>
 {
-    return vec4<f32>((bitcast<f32>((w_1.u_0[at_1]))), (bitcast<f32>((w_1.u_0[at_1 + u32(1)]))), (bitcast<f32>((w_1.u_0[at_1 + u32(2)]))), (bitcast<f32>((w_1.u_0[at_1 + u32(3)]))));
+    return vec4<f32>((bitcast<f32>((w_1.u_0[at_2]))), (bitcast<f32>((w_1.u_0[at_2 + u32(1)]))), (bitcast<f32>((w_1.u_0[at_2 + u32(2)]))), (bitcast<f32>((w_1.u_0[at_2 + u32(3)]))));
 }
 
 struct PatchSpan_0
@@ -191,7 +205,7 @@ fn unpackSpan_0( w_2 : SpanWords_0) -> PatchSpan_0
 
 fn inFrustum_0( m_0 : mat4x4<f32>,  center_1 : vec3<f32>,  radius_1 : f32) -> bool
 {
-    var _S1 : vec3<f32> = (((vec4<f32>(center_1, 1.0f)) * (m_0))).xyz;
+    var _S2 : vec3<f32> = (((vec4<f32>(center_1, 1.0f)) * (m_0))).xyz;
     var p_0 : u32 = u32(0);
     loop
     {
@@ -202,7 +216,7 @@ fn inFrustum_0( m_0 : mat4x4<f32>,  center_1 : vec3<f32>,  radius_1 : f32) -> bo
         {
             break;
         }
-        if(((dot(view_0.planes_0[p_0].xyz, _S1) + view_0.planes_0[p_0].w) < (- radius_1)))
+        if(((dot(view_0.planes_0[p_0].xyz, _S2) + view_0.planes_0[p_0].w) < (- radius_1)))
         {
             return false;
         }
@@ -235,15 +249,16 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
         return;
     }
     var a_0 : u32 = dice_0.batch_0 * u32(5);
-    var _S2 : u32 = atomicLoad(&(args_0[a_0 + u32(1)]));
-    if(_S2 == u32(0))
+    var _S3 : u32 = atomicLoad(&(args_0[a_0 + u32(1)]));
+    if(_S3 == u32(0))
     {
         return;
     }
-    var _S3 : u32 = dice_0.record_0;
-    var _S4 : mat4x4<f32> = mat4x4<f32>(items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(3)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(3)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(3)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(3)]);
+    var _S4 : u32 = dice_0.record_0;
+    var _S5 : mat4x4<f32> = mat4x4<f32>(items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(0)], items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(1)], items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(2)], items_0[dice_0.record_0].relModel_0.data_0[i32(0)][i32(3)], items_0[dice_0.record_0].relModel_0.data_0[i32(1)][i32(3)], items_0[dice_0.record_0].relModel_0.data_0[i32(2)][i32(3)], items_0[dice_0.record_0].relModel_0.data_0[i32(3)][i32(3)]);
     var w_3 : SpanWords_0;
-    var _S5 : u32 = records_0[_S3].positionOffset_0 + index_0 * u32(48);
+    var _S6 : vec2<u32> = vec2<u32>(arrayLength(&arena_0), 4);
+    var _S7 : u32 = clampSpan_0(records_0[_S4].positionOffset_0 + index_0 * u32(48), u32(48), _S6.x);
     var k_0 : u32 = u32(0);
     loop
     {
@@ -254,31 +269,31 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
         {
             break;
         }
-        w_3.u_0[k_0] = (bitcast<u32>((arena_0[_S5 + k_0])));
+        w_3.u_0[k_0] = (bitcast<u32>((arena_0[_S7 + k_0])));
         k_0 = k_0 + u32(1);
     }
     var s_1 : PatchSpan_0 = unpackSpan_0(w_3);
-    var _S6 : f32 = max(length(vec3<f32>(_S4[i32(0)][i32(0)], _S4[i32(1)][i32(0)], _S4[i32(2)][i32(0)])), max(length(vec3<f32>(_S4[i32(0)][i32(1)], _S4[i32(1)][i32(1)], _S4[i32(2)][i32(1)])), length(vec3<f32>(_S4[i32(0)][i32(2)], _S4[i32(1)][i32(2)], _S4[i32(2)][i32(2)]))));
-    var _S7 : bool;
-    if((records_0[_S3].placement_0) == u32(4294967295))
+    var _S8 : f32 = max(length(vec3<f32>(_S5[i32(0)][i32(0)], _S5[i32(1)][i32(0)], _S5[i32(2)][i32(0)])), max(length(vec3<f32>(_S5[i32(0)][i32(1)], _S5[i32(1)][i32(1)], _S5[i32(2)][i32(1)])), length(vec3<f32>(_S5[i32(0)][i32(2)], _S5[i32(1)][i32(2)], _S5[i32(2)][i32(2)]))));
+    var _S9 : bool;
+    if((records_0[_S4].placement_0) == u32(4294967295))
     {
-        _S7 = !inFrustum_0(_S4, s_1.sphere_0.xyz, s_1.sphere_0.w * _S6);
+        _S9 = !inFrustum_0(_S5, s_1.sphere_0.xyz, s_1.sphere_0.w * _S8);
     }
     else
     {
-        _S7 = false;
+        _S9 = false;
     }
-    if(_S7)
+    if(_S9)
     {
         return;
     }
     var perspective_0 : f32 = length(vec3<f32>(view_0.viewProj_0.data_1[i32(0)][i32(3)], view_0.viewProj_0.data_1[i32(1)][i32(3)], view_0.viewProj_0.data_1[i32(2)][i32(3)]));
-    var error_0 : f32 = dice_0.errorPixels_0 / max(max(length(vec3<f32>(view_0.viewProj_0.data_1[i32(0)][i32(0)], view_0.viewProj_0.data_1[i32(1)][i32(0)], view_0.viewProj_0.data_1[i32(2)][i32(0)])) * view_0.viewport_0.x, length(vec3<f32>(view_0.viewProj_0.data_1[i32(0)][i32(1)], view_0.viewProj_0.data_1[i32(1)][i32(1)], view_0.viewProj_0.data_1[i32(2)][i32(1)])) * view_0.viewport_0.y) * 0.5f * _S6 / max(max((((vec4<f32>((((vec4<f32>(s_1.faceSphere_0.xyz, 1.0f)) * (_S4))).xyz, 1.0f)) * (mat4x4<f32>(view_0.viewProj_0.data_1[i32(0)][i32(0)], view_0.viewProj_0.data_1[i32(1)][i32(0)], view_0.viewProj_0.data_1[i32(2)][i32(0)], view_0.viewProj_0.data_1[i32(3)][i32(0)], view_0.viewProj_0.data_1[i32(0)][i32(1)], view_0.viewProj_0.data_1[i32(1)][i32(1)], view_0.viewProj_0.data_1[i32(2)][i32(1)], view_0.viewProj_0.data_1[i32(3)][i32(1)], view_0.viewProj_0.data_1[i32(0)][i32(2)], view_0.viewProj_0.data_1[i32(1)][i32(2)], view_0.viewProj_0.data_1[i32(2)][i32(2)], view_0.viewProj_0.data_1[i32(3)][i32(2)], view_0.viewProj_0.data_1[i32(0)][i32(3)], view_0.viewProj_0.data_1[i32(1)][i32(3)], view_0.viewProj_0.data_1[i32(2)][i32(3)], view_0.viewProj_0.data_1[i32(3)][i32(3)])))).w - s_1.faceSphere_0.w * _S6 * perspective_0, perspective_0 * view_0.near_0), 9.99999997475242708e-07f), 9.999999960041972e-13f);
-    var _S8 : f32 = s_1.speed_0.x;
-    var du_0 : f32 = dice_0.jacobian_0 * s_1.density_0.x + dice_0.curvature_0 * _S8 * _S8 * 0.125f;
-    var _S9 : f32 = s_1.speed_0.y;
-    var duv_0 : f32 = dice_0.jacobian_0 * s_1.density_0.y + dice_0.curvature_0 * 2.0f * _S8 * _S9 * 0.125f;
-    var dv_0 : f32 = dice_0.jacobian_0 * s_1.density_0.z + dice_0.curvature_0 * _S9 * _S9 * 0.125f;
+    var error_0 : f32 = dice_0.errorPixels_0 / max(max(length(vec3<f32>(view_0.viewProj_0.data_1[i32(0)][i32(0)], view_0.viewProj_0.data_1[i32(1)][i32(0)], view_0.viewProj_0.data_1[i32(2)][i32(0)])) * view_0.viewport_0.x, length(vec3<f32>(view_0.viewProj_0.data_1[i32(0)][i32(1)], view_0.viewProj_0.data_1[i32(1)][i32(1)], view_0.viewProj_0.data_1[i32(2)][i32(1)])) * view_0.viewport_0.y) * 0.5f * _S8 / max(max((((vec4<f32>((((vec4<f32>(s_1.faceSphere_0.xyz, 1.0f)) * (_S5))).xyz, 1.0f)) * (mat4x4<f32>(view_0.viewProj_0.data_1[i32(0)][i32(0)], view_0.viewProj_0.data_1[i32(1)][i32(0)], view_0.viewProj_0.data_1[i32(2)][i32(0)], view_0.viewProj_0.data_1[i32(3)][i32(0)], view_0.viewProj_0.data_1[i32(0)][i32(1)], view_0.viewProj_0.data_1[i32(1)][i32(1)], view_0.viewProj_0.data_1[i32(2)][i32(1)], view_0.viewProj_0.data_1[i32(3)][i32(1)], view_0.viewProj_0.data_1[i32(0)][i32(2)], view_0.viewProj_0.data_1[i32(1)][i32(2)], view_0.viewProj_0.data_1[i32(2)][i32(2)], view_0.viewProj_0.data_1[i32(3)][i32(2)], view_0.viewProj_0.data_1[i32(0)][i32(3)], view_0.viewProj_0.data_1[i32(1)][i32(3)], view_0.viewProj_0.data_1[i32(2)][i32(3)], view_0.viewProj_0.data_1[i32(3)][i32(3)])))).w - s_1.faceSphere_0.w * _S8 * perspective_0, perspective_0 * view_0.near_0), 9.99999997475242708e-07f), 9.999999960041972e-13f);
+    var _S10 : f32 = s_1.speed_0.x;
+    var du_0 : f32 = dice_0.jacobian_0 * s_1.density_0.x + dice_0.curvature_0 * _S10 * _S10 * 0.125f;
+    var _S11 : f32 = s_1.speed_0.y;
+    var duv_0 : f32 = dice_0.jacobian_0 * s_1.density_0.y + dice_0.curvature_0 * 2.0f * _S10 * _S11 * 0.125f;
+    var dv_0 : f32 = dice_0.jacobian_0 * s_1.density_0.z + dice_0.curvature_0 * _S11 * _S11 * 0.125f;
     var shares_0 : f32 = f32(select(i32(0), i32(1), (du_0 > 0.0f)) + select(i32(0), i32(1), (duv_0 > 0.0f)) + select(i32(0), i32(1), (dv_0 > 0.0f)));
     var ru_0 : f32 = sqrt(shares_0 * du_0 / error_0);
     var rv_0 : f32 = sqrt(shares_0 * dv_0 / error_0);
@@ -288,16 +303,16 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     var rv_1 : f32;
     if((have_0 < wanted_0))
     {
-        var _S10 : bool = (ru_0 > 0.0f);
-        if(_S10)
+        var _S12 : bool = (ru_0 > 0.0f);
+        if(_S12)
         {
-            _S7 = (rv_0 > 0.0f);
+            _S9 = (rv_0 > 0.0f);
         }
         else
         {
-            _S7 = false;
+            _S9 = false;
         }
-        if(_S7)
+        if(_S9)
         {
             var f_0 : f32 = sqrt(wanted_0 / have_0);
             var rv_2 : f32 = rv_0 * f_0;
@@ -306,11 +321,11 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
         }
         else
         {
-            if(_S10)
+            if(_S12)
             {
-                var _S11 : f32 = wanted_0 / ru_0;
+                var _S13 : f32 = wanted_0 / ru_0;
                 ru_1 = ru_0;
-                rv_1 = _S11;
+                rv_1 = _S13;
             }
             else
             {
@@ -337,9 +352,11 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     var nv_0 : u32 = cellCount_0(rv_1 * (s_1.rect_0.w - s_1.rect_0.z));
     var across_0 : u32 = (nu_0 + u32(4) - u32(1)) / u32(4);
     var total_0 : u32 = across_0 * ((nv_0 + u32(4) - u32(1)) / u32(4));
-    var _S12 : u32 = atomicAdd(&(stats_0[i32(0)]), u32(1));
-    var _S13 : u32 = atomicAdd(&(stats_0[i32(1)]), nu_0 * nv_0);
+    var _S14 : u32 = atomicAdd(&(stats_0[i32(0)]), u32(1));
+    var _S15 : u32 = atomicAdd(&(stats_0[i32(1)]), nu_0 * nv_0);
     var first_0 : u32 = atomicAdd(&(args_0[a_0 + u32(4)]), total_0);
+    var _S16 : vec2<u32> = vec2<u32>(arrayLength(&chunks_0), 16);
+    var _S17 : u32 = _S16.x;
     var c_0 : u32 = u32(0);
     loop
     {
@@ -352,20 +369,29 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
         }
         if((c_0 >= total_0))
         {
-            _S7 = true;
+            _S9 = true;
         }
         else
         {
-            _S7 = ((first_0 + c_0) >= (dice_0.capacity_0));
+            _S9 = ((first_0 + c_0) >= (dice_0.capacity_0));
         }
-        if(_S7)
+        var _S18 : bool;
+        if(_S9)
+        {
+            _S18 = true;
+        }
+        else
+        {
+            _S18 = ((first_0 + c_0) >= _S17);
+        }
+        if(_S18)
         {
             break;
         }
-        var _S14 : u32 = c_0 % across_0;
-        var i0_0 : u32 = _S14 * u32(4);
-        var _S15 : u32 = c_0 / across_0;
-        chunks_0[first_0 + c_0] = vec4<u32>(dice_0.record_0, index_0, (((((i0_0 | ((((_S15 * u32(4)) << (u32(8))))))) | (((nu_0 << (u32(16))))))) | (((nv_0 << (u32(24)))))), u32(0));
+        var _S19 : u32 = c_0 % across_0;
+        var i0_0 : u32 = _S19 * u32(4);
+        var _S20 : u32 = c_0 / across_0;
+        chunks_0[first_0 + c_0] = vec4<u32>(dice_0.record_0, index_0, (((((i0_0 | ((((_S20 * u32(4)) << (u32(8))))))) | (((nu_0 << (u32(16))))))) | (((nv_0 << (u32(24)))))), u32(0));
         c_0 = c_0 + u32(1);
     }
     return;
@@ -376,16 +402,16 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
 fn writePatchArgs()
 {
     var a_1 : u32 = dice_0.batch_0 * u32(5);
-    var _S16 : u32 = a_1 + u32(4);
-    var _S17 : u32 = atomicLoad(&(args_0[_S16]));
-    var _S18 : u32 = min(_S17, dice_0.capacity_0);
-    atomicStore(&(stats_0[i32(2)]), _S17);
-    atomicStore(&(stats_0[i32(3)]), _S18);
+    var _S21 : u32 = a_1 + u32(4);
+    var _S22 : u32 = atomicLoad(&(args_0[_S21]));
+    var _S23 : u32 = min(_S22, dice_0.capacity_0);
+    atomicStore(&(stats_0[i32(2)]), _S22);
+    atomicStore(&(stats_0[i32(3)]), _S23);
     atomicStore(&(args_0[a_1]), u32(96));
-    atomicStore(&(args_0[a_1 + u32(1)]), _S18);
+    atomicStore(&(args_0[a_1 + u32(1)]), _S23);
     atomicStore(&(args_0[a_1 + u32(2)]), u32(0));
     atomicStore(&(args_0[a_1 + u32(3)]), u32(0));
-    atomicStore(&(args_0[_S16]), u32(0));
+    atomicStore(&(args_0[_S21]), u32(0));
     return;
 }
 

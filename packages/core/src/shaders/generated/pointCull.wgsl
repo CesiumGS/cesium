@@ -331,6 +331,8 @@ fn cullPoints(@builtin(global_invocation_id) gid_0 : vec3<u32>, @builtin(local_i
                     var _S27 : i32 = i32(floor(s_0.y - half_1 - 0.5f));
                     var _S28 : vec2<f32> = s_0.xy;
                     var _S29 : vec2<i32> = vec2<i32>(floor(_S28));
+                    var _S30 : vec2<u32> = vec2<u32>(arrayLength(&splatDepth_0), 4);
+                    var _S31 : u32 = _S30.x;
                     var dy_0 : i32 = i32(0);
                     loop
                     {
@@ -351,54 +353,65 @@ fn cullPoints(@builtin(global_invocation_id) gid_0 : vec3<u32>, @builtin(local_i
                             {
                                 break;
                             }
-                            var _S30 : i32 = _S26 + dx_0;
-                            var _S31 : i32 = _S27 + dy_0;
-                            var px_0 : vec2<i32> = vec2<i32>(_S30, _S31);
-                            var _S32 : f32 = _S22 + 2.0f;
-                            if((f32(dx_0) > _S32))
+                            var _S32 : i32 = _S26 + dx_0;
+                            var _S33 : i32 = _S27 + dy_0;
+                            var px_0 : vec2<i32> = vec2<i32>(_S32, _S33);
+                            var _S34 : f32 = _S22 + 2.0f;
+                            if((f32(dx_0) > _S34))
                             {
                                 quad_0 = true;
                             }
                             else
                             {
-                                quad_0 = (f32(dy_0) > _S32);
-                            }
-                            var _S33 : bool;
-                            if(quad_0)
-                            {
-                                _S33 = true;
-                            }
-                            else
-                            {
-                                _S33 = (any(((px_0 < vec2<i32>(i32(0))))));
-                            }
-                            var _S34 : bool;
-                            if(_S33)
-                            {
-                                _S34 = true;
-                            }
-                            else
-                            {
-                                _S34 = (_S30 >= _S24);
+                                quad_0 = (f32(dy_0) > _S34);
                             }
                             var _S35 : bool;
-                            if(_S34)
+                            if(quad_0)
                             {
                                 _S35 = true;
                             }
                             else
                             {
-                                _S35 = (_S31 >= _S25);
+                                _S35 = (any(((px_0 < vec2<i32>(i32(0))))));
                             }
+                            var _S36 : bool;
                             if(_S35)
+                            {
+                                _S36 = true;
+                            }
+                            else
+                            {
+                                _S36 = (_S32 >= _S24);
+                            }
+                            var _S37 : bool;
+                            if(_S36)
+                            {
+                                _S37 = true;
+                            }
+                            else
+                            {
+                                _S37 = (_S33 >= _S25);
+                            }
+                            if(_S37)
                             {
                                 dx_0 = dx_0 + i32(1);
                                 continue;
                             }
-                            var _S36 : f32 = splatCoverage_0(i_4, distance_3, (vec2<f32>(px_0) + vec2<f32>(0.5f) - _S28) / vec2<f32>(half_1), half_1, (all((px_0 == _S29))));
-                            if((_S36 > 0.0f))
+                            var p_2 : vec2<f32> = (vec2<f32>(px_0) + vec2<f32>(0.5f) - _S28) / vec2<f32>(half_1);
+                            var at_0 : u32 = u32(_S33 * _S24 + _S32);
+                            var _S38 : bool;
+                            if((at_0 < _S31))
                             {
-                                var _S37 : u32 = atomicMax(&(splatDepth_0[u32(_S31 * _S24 + _S30)]), _S23);
+                                var _S39 : f32 = splatCoverage_0(i_4, distance_3, p_2, half_1, (all((px_0 == _S29))));
+                                _S38 = (_S39 > 0.0f);
+                            }
+                            else
+                            {
+                                _S38 = false;
+                            }
+                            if(_S38)
+                            {
+                                var _S40 : u32 = atomicMax(&(splatDepth_0[at_0]), _S23);
                             }
                             dx_0 = dx_0 + i32(1);
                         }
@@ -424,8 +437,8 @@ fn cullPoints(@builtin(global_invocation_id) gid_0 : vec3<u32>, @builtin(local_i
     var local_0 : u32;
     if(quad_0)
     {
-        var _S38 : u32 = atomicAdd(&(pointsKept_0), u32(1));
-        local_0 = _S38;
+        var _S41 : u32 = atomicAdd(&(pointsKept_0), u32(1));
+        local_0 = _S41;
     }
     else
     {
@@ -434,10 +447,10 @@ fn cullPoints(@builtin(global_invocation_id) gid_0 : vec3<u32>, @builtin(local_i
     workgroupBarrier();
     if(_S17)
     {
-        var _S39 : u32 = pointCull_0.counter_0;
-        var _S40 : u32 = atomicLoad(&(pointsKept_0));
-        var _S41 : u32 = atomicAdd(&(pointCounts_0[_S39]), _S40);
-        pointsBase_0 = _S41;
+        var _S42 : u32 = pointCull_0.counter_0;
+        var _S43 : u32 = atomicLoad(&(pointsKept_0));
+        var _S44 : u32 = atomicAdd(&(pointCounts_0[_S42]), _S43);
+        pointsBase_0 = _S44;
     }
     workgroupBarrier();
     if(quad_0)
@@ -457,40 +470,46 @@ fn splatPoints(@builtin(global_invocation_id) gid_1 : vec3<u32>)
     {
         return;
     }
-    var _S42 : vec3<f32> = placed_1.xyz;
-    var distance_4 : f32 = length(_S42);
-    var _S43 : bool = (styleShow((i_5), (distance_4)));
-    var _S44 : bool;
-    if(!_S43)
+    var _S45 : vec3<f32> = placed_1.xyz;
+    var distance_4 : f32 = length(_S45);
+    var _S46 : bool = (styleShow((i_5), (distance_4)));
+    var _S47 : bool;
+    if(!_S46)
     {
-        _S44 = true;
+        _S47 = true;
     }
     else
     {
-        var _S45 : bool = splatted_0(i_5, distance_4);
-        _S44 = !_S45;
+        var _S48 : bool = splatted_0(i_5, distance_4);
+        _S47 = !_S48;
     }
-    if(_S44)
+    if(_S47)
     {
         return;
     }
-    var s_1 : vec4<f32> = onScreen_0(i_5, distance_4, _S42);
+    var s_1 : vec4<f32> = onScreen_0(i_5, distance_4, _S45);
     if((s_1.w) == 0.0f)
     {
         return;
     }
-    var _S46 : f32 = (styleSize((i_5), (distance_4)));
-    var _S47 : f32 = max(_S46, 1.0f);
-    var half_2 : f32 = _S47 * 0.5f;
-    var _S48 : u32 = (bitcast<u32>((s_1.z)));
-    var _S49 : vec4<f32> = (styleColor((i_5), (distance_4)));
-    var _S50 : u32 = records_0[pointCull_0.record_0].featureId_0 + i_5;
-    var _S51 : i32 = i32(view_0.viewport_0.x);
-    var _S52 : i32 = i32(view_0.viewport_0.y);
-    var _S53 : i32 = i32(floor(s_1.x - half_2 - 0.5f));
-    var _S54 : i32 = i32(floor(s_1.y - half_2 - 0.5f));
-    var _S55 : vec2<f32> = s_1.xy;
-    var _S56 : vec2<i32> = vec2<i32>(floor(_S55));
+    var _S49 : f32 = (styleSize((i_5), (distance_4)));
+    var _S50 : f32 = max(_S49, 1.0f);
+    var half_2 : f32 = _S50 * 0.5f;
+    var _S51 : u32 = (bitcast<u32>((s_1.z)));
+    var _S52 : vec4<f32> = (styleColor((i_5), (distance_4)));
+    var _S53 : u32 = records_0[pointCull_0.record_0].featureId_0 + i_5;
+    var _S54 : i32 = i32(view_0.viewport_0.x);
+    var _S55 : i32 = i32(view_0.viewport_0.y);
+    var _S56 : i32 = i32(floor(s_1.x - half_2 - 0.5f));
+    var _S57 : i32 = i32(floor(s_1.y - half_2 - 0.5f));
+    var _S58 : vec2<f32> = s_1.xy;
+    var _S59 : vec2<i32> = vec2<i32>(floor(_S58));
+    var _S60 : vec2<u32> = vec2<u32>(arrayLength(&splatDepth_0), 4);
+    var depthPixels_0 : u32 = _S60.x;
+    var _S61 : vec2<u32> = vec2<u32>(arrayLength(&splatColor_0), 4);
+    var colorPixels_0 : u32 = _S61.x;
+    var _S62 : vec2<u32> = vec2<u32>(arrayLength(&splatFeature_0), 4);
+    var _S63 : u32 = min(depthPixels_0, min(colorPixels_0, _S62.x));
     var dy_1 : i32 = i32(0);
     loop
     {
@@ -511,66 +530,72 @@ fn splatPoints(@builtin(global_invocation_id) gid_1 : vec3<u32>)
             {
                 break;
             }
-            var _S57 : i32 = _S53 + dx_1;
-            var _S58 : i32 = _S54 + dy_1;
-            var px_1 : vec2<i32> = vec2<i32>(_S57, _S58);
-            var _S59 : f32 = _S47 + 2.0f;
-            if((f32(dx_1) > _S59))
+            var _S64 : i32 = _S56 + dx_1;
+            var _S65 : i32 = _S57 + dy_1;
+            var px_1 : vec2<i32> = vec2<i32>(_S64, _S65);
+            var _S66 : f32 = _S50 + 2.0f;
+            if((f32(dx_1) > _S66))
             {
-                _S44 = true;
+                _S47 = true;
             }
             else
             {
-                _S44 = (f32(dy_1) > _S59);
+                _S47 = (f32(dy_1) > _S66);
             }
-            var _S60 : bool;
-            if(_S44)
+            var _S67 : bool;
+            if(_S47)
             {
-                _S60 = true;
+                _S67 = true;
             }
             else
             {
-                _S60 = (any(((px_1 < vec2<i32>(i32(0))))));
+                _S67 = (any(((px_1 < vec2<i32>(i32(0))))));
             }
-            var _S61 : bool;
-            if(_S60)
+            var _S68 : bool;
+            if(_S67)
             {
-                _S61 = true;
+                _S68 = true;
             }
             else
             {
-                _S61 = (_S57 >= _S51);
+                _S68 = (_S64 >= _S54);
             }
-            var _S62 : bool;
-            if(_S61)
+            var _S69 : bool;
+            if(_S68)
             {
-                _S62 = true;
+                _S69 = true;
             }
             else
             {
-                _S62 = (_S58 >= _S52);
+                _S69 = (_S65 >= _S55);
             }
-            if(_S62)
+            if(_S69)
             {
                 dx_1 = dx_1 + i32(1);
                 continue;
             }
-            var at_0 : u32 = u32(_S58 * _S51 + _S57);
-            var coverage_0 : f32 = splatCoverage_0(i_5, distance_4, (vec2<f32>(px_1) + vec2<f32>(0.5f) - _S55) / vec2<f32>(half_2), half_2, (all((px_1 == _S56))));
-            var _S63 : bool;
+            var p_3 : vec2<f32> = (vec2<f32>(px_1) + vec2<f32>(0.5f) - _S58) / vec2<f32>(half_2);
+            var at_1 : u32 = u32(_S65 * _S54 + _S64);
+            if((at_1 >= _S63))
+            {
+                dx_1 = dx_1 + i32(1);
+                continue;
+            }
+            var coverage_0 : f32 = splatCoverage_0(i_5, distance_4, p_3, half_2, (all((px_1 == _S59))));
+            var _S70 : bool;
             if((coverage_0 > 0.0f))
             {
-                var _S64 : u32 = atomicLoad(&(splatDepth_0[at_0]));
-                _S63 = _S64 == _S48;
+                var _S71 : u32 = atomicLoad(&(splatDepth_0[at_1]));
+                _S70 = _S71 == _S51;
             }
             else
             {
-                _S63 = false;
+                _S70 = false;
             }
-            if(_S63)
+            if(_S70)
             {
-                splatColor_0[at_0] = pack4x8unorm(vec4<f32>(_S49.xyz, coverage_0));
-                splatFeature_0[at_0] = _S50;
+                splatColor_0[at_1] = pack4x8unorm(vec4<f32>(_S52.xyz, coverage_0));
+                splatFeature_0[at_1] = _S53;
             }
             dx_1 = dx_1 + i32(1);
         }
@@ -584,29 +609,29 @@ fn splatPoints(@builtin(global_invocation_id) gid_1 : vec3<u32>)
 fn writePointArgs()
 {
     var a_1 : u32 = pointCull_0.batch_0 * u32(5);
-    var _S65 : u32 = a_1 + u32(1);
-    var _S66 : u32 = atomicLoad(&(args_0[_S65]));
-    var shown_0 : bool = (_S66 > u32(0));
-    var _S67 : u32;
+    var _S72 : u32 = a_1 + u32(1);
+    var _S73 : u32 = atomicLoad(&(args_0[_S72]));
+    var shown_0 : bool = (_S73 > u32(0));
+    var _S74 : u32;
     if(shown_0)
     {
-        var _S68 : u32 = atomicLoad(&(pointCounts_0[pointCull_0.counter_0]));
-        _S67 = _S68 * u32(6);
+        var _S75 : u32 = atomicLoad(&(pointCounts_0[pointCull_0.counter_0]));
+        _S74 = _S75 * u32(6);
     }
     else
     {
-        _S67 = u32(0);
+        _S74 = u32(0);
     }
-    atomicStore(&(args_0[a_1]), _S67);
+    atomicStore(&(args_0[a_1]), _S74);
     if(shown_0)
     {
-        _S67 = u32(1);
+        _S74 = u32(1);
     }
     else
     {
-        _S67 = u32(0);
+        _S74 = u32(0);
     }
-    atomicStore(&(args_0[_S65]), _S67);
+    atomicStore(&(args_0[_S72]), _S74);
     atomicStore(&(args_0[a_1 + u32(2)]), u32(0));
     atomicStore(&(args_0[a_1 + u32(3)]), u32(0));
     return;

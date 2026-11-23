@@ -19,6 +19,7 @@
 // through `pointF32`, `pointU32` and `styleTime`, exported under their
 // names (`__extern_cpp`), as pointCull.slang's styles do.
 
+import bounds;
 import common;
 
 struct PoolParams {
@@ -186,13 +187,21 @@ void claimSlots(uint3 gid : SV_DispatchThreadID) {
       float4((north * s - east * c) * scale, 0.0),
       float4(up * scale, 0.0),
       float4(a.xyz, 1.0)));
+  // A part's first row is data: a row past the table is skipped, not written.
+  uint partCount, partStride;
+  parts.GetDimensions(partCount, partStride);
+  uint rowCount, rowStride;
+  instanceRows.GetDimensions(rowCount, rowStride);
   for (uint k = 0u; k < MAX_POOL_PARTS; k++) {
-    if (k >= pool.parts) {
+    if (k >= pool.parts || k >= partCount) {
       break;
     }
     Part part = parts[k];
     float4x4 m = mul(mul(part.inverse, placement), part.local);
     uint row = part.first + slot;
+    if (row >= rowCount) {
+      continue;
+    }
     // Only the fields it changes (see `hideRest`).
     // As layout.ts writeInstance: three rows of the affine part.
     instanceRows[row].row0 = m[0];
@@ -213,7 +222,14 @@ void hideRest(uint3 gid : SV_DispatchThreadID) {
   if (slot < min(counters[CLAIMED].load(), pool.slots)) {
     return;
   }
-  uint row = parts[j / pool.slots].first + slot;
+  uint partCount, partStride;
+  parts.GetDimensions(partCount, partStride);
+  uint rowCount, rowStride;
+  instanceRows.GetDimensions(rowCount, rowStride);
+  uint row = parts[clampIndex(j / pool.slots, partCount)].first + slot;
+  if (row >= rowCount) {
+    return;
+  }
   // The one field: Slang copies a struct field by field (a load and a
   // store each, seven for an `Instance`), slower than the WGSL's copy.
   instanceRows[row].flags |= 1u;

@@ -7,6 +7,7 @@
 // it. No later pass reads the scene target's alpha: it is the opaque pass's
 // until this pass, and the exposure meter reads it, with what this pass is
 // about to blend, before this pass runs (meter.slang).
+import bounds;
 
 struct TranslucentParams {
   uint width;
@@ -85,7 +86,11 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
   if (id.x >= translucency.width || id.y >= translucency.height) {
     return;
   }
-  uint next = lists[LIST_HEADER + id.y * translucency.width + id.x];
+  // The header's place and every node's are data: each read is kept
+  // inside the lists' buffer (bounds.slang).
+  uint listWords, listStride;
+  lists.GetDimensions(listWords, listStride);
+  uint next = lists[clampIndex(LIST_HEADER + id.y * translucency.width + id.x, listWords)];
   uint count = 0u;
   for (uint walked = 0u; walked < MAX_LIST_WALK; walked++) {
     // No more nodes, or a node past the lists' (a broken list): done.
@@ -93,7 +98,7 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
       next = 0u;
       break;
     }
-    uint node = translucency.nodesBase + (next - 1u) * 4u;
+    uint node = clampSpan(translucency.nodesBase + (next - 1u) * 4u, 4u, listWords);
     float depth = asfloat(lists[node + 2u]);
     next = lists[node + 3u] & LIST_NEXT;
     // Reverse-Z: nearer is greater. Full, a layer farther than every kept

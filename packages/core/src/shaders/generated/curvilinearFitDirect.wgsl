@@ -169,31 +169,46 @@ fn directConstants(@builtin(global_invocation_id) id_0 : vec3<u32>)
     return;
 }
 
+fn clampSpan_0( at_1 : u32,  width_0 : u32,  count_1 : u32) -> u32
+{
+    var _S14 : u32;
+    if((count_1 >= width_0))
+    {
+        _S14 = count_1 - width_0;
+    }
+    else
+    {
+        _S14 = u32(0);
+    }
+    return min(at_1, _S14);
+}
+
 fn directResidual_0( p_3 : ptr<function, DirectParams_std140_0>,  draw_0 : u32,  m_0 : vec3<f32>) -> vec3<f32>
 {
-    var at_1 : u32 = draw_0 * u32(29);
-    var head_1 : vec4<f32> = draws_0[at_1];
-    var _S14 : u32 = (*p_3).kind_0;
+    var _S15 : vec2<u32> = vec2<u32>(arrayLength(&draws_0), 16);
+    var at_2 : u32 = clampSpan_0(draw_0 * u32(29), u32(29), _S15.x);
+    var head_1 : vec4<f32> = draws_0[at_2];
+    var _S16 : u32 = (*p_3).kind_0;
     if(((*p_3).kind_0) == u32(2))
     {
         return (*p_3).s1_0.xyz * (m_0 - head_1.xyz);
     }
-    var _S15 : vec3<f32> = head_1.xyz;
-    var _S16 : vec3<f32> = m_0 - _S15;
-    var u_1 : vec3<f32> = _S16 * vec3<f32>(head_1.w);
-    var _S17 : f32 = u_1.x;
-    var _S18 : f32 = _S17 * _S17;
-    var _S19 : vec4<f32> = vec4<f32>(1.0f, _S17, _S18, _S18 * _S17);
-    var _S20 : f32 = u_1.y;
-    var _S21 : f32 = _S20 * _S20;
-    var _S22 : vec4<f32> = vec4<f32>(1.0f, _S20, _S21, _S21 * _S20);
-    var _S23 : f32 = u_1.z;
-    var _S24 : f32 = _S23 * _S23;
-    var _S25 : vec4<f32> = vec4<f32>(1.0f, _S23, _S24, _S24 * _S23);
-    var _S26 : vec3<f32> = vec3<f32>(0.0f);
+    var _S17 : vec3<f32> = head_1.xyz;
+    var _S18 : vec3<f32> = m_0 - _S17;
+    var u_1 : vec3<f32> = _S18 * vec3<f32>(head_1.w);
+    var _S19 : f32 = u_1.x;
+    var _S20 : f32 = _S19 * _S19;
+    var _S21 : vec4<f32> = vec4<f32>(1.0f, _S19, _S20, _S20 * _S19);
+    var _S22 : f32 = u_1.y;
+    var _S23 : f32 = _S22 * _S22;
+    var _S24 : vec4<f32> = vec4<f32>(1.0f, _S22, _S23, _S23 * _S22);
+    var _S25 : f32 = u_1.z;
+    var _S26 : f32 = _S25 * _S25;
+    var _S27 : vec4<f32> = vec4<f32>(1.0f, _S25, _S26, _S26 * _S25);
+    var _S28 : vec3<f32> = vec3<f32>(0.0f);
     var k_0 : u32 = u32(19);
     var dh_0 : f32 = 0.0f;
-    var dn_0 : vec3<f32> = _S26;
+    var dn_0 : vec3<f32> = _S28;
     loop
     {
         if((k_0 > u32(0)))
@@ -203,41 +218,41 @@ fn directResidual_0( p_3 : ptr<function, DirectParams_std140_0>,  draw_0 : u32, 
         {
             break;
         }
-        var mono_0 : f32 = _S19[((POWERS_0[k_0]) & (u32(3)))] * _S22[((((POWERS_0[k_0]) >> (u32(2)))) & (u32(3)))] * _S25[((((POWERS_0[k_0]) >> (u32(4)))) & (u32(3)))];
-        var dh_1 : f32 = dh_0 + draws_0[at_1 + u32(3) + ((k_0 >> (u32(2))))][(k_0 & (u32(3)))] * mono_0;
-        var dn_1 : vec3<f32> = dn_0 + draws_0[at_1 + u32(9) + k_0].xyz * vec3<f32>(mono_0);
+        var mono_0 : f32 = _S21[((POWERS_0[k_0]) & (u32(3)))] * _S24[((((POWERS_0[k_0]) >> (u32(2)))) & (u32(3)))] * _S27[((((POWERS_0[k_0]) >> (u32(4)))) & (u32(3)))];
+        var dh_1 : f32 = dh_0 + draws_0[at_2 + u32(3) + ((k_0 >> (u32(2))))][(k_0 & (u32(3)))] * mono_0;
+        var dn_1 : vec3<f32> = dn_0 + draws_0[at_2 + u32(9) + k_0].xyz * vec3<f32>(mono_0);
         k_0 = k_0 - u32(1);
         dh_0 = dh_1;
         dn_0 = dn_1;
     }
-    var low_1 : vec4<f32> = draws_0[at_1 + u32(8)];
-    var n0_0 : vec3<f32> = draws_0[at_1 + u32(9)].xyz + low_1.yzw;
+    var low_1 : vec4<f32> = draws_0[at_2 + u32(8)];
+    var n0_0 : vec3<f32> = draws_0[at_2 + u32(9)].xyz + low_1.yzw;
     var a2_0 : f32 = dot(n0_0, n0_0);
     var a_13 : f32 = sqrt(a2_0);
     var s_4 : f32 = 2.0f * dot(n0_0, dn_0) + dot(dn_0, dn_0);
     var b_10 : f32 = sqrt(a2_0 + s_4);
-    var _S27 : vec3<f32> = vec3<f32>(b_10);
-    var unit_0 : vec3<f32> = (n0_0 + dn_0) / _S27;
-    var change_0 : vec3<f32> = dn_0 / _S27 - n0_0 * vec3<f32>((s_4 / (a_13 * b_10 * (a_13 + b_10))));
+    var _S29 : vec3<f32> = vec3<f32>(b_10);
+    var unit_0 : vec3<f32> = (n0_0 + dn_0) / _S29;
+    var change_0 : vec3<f32> = dn_0 / _S29 - n0_0 * vec3<f32>((s_4 / (a_13 * b_10 * (a_13 + b_10))));
     var dlift_0 : f32;
     var lift_1 : f32;
-    if(_S14 == u32(0))
+    if(_S16 == u32(0))
     {
-        var _S28 : f32 = (*p_3).a_0.x;
-        var _S29 : f32 = _S28 * (draws_0[at_1 + u32(3)].x + low_1.x - (*p_3).a_0.y) + (*p_3).a_0.z;
-        dlift_0 = _S28 * dh_0;
-        lift_1 = _S29;
+        var _S30 : f32 = (*p_3).a_0.x;
+        var _S31 : f32 = _S30 * (draws_0[at_2 + u32(3)].x + low_1.x - (*p_3).a_0.y) + (*p_3).a_0.z;
+        dlift_0 = _S30 * dh_0;
+        lift_1 = _S31;
     }
     else
     {
-        var w0_0 : vec3<f32> = draws_0[at_1 + u32(1)].xyz - (*p_3).cHi_0.xyz + (draws_0[at_1 + u32(2)].xyz - (*p_3).cLo_0.xyz) + _S15;
-        var w_0 : vec3<f32> = w0_0 + _S16;
-        var _S30 : f32 = (*p_3).b_0.x;
-        var gc_0 : f32 = exp(- dot(w0_0, w0_0) * _S30);
-        var _S31 : f32 = (*p_3).a_0.w;
-        var _S32 : f32 = _S31 * gc_0;
-        dlift_0 = _S31 * (exp(- dot(w_0, w_0) * _S30) - gc_0);
-        lift_1 = _S32;
+        var w0_0 : vec3<f32> = draws_0[at_2 + u32(1)].xyz - (*p_3).cHi_0.xyz + (draws_0[at_2 + u32(2)].xyz - (*p_3).cLo_0.xyz) + _S17;
+        var w_0 : vec3<f32> = w0_0 + _S18;
+        var _S32 : f32 = (*p_3).b_0.x;
+        var gc_0 : f32 = exp(- dot(w0_0, w0_0) * _S32);
+        var _S33 : f32 = (*p_3).a_0.w;
+        var _S34 : f32 = _S33 * gc_0;
+        dlift_0 = _S33 * (exp(- dot(w_0, w_0) * _S32) - gc_0);
+        lift_1 = _S34;
     }
     return vec3<f32>(dlift_0) * unit_0 + vec3<f32>(lift_1) * change_0;
 }
@@ -246,15 +261,15 @@ fn directResidual_0( p_3 : ptr<function, DirectParams_std140_0>,  draw_0 : u32, 
 @workgroup_size(64, 1, 1)
 fn directEval(@builtin(global_invocation_id) id_1 : vec3<u32>)
 {
-    var _S33 : u32 = id_1.x;
-    if((_S33 >= (params_0.count_0)))
+    var _S35 : u32 = id_1.x;
+    if((_S35 >= (params_0.count_0)))
     {
         return;
     }
-    var v_1 : vec4<f32> = vertices_0[_S33];
-    var _S34 : DirectParams_std140_0 = params_0;
-    var _S35 : vec3<f32> = directResidual_0(&(_S34), (bitcast<u32>((v_1.w))), v_1.xyz);
-    output_0[_S33] = vec4<f32>(_S35, 0.0f);
+    var v_1 : vec4<f32> = vertices_0[_S35];
+    var _S36 : DirectParams_std140_0 = params_0;
+    var _S37 : vec3<f32> = directResidual_0(&(_S36), (bitcast<u32>((v_1.w))), v_1.xyz);
+    output_0[_S35] = vec4<f32>(_S37, 0.0f);
     return;
 }
 
@@ -262,27 +277,28 @@ fn directEval(@builtin(global_invocation_id) id_1 : vec3<u32>)
 @workgroup_size(64, 1, 1)
 fn latticeEval(@builtin(global_invocation_id) id_2 : vec3<u32>)
 {
-    var _S36 : u32 = id_2.x;
-    if((_S36 >= (params_0.count_0)))
+    var _S38 : u32 = id_2.x;
+    if((_S38 >= (params_0.count_0)))
     {
         return;
     }
-    var v_2 : vec4<f32> = vertices_0[_S36];
-    var at_2 : u32 = (bitcast<u32>((v_2.w))) * u32(23);
-    var head_2 : vec4<f32> = lattices_0[at_2];
+    var v_2 : vec4<f32> = vertices_0[_S38];
+    var _S39 : vec2<u32> = vec2<u32>(arrayLength(&lattices_0), 16);
+    var at_3 : u32 = clampSpan_0((bitcast<u32>((v_2.w))) * u32(23), u32(23), _S39.x);
+    var head_2 : vec4<f32> = lattices_0[at_3];
     var u_2 : vec3<f32> = (v_2.xyz - head_2.xyz) * vec3<f32>(head_2.w);
-    var _S37 : f32 = u_2.x;
-    var _S38 : f32 = _S37 * _S37;
-    var _S39 : vec4<f32> = vec4<f32>(1.0f, _S37, _S38, _S38 * _S37);
-    var _S40 : f32 = u_2.y;
+    var _S40 : f32 = u_2.x;
     var _S41 : f32 = _S40 * _S40;
     var _S42 : vec4<f32> = vec4<f32>(1.0f, _S40, _S41, _S41 * _S40);
-    var _S43 : f32 = u_2.z;
+    var _S43 : f32 = u_2.y;
     var _S44 : f32 = _S43 * _S43;
     var _S45 : vec4<f32> = vec4<f32>(1.0f, _S43, _S44, _S44 * _S43);
-    var _S46 : vec3<f32> = vec3<f32>(0.0f);
+    var _S46 : f32 = u_2.z;
+    var _S47 : f32 = _S46 * _S46;
+    var _S48 : vec4<f32> = vec4<f32>(1.0f, _S46, _S47, _S47 * _S46);
+    var _S49 : vec3<f32> = vec3<f32>(0.0f);
     var k_1 : u32 = u32(0);
-    var d_0 : vec3<f32> = _S46;
+    var d_0 : vec3<f32> = _S49;
     loop
     {
         if((k_1 < u32(20)))
@@ -292,11 +308,11 @@ fn latticeEval(@builtin(global_invocation_id) id_2 : vec3<u32>)
         {
             break;
         }
-        var d_1 : vec3<f32> = d_0 + lattices_0[at_2 + u32(3) + k_1].xyz * vec3<f32>((_S39[((POWERS_0[k_1]) & (u32(3)))] * _S42[((((POWERS_0[k_1]) >> (u32(2)))) & (u32(3)))] * _S45[((((POWERS_0[k_1]) >> (u32(4)))) & (u32(3)))]));
+        var d_1 : vec3<f32> = d_0 + lattices_0[at_3 + u32(3) + k_1].xyz * vec3<f32>((_S42[((POWERS_0[k_1]) & (u32(3)))] * _S45[((((POWERS_0[k_1]) >> (u32(2)))) & (u32(3)))] * _S48[((((POWERS_0[k_1]) >> (u32(4)))) & (u32(3)))]));
         k_1 = k_1 + u32(1);
         d_0 = d_1;
     }
-    output_0[_S36] = vec4<f32>(d_0, 0.0f);
+    output_0[_S38] = vec4<f32>(d_0, 0.0f);
     return;
 }
 

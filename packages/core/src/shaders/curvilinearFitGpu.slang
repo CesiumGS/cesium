@@ -28,6 +28,7 @@
 // order preserving for non-negative numbers). `evalDirect` evaluates the
 // curvilinear map at points with no fit, to price drawing a closed-form curvilinear map straight
 // in the vertex stage.
+import bounds;
 import exactSum;
 import curvilinearFitDf64;
 
@@ -354,7 +355,11 @@ void checkCells(uint3 group : SV_GroupID, uint t : SV_GroupIndex) {
   GroupMemoryBarrierWithGroupSync();
   float3 hi = lattices[body + 1u].xyz;
   float3 lo = lattices[body + 2u].xyz;
-  uint first = body + 3u + entry.y * TERMS;
+  // The job's body and cell are data: the cell's terms are read from
+  // within the lattices' buffer (bounds.slang).
+  uint latticeRows, latticeStride;
+  lattices.GetDimensions(latticeRows, latticeStride);
+  uint first = clampSpan(body + 3u + entry.y * TERMS, TERMS, latticeRows);
   float mine = 0.0;
   for (uint s = t; s < CHECK_POINTS; s += 128u) {
     float3 v = float3(float(s % 9u), float((s / 9u) % 9u), float(s / 81u)) * 0.25 - float3(1.0);
