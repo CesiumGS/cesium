@@ -19,3 +19,7 @@ Detail: `docs/history/m2-progress.md`, "M2 close-out"; `docs/design/tile-selecti
 ## Note (2026-11-22)
 
 The owner committed it before beta.1 (CS-1003 A): the content-source seam's `Want` gains CPU and GPU bytes and a reclaim path before beta.1, and sources move over by 2.0.0.
+
+## Note (2026-11-23)
+
+The owner (2026-11-23, CS-1115): the ledger's kinds, bytes by owner and kind, CPU and GPU, are part of this item's contract. The report call is CS-1121.

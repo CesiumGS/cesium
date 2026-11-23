@@ -25,3 +25,7 @@ The sources make no recommendation beyond the overrides direction.
 ## Answer
 
 Open.
+
+## Note (2026-11-23)
+
+The owner chose per-feature state (2026-11-23, CS-1108 A): run-time columns keyed by stable ID that styles read. The host builds its override table on them, and the edit layer, labels and search use the same mechanism. No separate override table.

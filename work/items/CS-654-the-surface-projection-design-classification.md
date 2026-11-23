@@ -14,3 +14,7 @@ needs: [CS-258]
 - It chooses the mechanism (compute decals from depth and normals, per-pixel lists, texture-space projection for imagery) from measurements.
 
 From the owner's release planning on 2026-11-17: `docs/decisions/2026-11-17-release-plan-and-parity.md`.
+
+## Note (2026-11-23)
+
+The owner (2026-11-23, CS-1112 A): this design uses the shared clip vocabulary (region, targets, effect) of CS-1119.

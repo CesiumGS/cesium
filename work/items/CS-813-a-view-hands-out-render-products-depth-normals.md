@@ -30,3 +30,7 @@ Source: the owner's review of 2.0's seams, 2026-11-21, after a survey of physica
 - IDs in the images are CS-815's stable IDs, the same ones picks and ray hits return.
 - Tests on `test/fakeGpu.ts` check the depth values and IDs against known geometry. A browser test on the executor's own server checks one real frame.
 - `npm run surface` is run, and `api/surface.txt` is committed.
+
+## Note (2026-11-23)
+
+From the general-primitives review of a CAD or BIM host application's needs (2026-11-23): a host needs a region read (a rectangle of ID, depth, kind and planarity) and a held copy of the latest tick's products, readable synchronously.

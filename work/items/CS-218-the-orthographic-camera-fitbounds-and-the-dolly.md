@@ -15,3 +15,7 @@ The plan's Tasks 14 to 16 and their tests pass.
 ## Plan
 
 `docs/superpowers/plans/2026-11-08-frames-5d-controllers-and-animation.md`, Tasks 14 to 16.
+
+## Note (2026-11-23)
+
+The owner moved this into alpha.1, and slimmed it: the orthographic camera is a projective-matrix constructor on the camera record (CS-1117). `fitBounds` and the dolly between projections move to `@cesium/navigation` (CS-1124, CS-1123 A).
