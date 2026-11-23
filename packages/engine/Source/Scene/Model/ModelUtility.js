@@ -173,6 +173,7 @@ ModelUtility.getAttributeInfo = function (attribute) {
     // an underscore.
     variableName = variableName.replace(/^_/, "");
     variableName = variableName.toLowerCase();
+    variableName = ModelUtility.sanitizeGlslIdentifier(variableName);
   }
 
   const isVertexColor = /^color_\d+$/.test(variableName);
