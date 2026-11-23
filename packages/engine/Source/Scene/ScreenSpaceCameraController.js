@@ -530,6 +530,7 @@ function reactToInput(
 }
 
 const scratchZoomPickRay = new Ray();
+const scratchZoomWorldPosition2D = new Cartesian3();
 const scratchPickCartesian = new Cartesian3();
 const scratchZoomOffset = new Cartesian2();
 const scratchZoomDirection = new Cartesian3();
@@ -557,6 +558,40 @@ const scratchCartesianThree = new Cartesian3();
 const scratchZoomViewOptions = {
   orientation: new HeadingPitchRoll(),
 };
+
+/**
+ * Picks the zoom target in 2D from a window position, expressed in the
+ * 2D camera frame where x is the projected longitude.
+ * <p>
+ * {@link Camera#getPickRay} wraps the ray origin into the central map copy
+ * in 2D infinite-scroll mode, but the camera may be over a wrapped copy.
+ * Shift the target by whole map widths so it lies on the copy nearest the
+ * camera; otherwise the camera zooms toward the corresponding point on the
+ * central copy instead of the point under the cursor.
+ * </p>
+ *
+ * @private
+ */
+function pickZoomWorldPosition2D(object, startPosition, result) {
+  const camera = object._scene.camera;
+  const pickedPosition = camera
+    .getPickRay(startPosition, scratchZoomPickRay)
+    .origin;
+  Cartesian3.fromElements(
+    pickedPosition.y,
+    pickedPosition.z,
+    pickedPosition.x,
+    result,
+  );
+
+  if (object._scene.mapMode2D === MapMode2D.INFINITE_SCROLL) {
+    const mapWidth = 2.0 * object._maxCoord.x;
+    result.x +=
+      mapWidth * Math.round((camera.position.x - result.x) / mapWidth);
+  }
+
+  return result;
+}
 
 function handleZoom(
   object,
@@ -641,14 +676,10 @@ function handleZoom(
 
     // When camera transform is set, such as tracking an entity, object._globe will be undefined, and no position should be picked
     if (defined(object._globe) && mode === SceneMode.SCENE2D) {
-      pickedPosition = camera.getPickRay(
+      pickedPosition = pickZoomWorldPosition2D(
+        object,
         startPosition,
-        scratchZoomPickRay,
-      ).origin;
-      pickedPosition = Cartesian3.fromElements(
-        pickedPosition.y,
-        pickedPosition.z,
-        pickedPosition.x,
+        scratchZoomWorldPosition2D,
       );
     } else if (defined(object._globe)) {
       pickedPosition = pickPosition(
@@ -711,14 +742,10 @@ function handleZoom(
           (camera.position.x < 0.0 && savedX > 0.0) ||
           (camera.position.x > 0.0 && savedX < 0.0)
         ) {
-          pickedPosition = camera.getPickRay(
+          pickedPosition = pickZoomWorldPosition2D(
+            object,
             startPosition,
-            scratchZoomPickRay,
-          ).origin;
-          pickedPosition = Cartesian3.fromElements(
-            pickedPosition.y,
-            pickedPosition.z,
-            pickedPosition.x,
+            scratchZoomWorldPosition2D,
           );
           object._zoomWorldPosition = Cartesian3.clone(
             pickedPosition,
