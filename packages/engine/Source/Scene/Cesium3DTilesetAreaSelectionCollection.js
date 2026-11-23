@@ -1,7 +1,8 @@
 // @ts-check
 
-import { DeveloperError, defined } from "@cesium/core";
+import { DeveloperError, Intersect, defined } from "@cesium/core";
 /** @import Cesium3DTilesetAreaSelection from "./Cesium3DTilesetAreaSelection.js"; */
+/** @import Cesium3DTile from "./Cesium3DTile.js"; */
 
 /**
  * The maximum number of areas, because each area takes one bit of a 32-bit
@@ -109,6 +110,31 @@ class Cesium3DTilesetAreaSelectionCollection {
     }
     this._areas.length = 0;
     this._markDirty();
+  }
+
+  /**
+   * Computes which areas a tile overlaps. Only the areas whose bits are set in
+   * the parent mask are tested, since a tile lies inside its parent.
+   *
+   * @param {Cesium3DTile} tile The tile to test.
+   * @param {number} parentMask The mask of the tile's parent, or the collection's active mask for the root tile.
+   * @returns {number} The parent mask with the bits of the areas the tile is outside of cleared.
+   * @private
+   */
+  computeMask(tile, parentMask) {
+    let mask = parentMask;
+    for (let i = 0; i < this._areas.length; ++i) {
+      const bit = 1 << i;
+      if ((mask & bit) !== 0) {
+        const visibility = this._areas[i]._cullingVolume.computeVisibility(
+          tile._boundingVolume,
+        );
+        if (visibility === Intersect.OUTSIDE) {
+          mask &= ~bit;
+        }
+      }
+    }
+    return mask;
   }
 
   /**

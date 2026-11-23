@@ -1,4 +1,4 @@
-import { Rectangle } from "@cesium/core";
+import { BoundingSphere, Cartesian3, Rectangle } from "@cesium/core";
 import {
   Cesium3DTilesetAreaSelection,
   Cesium3DTilesetAreaSelectionCollection,
@@ -209,5 +209,62 @@ describe("Scene/Cesium3DTilesetAreaSelectionCollection", () => {
     collection.remove(first);
 
     expect(collection._activeMask).toBe(0b01);
+  });
+
+  describe("computeMask", () => {
+    function createSphereArea(x) {
+      return Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: new BoundingSphere(new Cartesian3(x, 0.0, 0.0), 10.0),
+        geometricError: 4.0,
+      });
+    }
+
+    function createTile(x, radius) {
+      return {
+        _boundingVolume: new BoundingSphere(
+          new Cartesian3(x, 0.0, 0.0),
+          radius,
+        ),
+      };
+    }
+
+    function createCollection() {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(createSphereArea(0.0));
+      collection.add(createSphereArea(1000.0));
+      collection.add(createSphereArea(2000.0));
+      return collection;
+    }
+
+    it("keeps the areas a tile overlaps", () => {
+      const collection = createCollection();
+      const tile = createTile(0.0, 1.0);
+
+      expect(collection.computeMask(tile, 0b111)).toBe(0b001);
+    });
+
+    it("returns 0 for a tile outside every area", () => {
+      const collection = createCollection();
+      const tile = createTile(5000.0, 1.0);
+
+      expect(collection.computeMask(tile, 0b111)).toBe(0);
+    });
+
+    it("keeps several overlapping areas", () => {
+      const collection = createCollection();
+      const tile = createTile(500.0, 600.0);
+
+      expect(collection.computeMask(tile, 0b111)).toBe(0b011);
+    });
+
+    it("only tests areas in the parent mask", () => {
+      const collection = createCollection();
+      const tile = createTile(0.0, 1.0);
+      const cullingVolume = collection.get(0)._cullingVolume;
+      spyOn(cullingVolume, "computeVisibility").and.callThrough();
+
+      expect(collection.computeMask(tile, 0b110)).toBe(0);
+      expect(cullingVolume.computeVisibility).not.toHaveBeenCalled();
+    });
   });
 });
