@@ -334,6 +334,7 @@ class Cesium3DTilesetAreaSelection {
 
   set show(value) {
     this._show = value;
+    this._collection?._markDirty();
   }
 }
 

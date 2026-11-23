@@ -12,6 +12,8 @@ class Cesium3DTilesetAreaSelectionCollection {
     /** @type {Cesium3DTilesetAreaSelection[]} */
     this._areas = [];
     this._relaxation = 1.0;
+    this._version = 0;
+    this._activeMask = 0;
   }
 
   /**
@@ -53,6 +55,7 @@ class Cesium3DTilesetAreaSelectionCollection {
   add(area) {
     area._collection = this;
     this._areas.push(area);
+    this._markDirty();
     return area;
   }
 
@@ -69,6 +72,7 @@ class Cesium3DTilesetAreaSelectionCollection {
     }
     this._areas.splice(index, 1);
     area._collection = undefined;
+    this._markDirty();
     return true;
   }
 
@@ -80,6 +84,25 @@ class Cesium3DTilesetAreaSelectionCollection {
       area._collection = undefined;
     }
     this._areas.length = 0;
+    this._markDirty();
+  }
+
+  /**
+   * Increments the version and recomputes the mask of shown areas. Called
+   * whenever an area is added, removed, or changes.
+   *
+   * @private
+   */
+  _markDirty() {
+    this._version++;
+
+    let mask = 0;
+    for (let i = 0; i < this._areas.length; ++i) {
+      if (this._areas[i].show) {
+        mask |= 1 << i;
+      }
+    }
+    this._activeMask = mask;
   }
 }
 

@@ -89,4 +89,80 @@ describe("Scene/Cesium3DTilesetAreaSelectionCollection", () => {
 
     expect(area.effectiveMinimumMeasure).toBe(8.0);
   });
+
+  it("starts at version 0", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    expect(collection._version).toBe(0);
+    expect(collection._activeMask).toBe(0);
+  });
+
+  it("increments the version on add, remove, and removeAll", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    const first = createArea();
+    const second = createArea();
+
+    let version = collection._version;
+    collection.add(first);
+    expect(collection._version).toBeGreaterThan(version);
+
+    version = collection._version;
+    collection.add(second);
+    expect(collection._version).toBeGreaterThan(version);
+
+    version = collection._version;
+    collection.remove(first);
+    expect(collection._version).toBeGreaterThan(version);
+
+    version = collection._version;
+    collection.removeAll();
+    expect(collection._version).toBeGreaterThan(version);
+  });
+
+  it("does not increment the version when removing a missing area", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    collection.add(createArea());
+    const version = collection._version;
+
+    collection.remove(createArea());
+
+    expect(collection._version).toBe(version);
+  });
+
+  it("sets a bit for each shown area", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+
+    collection.add(createArea());
+    collection.add(createArea());
+
+    expect(collection._activeMask).toBe(0b11);
+  });
+
+  it("clears the bit of a hidden area", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    collection.add(createArea());
+    const second = collection.add(createArea());
+
+    let version = collection._version;
+    second.show = false;
+    expect(collection._activeMask).toBe(0b01);
+    expect(collection._version).toBeGreaterThan(version);
+
+    version = collection._version;
+    second.show = true;
+    expect(collection._activeMask).toBe(0b11);
+    expect(collection._version).toBeGreaterThan(version);
+  });
+
+  it("recomputes the mask after a removal", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    const first = collection.add(createArea());
+    collection.add(createArea());
+    const third = collection.add(createArea());
+    third.show = false;
+    expect(collection._activeMask).toBe(0b011);
+
+    collection.remove(first);
+
+    expect(collection._activeMask).toBe(0b01);
+  });
 });
