@@ -17,7 +17,7 @@ interface Naga {
   validate(module: unknown): unknown;
 }
 
-// naga-wasm is a devDependency, so `npm install` provides it. A missing
+// naga-wasm is a devDependency, so `pnpm install` provides it. A missing
 // package skips these cases with a message (and fails the run under CI).
 const naga: Naga | undefined = await import("naga-wasm").then(
   (m) => m as unknown as Naga,
@@ -31,12 +31,12 @@ const naga: Naga | undefined = await import("naga-wasm").then(
 );
 
 describe("naga accepts the emitted WGSL", () => {
-  it("is installed (run `npm install` if this fails or the cases below skip)", () => {
+  it("is installed (run `pnpm install` if this fails or the cases below skip)", () => {
     if (process.env.CI) {
       expect(naga).toBeDefined();
     } else if (!naga) {
       console.warn(
-        "naga-wasm is not installed, so the WGSL validation cases are skipped. Run `npm install` at the repository root.",
+        "naga-wasm is not installed, so the WGSL validation cases are skipped. Run `pnpm install` at the repository root.",
       );
     }
   });

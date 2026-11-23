@@ -57,7 +57,7 @@ function checkForFiles(extraFilesList: Target[]) {
       if (target.src.includes(".d.ts")) {
         // probably a missing types file
         console.error(
-          "\nYou might be missing types files. Run `npm ci` at the repository root",
+          "\nYou might be missing types files. Run `pnpm install` at the repository root",
         );
       } else if (target.src.includes(".js") || target.src.includes("/Build/")) {
         // probably missing some built JS files

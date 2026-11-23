@@ -165,11 +165,11 @@ describe("npx @cesium/dyno resolves the workspace link and never downloads", () 
     ["the repository root", root],
     ["packages/cesium", next],
   ] as const) {
-    it(`runs from ${label} after npm install`, () => {
+    it(`runs from ${label} after pnpm install`, () => {
       const scratch = mkdtempSync(join(tmpdir(), "dyno-npx-"));
       try {
         const out = npx(cwd, ["@cesium/dyno", "--help"], scratch);
-        // A failure here means the workspace link is missing: run `npm install` at the root.
+        // A failure here means the workspace link is missing: run `pnpm install` at the root.
         expect(out.stderr).not.toContain("ECONNREFUSED");
         expect(out.status).toBe(0);
         expect(out.stdout).toContain("Dyno's command line");

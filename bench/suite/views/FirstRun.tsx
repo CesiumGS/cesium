@@ -112,7 +112,7 @@ function useChecks(): Record<"webgpu" | "pinned", Check> {
               detail: (
                 <>
                   The parity pages load the pinned 1.x (<code>cesium-1x</code>):
-                  run <code>npm ci</code> at the repository root.
+                  run <code>pnpm install</code> at the repository root.
                 </>
               ),
             },

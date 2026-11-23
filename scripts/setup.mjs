@@ -1,5 +1,5 @@
 // One-time setup of a machine for @cesium/next (README "Setup"):
-//  - a check that the pinned 1.x (cesium-1x, installed by `npm ci` at the
+//  - a check that the pinned 1.x (cesium-1x, installed by `pnpm install` at the
 //    repository root) is there: the parity harness and Dyno load it;
 //  - the CesiumJS releases the benchmark catalog runs by default, fetched
 //    from npm into the store outside the repo (~/.cesium-bench/cesium, or
@@ -78,7 +78,7 @@ console.log(
 );
 
 // The pinned 1.x (cesium-1x, a dev dependency of the workspace root), which
-// the parity harness and Dyno's default 1.x engine load: `npm ci` installs it.
+// the parity harness and Dyno's default 1.x engine load: `pnpm install` installs it.
 const pinned = pinned1x();
 console.log(`1.x: cesium@${pinned.version}, pinned (node_modules/cesium-1x)`);
 

@@ -47,7 +47,7 @@ export class HitldUnavailable extends Error {
 /** What the page may be told for each reason: fixed words, never hitld's output. */
 export const UNAVAILABLE_TEXT = {
   missing:
-    "hitld isn't installed: run npm install in the repository (human-in-the-lead is a dev dependency of the workspace root)",
+    "hitld isn't installed: run pnpm install in the repository (human-in-the-lead is a dev dependency of the workspace root)",
   version: `hitld's read API isn't version ${API_VERSION}, the version Dyno's board reads; install the release package.json pins`,
   failed: "hitld couldn't read the tracker; see the dev server's log",
 };

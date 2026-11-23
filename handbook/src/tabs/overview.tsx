@@ -97,7 +97,7 @@ const CLONE =
   "git clone --branch cesium-2.0-webgpu-poc https://github.com/CesiumGS/cesium.git";
 
 const QUICK_START = `cd cesium
-npm install
+pnpm install
 npm run setup
 npm run dev`;
 
@@ -123,8 +123,10 @@ export function Overview() {
       <Section title="Quick start: run Dyno">
         <p>
           Dyno is the app for measuring and exploring the engine. You need Node
-          24 or later and a browser with WebGPU. The engine is on the{" "}
-          <C>cesium-2.0-webgpu-poc</C> branch of the{" "}
+          24 or later, pnpm 11.12 or later (Node's corepack provides the version
+          the repository names: <C>corepack enable pnpm</C>), and a browser with
+          WebGPU. The engine is on the <C>cesium-2.0-webgpu-poc</C> branch of
+          the{" "}
           <a href="https://github.com/CesiumGS/cesium/tree/cesium-2.0-webgpu-poc">
             CesiumGS/cesium
           </a>{" "}
@@ -135,7 +137,7 @@ export function Overview() {
         <CodeBlock language="shell" code={QUICK_START} />
         <p>
           You only need <C>setup</C> once per machine. It fetches the tools and
-          checks the pinned CesiumJS 1.x that <C>npm install</C> put in place.
+          checks the pinned CesiumJS 1.x that <C>pnpm install</C> put in place.
           When the server is up, open{" "}
           <a href="http://127.0.0.1:5190">http://127.0.0.1:5190</a>.
         </p>

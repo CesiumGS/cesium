@@ -259,7 +259,7 @@ describe("the emitter", () => {
   });
 });
 
-// naga-wasm is a devDependency, so `npm install` provides it. Only a package
+// naga-wasm is a devDependency, so `pnpm install` provides it. Only a package
 // that isn't installed skips the cases below, with a hint (and the run fails
 // under CI); a broken install throws.
 const naga: NagaApi | undefined = await import("naga-wasm").then(
@@ -277,12 +277,12 @@ describe("naga's GLSL ES output, as a cross-check", () => {
   // compiled beside ours. This half checks that naga writes it for every
   // module and that the names the browser page binds by are there; the page
   // (`bench/irGlsl.ts`) compiles, links and reads it back in WebGL 2.
-  it("is installed (run `npm install` if this fails or the cases below skip)", () => {
+  it("is installed (run `pnpm install` if this fails or the cases below skip)", () => {
     if (process.env.CI) {
       expect(naga).toBeDefined();
     } else if (!naga) {
       console.warn(
-        "naga-wasm is not installed, so the naga cross-check cases are skipped. Run `npm install` at the repository root.",
+        "naga-wasm is not installed, so the naga cross-check cases are skipped. Run `pnpm install` at the repository root.",
       );
     }
   });

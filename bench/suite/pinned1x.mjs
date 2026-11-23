@@ -30,7 +30,7 @@ export function pinned1x() {
     manifest = require.resolve("cesium-1x/package.json");
   } catch {
     throw new Error(
-      "cesium-1x isn't installed: run `npm ci` at the repository root (the pinned CesiumJS 1.x is a dev dependency there)",
+      "cesium-1x isn't installed: run `pnpm install` at the repository root (the pinned CesiumJS 1.x is a dev dependency there)",
     );
   }
   const dir = dirname(manifest);
