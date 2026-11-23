@@ -1,3 +1,5 @@
+// @ts-check
+
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -6,8 +8,10 @@ import DeveloperError from "./DeveloperError.js";
  *
  * @function subdivideArray
  *
- * @param {Array} array The array to divide.
+ * @template T
+ * @param {T[]} array The array to divide.
  * @param {number} numberOfArrays The number of arrays to divide the provided array into.
+ * @returns {T[][]} The subdivided arrays.
  *
  * @exception {DeveloperError} numberOfArrays must be greater than 0.
  */

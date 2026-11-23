@@ -1,3 +1,5 @@
+// @ts-check
+
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import RuntimeError from "./RuntimeError.js";
@@ -39,11 +41,21 @@ function getStringFromTypedArray(uint8Array, byteOffset, byteLength) {
 }
 
 // Exposed functions for testing
+/**
+ * @param {Uint8Array} view
+ * @returns {string}
+ * @private
+ */
 getStringFromTypedArray.decodeWithTextDecoder = function (view) {
   const decoder = new TextDecoder("utf-8");
   return decoder.decode(view);
 };
 
+/**
+ * @param {Uint8Array} view
+ * @returns {string}
+ * @private
+ */
 getStringFromTypedArray.decodeWithFromCharCode = function (view) {
   let result = "";
   const codePoints = utf8Handler(view);
@@ -60,11 +72,23 @@ getStringFromTypedArray.decodeWithFromCharCode = function (view) {
   return result;
 };
 
+/**
+ * @param {number} a
+ * @param {number} min
+ * @param {number} max
+ * @returns {boolean}
+ * @private
+ */
 function inRange(a, min, max) {
   return min <= a && a <= max;
 }
 
 // This code is inspired by public domain code found here: https://github.com/inexorabletash/text-encoding
+/**
+ * @param {Uint8Array} utfBytes
+ * @returns {number[]}
+ * @private
+ */
 function utf8Handler(utfBytes) {
   let codePoint = 0;
   let bytesSeen = 0;

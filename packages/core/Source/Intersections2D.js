@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
@@ -82,7 +84,7 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
     u2Behind = u2 > threshold;
   }
 
-  const numBehind = u0Behind + u1Behind + u2Behind;
+  const numBehind = Number(u0Behind) + Number(u1Behind) + Number(u2Behind);
 
   let u01Ratio;
   let u02Ratio;
