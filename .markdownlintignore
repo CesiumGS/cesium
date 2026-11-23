@@ -1,4 +1,4 @@
-/node_modules
+node_modules/
 apps/sandcastle/node_modules
 **/ThirdParty
 /Tools/**
