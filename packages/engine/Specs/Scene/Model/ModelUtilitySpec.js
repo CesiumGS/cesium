@@ -124,6 +124,22 @@ describe("Scene/Model/ModelUtility", function () {
     });
   });
 
+  it("getAttributeInfo sanitizes custom attribute names for GLSL", function () {
+    const attribute = {
+      name: "_KHR_gaussian_splatting:OPACITY",
+      type: AttributeType.SCALAR,
+    };
+
+    expect(ModelUtility.getAttributeInfo(attribute)).toEqual({
+      attribute: attribute,
+      isQuantized: false,
+      variableName: "khr_gaussian_splatting_opacity",
+      hasSemantic: false,
+      glslType: "float",
+      quantizedGlslType: undefined,
+    });
+  });
+
   it("getAttributeInfo works for quantized attributes", function () {
     let attribute = {
       semantic: "POSITION",
