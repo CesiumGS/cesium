@@ -8,9 +8,16 @@ import { describe, expect, it } from "vitest";
 import {
   CENTER_TERM_GLSL,
   CENTER_TERM_WGSL,
+  centerTermBound,
+  centerTermExact,
   fixParts,
   fromFixParts,
+  type CenterInputs,
 } from "../packages/core/src/transform/centerTerm.ts";
+import {
+  centerInputsOf,
+  INPUTS,
+} from "../packages/core/src/transform/routeReadback.ts";
 import { splitVec3 } from "../packages/core/src/math/transforms.ts";
 import { routeCases } from "../packages/core/src/transforms/routeCases.ts";
 
@@ -171,85 +178,115 @@ describe("the center term's integer limbs (tg_wk)", () => {
   });
 });
 
-describe("the center term, emulated in int32 and float32", () => {
-  // Every route case's eye is its float64 image of the center, so the
-  // answer is 0 in the output's units.
-  const cases = routeCases();
+/** The WGSL's center term for one axis, emulated. */
+function emulate(x: CenterInputs): number {
+  let s = diff(x.value.p, x.value.at, x.eye.p, x.eye.at);
+  for (const [p, g] of x.terms) {
+    s = addMul(s, p.p, p.at, g.p, g.at);
+  }
+  return value(s);
+}
 
-  it("is within 2 × 10⁻⁸ units of float64 for every route case, separable routes included", () => {
+describe("the center term, emulated in int32 and float32", () => {
+  // Every route case, the eye-away cases and the float32 one past 2^31 m
+  // included, at every row and axis.
+  const cases = routeCases();
+  const lanes = cases.flatMap((c) =>
+    c.rows.flatMap((_, i) =>
+      c.routes.flatMap((u, k) =>
+        [0, 1, 2].map((a) => ({
+          name: `${c.name}, row ${i}, axis ${a}`,
+          inputs: centerInputsOf(c, i, k, a),
+          map: u.image[a]! - (c.eyes ? c.eyes[i]![a]! : u.eye[a]!),
+          scale:
+            Math.abs(u.image[a]!) +
+            Math.abs(c.eyes ? c.eyes[i]![a]! : u.eye[a]!),
+          inputsBound: c.inputs,
+        })),
+      ),
+    ),
+  );
+
+  it("is within the derived bound of its parts' exact value everywhere", () => {
     let worst = 0;
-    let separable = 0;
-    for (const c of cases) {
-      for (const u of c.routes) {
-        const { perDrawLayout: draw, uniformsLayout: view } = u.compiled;
-        const keys = u.compiled.separableParams;
-        separable += keys.length > 0 ? 1 : 0;
-        for (let a = 0; a < 3; a++) {
-          let s = diff(
-            u.record,
-            draw.fields.out! + 4 * a,
-            u.uniforms,
-            view.fields.eye! + 4 * a,
-          );
-          // The float64 sum of the parts the shader reads, which the CPU's rounding of F(c) and the eye leaves.
-          let exact =
-            fromFixParts(u.record, draw.fields.out! + 4 * a) -
-            fromFixParts(u.uniforms, view.fields.eye! + 4 * a);
-          for (const key of keys) {
-            const p = view.fields[`paramParts:${key}`]!;
-            const g = draw.fields[`outG:${key}`]! + 4 * a;
-            s = addMul(s, u.uniforms, p, u.record, g);
-            exact += fromFixParts(u.uniforms, p) * fromFixParts(u.record, g);
-          }
-          const got = value(s);
-          worst = Math.max(worst, Math.abs(got));
-          expect(Math.abs(got - exact), `${c.name}, axis ${a}`).toBeLessThan(
-            2e-8,
-          );
-        }
-      }
+    let away = 0;
+    for (const l of lanes) {
+      const t = centerTermExact(l.inputs);
+      const bound = centerTermBound(l.inputs, t);
+      const err = Math.abs(emulate(l.inputs) - t);
+      expect(err, l.name).toBeLessThanOrEqual(bound);
+      worst = Math.max(worst, err / bound);
+      away += Math.abs(t) > 1 ? 1 : 0;
     }
-    expect(separable).toBeGreaterThan(5);
-    // Against 0, the CPU's float64 derivative G(c) adds its own: a
-    // difference of two values as large as |F(c)|, times the parameter.
-    expect(worst).toBeLessThan(1e-7);
+    expect(away).toBeGreaterThan(100);
+    expect(worst).toBeGreaterThan(0);
   });
 
-  it("keeps the low parts when the sum is far from 0: an eye 1 km away", () => {
-    for (const c of cases.filter(
-      (k) => k.routes[0]!.compiled.separableParams.length > 0,
-    )) {
-      const u = c.routes[0]!;
-      const eye = [
-        u.eye[0]! + 1000.123456789,
-        u.eye[1]! - 250.5,
-        u.eye[2]! + 3.25,
-      ];
-      const uniforms = u.compiled.fillUniforms(u.route, undefined, eye);
-      const { perDrawLayout: draw, uniformsLayout: view } = u.compiled;
-      for (let a = 0; a < 3; a++) {
-        let s = diff(
-          u.record,
-          draw.fields.out! + 4 * a,
-          uniforms,
-          view.fields.eye! + 4 * a,
-        );
-        for (const key of u.compiled.separableParams) {
-          s = addMul(
-            s,
-            uniforms,
-            view.fields[`paramParts:${key}`]!,
-            u.record,
-            draw.fields[`outG:${key}`]! + 4 * a,
-          );
-        }
-        const want = u.eye[a]! - eye[a]!;
-        // float32 of a value up to 1 km: half an ulp is 3 × 10⁻⁵ m; the parts add under 10⁻⁷.
-        expect(
-          Math.abs(value(s) - want),
-          `${c.name}, axis ${a}`,
-        ).toBeLessThanOrEqual(Math.abs(want) * 2 ** -24 + 1e-7);
-      }
+  it("reads parts whose exact value is the float64 map's, to the inputs bound", () => {
+    for (const l of lanes) {
+      const t = centerTermExact(l.inputs);
+      expect(Math.abs(t - l.map), l.name).toBeLessThanOrEqual(
+        l.inputsBound.abs + l.inputsBound.rel * l.scale,
+      );
+    }
+    expect(INPUTS).toEqual({ abs: 1e-7, rel: 0 });
+  });
+
+  it("falls back to float32 past 2^31 units, and the bound still holds against the parts", () => {
+    const far = lanes.filter((l) => l.name.includes("past 2^31"));
+    expect(far.length).toBe(6);
+    // x (6 × 10⁹ m) and z (−2.6 × 10⁹ m) are float32 in the rest; y isn't.
+    const rests = far.map((l) => l.inputs.value.p[l.inputs.value.at + 3]!);
+    expect(Math.abs(rests[0]!)).toBeGreaterThan(2 ** 31);
+    expect(Math.abs(rests[1]!)).toBeLessThan(1);
+    expect(Math.abs(rests[2]!)).toBeGreaterThan(2 ** 31);
+    let cost = 0;
+    for (const l of far) {
+      const t = centerTermExact(l.inputs);
+      expect(Math.abs(emulate(l.inputs) - t)).toBeLessThanOrEqual(
+        centerTermBound(l.inputs, t),
+      );
+      cost = Math.max(cost, Math.abs(t - l.map));
+    }
+    // The float32 parts miss the map by up to 2⁻²⁴ of the values (about 360 m each at 6 × 10⁹ m).
+    expect(cost).toBeGreaterThan(1);
+  });
+
+  it("states the bound's figures at the Earth's surface", () => {
+    const parts = (v: number) => {
+      const out = new Float32Array(4);
+      fixParts(v, out, 0);
+      return { p: out, at: 0 };
+    };
+    const zero = parts(0);
+    // No separable parameter, the eye at the image: a few float32 rests.
+    const none: CenterInputs = {
+      value: parts(4441151.6187),
+      eye: parts(4441151.6187),
+      terms: [],
+    };
+    expect(centerTermBound(none, 0)).toBeLessThan(1e-13);
+    // Flatten's 150 m, an integer: 10⁻¹¹ m.
+    const flat: CenterInputs = {
+      value: zero,
+      eye: zero,
+      terms: [[parts(150), parts(-0.8123456789)]],
+    };
+    expect(centerTermBound(flat, 0)).toBeLessThan(2e-11);
+    // A parameter and a derivative under 10⁴ m with fractions: 5.4 × 10⁻⁷ m.
+    const worst = 0.5 - 2 ** -25;
+    const frac: CenterInputs = {
+      value: zero,
+      eye: zero,
+      terms: [[parts(9999 + worst), parts(9999 + worst)]],
+    };
+    expect(centerTermBound(frac, 0)).toBeGreaterThan(5e-7);
+    expect(centerTermBound(frac, 0)).toBeLessThan(5.5e-7);
+    // The eye d away, one parameter: about 5.4 × 10⁻⁷·d.
+    for (const d of [10, 1e3, 1e5, 1e6]) {
+      const b = centerTermBound(flat, d);
+      expect(b / d).toBeGreaterThan(5.3e-7);
+      expect(b / d).toBeLessThan(6.3e-7);
     }
   });
 });

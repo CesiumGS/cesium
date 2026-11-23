@@ -26,10 +26,70 @@
 // the result's own float32 rounding. The engine's positions do the same
 // (shaders/common.slang `SplitPosition.difference`).
 //
-// Ranges: every value under 2³¹ units (each part then fits its float32
-// exactly), and each product s·G under 2³¹ units, as the engine's positions
-// are valid to ±2³¹ m. Beyond that, `fixParts` puts the whole value in r: the
-// term is then float32.
+// The bound (CS-986), in the output's units (meters for every built-in at
+// the Earth's surface). Write a value as V = W + k·2⁻²⁴ + r, with W its whole
+// units, |k·2⁻²⁴| ≤ 1/2 and |r| ≤ 2⁻²⁵, and φ = k·2⁻²⁴ + r its fraction. The
+// term is T = A − B + Σⱼ Pⱼ·Gⱼ, for F(c) = A, the eye B, and J separable
+// parameters P with derivatives G. Assumptions: each float32 add, subtract,
+// multiply and int-to-float conversion rounds to nearest, within u = 2⁻²⁴ of
+// its result (WGSL, GLSL ES 3.00 and Metal specify it); relaxed math may
+// reorder and contract the float sums in any way (their terms share no
+// factor, so it has nothing to distribute); a result under 2⁻¹²⁶ may flush to
+// 0; int32 add, subtract and multiply wrap modulo 2³² (WGSL and GLSL ES 3.00
+// specify it).
+//
+// - The whole units (h, l): integers, |h| ≤ 2¹⁵ and l < 2¹⁶, exact in float32
+//   and as int32. Their sums and the products W_P·W_G are int32, exact modulo
+//   2³², so exact while the term's whole units are under 2³¹. Error: 0.
+// - The 2⁻²⁴ units (k): |k| ≤ 2²³, exact the same way. W·k·2⁻²⁴ is exact as
+//   limbs (`tg_wk`, every product under 2²⁸), and its carries are shifts of a
+//   sum under 7·2²⁴. Error: 0.
+// - The float32 rests: the terms r_A − r_B and, per parameter, W_P·r_G,
+//   r_P·W_G and φ_P·φ_G. Their magnitudes sum to at most
+//   S = |r_A| + |r_B| + Σⱼ (|W_P|·|r_G| + |r_P|·|W_G| + |φ_P|·|φ_G|).
+//   Each term's own roundings (its product, and φ's) cost at most 3u of it.
+// - The end (`tg_value`): an integer whole, w, and an integer fraction in
+//   [−1/2, 1/2) give the integers' sum exactly, so T = w + fraction + rests.
+//   The float32 sum has n = 3 + 3J terms (f32(w), the fraction, the rests).
+//   Its terms' magnitudes sum to at most Σ = min(|T| + 1 + 2S, 3|T| + 4S): w
+//   is 0 unless |T| ≥ 1/2 − S. In any order its n − 1 adds cost at most
+//   (n − 1)·u·Σ, and f32(w) at most u·Σ.
+//
+// So, to first order in u, with m = n + 3 = 6 + 3J:
+//
+//   |error| ≤ m·u/(1 − m·u) · min(|T| + 1 + 2S, 3|T| + 4S) + m·2⁻¹²⁶
+//
+// against the exact value of the parts (`centerTermBound`). The parts carry
+// each float64 value to 2⁻⁴⁹ units; what the CPU's float64 F(c) and G(c) miss
+// is theirs, not this form's. In meters at the Earth's surface (u =
+// 5.96 × 10⁻⁸):
+//
+// - The eye at the draw's image (|T| under 1 mm), integer-valued separable
+//   parameters (φ_P = 0): under 10⁻¹³ m with none, 10⁻¹¹ m for flatten's
+//   150 m (S ≈ 150·2⁻²⁵).
+// - The eye at the image, a parameter and a derivative under 10⁴ m, each with
+//   a fraction: S up to 0.2506, so up to 5.4 × 10⁻⁷ m for one parameter and
+//   1.4 × 10⁻⁶ m for two, from φ_P·φ_G's float32 sums. The readback's cases
+//   with fractional parameters, eye at the image: transverse Mercator's (its
+//   scale factor) 1.4 × 10⁻⁷ m, radial distortion's 4.5 × 10⁻⁷ image-plane
+//   units, the lattices' 72 and 81 up to 1.8 × 10⁻⁵ m.
+// - The eye d away: about m·u·d, 3.6 × 10⁻⁷·d with no separable parameter
+//   and 5.4 × 10⁻⁷·d with one: at 10 m, 5.9 × 10⁻⁶ m; 1 km, 5.4 × 10⁻⁴ m;
+//   100 km, 0.054 m; 1,000 km, 0.54 m. That is reordering's worst case: the
+//   sum as written rounds once at |T|, 2⁻²⁴·d, which a float32 output of d
+//   costs anyway.
+//
+// So the bound is above 10⁻⁷ m where |T| is over about 0.1 m, or where
+// parameters have fractions; the readback holds each case to the bound at
+// its own parts.
+//
+// The exact range: every value under 2³¹ units (2.1 × 10⁹ m at 1 unit = 1 m,
+// 5.6 times the Moon's distance), and the term and each s·G under 2³¹ units.
+// Beyond it, `fixParts` writes a value whole in r, as float32: that value
+// costs up to 2⁻²⁴ of itself (128 m at 2³¹ m), and the bound above still
+// holds against the parts, with S then as large as the value. A term past
+// 2³¹ units whose values are each under 2³¹ (F(c) and the eye on opposite
+// sides past 2³⁰ units) would wrap by 2³² units: nothing guards that yet.
 
 /** 2⁻²⁴, the unit of a value's third part. */
 const UNIT = 2 ** -24;
@@ -57,6 +117,63 @@ export function fixParts(v: number, out: Float32Array, at: number): void {
   out[at + 1] = whole - 65536 * high;
   out[at + 2] = k;
   out[at + 3] = rest - k * UNIT;
+}
+
+/** One value's four parts, at `p[at … at + 3]`, as `fixParts` writes them. */
+export interface PartsAt {
+  readonly p: ArrayLike<number>;
+  readonly at: number;
+}
+
+/** The center term's inputs on one axis: F(c), the eye, and each separable parameter with its derivative. */
+export interface CenterInputs {
+  readonly value: PartsAt;
+  readonly eye: PartsAt;
+  readonly terms: readonly (readonly [PartsAt, PartsAt])[];
+}
+
+/** A value's parts as an exact integer times 2¹⁵⁰ (every float32 is a multiple of 2⁻¹⁴⁹). */
+function bigParts(v: PartsAt): bigint {
+  const rest = v.p[v.at + 3]! * 2 ** 150;
+  if (!Number.isInteger(rest)) {
+    throw new Error(`a part that isn't a float32: ${v.p[v.at + 3]}`);
+  }
+  return (
+    (BigInt(65536 * v.p[v.at]! + v.p[v.at + 1]!) << 150n) +
+    (BigInt(v.p[v.at + 2]!) << 126n) +
+    BigInt(rest)
+  );
+}
+
+/** The exact value of the center term's parts, rounded once to float64 (tests). */
+export function centerTermExact(x: CenterInputs): number {
+  let sum = (bigParts(x.value) - bigParts(x.eye)) << 150n;
+  for (const [p, g] of x.terms) {
+    sum += bigParts(p) * bigParts(g);
+  }
+  return Number(sum) / 2 ** 300;
+}
+
+/**
+ * The center term's worst-case error against the exact value `t` of its
+ * parts, in its units: the bound derived above (tests and the readback).
+ */
+export function centerTermBound(
+  x: CenterInputs,
+  t = centerTermExact(x),
+): number {
+  const whole = (v: PartsAt) => Math.abs(65536 * v.p[v.at]! + v.p[v.at + 1]!);
+  const rest = (v: PartsAt) => Math.abs(v.p[v.at + 3]!);
+  const fraction = (v: PartsAt) =>
+    Math.abs(v.p[v.at + 2]! * UNIT + v.p[v.at + 3]!);
+  let s = rest(x.value) + rest(x.eye);
+  for (const [p, g] of x.terms) {
+    s += whole(p) * rest(g) + rest(p) * whole(g) + fraction(p) * fraction(g);
+  }
+  const m = 6 + 3 * x.terms.length;
+  const at = Math.abs(t);
+  const sum = Math.min(at + 1 + 2 * s, 3 * at + 4 * s);
+  return ((m * UNIT) / (1 - m * UNIT)) * sum + m * 2 ** -126;
 }
 
 /** The value `fixParts` wrote, in float64 (tests). */

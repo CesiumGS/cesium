@@ -2,11 +2,14 @@
 // float64 map. For every built-in transform, its route (content through the
 // built-in to the world, as in the golden fixtures, `test/transformGolden.test.ts`)
 // is compiled with exact normals. A kernel runs `tgRoute` at offsets from a
-// draw center and writes the position, relative to an eye at the route's
-// image of the center, the center term alone (`tgCenter`, the integer sums of
-// the center constants and the separable parameters, which should be 0 there), and
-// the Jacobian's three columns. The change from the center is the position
-// minus the center term: the float32 work of the residual rules. The WebGPU suite (`bench/irWgsl.ts`) runs a compute
+// draw center and writes the position relative to the eye, the center term
+// alone (`tgCenter`, the integer sums of the center constants, the eye and the
+// separable parameters), and the Jacobian's three columns. The change from
+// the center is the position minus the center term: the float32 work of the
+// residual rules. The eye is the route's image of the center, or, in the
+// eye-away cases (CS-986), each row's own eye, which the kernel writes into
+// its copy of the uniforms. The center term is held against the exact value
+// of the parts it reads, to the bound derived in centerTerm.ts. The WebGPU suite (`bench/irWgsl.ts`) runs a compute
 // kernel around `CompiledRoute.wgsl`, and the WebGL 2 suite (`bench/irGlsl.ts`)
 // a vertex shader around `CompiledRoute.glsl`, read back by transform feedback.
 // Both run the same cases against the same tolerances, so the two emitters are
@@ -23,6 +26,12 @@
 // `src/transforms/routeCases.ts`: the transform core imports none of them.
 //
 // Not exported from the entry point: it is test support.
+import {
+  centerTermBound,
+  centerTermExact,
+  fixParts,
+  type CenterInputs,
+} from "./centerTerm.ts";
 import { compileRoute, type CompiledRoute } from "./compile.ts";
 import { evaluate } from "./evaluate.ts";
 import type { Route } from "./route.ts";
@@ -35,7 +44,9 @@ export interface RouteUnit {
   readonly compiled: CompiledRoute;
   /** The draw center, in the content's frame (the route's input). */
   readonly center: Vec3;
-  /** The eye: the route's float64 image of the center. */
+  /** The route's float64 image of the center. */
+  readonly image: Float64Array;
+  /** The eye `uniforms` hold: the image, unless a case gives each row its own (`RouteCase.eyes`). */
   readonly eye: Float64Array;
   /** The per-draw record (`DrawCenter`), from the CPU in float64. */
   readonly record: Float32Array;
@@ -63,8 +74,25 @@ export interface RouteCase {
    * bound is relative to how far the vertex moved.
    */
   readonly position: Bound;
-  /** The center term (`tgCenter`, in `units`): its scale is |F(c)|, the size of what the sums cancel. */
+  /**
+   * The center term (`tgCenter`, in `units`), against the exact value of the
+   * parts it reads: its scale is the term's derived worst-case error there
+   * (`centerTermBound`), so `CENTER`, `{abs: 0, rel: 1}`, is that bound.
+   */
   readonly center: Bound;
+  /**
+   * The parts the center term reads, against the float64 map (the route's
+   * image of the center less the eye): the CPU's float64 inputs, which every
+   * backend shares. Its scale is |F(c)| plus |eye|, per axis.
+   */
+  readonly inputs: Bound;
+  /**
+   * An eye for each row, in `units` (single-route cases only): the kernel
+   * writes each into its own copy of `RouteUniforms`, so the center term is
+   * read with the eye away from the draw's image. Without it, every row's eye
+   * is the image.
+   */
+  readonly eyes?: readonly Vec3[];
   /** The Jacobian's entries: their scale is the largest entry of J there. */
   readonly jacobian: Bound;
   /**
@@ -103,20 +131,23 @@ export const CORRIDOR_DRAWN_M = 1e-4;
  */
 export const POSITION: Bound = { abs: 0, rel: 4e-5 };
 /**
- * The center term, in the output's units, absolute (CS-921). The shader sums
- * its parts as integers (centerTerm.ts), so relaxed math can't drop the low
- * parts: the GPU's own error is the float32 rounding of the fraction and the
- * rests, under 2 × 10⁻⁸ in a Node emulation of the helpers. What is left is
- * the CPU's: the float64 derivative G(c) of a separable route, a difference
- * of two values as large as |F(c)|, times the parameter (flatten's 150 m).
- * Measured on an Apple M2 (2026-11-22), the same on WebGPU and WebGL 2: at
- * most 6.6 × 10⁻⁸ m (flatten), and 0 to 6 × 10⁻⁸ m for the separable routes
- * at the Earth's surface, which the df64 form missed by 0.08 to 0.29 m.
- * CS-54's bound was 2 × 10⁻⁷ of |F(c)|, at least 4 × 10⁻⁷ for every case
- * (the smallest |F(c)| is 2.06) and 10⁻⁴ m for the corridor; this one is
- * tighter for all of them.
+ * The center term, against the exact value of the parts it reads: the bound
+ * derived in centerTerm.ts (`centerTermBound`), with nothing added (CS-921,
+ * CS-986). It replaces CS-54's 2 × 10⁻⁷ of |F(c)| (1.3 m at the Earth's
+ * surface), a figure measured with the eye at the draw's image.
  */
-export const CENTER: Bound = { abs: 1e-7, rel: 0 };
+export const CENTER: Bound = { abs: 0, rel: 1 };
+/**
+ * The parts against the float64 map: the CPU's inputs, shared by every
+ * backend. Each value in the exact form is its float64 to 2⁻⁴⁹ units; what
+ * is left is two float64 computations' agreement: the record's F(c) and G(c)
+ * (G a difference of two evaluations, each as large as |F(c)|, times the
+ * parameter) against `Route.forward`. That agreement isn't derived: 10⁻⁷ m
+ * is the ceiling CS-921 measured it under (6.6 × 10⁻⁸ m, flatten), kept so
+ * it can't grow unseen. A value past 2³¹ units is float32 (`fixParts`): its
+ * case adds 2⁻²⁴ of its scale.
+ */
+export const INPUTS: Bound = { abs: 1e-7, rel: 0 };
 /** float32 on J's entries, against the largest: measured at most 3.5 × 10⁻⁷ of it. */
 export const JACOBIAN: Bound = { abs: 0, rel: 2e-6 };
 
@@ -154,6 +185,7 @@ export function unitOf(route: Route, center: Vec3, prefix = ""): RouteUnit {
     route,
     compiled,
     center,
+    image: eye,
     eye,
     record: compiled.centerConstants(center),
     uniforms: compiled.fillUniforms(route, undefined, eye),
@@ -162,10 +194,38 @@ export function unitOf(route: Route, center: Vec3, prefix = ""): RouteUnit {
 
 // --- The kernels ------------------------------------------------------------
 
-/** The input buffer: each row's offset, 3 floats (at least one float). */
+/**
+ * Each row's eye as the center term's parts (12 floats a row, `fixParts`
+ * per axis), for a case with `eyes`; else null.
+ */
+export function rowEyeParts(c: RouteCase): Float32Array | null {
+  if (!c.eyes) {
+    return null;
+  }
+  if (c.routes.length !== 1 || c.eyes.length !== c.rows.length) {
+    throw new Error(`${c.name}: one eye a row, for one route`);
+  }
+  const out = new Float32Array(12 * c.eyes.length);
+  c.eyes.forEach((e, i) => {
+    for (let a = 0; a < 3; a++) {
+      fixParts(e[a]!, out, 12 * i + 4 * a);
+    }
+  });
+  return out;
+}
+
+/**
+ * The input buffer: each row's offset, 3 floats (at least one float), then,
+ * for a case with `eyes`, each row's eye parts (`rowEyeParts`).
+ */
 export function packRouteRows(c: RouteCase): Float32Array {
-  const input = new Float32Array(Math.max(3 * c.rows.length, 1));
+  const eyes = rowEyeParts(c);
+  const offsets = 3 * c.rows.length;
+  const input = new Float32Array(Math.max(offsets + (eyes?.length ?? 0), 1));
   c.rows.forEach((r, i) => input.set(r, 3 * i));
+  if (eyes) {
+    input.set(eyes, offsets);
+  }
   return input;
 }
 
@@ -208,10 +268,25 @@ export function routeKernelWgsl(c: RouteCase): {
   c.routes.forEach((u, k) => {
     const p = u.compiled.prefix;
     const base = ROUTE_OUT_FLOATS * k;
+    let view = `ru${k}`;
+    if (c.eyes) {
+      // The row's eye, after the offsets, into a copy of the uniforms.
+      const e = u.compiled.uniformsLayout.fields.eye! >> 2;
+      const at = 3 * rows;
+      view = `uu${k}`;
+      lines.push(`  var uu${k}: ${p}RouteUniforms = ru${k};`);
+      for (let a = 0; a < 3; a++) {
+        const f = (n: number) =>
+          `rin[min(${at}u + 12u * i + ${4 * a + n}u, ni)]`;
+        lines.push(
+          `  uu${k}.v${e + a} = vec4f(${f(0)}, ${f(1)}, ${f(2)}, ${f(3)});`,
+        );
+      }
+    }
     lines.push(
       `  var j${k}: mat3x3f;`,
-      `  let q${k} = ${p}tgRoute(p, rc${k}, ru${k}, &j${k});`,
-      `  let o${k} = ${p}tgCenter(rc${k}, ru${k});`,
+      `  let q${k} = ${p}tgRoute(p, rc${k}, ${view}, &j${k});`,
+      `  let o${k} = ${p}tgCenter(rc${k}, ${view});`,
     );
     const lanes = [`q${k}`, `o${k}`, `j${k}[0]`, `j${k}[1]`, `j${k}[2]`];
     lanes.forEach((v, l) => {
@@ -261,6 +336,14 @@ export function routeKernelGlsl(c: RouteCase): {
       varyings.push(`tg_o${5 * k + l}`);
     }
   });
+  const eyes = rowEyeParts(c);
+  if (eyes) {
+    // Each row's eye parts: three vec4s a row, read by the vertex's index.
+    lines.push(
+      `layout(std140) uniform TgEyes { vec4 e[${eyes.length / 4}]; } tge;`,
+    );
+    blocks.push({ name: "TgEyes", data: eyes });
+  }
   lines.push(
     "in vec3 tg_p;",
     ...varyings.map((v) => `out vec3 ${v};`),
@@ -268,10 +351,22 @@ export function routeKernelGlsl(c: RouteCase): {
   );
   c.routes.forEach((u, k) => {
     const p = u.compiled.prefix;
+    let view = `tgv${k}.u`;
+    if (eyes) {
+      const e = u.compiled.uniformsLayout.fields.eye! >> 2;
+      view = `uu${k}`;
+      lines.push(
+        `  int r${k} = clamp(gl_VertexID, 0, ${c.rows.length - 1});`,
+        `  ${p}RouteUniforms uu${k} = tgv${k}.u;`,
+      );
+      for (let a = 0; a < 3; a++) {
+        lines.push(`  uu${k}.v${e + a} = tge.e[3 * r${k} + ${a}];`);
+      }
+    }
     lines.push(
       `  mat3 j${k};`,
-      `  tg_o${5 * k} = ${p}tgRoute(tg_p, tgd${k}.c, tgv${k}.u, j${k});`,
-      `  tg_o${5 * k + 1} = ${p}tgCenter(tgd${k}.c, tgv${k}.u);`,
+      `  tg_o${5 * k} = ${p}tgRoute(tg_p, tgd${k}.c, ${view}, j${k});`,
+      `  tg_o${5 * k + 1} = ${p}tgCenter(tgd${k}.c, ${view});`,
       `  tg_o${5 * k + 2} = j${k}[0];`,
       `  tg_o${5 * k + 3} = j${k}[1];`,
       `  tg_o${5 * k + 4} = j${k}[2];`,
@@ -306,6 +401,8 @@ export interface RouteReadbackRow {
   compileMessages: string[];
   position: BoundResult;
   center: BoundResult;
+  /** The CPU's inputs (the parts) against the float64 map. */
+  inputs: BoundResult;
   jacobian: BoundResult;
   /** The drawn position's result, for a case that sets `drawn`; else null. */
   drawn: BoundResult | null;
@@ -332,16 +429,75 @@ export function newRouteRow(c: RouteCase): RouteReadbackRow {
     compileMessages: [],
     position: bound(c.position),
     center: bound(c.center),
+    inputs: bound(c.inputs),
     jacobian: bound(c.jacobian),
     drawn: c.drawn ? bound(c.drawn) : null,
     pass: false,
   };
 }
 
-/** Each route's float64 answers at each row: the change from the center, the center term (0) and J's columns. */
-export function expectedRoute(c: RouteCase): Float64Array {
+/** The eye row `row` reads for route `u`: its own (`RouteCase.eyes`), or the unit's. */
+function eyeAt(c: RouteCase, u: RouteUnit, row: number): ArrayLike<number> {
+  return c.eyes ? c.eyes[row]! : u.eye;
+}
+
+/**
+ * The parts the center term reads on axis `a`, for row `row` and route `k`:
+ * F(c) from the record, the eye (the row's own, or the uniforms'), and each
+ * separable parameter with its derivative, in the shader's order.
+ */
+export function centerInputsOf(
+  c: RouteCase,
+  row: number,
+  k: number,
+  a: number,
+): CenterInputs {
+  const u = c.routes[k]!;
+  const { perDrawLayout: draw, uniformsLayout: view } = u.compiled;
+  const eyes = rowEyeParts(c);
+  return {
+    value: { p: u.record, at: draw.fields.out! + 4 * a },
+    eye: eyes
+      ? { p: eyes, at: 12 * row + 4 * a }
+      : { p: u.uniforms, at: view.fields.eye! + 4 * a },
+    terms: u.compiled.separableParams.map(
+      (key) =>
+        [
+          { p: u.uniforms, at: view.fields[`paramParts:${key}`]! },
+          { p: u.record, at: draw.fields[`outG:${key}`]! + 4 * a },
+        ] as const,
+    ),
+  };
+}
+
+/** One lane's float64 answers: what an exact GPU writes, and what each bound compares. */
+interface Expected {
+  /** What an exact GPU writes (`routeOutStride` floats a row): position, center term, J. */
+  readonly gpu: Float64Array;
+  /** The change from the center, q(x) − q(c), per row, route and axis (3 a route). */
+  readonly change: Float64Array;
+  /** The drawn position, q(x) − eye, the same way. */
+  readonly drawn: Float64Array;
+  /** The center term's derived bound at its parts, the same way. */
+  readonly centerBound: Float64Array;
+  /** The float64 map's center term, q(c) − eye, the same way. */
+  readonly map: Float64Array;
+  /** The inputs bound's scale, |q(c)| + |eye| per axis, the same way. */
+  readonly inputsScale: Float64Array;
+}
+
+function expectations(c: RouteCase): Expected {
   const stride = routeOutStride(c);
-  const out = new Float64Array(stride * c.rows.length);
+  const n = c.rows.length;
+  const lanes = 3 * c.routes.length;
+  const e: Expected = {
+    gpu: new Float64Array(stride * n),
+    change: new Float64Array(lanes * n),
+    drawn: new Float64Array(lanes * n),
+    centerBound: new Float64Array(lanes * n),
+    map: new Float64Array(lanes * n),
+    inputsScale: new Float64Array(lanes * n),
+  };
   c.routes.forEach((u, k) => {
     // The kernels and the expected J are one curvilinear step's.
     if (u.compiled.steps.length !== 1) {
@@ -362,19 +518,37 @@ export function expectedRoute(c: RouteCase): Float64Array {
         u.center[2] + Math.fround(r[2]),
       ];
       const q = u.route.forward(x);
+      const eye = eyeAt(c, u, i);
       // The step's float64 autodiff J (row-major): the content's affine is the identity.
       const j = evaluate(step.jacobian!, x, local);
       const at = stride * i + ROUTE_OUT_FLOATS * k;
       for (let a = 0; a < 3; a++) {
-        out[at + a] = q[a]! - u.eye[a]!;
-        out[at + 3 + a] = 0;
+        const lane = lanes * i + 3 * k + a;
+        const inputs = centerInputsOf(c, i, k, a);
+        const t = centerTermExact(inputs);
+        e.change[lane] = q[a]! - u.image[a]!;
+        e.drawn[lane] = q[a]! - eye[a]!;
+        e.centerBound[lane] = centerTermBound(inputs, t);
+        e.map[lane] = u.image[a]! - eye[a]!;
+        e.inputsScale[lane] = Math.abs(u.image[a]!) + Math.abs(eye[a]!);
+        e.gpu[at + a] = t + e.change[lane]!;
+        e.gpu[at + 3 + a] = t;
         for (let col = 0; col < 3; col++) {
-          out[at + 6 + 3 * col + a] = j[3 * a + col]!;
+          e.gpu[at + 6 + 3 * col + a] = j[3 * a + col]!;
         }
       }
     });
   });
-  return out;
+  return e;
+}
+
+/**
+ * What an exact GPU writes at each row (`routeOutStride` floats): each
+ * route's position (the center term plus the change), its center term (the
+ * exact value of the parts it reads) and J's columns, in float64.
+ */
+export function expectedRoute(c: RouteCase): Float64Array {
+  return expectations(c).gpu;
 }
 
 function record(
@@ -408,37 +582,63 @@ export function compareRoute(
   c: RouteCase,
   gpu: Float32Array,
 ): void {
-  const expected = expectedRoute(c);
+  const expected = expectations(c);
   const stride = routeOutStride(c);
+  const lanes = 3 * c.routes.length;
   c.rows.forEach((r, i) => {
     const moved = Math.hypot(r[0], r[1], r[2]);
     c.routes.forEach((u, k) => {
       const at = stride * i + ROUTE_OUT_FLOATS * k;
-      const size = Math.hypot(u.eye[0]!, u.eye[1]!, u.eye[2]!);
+      const size = Math.hypot(u.image[0]!, u.image[1]!, u.image[2]!);
       let jmax = 0;
       for (let e = 6; e < ROUTE_OUT_FLOATS; e++) {
-        jmax = Math.max(jmax, Math.abs(expected[at + e]!));
+        jmax = Math.max(jmax, Math.abs(expected.gpu[at + e]!));
       }
       for (let e = 0; e < ROUTE_OUT_FLOATS; e++) {
         const lane = ROUTE_OUT_FLOATS * k + e;
-        const cpu = expected[at + e]!;
+        const cpu = expected.gpu[at + e]!;
         if (e < 3) {
+          const l = lanes * i + 3 * k + e;
           // The change: the position less the GPU's own center term.
           const change = gpu[at + e]! - gpu[at + 3 + e]!;
-          record(row.position, i, lane, change, cpu, moved * jmax);
+          record(
+            row.position,
+            i,
+            lane,
+            change,
+            expected.change[l]!,
+            moved * jmax,
+          );
           if (row.drawn) {
             // The drawn position: the GPU's position as written.
-            record(row.drawn, i, lane, gpu[at + e]!, cpu, size);
+            record(row.drawn, i, lane, gpu[at + e]!, expected.drawn[l]!, size);
           }
         } else if (e < 6) {
-          record(row.center, i, lane, gpu[at + e]!, cpu, size);
+          const l = lanes * i + 3 * k + e - 3;
+          record(
+            row.center,
+            i,
+            lane,
+            gpu[at + e]!,
+            cpu,
+            expected.centerBound[l]!,
+          );
+          // The CPU's parts against the map: the same on every backend.
+          record(
+            row.inputs,
+            i,
+            lane,
+            cpu,
+            expected.map[l]!,
+            expected.inputsScale[l]!,
+          );
         } else {
           record(row.jacobian, i, lane, gpu[at + e]!, cpu, jmax);
         }
       }
     });
   });
-  const bounds = [row.position, row.center, row.jacobian];
+  const bounds = [row.position, row.center, row.inputs, row.jacobian];
   if (row.drawn) {
     bounds.push(row.drawn);
   }

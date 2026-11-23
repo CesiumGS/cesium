@@ -43,6 +43,7 @@ import {
   CENTER,
   CORRIDOR_CHANGE_M,
   CORRIDOR_DRAWN_M,
+  INPUTS,
   JACOBIAN,
   offsetsOf,
   POSITION,
@@ -447,6 +448,32 @@ const BUILTINS: readonly Builtin[] = [
   },
 ];
 
+/** The built-ins whose center term the readback also reads with the eye away from the draw. */
+const EYE_ROUTES = [
+  "verticalExaggeration",
+  "heightOffset",
+  "flatten",
+  "corridorUnroll, lines and arcs",
+  "corridorUnroll, a polyline",
+  "geographicToGeocentric",
+] as const;
+
+/** The eye's offsets from the draw's image: 0, then 10 m, 1 km, 100 km and 1,000 km in three directions. */
+function eyeOffsets(): Vec3[] {
+  const directions: Vec3[] = [
+    [1, 0, 0],
+    [1 / 3, -2 / 3, 2 / 3],
+    [-0.6, 0.48, -0.64],
+  ];
+  const out: Vec3[] = [[0, 0, 0]];
+  for (const d of [10, 1e3, 1e5, 1e6]) {
+    for (const v of directions) {
+      out.push([d * v[0], d * v[1], d * v[2]]);
+    }
+  }
+  return out;
+}
+
 /** The built-in's route: content (the identity) through it to the world. */
 function builtinRoute(b: Builtin): Route {
   const graph = new TransformGraph();
@@ -473,11 +500,63 @@ export function routeCases(): RouteCase[] {
         rows: offsetsOf(b.half),
         position: b.position ?? POSITION,
         center: b.center ?? CENTER,
+        inputs: INPUTS,
         jacobian: b.jacobian ?? JACOBIAN,
         ...(b.drawn ? { drawn: b.drawn } : {}),
       });
     });
   }
+  // The eye away from the draw's image (CS-986): the separable routes, the
+  // corridors and a draw at the Earth's surface without separable parameters.
+  for (const name of EYE_ROUTES) {
+    const b = BUILTINS.find((k) => k.name === name)!;
+    const route = builtinRoute(b);
+    b.centers.forEach((center, k) => {
+      const unit = unitOf(route, center);
+      const eyes = eyeOffsets().map((d): Vec3 => [
+        unit.image[0]! + d[0],
+        unit.image[1]! + d[1],
+        unit.image[2]! + d[2],
+      ]);
+      out.push({
+        name: `route: ${b.name} @${k}, the eye away`,
+        units: b.units,
+        routes: [unit],
+        // The center term doesn't read the offset: each row is the center.
+        rows: eyes.map((): Vec3 => [0, 0, 0]),
+        eyes,
+        position: b.position ?? POSITION,
+        center: CENTER,
+        inputs: INPUTS,
+        jacobian: b.jacobian ?? JACOBIAN,
+      });
+    });
+  }
+  // Past the exact range: a draw 3 × 10⁹ m out, whose F(c) fixParts writes
+  // as float32 on x and z (6 × 10⁹ m and −2.6 × 10⁹ m after the scale), with
+  // the eye at the image and 1,234.5678 m away.
+  const far = BUILTINS.find((b) => b.name === "scaleAbout")!;
+  const farUnit = unitOf(builtinRoute(far), [3e9, -2.5e9, 1.75e9]);
+  const farEyes = [
+    [0, 0, 0],
+    [1234.5678, -0.25, 17.125],
+  ].map((d): Vec3 => [
+    farUnit.image[0]! + d[0]!,
+    farUnit.image[1]! + d[1]!,
+    farUnit.image[2]! + d[2]!,
+  ]);
+  out.push({
+    name: "route: scaleAbout past 2^31 m, float32 parts",
+    units: far.units,
+    routes: [farUnit],
+    rows: farEyes.map((): Vec3 => [0, 0, 0]),
+    eyes: farEyes,
+    position: POSITION,
+    center: CENTER,
+    // Each value past 2³¹ units is float32: 2⁻²⁴ of it.
+    inputs: { abs: INPUTS.abs, rel: 2 ** -24 },
+    jacobian: JACOBIAN,
+  });
   const twist = BUILTINS.find((b) => b.name === "twist")!;
   const corridor = BUILTINS.find(
     (b) => b.name === "corridorUnroll, lines and arcs",
@@ -495,6 +574,7 @@ export function routeCases(): RouteCase[] {
     // The center bound, and the corridor's drawn bound, in meters, for both
     // routes: the twist's center term is meters near the origin.
     center: CENTER,
+    inputs: INPUTS,
     jacobian: JACOBIAN,
     drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   });

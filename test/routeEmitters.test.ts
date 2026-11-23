@@ -466,9 +466,12 @@ describe("the WebGL 2 corridor baseline, its float64 half", () => {
   }
 
   it("the GPU half holds the drawn position, and the change from the draw center, to 0.1 mm, in meters", () => {
+    // The eye at the image: the eye-away cases hold the center term alone,
+    // since a float32 position d from the eye can't keep 0.1 mm past 1.7 km.
     const corridor = cases.filter(
       (c) =>
-        c.name.startsWith("route: corridorUnroll") || c.routes.length === 2,
+        !c.eyes &&
+        (c.name.startsWith("route: corridorUnroll") || c.routes.length === 2),
     );
     expect(corridor.length).toBeGreaterThan(0);
     expect(CORRIDOR_CHANGE_M).toBe(1e-4);
@@ -477,14 +480,15 @@ describe("the WebGL 2 corridor baseline, its float64 half", () => {
       expect(c.units).toBe("m");
       expect(c.position.abs).toBe(CORRIDOR_CHANGE_M);
       expect(c.drawn, c.name).toEqual({ abs: CORRIDOR_DRAWN_M, rel: 0 });
-      // The center term may not take the rest: it is held in meters, to 10⁻⁷ m (CS-921).
+      // The center term may not take the rest: it is held to its derived
+      // bound at its own parts (CS-921, CS-986), under 10⁻¹³ m here.
       expect(c.center, c.name).toEqual(CENTER);
-      expect(CENTER).toEqual({ abs: 1e-7, rel: 0 });
+      expect(CENTER).toEqual({ abs: 0, rel: 1 });
     }
     // The readback's comparison, on GPU answers made from the float64 ones:
     // exact, then off by 0.07 mm in the center term and 0.07 mm in the change.
-    // The change bound passes them; the center bound (10⁻⁷ m since CS-921)
-    // and the drawn position (0.14 mm) fail.
+    // The change bound passes them; the center bound (its derived bound
+    // since CS-921) and the drawn position (0.14 mm) fail.
     const c = corridor[0]!;
     const want = expectedRoute(c);
     const exact = Float32Array.from(want);
