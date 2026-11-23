@@ -38,7 +38,7 @@
   },
   "env": {
     "worktree_setup": [
-      "npm ci --ignore-scripts --no-audit --no-fund --prefer-offline"
+      "pnpm install --frozen-lockfile --ignore-scripts --prefer-offline"
     ]
   },
   "ids": {
