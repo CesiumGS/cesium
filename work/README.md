@@ -138,7 +138,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 30 of 62 done, 15 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 31 of 62 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -212,7 +212,7 @@ No milestone
 - [?] [CS-1058](./items/CS-1058-fitted-draws-lose-their-exact-center-on-apple.md) Fitted draws lose their "exact" center on Apple GPUs too. Proposed. Needs nothing.
 - [?] [CS-1078](./items/CS-1078-a-compiled-route-s-center-term-wraps-when-f-c.md) A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
 - [x] [CS-1096](./items/CS-1096-how-does-cs-921-s-center-term-handle-values.md) decision: How does CS-921's center term handle values past 2³⁰ units?. Done.
-- [ ] [CS-1104](./items/CS-1104-merge-cs-921-the-center-term-as-integers-with-a.md) decision: Merge CS-921, the center term as integers with a derived bound. Needs nothing. Decided by owner.
+- [x] [CS-1104](./items/CS-1104-merge-cs-921-the-center-term-as-integers-with-a.md) decision: Merge CS-921, the center term as integers with a derived bound. Done.
 
 ### Live MaterialX graph editing
 
@@ -1054,7 +1054,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 10 of 39 done, 17 ready, 0 blocked, 12 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 10 of 40 done, 17 ready, 0 blocked, 13 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -1103,10 +1103,11 @@ No milestone
 - [?] [CS-1039](./items/CS-1039-the-gates-own-definitions-aren-t-owner-paths.md) The gates' own definitions aren't owner paths. Proposed. Needs nothing.
 - [?] [CS-1040](./items/CS-1040-wall-clock-assertions-in-the-unit-suite-fail.md) Wall-clock assertions in the unit suite fail under load and train reruns. Proposed. Needs nothing.
 - [?] [CS-1041](./items/CS-1041-source-scans-that-pass-when-they-find-no-files.md) Source scans that pass when they find no files. Proposed. Needs nothing.
+- [?] [CS-1106](./items/CS-1106-dyno-refuses-to-start-a-run-whose-scenes-need.md) Dyno refuses to start a run whose scenes need an ion token when it has none, instead of recording invalid runs. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 60 of 99 done, 17 ready, 13 blocked, 9 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 61 of 100 done, 16 ready, 13 blocked, 10 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1231,8 +1232,9 @@ No milestone
 - [x] [CS-929](./items/CS-929-merge-cs-392-finding-runs-from-the-terminal.md) decision: Merge CS-392, finding runs from the terminal (runs, show, pin). Done.
 - [ ] [CS-992](./items/CS-992-dyno-loads-an-outside-module-and-benchmarks-it.md) Dyno loads an outside module and benchmarks it as it does the built-in sources. Needs nothing.
 - [ ] [CS-1008](./items/CS-1008-dyno-s-quiet-rule-gets-a-wait-limit-after-which.md) Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C). Needs CS-1004 (Benchmarks, parity and image regression).
-- [ ] [CS-1095](./items/CS-1095-merge-cs-395-reference-images-and-the-sweep-view.md) decision: Merge CS-395, reference images and the sweep view. Needs nothing. Decided by owner.
+- [x] [CS-1095](./items/CS-1095-merge-cs-395-reference-images-and-the-sweep-view.md) decision: Merge CS-395, reference images and the sweep view. Done.
 - [?] [CS-1099](./items/CS-1099-example-captures-without-the-host-s-warning.md) Example captures without the host's warning banner. Proposed. Needs CS-394.
+- [?] [CS-1107](./items/CS-1107-the-sweep-view-reads-at-a-glance-a-ux-pass-on.md) The sweep view reads at a glance: a UX pass on CS-395's small multiples, image grid and noise wording. Proposed. Needs CS-395.
 
 ### The public API reviews
 
@@ -1390,7 +1392,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 35 of 52 done, 3 ready, 0 blocked, 14 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 36 of 52 done, 2 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1448,7 +1450,7 @@ No milestone
 - [x] [CS-1090](./items/CS-1090-the-pnpm-spike-s-decision-move-2-0-from-npm-to.md) decision: The pnpm spike's decision: move 2.0 from npm to pnpm, stay on npm, or take a middle option?. Done.
 - [ ] [CS-1091](./items/CS-1091-2-0-installs-with-pnpm-pnpm-lock-yaml-pnpm-in.md) 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A). Needs CS-951 and CS-1090.
 - [x] [CS-1092](./items/CS-1092-merge-cs-951-the-pnpm-spike-s-write-up.md) decision: Merge CS-951, the pnpm spike's write-up. Done.
-- [ ] [CS-1105](./items/CS-1105-merge-cs-1091-2-0-installs-with-pnpm.md) decision: Merge CS-1091, 2.0 installs with pnpm. Needs nothing. Decided by owner.
+- [x] [CS-1105](./items/CS-1105-merge-cs-1091-2-0-installs-with-pnpm.md) decision: Merge CS-1091, 2.0 installs with pnpm. Done.
 
 ### Packaging and package names
 

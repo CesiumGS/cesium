@@ -34,7 +34,6 @@ CS-10 Cesium IR
   CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
   CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
   CS-989  Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
-  CS-1104  decision: Merge CS-921, the center term as integers with a derived bound
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -253,7 +252,6 @@ CS-389 Dyno as the development harness
   CS-856  Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items
   CS-992  Dyno loads an outside module and benchmarks it as it does the built-in sources
   CS-1008  Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C)
-  CS-1095  decision: Merge CS-395, reference images and the sweep view
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -307,7 +305,6 @@ CS-18 The work tracker
 CS-609 A clean 2.0 branch and a modern build
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
   CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
-  CS-1105  decision: Merge CS-1091, 2.0 installs with pnpm
 
-240 ready
+237 ready
 ```

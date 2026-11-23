@@ -63,14 +63,5 @@ CS-199 Dyno hardening, packaging and CI
 CS-16 Streaming robustness
   CS-1032  Merge CS-144, the fault-injection harness (owner)
 
-CS-389 Dyno as the development harness
-  CS-1095  Merge CS-395, reference images and the sweep view (owner)
-
-CS-10 Cesium IR
-  CS-1104  Merge CS-921, the center term as integers with a derived bound (owner)
-
-CS-609 A clean 2.0 branch and a modern build
-  CS-1105  Merge CS-1091, 2.0 installs with pnpm (owner)
-
-22 open decision(s) for owner
+19 open decision(s) for owner
 ```

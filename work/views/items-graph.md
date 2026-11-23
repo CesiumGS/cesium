@@ -115,7 +115,7 @@ graph LR
     CS_1058["CS-1058 Fitted draws lose their 'exact' center on Apple GPUs too"]:::proposed
     CS_1078["CS-1078 A compiled route's center term wraps when F(c) minus the eye p"]:::proposed
     CS_1096["CS-1096 How does CS-921's center term handle values past 2³⁰ units?"]:::done
-    CS_1104["CS-1104 Merge CS-921, the center term as integers with a derived bound"]:::decision
+    CS_1104["CS-1104 Merge CS-921, the center term as integers with a derived bound"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -709,6 +709,7 @@ graph LR
     CS_1039["CS-1039 The gates' own definitions aren't owner paths"]:::proposed
     CS_1040["CS-1040 Wall-clock assertions in the unit suite fail under load and tr"]:::proposed
     CS_1041["CS-1041 Source scans that pass when they find no files"]:::proposed
+    CS_1106["CS-1106 Dyno refuses to start a run whose scenes need an ion token whe"]:::proposed
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -808,8 +809,9 @@ graph LR
     CS_929["CS-929 Merge CS-392, finding runs from the terminal (runs, show, pin)"]:::done
     CS_992["CS-992 Dyno loads an outside module and benchmarks it as it does the b"]:::open
     CS_1008["CS-1008 Dyno's quiet rule gets a wait limit, after which the orchestra"]:::open
-    CS_1095["CS-1095 Merge CS-395, reference images and the sweep view"]:::decision
+    CS_1095["CS-1095 Merge CS-395, reference images and the sweep view"]:::done
     CS_1099["CS-1099 Example captures without the host's warning banner"]:::proposed
+    CS_1107["CS-1107 The sweep view reads at a glance: a UX pass on CS-395's small "]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -976,7 +978,7 @@ graph LR
     CS_1090["CS-1090 The pnpm spike's decision: move 2.0 from npm to pnpm, stay on "]:::done
     CS_1091["CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup"]:::open
     CS_1092["CS-1092 Merge CS-951, the pnpm spike's write-up"]:::done
-    CS_1105["CS-1105 Merge CS-1091, 2.0 installs with pnpm"]:::decision
+    CS_1105["CS-1105 Merge CS-1091, 2.0 installs with pnpm"]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1976,6 +1978,7 @@ graph LR
   CS_1090 --> CS_1091
   CS_966 --> CS_1098
   CS_394 --> CS_1099
+  CS_395 --> CS_1107
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

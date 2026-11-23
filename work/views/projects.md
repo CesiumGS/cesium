@@ -12,7 +12,7 @@ CS-9 The WebGL 2 renderer [Planned], led by owner
   waits on: CS-10 Cesium IR (3); CS-13 The worker-mode façade (1)
   waited on by: CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
-  30 of 62 done, 15 ready, 10 blocked, 7 proposed
+  31 of 62 done, 14 ready, 10 blocked, 7 proposed
   waits on: nothing open
   waited on by: CS-9 The WebGL 2 renderer (3); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (3); CS-17 The transform graph (1); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (6)
 CS-11 Live MaterialX graph editing [Planned], led by owner
@@ -96,11 +96,11 @@ CS-198 GPU-driven rendering and capacities [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2)
 CS-199 Dyno hardening, packaging and CI [Planned], led by owner
-  10 of 39 done, 17 ready, 0 blocked, 12 proposed
+  10 of 40 done, 17 ready, 0 blocked, 13 proposed
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  60 of 99 done, 17 ready, 13 blocked, 9 proposed
+  61 of 100 done, 16 ready, 13 blocked, 10 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (8)
 CS-437 The public API reviews [Planned], led by owner
@@ -120,7 +120,7 @@ CS-596 Trust and evals [Planned], led by owner
   waits on: CS-195 Benchmarks, parity and image regression (1)
   waited on by: CS-18 The work tracker (3)
 CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
-  35 of 52 done, 3 ready, 0 blocked, 14 proposed
+  36 of 52 done, 2 ready, 0 blocked, 14 proposed
   waits on: CS-615 Packaging and package names (1)
   waited on by: CS-18 The work tracker (2)
 CS-615 Packaging and package names [Planned], led by owner
