@@ -2,10 +2,14 @@
 id: CS-1105
 title: Merge CS-1091, 2.0 installs with pnpm
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge; worktrees then install with pnpm."
+answered_at: 2026-11-23T22:30:28.995Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

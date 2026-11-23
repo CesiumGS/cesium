@@ -2,10 +2,14 @@
 id: CS-1104
 title: Merge CS-921, the center term as integers with a derived bound
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge; CS-941 and CS-955 can then start."
+answered_at: 2026-11-23T22:30:25.445Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
