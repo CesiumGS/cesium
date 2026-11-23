@@ -363,7 +363,9 @@ entry	name	kind	tier
 .	Rig	interface	-
 .	RigOrientation	type	-
 .	RigPosition	interface	-
+.	Route	interface	-
 .	RouteAccuracy	interface	-
+.	RouteStep	type	-
 .	RowIdentity	interface	experimental
 .	RowSink	interface	experimental
 .	STAGES	const	-
@@ -579,6 +581,7 @@ entry	name	kind	tier
 .	observerPointSpread	function	-
 .	orbitBasis	function	-
 .	orbitPose	function	-
+.	parseStableId	function	-
 .	placePosition	function	-
 .	pointIn	function	-
 .	radialDistortion	function	-
@@ -601,6 +604,7 @@ entry	name	kind	tier
 .	sectionTile	function	-
 .	slangPostShader	function	-
 .	stableIdOf	function	-
+.	stableIdToHex	function	-
 .	summarizeContent	function	-
 .	surfaceCount	function	-
 .	tableResolver	function	-
@@ -957,6 +961,7 @@ ui	OrbitContext	interface	-
 ui	OrbitOptions	interface	-
 ui	OrbitPlan	interface	-
 ui	PickInfo	interface	-
+ui	Recordable	interface	-
 ui	StagePercentiles	interface	-
 ui	TickEvent	type	-
 ui	TilesetSource	type	-
@@ -1342,7 +1347,9 @@ ui	zoneOf	function	-
 @cesium/core	Rig	interface	-
 @cesium/core	RigOrientation	type	-
 @cesium/core	RigPosition	interface	-
+@cesium/core	Route	interface	-
 @cesium/core	RouteAccuracy	interface	-
+@cesium/core	RouteStep	type	-
 @cesium/core	RowIdentity	interface	experimental
 @cesium/core	RowSink	interface	experimental
 @cesium/core	STAGES	const	-
@@ -1558,6 +1565,7 @@ ui	zoneOf	function	-
 @cesium/core	observerPointSpread	function	-
 @cesium/core	orbitBasis	function	-
 @cesium/core	orbitPose	function	-
+@cesium/core	parseStableId	function	-
 @cesium/core	placePosition	function	-
 @cesium/core	pointIn	function	-
 @cesium/core	radialDistortion	function	-
@@ -1580,6 +1588,7 @@ ui	zoneOf	function	-
 @cesium/core	sectionTile	function	-
 @cesium/core	slangPostShader	function	-
 @cesium/core	stableIdOf	function	-
+@cesium/core	stableIdToHex	function	-
 @cesium/core	summarizeContent	function	-
 @cesium/core	surfaceCount	function	-
 @cesium/core	tableResolver	function	-
@@ -2000,6 +2009,7 @@ ui	zoneOf	function	-
 @cesium/ui	OrbitOptions	interface	-
 @cesium/ui	OrbitPlan	interface	-
 @cesium/ui	PickInfo	interface	-
+@cesium/ui	Recordable	interface	-
 @cesium/ui	StagePercentiles	interface	-
 @cesium/ui	TickEvent	type	-
 @cesium/ui	TilesetSource	type	-
