@@ -220,6 +220,14 @@ describe(
       expect(globe.tilesLoaded).toBe(false);
     });
 
+    it("tileLoadTimeSlice is passed to the surface", function () {
+      expect(globe.tileLoadTimeSlice).toBe(5);
+
+      globe.tileLoadTimeSlice = 50;
+      scene.render();
+      expect(globe._surface.tileLoadTimeSlice).toBe(50);
+    });
+
     it("renders terrain with enableLighting", async function () {
       const renderOptions = {
         scene: scene,
