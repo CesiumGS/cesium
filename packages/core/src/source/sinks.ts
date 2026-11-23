@@ -55,41 +55,58 @@ export interface RowAt {
 }
 
 /**
+ * Query parameters (and option keys) that are credentials or signatures,
+ * never kept in a canonical source, compared without case (CS-1080 A): a
+ * feature ID is hashed from its source and saved by hosts and peers, so a
+ * secret in it would leak, and a value that changes each session (a token,
+ * a signature, a signing time or an expiry) would give new feature IDs on
+ * every open. OAuth's `access_token`, plain tokens and API keys; AWS S3's
+ * and Google Cloud Storage's signed URLs (V4); Azure's shared access
+ * signatures; and CloudFront's signed URLs (`Signature`, `Expires`,
+ * `Key-Pair-Id`, `Policy`).
+ * @internal
+ */
+export const CREDENTIAL_PARAMS: ReadonlySet<string> = new Set(
+  [
+    "access_token",
+    "token",
+    "key",
+    "apikey",
+    "api_key",
+    "X-Amz-Signature",
+    "X-Amz-Credential",
+    "X-Amz-Security-Token",
+    "X-Amz-Date",
+    "X-Amz-Expires",
+    "X-Goog-Signature",
+    "X-Goog-Credential",
+    "X-Goog-Date",
+    "X-Goog-Expires",
+    "sig",
+    "se",
+    "st",
+    "sp",
+    "sv",
+    "sr",
+    "Signature",
+    "Expires",
+    "Key-Pair-Id",
+    "Policy",
+  ].map((name) => name.toLowerCase()),
+);
+
+/**
  * The query parameters a URL keeps in its canonical source when neither
- * its resolver nor its kind declares any (`SourceIdentity.params`): none.
- * This is the one place the default is made, and it is the owner's call
- * (the report's question): keep the whole query but credentials and
- * signatures (A), none (B, today's), or the whole query but credentials (C).
- * Credentials go whatever it returns.
+ * its resolver nor its kind declares any (`SourceIdentity.params`): every
+ * one but the credentials and signatures in `CREDENTIAL_PARAMS` (CS-1080 A).
+ * A declaration replaces it. This is the one place the default is made.
  * @internal
  */
 export function undeclaredParams(url: URL): readonly string[] {
-  void url;
-  return [];
+  return [...new Set(url.searchParams.keys())].filter(
+    (name) => !CREDENTIAL_PARAMS.has(name.toLowerCase()),
+  );
 }
-
-/**
- * Query parameters and option keys the engine knows as credentials or
- * signatures, never kept, compared without case: OAuth's `access_token`,
- * plain tokens and keys, and the signed-URL schemes of S3, Google Cloud
- * Storage and Azure.
- */
-const CREDENTIAL_NAMES = new Set([
-  "access_token",
-  "token",
-  "key",
-  "apikey",
-  "api_key",
-  "api-key",
-  "signature",
-  "sig",
-  "se",
-  "sp",
-  "sv",
-  "policy",
-  "key-pair-id",
-]);
-const CREDENTIAL_PREFIXES = /^(?:x-amz-|x-goog-)/i;
 
 /** Whether `name` is a credential: known, the asset's credential's own, or declared one. */
 function isCredential(
@@ -99,8 +116,7 @@ function isCredential(
 ): boolean {
   const lower = name.toLowerCase();
   return (
-    CREDENTIAL_NAMES.has(lower) ||
-    CREDENTIAL_PREFIXES.test(lower) ||
+    CREDENTIAL_PARAMS.has(lower) ||
     declared.has(lower) ||
     Object.keys(asset.credentials?.query ?? {}).some(
       (k) => k.toLowerCase() === lower,
@@ -153,9 +169,11 @@ const byName = (a: readonly [string, string], b: readonly [string, string]) =>
  *   and path (a token in the path stays: nothing says it is one), with no
  *   user information, query or fragment, except a Cesium ion asset's
  *   version (`v`, percent-encoded); a data URI becomes its bytes' hash.
- * - The query parameters that select its content (`SourceIdentity.params`,
- *   its resolver's and its kind's, else `undeclaredParams`), with their
- *   values, sorted and percent-encoded, after `?` (or `&` after ion's `v`).
+ * - The query parameters that select its content, with their values,
+ *   sorted by name and then value and percent-encoded, after `?` (or `&`
+ *   after ion's `v`): those its resolver and its kind declare
+ *   (`SourceIdentity.params`), or, with no declaration, every one but the
+ *   credentials and signatures (`undeclaredParams`, CS-1080 A).
  * - After `#`, which a canonical URL never holds: its `version` (when it
  *   isn't ion's `v` already) and the options that select its content
  *   (`SourceIdentity.options`), each `option.<key>` with its value as JSON.
@@ -174,10 +192,15 @@ export function assetSource(
       namesOf(d?.credentials, "credentials").map((n) => n.toLowerCase()),
     ),
   );
-  const params = new Set([
-    ...declared.flatMap((d) => namesOf(d?.params, "params")),
-    ...undeclaredParams(asset.url),
-  ]);
+  // A declaration replaces the default: only what it names is kept.
+  const declaredParams = declared.flatMap((d) =>
+    d?.params === undefined ? [] : [namesOf(d.params, "params")],
+  );
+  const params = new Set(
+    declaredParams.length > 0
+      ? declaredParams.flat()
+      : undeclaredParams(asset.url),
+  );
   const options = new Set(
     declared.flatMap((d) => namesOf(d?.options, "options")),
   );

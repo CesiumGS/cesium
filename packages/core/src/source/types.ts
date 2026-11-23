@@ -214,13 +214,15 @@ export interface ResolvedAsset {
  * What identifies an asset's content beyond its URL's scheme, host and path,
  * declared by its resolver (`ResolvedAsset.identity`) or its kind
  * (`SourceKind.identity`), the two merged. Its canonical source
- * (`assetSource`), and so its feature IDs, keep what it names, so two opens
- * of `features?layer=roads` and `features?layer=buildings` get different
- * feature IDs once `layer` is declared. A credential never enters: neither
- * `access_token`, nor a parameter of the asset's `credentials`, nor one
- * named in `credentials` here, nor one the engine knows as a credential or
- * a signature (`token`, `key`, `signature`, `X-Amz-…`), even when listed in
- * `params`.
+ * (`assetSource`), and so its feature IDs, keep what it names. With no
+ * declaration of `params`, every query parameter but the credentials and
+ * signatures is kept (CS-1080 A); a declaration keeps only what it names,
+ * so a kind can leave out a parameter that doesn't select content (a page
+ * size, a cache buster). A credential never enters: neither one the engine
+ * knows as a credential or a signature (`access_token`, `token`, `key`,
+ * `X-Amz-Signature`, Azure's `sig` and the like), nor a parameter of the
+ * asset's `credentials`, nor one named in `credentials` here, even when
+ * listed in `params`.
  * @experimental
  */
 export interface SourceIdentity {

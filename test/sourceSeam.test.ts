@@ -2403,7 +2403,7 @@ describe("what identifies content: declared parameters, versions and options, ne
     ).toThrow(/neither this content's canonical source nor its ID/);
   });
 
-  it("gives them one set of feature IDs under today's default, the owner's open question (A, B or C) for a URL with nothing declared", async () => {
+  it("gives ?layer=roads and ?layer=buildings their own feature IDs with nothing declared (CS-1080 A)", async () => {
     const roads = await placed(
       { url: "https://api.test/features.sample?layer=roads" },
       "roads",
@@ -2412,25 +2412,116 @@ describe("what identifies content: declared parameters, versions and options, ne
       { url: "https://api.test/features.sample?layer=buildings" },
       "buildings",
     );
-    // Default B: the whole query goes unless a resolver or kind declares it.
-    expect(buildings.source).toBe(roads.source);
-    expect(buildings.featureId("road-0")).toBe(roads.featureId("road-0"));
+    // The default keeps the whole query but credentials and signatures.
+    expect(roads.source).toBe("https://api.test/features.sample?layer=roads");
+    expect(buildings.source).not.toBe(roads.source);
+    expect(buildings.featureId("road-0")).not.toBe(roads.featureId("road-0"));
+  });
+
+  it("gives ?a=1&b=2 and ?b=2&a=1 one set of feature IDs: kept parameters are sorted", async () => {
+    const ab = await placed({ url: "https://api.test/f.sample?a=1&b=2" }, "ab");
+    const ba = await placed({ url: "https://api.test/f.sample?b=2&a=1" }, "ba");
+    expect(ab.source).toBe("https://api.test/f.sample?a=1&b=2");
+    expect(ba.source).toBe(ab.source);
+    expect(ba.featureId("road-0")).toBe(ab.featureId("road-0"));
+  });
+
+  it("lets no credential or signature parameter, in any case, change a feature ID", () => {
+    // Its own list, so an emptied CREDENTIAL_PARAMS fails here.
+    const credentials = [
+      "access_token",
+      "token",
+      "key",
+      "apikey",
+      "api_key",
+      "X-Amz-Signature",
+      "X-Amz-Credential",
+      "X-Amz-Security-Token",
+      "X-Amz-Date",
+      "X-Amz-Expires",
+      "sig",
+      "se",
+      "st",
+      "sp",
+      "sv",
+      "sr",
+      "X-Goog-Signature",
+      "X-Goog-Credential",
+      "X-Goog-Date",
+      "Signature",
+      "Expires",
+      "Key-Pair-Id",
+      "Policy",
+    ];
+    const plain = "https://api.test/f.json?layer=roads";
+    const source = (url: string) =>
+      assetSource({ url: new URL(url), credits: [] });
+    expect(source(plain)).toBe(plain);
+    for (const name of credentials) {
+      for (const spelled of [name, name.toLowerCase(), name.toUpperCase()]) {
+        expect(source(`${plain}&${spelled}=s3cret`), spelled).toBe(plain);
+        expect(source(`${plain}&${spelled}=other`), spelled).toBe(plain);
+      }
+    }
+  });
+
+  it("lets a kind's declaration win over the default: only what it names is kept", async () => {
+    const two = await placed(
+      { url: "https://api.test/f.layers?layer=roads&page=2" },
+      "two",
+    );
+    const three = await placed(
+      { url: "https://api.test/f.layers?page=3&layer=roads" },
+      "three",
+    );
+    expect(two.source).toBe("https://api.test/f.layers?layer=roads");
+    expect(three.featureId("road-0")).toBe(two.featureId("road-0"));
+    // A resolver's declaration wins too.
+    expect(
+      assetSource({
+        url: new URL("https://api.test/f.json?b=2&a=1&t=9"),
+        credits: [],
+        identity: { params: ["b", "a"] },
+      }),
+    ).toBe("https://api.test/f.json?a=1&b=2");
   });
 
   it("makes the default in one function: the canonical source of each URL with nothing declared", () => {
     const ion = "https://assets.ion.cesium.com/96188/tileset.json";
-    const table: [string, string][] = [
-      ["https://api.test/f.json", "https://api.test/f.json"],
-      ["https://api.test/f.json?layer=roads", "https://api.test/f.json"],
-      ["https://api.test/f.json?b=2&a=1&token=t", "https://api.test/f.json"],
-      ["https://u:p@api.test/f.json?k=1#x", "https://api.test/f.json"],
-      [`${ion}?v=3&access_token=t`, `${ion}?v=3`],
+    const table: [string, string, string[]][] = [
+      ["https://api.test/f.json", "https://api.test/f.json", []],
+      [
+        "https://api.test/f.json?layer=roads",
+        "https://api.test/f.json?layer=roads",
+        ["layer"],
+      ],
+      [
+        "https://api.test/f.json?b=2&a=1&token=t",
+        "https://api.test/f.json?a=1&b=2",
+        ["b", "a"],
+      ],
+      [
+        "https://api.test/f.json?a=x%20y&a=0",
+        "https://api.test/f.json?a=0&a=x+y",
+        ["a"],
+      ],
+      [
+        "https://u:p@api.test/f.json?k=1#x",
+        "https://api.test/f.json?k=1",
+        ["k"],
+      ],
+      [`${ion}?v=3&access_token=t`, `${ion}?v=3`, ["v"]],
+      [`${ion}?v=3&layer=x`, `${ion}?v=3&layer=x`, ["v", "layer"]],
       // A `v` that decodes to `&access_token=` stays one encoded value.
-      [`${ion}?v=1%26access_token%3Dabc`, `${ion}?v=1%26access_token%3Dabc`],
+      [
+        `${ion}?v=1%26access_token%3Dabc`,
+        `${ion}?v=1%26access_token%3Dabc`,
+        ["v"],
+      ],
     ];
-    for (const [url, source] of table) {
-      expect(undeclaredParams(new URL(url))).toEqual([]);
-      expect(assetSource({ url: new URL(url), credits: [] })).toBe(source);
+    for (const [url, source, kept] of table) {
+      expect(undeclaredParams(new URL(url)), url).toEqual(kept);
+      expect(assetSource({ url: new URL(url), credits: [] }), url).toBe(source);
     }
     expect(
       assetSource({
@@ -2438,13 +2529,7 @@ describe("what identifies content: declared parameters, versions and options, ne
         credits: [],
       }),
     ).not.toContain("access_token=abc");
-    // Declared, sorted and encoded; ion's own `v` never twice.
-    expect(
-      assetSource(
-        { url: new URL("https://api.test/f.json?b=2&a=x%20y"), credits: [] },
-        { params: ["b", "a"] },
-      ),
-    ).toBe("https://api.test/f.json?a=x+y&b=2");
+    // ion's own `v` never twice, nor its version.
     expect(
       assetSource(
         { url: new URL(`${ion}?v=3&layer=x`), credits: [], version: "3" },
