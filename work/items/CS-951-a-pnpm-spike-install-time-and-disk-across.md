@@ -2,7 +2,7 @@
 id: CS-951
 title: "A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-609
 needs: [CS-613]
