@@ -8,7 +8,7 @@
 # the umbrella last. The GitHub release is created as a draft, with the
 # combined release notes, for the owner to publish after the approvals.
 #
-# Only `publish` holds `id-token: write`, and it runs no `npm ci` and no
+# Only `publish` holds `id-token: write`, and it runs no install and no
 # build: `verify` builds, tests, packs and checks the tarballs, and
 # `publish` stages exactly those, their SHA-256 sums checked on arrival.
 #
@@ -50,7 +50,7 @@ jobs:
   # never ends green, when a version could be lost: two records in one
   # push, a commit that moves the version up without being one, or a head
   # whose version went up from the before commit's with no record found.
-  # No `npm ci`: the script needs only Node.
+  # No install: the script needs only Node.
   record:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -108,12 +108,15 @@ jobs:
         with:
           ref: ${{ needs.record.outputs.sha }}
           persist-credentials: false
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      # It installs only; the packing below and the staging stay npm's.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           # No dependency cache on the release path.
           package-manager-cache: false
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: The version lines
         run: npm run release:check
       # The suite's bundle test reads the packages' dist/, so the build comes
@@ -154,7 +157,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  # Stages the checked tarballs, and nothing else runs here: no `npm ci`, no
+  # Stages the checked tarballs, and nothing else runs here: no install, no
   # build, no dependency's code. The `npm` environment's required reviewer
   # (the owner) approves the run before this job starts; npm's trusted
   # publisher for each package names this file and that environment, and

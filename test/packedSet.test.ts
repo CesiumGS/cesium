@@ -153,7 +153,7 @@ function installHost(
       !output.includes("@cesium")
     ) {
       throw new Error(
-        `a third-party dependency isn't in the npm cache, and this test doesn't reach out for it. Run npm ci in the checkout to fill the cache:\n${output}`,
+        `a third-party dependency isn't in the npm cache, and this test doesn't reach out for it. The checkout installs with pnpm, which doesn't fill npm's cache: add the packages' third-party dependencies to it with \`npm cache add <name>@<version>\`:\n${output}`,
         { cause: error },
       );
     }

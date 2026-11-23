@@ -3,9 +3,10 @@
 # is the second gate, on the public side, and the record a release reads.
 #
 # Hardening: read-only `contents` for every job, no secrets, no
-# `pull_request_target`, `npm ci --ignore-scripts` so no dependency's install
-# script runs, and every action pinned to a full commit SHA (its version in a
-# comment; Dependabot keeps the pins current, .github/dependabot.yml).
+# `pull_request_target`, `pnpm install --frozen-lockfile --ignore-scripts` so
+# no dependency's install script runs and the lockfile is installed as it is,
+# and every action pinned to a full commit SHA (its version in a comment;
+# Dependabot keeps the pins current, .github/dependabot.yml).
 name: ci
 
 on:
@@ -105,11 +106,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Declarations (tsc --build)
         run: npm run typecheck
       - name: The harness (tsc --noEmit)
@@ -160,11 +163,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node }}
-          cache: npm
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       # The suite's bundle test (test/importBoundary.test.ts) builds pages
       # against the packages' dist/, so the packages are built first.
       - name: Build (no packed checks; the build job runs those)
@@ -181,11 +186,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Build, pack, and the packed checks (publint, attw, declarations)
         run: npm run build
       - name: The bundle check
@@ -205,11 +212,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       # Its data script runs the bundle check, which builds against dist/.
       - name: Build (no packed checks)
         run: npm run build -- --no-checks
@@ -236,10 +245,12 @@ jobs:
             echo "::error::slangVersion.ts pins another Slang release than this job's $SLANG_VERSION; update SLANG_VERSION and SLANG_ASSET_SHA256 together"
             exit 1
           fi
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
       - name: Cache the slangc release
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -266,7 +277,7 @@ jobs:
           chmod +x "$slangc"
           "$slangc" -version
           echo "SLANGC=$slangc" >> "$GITHUB_ENV"
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: npm run shaders:check
 
   # The data tier: nightly, and on a change under packages/{time,frames,crs}.
@@ -282,17 +293,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # pnpm at the version package.json's packageManager names (CS-1091).
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
+          cache: pnpm
       - name: Cache the setup store
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cesium-bench
           key: setup-store-${{ hashFiles('scripts/setup.mjs', 'scripts/frameData.mjs', 'scripts/projGrids.mjs', 'scripts/gridSets.mjs', 'scripts/designTiles.mjs', 'scripts/dataFormats.mjs', 'scripts/slangTools.mjs', 'scripts/smlibTools.mjs', 'scripts/occtTools.mjs', 'scripts/stepSamples.mjs', 'packages/core/src/scene/slangVersion.ts', 'bench/suite/catalog/public.json') }}
           restore-keys: setup-store-
-      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: The setup store
         run: npm run setup
       - run: npm run test:data

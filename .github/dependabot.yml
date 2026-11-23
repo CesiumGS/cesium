@@ -22,3 +22,25 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: "ci"
+  # 2.0's dependencies (CS-894, CS-1091): pnpm-lock.yaml, read through the
+  # `npm` ecosystem, which covers pnpm (GitHub's supported-ecosystems page
+  # lists pnpm 11, read 2026-11-23). Development tools come as one grouped
+  # change a week, runtime dependencies one at a time
+  # (docs/design/repository-build-and-release.md, "Installs and the
+  # lockfile"). The pinned 1.x, naga-wasm and hitld move only on purpose.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "cesium-2.0-webgpu-poc"
+    groups:
+      development:
+        dependency-type: "development"
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "cesium-1x"
+      - dependency-name: "cesium"
+      - dependency-name: "naga-wasm"
+      - dependency-name: "human-in-the-lead"
+    commit-message:
+      prefix: "deps"
