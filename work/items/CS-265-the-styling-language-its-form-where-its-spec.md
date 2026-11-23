@@ -2,10 +2,11 @@
 id: CS-265
 title: "The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?"
 kind: decision
-state: planned
+state: dropped
 created: 2026-11-13
 project: CS-190
 decider: owner
+reason: "Superseded by the owner's piecewise answers of 2026-11-23: any language lowers to Cesium IR, whose JSON and conformance vectors live in the Rust workspace's IR crate (CS-1130); an experimental language of our own plus a 1.x front end ship with 2.0 (CS-1140); a proposal goes to the 3D Tiles group after the plan settles (CS-1143). Closed as superseded on the owner's word."
 ---
 
 ## Question

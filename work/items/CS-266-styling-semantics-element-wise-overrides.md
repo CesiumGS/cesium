@@ -2,10 +2,11 @@
 id: CS-266
 title: "Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?"
 kind: decision
-state: planned
+state: dropped
 created: 2026-11-13
 project: CS-190
 decider: owner
+reason: "Superseded by the owner's piecewise answers of 2026-11-23: per-feature state (CS-1108), strings and an item rate in the IR (CS-1136), the color model (CS-1141), missing values (CS-1142), label placement (CS-1137), units (CS-1139); 64-bit IDs are CS-898 and CS-936. The key's width on the GPU moves to CS-1081. Closed as superseded on the owner's word."
 ---
 
 ## Question
