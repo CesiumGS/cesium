@@ -548,13 +548,13 @@ function overlay() {
 describe("the ray seam's detector flags bypasses", () => {
   it("by what imports and names resolve to, and members of any spelling", () => {
     // Each line marked "rays" or "retained" must be flagged so, and no
-    // other line: aliases, namespaces, the package's index, dynamic and
+    // other line: aliases, namespaces, a re-exporting module, dynamic and
     // type imports, members bracketed or destructured, a tile under
     // another name.
     const lines = [
       `import { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts"; // rays`,
-      `import { castTerrainRay as trace } from "../packages/core/src/index.ts"; // rays`,
-      `import * as next from "../packages/core/src/index.ts";`,
+      `import { castTerrainRay as trace } from "./__ray_seam_barrel__.ts"; // rays`,
+      `import * as next from "./__ray_seam_barrel__.ts";`,
       `import type { TerrainRayTarget } from "../packages/core/src/globe/terrainRay.ts"; // rays`,
       `import { drawBackend } from "../packages/core/src/query/drawBackend.ts"; // rays`,
       `import { castEllipsoid } from "../packages/core/src/query/ellipsoidBackend.ts"; // rays`,
@@ -601,7 +601,13 @@ describe("the ray seam's detector flags bypasses", () => {
     const marked = (mark: string) =>
       lines.flatMap((l, i) => (l.endsWith(`// ${mark}`) ? [i + 1] : []));
     const path = join(repo, "examples", "__ray_seam_snippet__.ts");
-    const program = rayProgram([], { [path]: lines.join("\n") });
+    // A barrel that passes castTerrainRay on, as core's index did until
+    // CS-977 took it off the public entry.
+    const barrel = join(repo, "examples", "__ray_seam_barrel__.ts");
+    const program = rayProgram([], {
+      [path]: lines.join("\n"),
+      [barrel]: `export { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts";`,
+    });
     expect(rayBypasses(program, program.getSourceFile(path)!)).toEqual({
       rays: marked("rays"),
       retained: marked("retained"),

@@ -454,7 +454,6 @@ export {
   type Attribution,
   type IonOptions,
 } from "./io/ion.ts";
-export { resolveUri } from "./io/resolveUri.ts";
 export {
   Credential,
   DefaultProxy,
@@ -525,14 +524,10 @@ export { loadIonMoonMap, type MoonMap } from "./io/moonMapLoad.ts";
 export { AEROSOLS, type AerosolType } from "./atmosphere/model.ts";
 export { readWithProgress, type LoadProgress } from "./io/readWithProgress.ts";
 export {
-  castTerrainRay,
-  type TerrainRayOptions,
   type TerrainRayPatch,
-  type TerrainRayResult,
   type TerrainRayTarget,
   type TerrainRayTile,
 } from "./globe/terrainRay.ts";
-export { LEVEL_ZERO_ERROR } from "./globe/TerrainSource.ts";
 // Bulk work in slices, with an AbortSignal and progress (spec section 9.6;
 // Engine.bulk slices inside the loop's ticks).
 export {

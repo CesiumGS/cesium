@@ -184,7 +184,6 @@ entry	name	kind	tier
 .	IonAsset	interface	-
 .	IonOptions	interface	-
 .	IonTmsImagery	class	-
-.	LEVEL_ZERO_ERROR	const	-
 .	Labels	type	-
 .	LightHandle	interface	-
 .	LightOptions	interface	-
@@ -361,9 +360,7 @@ entry	name	kind	tier
 .	TICK_REASONS	const	-
 .	TaxonomyDeclaration	interface	-
 .	TerrainQueryOptions	interface	-
-.	TerrainRayOptions	interface	-
 .	TerrainRayPatch	interface	-
-.	TerrainRayResult	interface	-
 .	TerrainRayTarget	interface	-
 .	TerrainRayTile	interface	-
 .	TerrainRegion	interface	-
@@ -428,7 +425,6 @@ entry	name	kind	tier
 .	canonicalSource	function	-
 .	capPlanes	function	-
 .	cartographic	function	-
-.	castTerrainRay	function	-
 .	clipFilter	function	-
 .	clipSetDistance	function	-
 .	clipSetKeeps	function	-
@@ -504,7 +500,6 @@ entry	name	kind	tier
 .	resamplable	function	-
 .	resolveITwinIModel	function	-
 .	resolveIonAsset	function	-
-.	resolveUri	function	-
 .	runBulk	function	-
 .	scaleAbout	function	-
 .	scaleAboutEdge	function	-
@@ -1077,7 +1072,6 @@ ui	zoneOf	function	-
 @cesium/core	IonAsset	interface	-
 @cesium/core	IonOptions	interface	-
 @cesium/core	IonTmsImagery	class	-
-@cesium/core	LEVEL_ZERO_ERROR	const	-
 @cesium/core	Labels	type	-
 @cesium/core	LightHandle	interface	-
 @cesium/core	LightOptions	interface	-
@@ -1254,9 +1248,7 @@ ui	zoneOf	function	-
 @cesium/core	TICK_REASONS	const	-
 @cesium/core	TaxonomyDeclaration	interface	-
 @cesium/core	TerrainQueryOptions	interface	-
-@cesium/core	TerrainRayOptions	interface	-
 @cesium/core	TerrainRayPatch	interface	-
-@cesium/core	TerrainRayResult	interface	-
 @cesium/core	TerrainRayTarget	interface	-
 @cesium/core	TerrainRayTile	interface	-
 @cesium/core	TerrainRegion	interface	-
@@ -1321,7 +1313,6 @@ ui	zoneOf	function	-
 @cesium/core	canonicalSource	function	-
 @cesium/core	capPlanes	function	-
 @cesium/core	cartographic	function	-
-@cesium/core	castTerrainRay	function	-
 @cesium/core	clipFilter	function	-
 @cesium/core	clipSetDistance	function	-
 @cesium/core	clipSetKeeps	function	-
@@ -1397,7 +1388,6 @@ ui	zoneOf	function	-
 @cesium/core	resamplable	function	-
 @cesium/core	resolveITwinIModel	function	-
 @cesium/core	resolveIonAsset	function	-
-@cesium/core	resolveUri	function	-
 @cesium/core	runBulk	function	-
 @cesium/core	scaleAbout	function	-
 @cesium/core	scaleAboutEdge	function	-

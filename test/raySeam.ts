@@ -81,8 +81,8 @@ export function rayProgram(
  *   from `src/query/terrainBackend.ts` but `terrainQueries`;
  * - any name that resolves to `castTerrainRay`, to a declaration of
  *   `drawBackend.ts`, or to one of `terrainBackend.ts` but
- *   `terrainQueries`, however it was imported (an alias, a namespace, the
- *   package's index);
+ *   `terrainQueries`, however it was imported (an alias, a namespace, a
+ *   module that re-exports it);
  * - any member named `castRays` (dotted, bracketed or destructured) that
  *   isn't the query interface's (`SpatialQueries.castRays`);
  * - any member named `terrainRayTarget` or `rayTarget`.
