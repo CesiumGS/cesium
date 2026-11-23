@@ -2,10 +2,14 @@
 id: CS-1015
 title: Merge CS-943, export Route, RouteStep and Recordable
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the gates if main's code moved, fast-forwards, regenerates the views and logs the merge."
+answered_at: 2026-11-23T04:11:44.780Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

@@ -2,10 +2,14 @@
 id: CS-956
 title: Merge CS-847, the content-source seam's core
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-191
 decider: owner
+answer: "B. A fix round first: Say which of the seams review's findings to fix before it merges (its two Criticals at least); it goes back to its executor, then to the gates and a review, then to you again."
+answered_at: 2026-11-23T04:11:41.014Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

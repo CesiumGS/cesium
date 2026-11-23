@@ -2,10 +2,14 @@
 id: CS-1006
 title: Merge CS-613, CI and the release pipeline
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator replays it, with the checklist commit, onto main's tip, reruns the gates if main's code moved, fast-forwards, regenerates the views and logs the merge. The workflows first run when the owner pushes; the owner's checklist comes before any release."
+answered_at: 2026-11-23T04:11:42.749Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
