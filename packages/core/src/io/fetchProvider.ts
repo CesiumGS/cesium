@@ -8,12 +8,15 @@
  * 1. **Origin rules** (`FetchProviderOptions.origins`): headers a host's
  *    network requires for an origin (a tenant or gateway header), and the
  *    rule's proxy.
- * 2. **The request hook** (`onRequest`): the host's own signing or logging.
- *    It sees the URL, the kind and the rule's headers, and may change them.
- *    When it moves the request to an origin with another rule, the first
- *    rule's headers stay behind and the new rule's apply.
- *    It never sees a source's headers or a `Credential`'s values: those are
- *    added after it, so a hook gets nothing the host didn't give it there.
+ * 2. **The request hook** (`onRequest`): the host's own signing or logging,
+ *    or a move to a mirror. It sees the URL, the kind and the rule's
+ *    headers, and may change them. The hook decides what is sent (the
+ *    owner's answer CS-1034 A): what it returns goes as is. When it moves
+ *    the request to an origin with another rule, the new rule adds only the
+ *    headers the hook's request doesn't set. It never sees a source's
+ *    headers or a `Credential`'s values: those are added after it, so a
+ *    hook gets nothing the host didn't give it there. It runs once per
+ *    request, never once per redirect hop.
  * 3. **The source's headers**: a tileset's, terrain's or imagery's
  *    `headers`. When they are a `Credential`'s `headers`, its values are
  *    read now (so a rotated token takes effect on the next request), with
@@ -21,8 +24,12 @@
  *    (CS-966): a source binds its headers to its URL (`bindToSource`: a
  *    tileset's root JSON, a terrain's `layer.json`, a model's URL), and a
  *    request to any other origin, which only content can name, carries
- *    none of them. A `Credential` that lists `origins` goes to those
- *    origins instead, and to no other, its source's included. Headers
+ *    none of them. A request the engine made to the source's origin keeps
+ *    them wherever the hook sends it: a hook that moves such a request to
+ *    a third party's server sends the source's headers there. A
+ *    `Credential` that lists `origins` goes to those origins instead, and
+ *    to no other, its source's included; it is checked on the URL the hook
+ *    returns, so a move off its list drops it. Headers
  *    passed to a request directly, with no source bound, have that request
  *    as their source. This is the one place it is checked: every request,
  *    on the page or for a worker, comes through here. The boundary is the
@@ -45,6 +52,17 @@
  *    a host chooses another, per origin.
  * 6. **The transport** (`fetch`, or a host's), then the response hook
  *    (`onResponse`) with the status and headers.
+ * 7. **Redirects** (CS-1033 A). fetch strips only `Authorization` and
+ *    cookies on a cross-origin hop. A request that carries a source's or an
+ *    origin rule's header other than `Authorization`, `Accept` or `Prefer`
+ *    follows redirects through the provider instead (`redirects.ts`): in
+ *    Node by hand, each hop checked as a fresh request (the first origin's
+ *    headers go only to it and are never regained once the chain leaves
+ *    it, a credential that lists origins goes to each hop on them, each
+ *    hop's own rule applies, at most 20 hops, no loop, no https to http);
+ *    in a browser, which hides a manual redirect's target, the redirect is
+ *    refused with an error that names the URL and says why. Any other
+ *    request keeps fetch's own `follow`, ion's and iTwin's among them.
  *
  * **Renewal.** A 401 on a request whose headers belong to a renewable
  * `Credential` refreshes it (one refresh for every request that failed with
@@ -73,6 +91,8 @@
  * single sign-on reach that proxy with an origin rule for it that has
  * `allowCredentials` and `credentials: "include"`.
  */
+
+import { followRedirects, type Hop } from "./redirects.ts";
 
 /** What a request is for: hooks and diagnostics can tell requests apart. */
 export type RequestKind =
@@ -119,6 +139,10 @@ export interface CredentialOptions {
    * origin, or that names a path, a query or a fragment: the boundary is
    * the origin, not the path. A host that serves many tenants under one
    * origin (path-style buckets) gets the credential for any path on it.
+   *
+   * They are checked on the URL the host's request hook leaves, and on
+   * each redirect hop the provider follows, so a move or a hop off the
+   * list drops it.
    */
   origins?: readonly string[];
 }
@@ -330,7 +354,16 @@ export interface OriginRule {
   allowCredentials?: boolean;
 }
 
-/** A request as the request hook sees it: change it in place. */
+/**
+ * A request as the request hook sees it: change it in place. What the hook
+ * leaves is sent as is (CS-1034 A): its URL, and the headers here,
+ * including the first origin's rule headers on a move. A move to an origin
+ * with another rule adds that rule's headers where these don't set them.
+ * The source's headers, which the hook never sees, follow a request the
+ * engine made to the source's origin wherever the hook sends it; a
+ * `Credential` that lists its origins goes only where the hook's URL is
+ * on its list.
+ */
 export interface OutgoingRequest {
   url: string;
   readonly kind: RequestKind;
@@ -359,6 +392,12 @@ export interface FetchProviderOptions {
   proxy?: RequestProxy;
   /** The first rule whose origin matches applies. */
   origins?: readonly OriginRule[];
+  /**
+   * The host's hook, run once per request (not per redirect hop). It
+   * decides what is sent (CS-1034 A): a hook that moves a request to a
+   * third party's server sends the source's headers there, so a host whose
+   * mirror mustn't get them gives a `Credential` that lists its origins.
+   */
   onRequest?: (request: OutgoingRequest) => void | Promise<void>;
   onResponse?: (response: IncomingResponse) => void | Promise<void>;
   /** Sends the request. Default: the global `fetch`, read per request. */
@@ -453,12 +492,12 @@ export class FetchProvider {
     }
     await this.options.onRequest?.(outgoing);
     const target = outgoing.url;
-    const origin = originOf(target);
-    const targetRule = this.ruleFor(origin);
+    const targetRule = this.ruleFor(originOf(target));
     if (targetRule !== rule) {
-      // The hook moved the request to an origin with another rule: the old
-      // rule's headers stay behind and the new rule's apply.
-      rehome(outgoing.headers, rule, targetRule, init.accept);
+      // The hook moved the request to an origin with another rule. What it
+      // returned is sent as is (CS-1034 A); the new rule adds only the
+      // headers the hook's request doesn't set.
+      addMissing(outgoing.headers, targetRule?.headers);
     }
     const proxy =
       targetRule?.proxy !== undefined
@@ -471,7 +510,10 @@ export class FetchProvider {
     let headers: Record<string, string> = { ...outgoing.headers };
     let url = target;
     let sentCredential = false;
-    if (init.headers && carries(target, origin, credential, source)) {
+    let sentSource = false;
+    let proxyRule: OriginRule | undefined;
+    if (init.headers && carries(input, target, credential, source)) {
+      sentSource = true;
       for (const [name, value] of Object.entries(init.headers)) {
         setHeader(headers, name, value);
       }
@@ -494,7 +536,7 @@ export class FetchProvider {
       // and no `credentials: "include"`.
       const bare = withoutTokens(target, credential);
       const bareUrl = proxy.getURL(bare);
-      const proxyRule = this.ruleFor(originOf(bareUrl));
+      proxyRule = this.ruleFor(originOf(bareUrl));
       if (proxyRule?.allowCredentials === true) {
         for (const [name, value] of Object.entries({
           ...proxyRule.headers,
@@ -518,6 +560,7 @@ export class FetchProvider {
         }
         url = bareUrl;
         sentCredential = false;
+        sentSource = false;
         mode =
           proxyRule?.credentials === "include"
             ? undefined
@@ -532,7 +575,20 @@ export class FetchProvider {
     const transport =
       this.options.transport ??
       ((u: string, i?: RequestInit) => globalThis.fetch(u, i));
-    const response = await transport(url, request);
+    let response: Response;
+    const own = ownHeaderNames(sentSource ? init.headers : undefined, [
+      rule,
+      targetRule,
+      proxyRule,
+    ]);
+    if (!Object.keys(headers).some((name) => carriesSecret(name, own))) {
+      // Nothing fetch wouldn't strip on a cross-origin hop: fetch follows.
+      response = await transport(url, request);
+    } else {
+      const hops = this.hops(url, headers, credential, sentCredential);
+      response = await followRedirects(transport, url, request, hops.next);
+      sentCredential = hops.credentialSent();
+    }
     await this.options.onResponse?.({
       url: target,
       kind,
@@ -541,6 +597,56 @@ export class FetchProvider {
       headers: response.headers,
     });
     return { response, sentCredential };
+  }
+
+  /**
+   * Each redirect hop's headers, checked as for a fresh request (CS-1033
+   * A): the headers sent to the first URL's origin go only to that origin,
+   * and once the chain leaves it no later hop gets them back; a credential
+   * that lists its origins goes to each hop on them, until a hop isn't;
+   * each hop's own origin rule adds its headers and credentials mode; and
+   * `Accept` goes everywhere.
+   */
+  private hops(
+    url: string,
+    sent: Readonly<Record<string, string>>,
+    credential: Credential | undefined,
+    sentCredential: boolean,
+  ): { next: (hop: string) => Hop; credentialSent: () => boolean } {
+    const first = originOf(url);
+    const scoped =
+      sentCredential && credential && listsOrigins.has(credential)
+        ? new Set(Object.keys(credential.headers).map((n) => n.toLowerCase()))
+        : undefined;
+    let accept: Record<string, string> = {};
+    let bound: Record<string, string> | undefined = {};
+    let listed: Record<string, string> | undefined = scoped ? {} : undefined;
+    for (const [name, value] of Object.entries(sent)) {
+      const lower = name.toLowerCase();
+      if (lower === "accept") {
+        accept = { [name]: value };
+      } else if (scoped?.has(lower)) {
+        listed![name] = value;
+      } else {
+        bound[name] = value;
+      }
+    }
+    const next = (hop: string): Hop => {
+      const origin = originOf(hop);
+      if (bound && (origin === undefined || origin !== first)) {
+        bound = undefined;
+      }
+      if (listed && !credential!.appliesTo(origin)) {
+        listed = undefined;
+      }
+      const headers = { ...accept, ...bound, ...listed };
+      const rule = this.ruleFor(origin);
+      addMissing(headers, rule?.headers);
+      return { headers, credentials: rule?.credentials };
+    };
+    const credentialSent = () =>
+      sentCredential && (scoped ? listed !== undefined : bound !== undefined);
+    return { next, credentialSent };
   }
 
   private ruleFor(origin: string | undefined): OriginRule | undefined {
@@ -602,27 +708,34 @@ export function bindToSource<
 }
 
 /**
- * Whether a request to `target` (on `origin`) carries the source's
- * headers: those of a credential that lists its origins, when it lists
- * `origin`; any others only on the source's own origin. An opaque origin
- * matches nothing but the source's own resource.
+ * Whether a request carries the source's headers. A credential that lists
+ * its origins goes where `target`, the URL the host's hook left, is on one
+ * of them. Any others go when the engine's request (`input`, before the
+ * hook) or `target` is on the source's own origin: the hook decides where
+ * a request for the source's origin goes (CS-1034 A), but never carries
+ * the source's headers from a request content made to another origin. An
+ * opaque origin matches nothing but the source's own resource.
  */
 function carries(
+  input: string,
   target: string,
-  origin: string | undefined,
   credential: Credential | undefined,
   source: BoundSource | undefined,
 ): boolean {
   if (credential && listsOrigins.has(credential)) {
-    return credential.appliesTo(origin);
+    return credential.appliesTo(originOf(target));
   }
   if (source === undefined) {
     return true;
   }
+  return onSource(input, source) || onSource(target, source);
+}
+
+/** Whether `url` is on `source`'s origin (its own resource, if opaque). */
+function onSource(url: string, source: BoundSource): boolean {
+  const origin = originOf(url);
   if (source.origin === undefined || origin === undefined) {
-    return (
-      source.resource !== undefined && resourceOf(target) === source.resource
-    );
+    return source.resource !== undefined && resourceOf(url) === source.resource;
   }
   return origin === source.origin;
 }
@@ -639,35 +752,44 @@ function resourceOf(url: string): string | undefined {
   }
 }
 
-/**
- * Moves `headers` from `from`'s rule to `to`'s, after the request hook
- * moved the request: drops each of `from`'s headers the hook left as it
- * was, then adds `to`'s where the hook set none of its own. `Accept`, when
- * the request set it, stays.
- */
-function rehome(
+/** Adds each of `extra` to `headers` where no spelling of it is set. */
+function addMissing(
   headers: Record<string, string>,
-  from: OriginRule | undefined,
-  to: OriginRule | undefined,
-  accept: string | undefined,
+  extra: Readonly<Record<string, string>> | undefined,
 ): void {
-  for (const [name, value] of Object.entries(from?.headers ?? {})) {
-    const lower = name.toLowerCase();
-    if (accept !== undefined && lower === "accept") {
-      continue;
-    }
-    for (const key of Object.keys(headers)) {
-      if (key.toLowerCase() === lower && headers[key] === value) {
-        delete headers[key];
-      }
-    }
-  }
-  for (const [name, value] of Object.entries(to?.headers ?? {})) {
+  for (const [name, value] of Object.entries(extra ?? {})) {
     const lower = name.toLowerCase();
     if (!Object.keys(headers).some((key) => key.toLowerCase() === lower)) {
       headers[name] = value;
     }
   }
+}
+
+/**
+ * Headers fetch follows a redirect with that carry no secret it wouldn't
+ * strip: `Authorization`, which fetch strips on a cross-origin hop, and
+ * `Accept` and `Prefer`, which only say what the response should be.
+ */
+const FOLLOW_SAFE = new Set(["authorization", "accept", "prefer"]);
+
+/** The names of a source's and the origin rules' headers, in lower case. */
+function ownHeaderNames(
+  source: Readonly<Record<string, string>> | undefined,
+  rules: readonly (OriginRule | undefined)[],
+): Set<string> {
+  const names = new Set<string>();
+  for (const record of [source, ...rules.map((rule) => rule?.headers)]) {
+    for (const name of Object.keys(record ?? {})) {
+      names.add(name.toLowerCase());
+    }
+  }
+  return names;
+}
+
+/** Whether a header named `name` is a source's or a rule's own secret. */
+function carriesSecret(name: string, own: ReadonlySet<string>): boolean {
+  const lower = name.toLowerCase();
+  return own.has(lower) && !FOLLOW_SAFE.has(lower);
 }
 
 /** Makes an engine request through `FetchProvider.default`. */

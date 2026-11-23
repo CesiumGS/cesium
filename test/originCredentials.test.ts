@@ -282,7 +282,10 @@ describe("the provider: a source's headers go only to its origin", () => {
     }
   });
 
-  it("a hook that moves a request takes the new origin's rule headers, not the old one's", async () => {
+  // CS-1034 A: the host's hook decides what is sent. Round 1 dropped the
+  // first origin's rule headers on a move; they now go as the hook returns
+  // them, and the new origin's rule adds only what the hook didn't set.
+  it("a hook that moves a request sends what it returns, and the new origin's rule adds only what it lacks", async () => {
     const sent: Sent[] = [];
     FetchProvider.default = new FetchProvider({
       origins: [
@@ -307,10 +310,117 @@ describe("the provider: a source's headers go only to its origin", () => {
     expect(sent[0]!.url).toBe("https://b.test/x.json");
     expect(sent[0]!.headers).toEqual({
       Accept: "application/json",
+      "X-Tenant": "a",
+      "X-A": "1",
       "X-Trace": "t",
-      "X-Tenant": "b",
       "X-B": "1",
     });
+  });
+
+  /** A provider whose hook moves `from` to `to` (a host's mirror). */
+  function mirror(from: string, to: string): Sent[] {
+    const sent: Sent[] = [];
+    FetchProvider.default = new FetchProvider({
+      onRequest: (request) => {
+        request.url = request.url.replace(from, to);
+      },
+      transport: async (url, init) => {
+        sent.push({
+          url,
+          headers: { ...(init?.headers as Record<string, string> | undefined) },
+        });
+        return new Response("");
+      },
+    });
+    return sent;
+  }
+
+  it("a hook that moves a request to a mirror keeps the source's headers (CS-1034 A)", async () => {
+    const sent = mirror("https://tiles.test", "https://mirror.test");
+    const credential = new Credential({
+      headers: { Authorization: `Bearer ${TOKEN}` },
+      query: { key: KEY },
+    });
+    await FetchProvider.default.fetch("https://tiles.test/t/a.glb", {
+      headers: bindToSource({ "X-Api-Key": KEY }, source),
+    });
+    await FetchProvider.default.fetch("https://tiles.test/t/b.glb", {
+      headers: bindToSource(credential.headers, source),
+    });
+    expect(sent[0]!.url).toBe("https://mirror.test/t/a.glb");
+    expect(sent[0]!.headers).toEqual({ "X-Api-Key": KEY });
+    expect(sent[1]!.url).toBe(`https://mirror.test/t/b.glb?key=${KEY}`);
+    expect(sent[1]!.headers).toEqual({ Authorization: `Bearer ${TOKEN}` });
+  });
+
+  it("a hook never carries a source's headers from another origin's request", async () => {
+    // Content named evil.test; the hook moved it elsewhere. The engine's
+    // request was never on the source's origin, so nothing goes.
+    const sent = mirror("https://evil.test", "https://mirror.test");
+    await FetchProvider.default.fetch("https://evil.test/t/a.glb", {
+      headers: bindToSource({ "X-Api-Key": KEY }, source),
+    });
+    expect(sent[0]!.url).toBe("https://mirror.test/t/a.glb");
+    expect(secretsIn(sent[0]!)).toEqual([]);
+  });
+
+  it("a credential with declared origins is checked again after a hook's move", async () => {
+    const credential = new Credential(
+      { headers: { Authorization: `Bearer ${TOKEN}` }, query: { key: KEY } },
+      { origins: ["https://tiles.test", "https://cdn2.test"] },
+    );
+    const headers = bindToSource(credential.headers, source);
+    let sent = mirror("https://tiles.test", "https://mirror.test");
+    await FetchProvider.default.fetch("https://tiles.test/t/a.glb", {
+      headers,
+    });
+    expect(sent[0]!.url).toBe("https://mirror.test/t/a.glb");
+    expect(secretsIn(sent[0]!)).toEqual([]);
+
+    sent = mirror("https://tiles.test", "https://cdn2.test");
+    await FetchProvider.default.fetch("https://tiles.test/t/a.glb", {
+      headers,
+    });
+    expect(sent[0]!.url).toBe(`https://cdn2.test/t/a.glb?key=${KEY}`);
+    expect(sent[0]!.headers).toEqual({ Authorization: `Bearer ${TOKEN}` });
+  });
+
+  it("the hook runs once per request, not once per redirect hop", async () => {
+    const sent: Sent[] = [];
+    let calls = 0;
+    FetchProvider.default = new FetchProvider({
+      onRequest: (request) => {
+        calls++;
+        request.url = request.url.replace(
+          "https://tiles.test",
+          "https://mirror.test",
+        );
+      },
+      transport: async (url, init) => {
+        sent.push({
+          url,
+          headers: { ...(init?.headers as Record<string, string> | undefined) },
+        });
+        return url === "https://mirror.test/t/a.glb"
+          ? new Response(null, {
+              status: 302,
+              headers: { Location: "https://other.test/a.glb" },
+            })
+          : new Response("");
+      },
+    });
+    await FetchProvider.default.fetch("https://tiles.test/t/a.glb", {
+      headers: bindToSource({ "X-Api-Key": KEY }, source),
+    });
+    expect(calls).toBe(1);
+    expect(sent.map((s) => s.url)).toEqual([
+      "https://mirror.test/t/a.glb",
+      "https://other.test/a.glb",
+    ]);
+    // The per-hop check applies after the hook: the mirror got the key; the
+    // hop away from it didn't.
+    expect(sent[0]!.headers).toEqual({ "X-Api-Key": KEY });
+    expect(secretsIn(sent[1]!)).toEqual([]);
   });
 });
 
