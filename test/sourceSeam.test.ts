@@ -725,7 +725,7 @@ describe("the edit layer (CS-865)", () => {
     }
   });
 
-  it("applies a feed's change set under this client's edits, and drops a malformed one", async () => {
+  it("applies a feed's change set under this client's edits, and turns a refused one into an invalidation of everything (CS-1102 A)", async () => {
     const { rt, place, reports } = runtime();
     const content = await rt.open(
       { url: "https://data.test/city.sample" },
@@ -781,10 +781,18 @@ describe("the edit layer (CS-865)", () => {
         ],
       },
     });
-    expect(content.feature(content.featureId("car-0"))).toBeDefined();
+    // Neither applied in part: each became an invalidation of everything,
+    // and the source loads committed state again.
+    const car0 = content.featureId("car-0");
+    expect(content.feature(car0)).toBeUndefined();
+    expect(content.rows.features.size).toBe(0);
+    rt.tick();
+    rt.tick();
+    expect(content.feature(car0)).toBeDefined();
+    expect(content.feature(road0)?.properties).toEqual({ lanes: 1 }); // mine still
     expect(reports).toEqual([
-      'the "sample" source\'s features change threw: change set: its id is a non-empty string.',
-      "the \"sample\" source's features change threw: change set: op 1: its id isn't its key's feature ID in this content.",
+      'the "sample" source\'s change set is refused, and becomes an invalidation of everything, so its source loads committed state again: change set: its id is a non-empty string.',
+      "the \"sample\" source's change set is refused, and becomes an invalidation of everything, so its source loads committed state again: change set: op 1: its id isn't its key's feature ID in this content.",
     ]);
   });
 });
@@ -1269,7 +1277,7 @@ describe("pushes under bounds and the apply phase's budget", () => {
     }
     expect(reports).toEqual([
       expect.stringContaining(
-        `more than ${MAX_QUEUED_CHANGES} changes queued between ticks`,
+        `more than ${MAX_QUEUED_CHANGES} ops queued between ticks: its queue, change sets included, collapses into one invalidation of everything`,
       ),
     ]);
     jobs.apply(Infinity);
@@ -1604,14 +1612,14 @@ describe("a throwing update, destroy or open loses nothing and stops nothing", (
   });
 });
 
-describe("the bounds keep others' edits and say what they drop", () => {
+describe("the bounds turn what doesn't fit into an invalidation, and say what they drop (CS-1102 A)", () => {
   const set = (n: number, key: string): ChangeSet => ({
     id: `cs-${n}`,
     source: "city",
     ops: [{ op: "delete", key }],
   });
 
-  it("keeps queued change sets through a collapse, and reports dropped change sets plainly, once", async () => {
+  it("counts ops, collapses a queue past its bound, change sets included, into one invalidation of everything, and covers what follows until it applies", async () => {
     const { rt, jobs, place, reports } = runtime({ phased: true });
     const content = await rt.open(
       { url: "https://data.test/city.sample" },
@@ -1624,26 +1632,46 @@ describe("the bounds keep others' edits and say what they drop", () => {
     jobs.apply(Infinity);
     const road0 = content.featureId("road-0");
     const source = sourceOf(content);
-    source.push({ kind: "features", changes: set(0, "road-0") });
-    for (let i = 0; i < MAX_QUEUED_CHANGES; i++) {
-      source.push({ kind: "invalidate", keys: ["none"] });
-    }
-    expect(reports).toEqual([expect.stringContaining("its change sets stay")]);
+    const many = (n: number, from: number): ChangeSet => ({
+      id: `cs-${from}`,
+      source: "city",
+      ops: Array.from({ length: n }, (_, i) => ({
+        op: "delete" as const,
+        key: `k${from + i}`,
+      })),
+    });
+    // Two change sets pass the bound by their ops, not their count.
+    source.push({ kind: "features", changes: many(6_000, 0) });
+    expect(reports).toEqual([]);
+    source.push({ kind: "features", changes: many(5_000, 6_000) });
+    expect(reports).toEqual([
+      `the "sample" source's push threw: more than ${MAX_QUEUED_CHANGES} ops queued between ticks: its queue, change sets included, collapses into one invalidation of everything, and its source loads committed state again.`,
+    ]);
+    // Covered until it applies: queued for nothing, said once.
+    source.push({ kind: "features", changes: set(1, "road-0") });
+    source.push({ kind: "invalidate", keys: ["a"] });
+    expect(reports).toHaveLength(1);
     jobs.apply(Infinity);
-    // The change set applied, and everything reloads.
-    expect(content.feature(road0)).toBeUndefined();
-    expect(content.rows.feed.size).toBe(0);
-    expect(content.rows.points.has("a")).toBe(false);
-    // Change sets alone past the bound: the rest are dropped, said once.
+    expect(content.rows.points.has("a")).toBe(false); // everything reloads
+    rt.tick();
+    jobs.apply(Infinity);
+    rt.tick();
+    jobs.apply(Infinity);
+    // Committed state, as its source serves it: nothing was held.
+    expect(content.feature(road0)?.properties).toEqual({
+      lanes: 2,
+      name: "Main",
+    });
+    // Change sets alone past the bound collapse too; a later overflow is news again.
     reports.length = 0;
-    for (let i = 1; i <= MAX_QUEUED_CHANGES + 5; i++) {
+    for (let i = 0; i <= MAX_QUEUED_CHANGES + 5; i++) {
       source.push({ kind: "features", changes: set(i, "road-0") });
     }
     expect(reports).toEqual([
-      expect.stringContaining(
-        "others' edits are dropped until its queue drains, and a reload doesn't bring them back",
-      ),
+      expect.stringContaining("change sets included, collapses"),
     ]);
+    jobs.apply(Infinity);
+    expect(content.rows.features.size).toBe(0);
   });
 
   it("reports samples dropped at the bound once per run of drops", async () => {
@@ -1926,8 +1954,10 @@ describe("two IDs, change sets by the source's keys, and the scene clock (CS-957
     const inserted = content.featureId(
       (result as { keys: Record<string, string> }).keys["provisional-1"]!,
     );
-    expect(content.feature(inserted)?.properties?.name).toBe("New");
-    expect(content.keyOf(inserted)).toBe("road-2");
+    // A peer's insert of a key nothing resident holds isn't held (CS-1102 A):
+    // its source invalidates what holds it, and the reload shows it.
+    expect(content.feature(inserted)).toBeUndefined();
+    expect(content.keyOf(inserted)).toBeUndefined();
     // Back out as JSON: the keys, with this client's IDs beside them.
     const out = JSON.parse(
       changeSetToJson(content.resolve(changeSetFromJson(theirs))),
@@ -2137,7 +2167,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     ).toThrow(/op 0: its id isn't its key's feature ID/);
   });
 
-  it("holds nothing for a feed's op on a key nothing resident has, and says nothing of it (CS-1085 A)", async () => {
+  it("holds nothing for a feed's op on a key nothing resident has, an insert included, and says nothing of it (CS-1085 A, CS-1102 A)", async () => {
     const reports: string[] = [];
     engine.errors.on((e) => reports.push(e.message));
     const { content } = await twoItems();
@@ -2159,9 +2189,10 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     expect(content.rows.rowsOf(content.featureId("road-0"))).toHaveLength(0);
     expect(content.keyOf(content.featureId("n3/p0"))).toBeUndefined();
     expect(content.feature(content.featureId("later"))).toBeUndefined();
-    // An insert is a row of the feed's own batch, with its key.
-    expect([...content.rows.feed.keys()]).toEqual([content.featureId("new-1")]);
-    expect(content.keyOf(content.featureId("new-1"))).toBe("new-1");
+    // An insert isn't held either: its source invalidates what holds it.
+    expect([...content.rows.ids()]).not.toContain(content.featureId("new-1"));
+    expect(content.feature(content.featureId("new-1"))).toBeUndefined();
+    expect(content.keyOf(content.featureId("new-1"))).toBeUndefined();
   });
 
   it("refuses a change set for other content, and records no key from a refused one", async () => {
@@ -2183,8 +2214,9 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     };
     sourceOf(content).push({ kind: "features", changes: refused });
     engine.scene.workers.jobs.apply(Infinity);
-    expect(content.rows.feed.size).toBe(0);
     expect(content.keyOf(content.featureId("ghost"))).toBeUndefined();
+    // Refused whole, it became an invalidation of everything.
+    expect(content.rows.features.size).toBe(0);
   });
 
   it("refuses a source's own DrawOptions.identity", async () => {
@@ -2533,7 +2565,7 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
   });
 });
 
-describe("the feed as base: resident rows, the feed's own batch, the budget (CS-1085 A)", () => {
+describe("the feed as base: resident rows patched in place, nothing else held (CS-1085 A, CS-1102 A)", () => {
   let engine: Engine;
   let world: World;
   let reports: string[];
@@ -2623,12 +2655,6 @@ describe("the feed as base: resident rows, the feed's own batch, the budget (CS-
               key: "road-1",
               patch: { properties: JSON.parse('{"__proto__": 7}') },
             },
-            { op: "insert", key: "proto", feature: { properties: {} } },
-            {
-              op: "update",
-              key: "proto",
-              patch: { properties: JSON.parse('{"__proto__": 7}') },
-            },
           ],
         },
       }),
@@ -2637,45 +2663,33 @@ describe("the feed as base: resident rows, the feed's own batch, the budget (CS-
     engine.scene.workers.jobs.apply(Infinity);
     expect((Object.prototype as Record<number, unknown>)[1]).toBeUndefined();
     expect(Object.getPrototypeOf({})).toBe(Object.prototype);
-    const proto = content.feature(content.featureId("proto"))!;
-    expect(Object.getPrototypeOf(proto.properties)).toBe(Object.prototype);
-    expect(Object.hasOwn(proto.properties!, "__proto__")).toBe(true);
+    // No column of that name: the batch doesn't fit it, and reloads.
+    expect(content.rows.features.has("a")).toBe(false);
   });
 
-  it("counts the feed's own rows by the budget, until its delete or the source's own row", async () => {
+  it("holds no row for a peer's insert, so the budget holds nothing for it; the source's own row shows once it writes one", async () => {
     const { content, feed } = await city();
     const budget = engine.sources.budget;
     const before = budget.resident;
     feed("cs-1", [
       { op: "insert", key: "kiosk", feature: { properties: { open: true } } },
-    ]);
-    const kiosk = content.featureId("kiosk");
-    expect(content.feature(kiosk)).toEqual({ properties: { open: true } });
-    expect(budget.resident).toBeGreaterThan(before);
-    feed("cs-2", [
       { op: "update", key: "kiosk", patch: { properties: { open: false } } },
     ]);
-    expect(content.feature(kiosk)).toEqual({ properties: { open: false } });
-    feed("cs-3", [{ op: "delete", key: "kiosk" }]);
-    expect(content.rows.feed.size).toBe(0);
+    const kiosk = content.featureId("kiosk");
+    expect(content.feature(kiosk)).toBeUndefined();
+    expect([...content.rows.ids()]).not.toContain(kiosk);
     expect(budget.resident).toBe(before);
-    // The source's own row of an inserted key takes its place.
-    feed("cs-4", [{ op: "insert", key: "late", feature: {} }]);
+    // The source invalidates what holds it; its reload writes the row.
     sourceOf(content).host.sinks.points.put({
       key: "b",
       crs: "EPSG:4979",
       count: 1,
       positions: Float64Array.of(0, 0, 0),
-      names: ["late"],
+      names: ["kiosk"],
+      properties: { open: ["yes"] },
     });
-    expect(content.rows.feed.size).toBe(0);
-    expect(budget.resident).toBe(before);
-    expect(content.feature(content.featureId("late"))?.geometry).toBeDefined();
-    // Closed, it frees what the feed held.
-    feed("cs-5", [{ op: "insert", key: "gone", feature: {} }]);
-    expect(budget.resident).toBeGreaterThan(before);
-    content.destroy();
-    expect(budget.resident).toBe(0);
+    expect(content.feature(kiosk)?.properties).toEqual({ open: "yes" });
+    expect(content.keyOf(kiosk)).toBe("kiosk");
   });
 
   it("answers keyOf from a row while one is held, from another batch that names it, and from an edit record once none is", async () => {

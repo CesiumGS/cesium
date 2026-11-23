@@ -323,7 +323,7 @@ export class SourceContent {
   /**
    * The source's own key for feature `id`, from what holds it: an edit
    * record (which holds its key, loaded or not), a resident row the source
-   * names so (or the feed inserted), or a draw. No other table maps an ID back to a key, so for an ID none
+   * names so, or a draw. No other table maps an ID back to a key, so for an ID none
    * of those hold it is undefined.
    * @experimental
    */
@@ -426,8 +426,8 @@ export class SourceContent {
   /**
    * Feature `id` as it shows now, edits applied: an inserted or replaced
    * feature's data, the resident row (the source's, with its feed's changes
-   * applied: its properties and geometry), `{}` for a draw with no row
-   * data, or undefined when hidden or not loaded.
+   * applied in place: its properties and geometry), `{}` for a draw with no
+   * row data, or undefined when hidden or not loaded.
    * @experimental
    */
   feature(id: FeatureId): FeatureData | undefined {
@@ -442,13 +442,9 @@ export class SourceContent {
     return this.baseFeature(id);
   }
 
-  /** @internal Whether a resident row (its source's, or its feed's) or a draw has feature `id` now. */
+  /** @internal Whether a resident row or a draw has feature `id` now. */
   hasBase(id: FeatureId): boolean {
-    return (
-      this.rows.rowsOf(id).length > 0 ||
-      this.rows.feed.has(id) ||
-      this.drawsById.has(id)
-    );
+    return this.rows.rowsOf(id).length > 0 || this.drawsById.has(id);
   }
 
   /**
@@ -599,17 +595,14 @@ export class SourceContent {
     }
   }
 
-  /** @internal Feature `id` as resident (its source's rows with its feed's changes, or its draws), under every edit. */
+  /** @internal Feature `id` as resident (its source's rows with its feed's changes applied, or its draws), under every edit. */
   baseFeature(id: FeatureId): FeatureData | undefined {
     const at = this.rows.rowsOf(id)[0];
     if (at) {
       const held = this.rows.batchAt(at)!;
       return rowFeature(held, at.index, at.sink);
     }
-    return (
-      this.rows.feed.get(id)?.feature ??
-      (this.drawsById.has(id) ? {} : undefined)
-    );
+    return this.drawsById.has(id) ? {} : undefined;
   }
 
   /**

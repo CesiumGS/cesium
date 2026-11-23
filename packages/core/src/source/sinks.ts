@@ -21,12 +21,7 @@ import {
   type StableId,
   storedId,
 } from "../scene/identity.ts";
-import type {
-  ChangeOp,
-  FeatureData,
-  FeaturePatch,
-  GeometryData,
-} from "./editing.ts";
+import type { ChangeOp, FeaturePatch, GeometryData } from "./editing.ts";
 import type {
   ContentKey,
   CreditList,
@@ -34,7 +29,6 @@ import type {
   FeatureBatch,
   PointBatch,
   RasterImage,
-  PlainValue,
   PropertyColumn,
   RowIdentity,
   RowSink,
@@ -52,18 +46,6 @@ export interface HeldRows<B> {
   readonly batch: B;
   /** One stable ID per row. */
   readonly ids: BigUint64Array;
-}
-
-/**
- * A feature the feed inserted that the source holds no row of (CS-1085 A):
- * a row of the feed's own batch, with its key, counted by the budget
- * (`ContentRows.onHold`) until the feed deletes it or the source writes a
- * row of its own for the key.
- */
-export interface FeedRow {
-  readonly key: string;
-  readonly feature: FeatureData;
-  readonly bytes: number;
 }
 
 /** Where one row is. */
@@ -85,10 +67,6 @@ export class ContentRows {
   readonly custom = new Map<string, Map<ContentKey, HeldRows<CustomRows>>>();
   /** Every row of every batch, by its ID (a named feature may be in several tiles). */
   private readonly byId = new Map<StableId, RowAt[]>();
-  /** The feed's own batch: inserts of keys the source holds no row of, by ID. */
-  readonly feed = new Map<StableId, FeedRow>();
-  /** Called with each change in the bytes the feed's batch holds: the budget counts them. */
-  onHold: ((delta: number) => void) | undefined;
   /** Bumped by every change: what reads rows checks it. */
   revision = 0;
   /** Called after each change, with the IDs it touched. */
@@ -142,38 +120,21 @@ export class ContentRows {
   /** Its content was destroyed: every put throws from now on, and removes do nothing. */
   close(): void {
     this.closed = true;
-    this.dropFeed();
-  }
-
-  /** Drops the feed's batch (an invalidation of everything, or a close). */
-  dropFeed(): void {
-    const ids = [...this.feed.keys()];
-    for (const id of ids) {
-      this.unfeed(id);
-    }
-    if (ids.length > 0 && !this.closed) {
-      this.changed(ids);
-    }
-  }
-
-  private unfeed(id: StableId): void {
-    const row = this.feed.get(id);
-    if (row) {
-      this.feed.delete(id);
-      this.onHold?.(-row.bytes);
-    }
   }
 
   /**
    * Applies others' committed changes from its source's feed (`ops`,
-   * resolved) to what is resident (CS-1085 A): an update patches the rows
-   * of its key in place, as samples do; a delete removes them; an insert of
-   * a key with no row becomes a row of the feed's own batch. An op for a key
-   * nothing resident holds is not held: the source's next load of it brings
-   * the committed state, since a source serves content at or past what it
-   * pushed. Returns the content keys of batches a patch doesn't fit (a new
-   * property, another type, another shape of geometry): the engine drops
-   * them, and the source loads them again.
+   * resolved) to what is resident (CS-1085 A, CS-1102 A). A pushed change
+   * has two outcomes only: applied to a resident row, or turned into an
+   * invalidation. An update, or an insert of a key a resident row holds,
+   * patches its rows in place, as samples do; a delete removes them. An op
+   * for a key nothing resident holds, an insert included, is not held: the
+   * source's next load brings the committed state, since a source serves
+   * content at or past what it pushed, and a source invalidates the content
+   * that holds a peer's insert (`SourceChange`). Returns the content keys of
+   * batches a patch doesn't fit (a new property, another type, another
+   * shape of geometry): the engine invalidates them, and the source loads
+   * them again.
    */
   applyFeed(ops: readonly ChangeOp[]): ContentKey[] {
     const stale = new Set<ContentKey>();
@@ -181,28 +142,18 @@ export class ContentRows {
     for (const op of ops) {
       const id = op.id!;
       const rows = this.rowsOf(id);
-      const own = this.feed.get(id);
+      if (rows.length === 0) {
+        continue; // not resident: nothing is held
+      }
       if (op.op === "delete") {
-        this.unfeed(id);
         this.removeRows(rows);
-      } else if (own) {
-        this.unfeed(id);
-        this.putFeed(
-          id,
-          op.key,
-          op.op === "insert" ? op.feature : patched(own.feature, op.patch),
-        );
-      } else if (rows.length > 0) {
+      } else {
         const patch: FeaturePatch = op.op === "insert" ? op.feature : op.patch;
         for (const at of rows) {
           if (!writeRow(this.batchAt(at)!.batch, at.index, patch)) {
             stale.add(at.key);
           }
         }
-      } else if (op.op === "insert") {
-        this.putFeed(id, op.key, op.feature);
-      } else {
-        continue; // not resident: nothing is held
       }
       touched.push(id);
     }
@@ -210,12 +161,6 @@ export class ContentRows {
       this.changed(touched);
     }
     return [...stale];
-  }
-
-  private putFeed(id: StableId, key: string, feature: FeatureData): void {
-    const bytes = 64 + 2 * (JSON.stringify(feature)?.length ?? 0);
-    this.feed.set(id, { key, feature, bytes });
-    this.onHold?.(bytes);
   }
 
   /** Removes rows `at` from their batches, each batch put again without them. */
@@ -269,14 +214,9 @@ export class ContentRows {
     return this.custom.get(at.sink.slice("custom:".length))?.get(at.key);
   }
 
-  /** Every ID held, the source's rows' and the feed's, in no particular order. */
-  *ids(): IterableIterator<StableId> {
-    yield* this.byId.keys();
-    for (const id of this.feed.keys()) {
-      if (!this.byId.has(id)) {
-        yield id;
-      }
-    }
+  /** Every ID a resident row holds, in no particular order. */
+  ids(): IterableIterator<StableId> {
+    return this.byId.keys();
   }
 
   /** Each batch's credits, then the images', without repeats (by html). */
@@ -387,8 +327,7 @@ export class ContentRows {
   addressOf(id: StableId): { key: string; row?: number } | undefined {
     const at = this.byId.get(id)?.[0];
     if (!at) {
-      const fed = this.feed.get(id);
-      return fed && { key: fed.key };
+      return undefined;
     }
     const name = (this.batchAt(at)!.batch as RowIdentity).names?.[at.index];
     return name !== undefined ? { key: name } : { key: at.key, row: at.index };
@@ -423,11 +362,7 @@ export class ContentRows {
         this.checkOpen(`the ${name} sink's put`);
         check(batch);
         checkNames(batch, this.writable);
-        const ids = this.store(name, map, batch);
-        // The source's own row of a key the feed inserted: at or past it.
-        for (const word of ids) {
-          this.unfeed(storedId(word));
-        }
+        this.store(name, map, batch);
       },
       remove: (key) => {
         const held = this.closed ? undefined : map.get(key);
@@ -511,28 +446,6 @@ export class ContentRows {
 
 // ---------------------------------------------------------------------------
 // The feed's changes, in place
-
-/** `base` with `patch`'s properties set or removed (null) and its geometry, if any. */
-export function patched(base: FeatureData, patch: FeaturePatch): FeatureData {
-  // A map, then own properties: a name like `__proto__` is a name.
-  const properties = new Map<string, PlainValue>(
-    Object.entries(base.properties ?? {}),
-  );
-  for (const [name, value] of Object.entries(patch.properties ?? {})) {
-    if (value === null) {
-      properties.delete(name);
-    } else {
-      properties.set(name, value);
-    }
-  }
-  const geometry = patch.geometry ?? base.geometry;
-  return {
-    ...(properties.size > 0
-      ? { properties: Object.fromEntries(properties) }
-      : {}),
-    ...(geometry ? { geometry } : {}),
-  };
-}
 
 /**
  * Writes `patch` into row `index` of `batch` in place, when every part of it

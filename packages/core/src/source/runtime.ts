@@ -18,13 +18,21 @@
  *   wait until their world's scene time reaches them, so a replayed feed
  *   gives the same rows.
  *   The engine never polls a source (CS-863: a source may poll its own server).
+ * - **Two outcomes** (CS-1102 A): a pushed change is applied to what is
+ *   resident, or turned into an invalidation; the engine keeps nothing else
+ *   of it. An op for a key nothing resident holds, a peer's insert included,
+ *   is not held: the source invalidates the content that holds an insert,
+ *   and its reload shows it. A change set that fails its check becomes an
+ *   invalidation of everything, reported.
  * - **Bounds:** between ticks a source may queue at most `MAX_QUEUED_CHANGES`
- *   changes; past that its queued invalidations collapse into one
- *   invalidation of everything (it reloads, reported). Its queued change sets
- *   (`features`) stay, since a reload doesn't replay others' edits; once its
- *   queue holds nothing else, a further change set is dropped, and that is
- *   reported plainly. At most `MAX_BUFFERED_SAMPLES` samples wait for their
- *   times; a push past that is dropped, reported once per run of drops.
+ *   ops (a change set counts its ops, an invalidation its keys). Past that,
+ *   its whole queue, change sets included, collapses into one invalidation
+ *   of everything, reported: its source loads committed state again, which
+ *   is at or past what it pushed (CS-1085 A), so nothing is lost; what it
+ *   pushes until that applies is covered by it. At most
+ *   `MAX_BUFFERED_SAMPLES` samples wait for their times; a push past that is
+ *   dropped, reported once per run of drops. That is a stated loss: a reload
+ *   doesn't bring a sample back, and the next one heals a position.
  * - **Close:** destroying content cancels its source's jobs, and its sinks
  *   and `jobs.submit` throw from then on; its pushes are dropped.
  */
@@ -32,7 +40,7 @@ import type { Credential, FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
 import { SourceContent } from "./content.ts";
-import { checkChangeSet, type ChangeSet } from "./editing.ts";
+import { checkChangeSet, type ChangeOp, type ChangeSet } from "./editing.ts";
 import {
   SourceKinds,
   UrlResolver,
@@ -56,7 +64,10 @@ import type {
   SourceView,
 } from "./types.ts";
 
-/** Most changes one source may queue between apply phases. */
+/**
+ * Most ops one source may queue between apply phases: a change set counts
+ * its ops, an invalidation its keys, any other change one (CS-1102 A).
+ */
 export const MAX_QUEUED_CHANGES = 10_000;
 
 /** Most samples that may wait for their times, every source together. */
@@ -123,14 +134,23 @@ interface Opened {
   readonly client: BudgetClient;
   /** Its source's jobs not yet settled: canceled when it closes. */
   readonly jobs: Set<Job<unknown>>;
-  /** Its changes in the queue now (`MAX_QUEUED_CHANGES`). */
+  /** The ops of its changes in the queue now (`MAX_QUEUED_CHANGES`). */
   queued: number;
-  /** Of those, change sets (`features`), which a collapse keeps. */
-  queuedSets: number;
-  /** Of those, invalidations of everything. */
-  queuedAll: number;
-  /** What its queue's overflow reported (once each until its queue drains). */
-  readonly overflowReported: Set<"collapsed" | "dropped">;
+  /**
+   * Its queue collapsed into one invalidation of everything that hasn't
+   * applied yet: what it pushes until then is covered by it.
+   */
+  collapsed: boolean;
+}
+
+/** A change waiting for the apply phase. */
+interface Queued {
+  readonly opened: Opened;
+  readonly change: SourceChange;
+  /** Its ops, as counted against `MAX_QUEUED_CHANGES`. */
+  readonly ops: number;
+  /** The invalidation of everything an overflow collapsed its queue into. */
+  readonly collapse?: true;
 }
 
 interface BufferedSample {
@@ -155,7 +175,7 @@ export class SourceRuntime {
    * Changes waiting for the apply phase, in arrival order (samples aside),
    * from `queueHead` on: applied ones are skipped, not shifted out.
    */
-  private queue: { opened: Opened; change: SourceChange }[] = [];
+  private queue: Queued[] = [];
   private queueHead = 0;
   /**
    * Samples waiting for their times, from `samplesHead` on, in time order
@@ -251,16 +271,12 @@ export class SourceRuntime {
       name,
     );
     const client = this.budget.client();
-    // The feed's own rows are counted by the budget as all content is.
-    content.rows.onHold = (delta) => this.budget.hold(delta);
     const opened: Opened = {
       content,
       client,
       jobs: new Set(),
       queued: 0,
-      queuedSets: 0,
-      queuedAll: 0,
-      overflowReported: new Set(),
+      collapsed: false,
     };
     content.onDestroy = () => this.close(opened);
     let source: ContentSource | undefined;
@@ -421,91 +437,46 @@ export class SourceRuntime {
       if (!this.bufferSamples(opened, change.samples)) {
         return;
       }
-    } else if (opened.queued >= MAX_QUEUED_CHANGES) {
-      if (!this.overflow(opened, change)) {
-        return;
-      }
+    } else if (opened.collapsed) {
+      return; // the invalidation of everything it queued covers it
     } else {
-      this.enqueue(opened, change);
+      const ops = opsOf(change);
+      if (opened.queued + ops > MAX_QUEUED_CHANGES) {
+        this.collapse(opened);
+      } else {
+        this.queue.push({ opened, change, ops });
+        opened.queued += ops;
+      }
     }
     this.scheduleApply();
     this.options.wake?.();
   }
 
-  private enqueue(opened: Opened, change: SourceChange): void {
-    this.queue.push({ opened, change });
-    opened.queued++;
-    if (change.kind === "features") {
-      opened.queuedSets++;
-    } else if (invalidatesAll(change)) {
-      opened.queuedAll++;
-    }
-  }
-
   /**
-   * A push past `MAX_QUEUED_CHANGES`. Its queued invalidations (and any
-   * other kind but change sets) collapse into one invalidation of
-   * everything, which reloads all; its change sets stay, since a reload
-   * doesn't replay others' edits. A further change set that doesn't fit is
-   * dropped. Each is reported once until its queue drains. Returns whether
-   * the push queued (or is covered by what did).
+   * A push past `MAX_QUEUED_CHANGES`: its whole queue, change sets
+   * included, collapses into one invalidation of everything, reported. Its
+   * source then loads committed state, at or past every change it pushed,
+   * so nothing is lost (CS-1102 A).
    */
-  private overflow(opened: Opened, change: SourceChange): boolean {
-    const where = `the "${opened.content.kind}" source's push`;
-    // Collapse when it frees something, or when an invalidation arrives
-    // at a queue of change sets only (then its queue passes the bound by one).
-    const others = opened.queued - opened.queuedSets;
-    const collapse =
-      others > 1 ||
-      (others === 1 && opened.queuedAll === 0) ||
-      (others === 0 && change.kind !== "features");
-    if (collapse) {
-      const kept: { opened: Opened; change: SourceChange }[] = [];
-      for (let i = this.queueHead; i < this.queue.length; i++) {
-        const q = this.queue[i]!;
-        if (q.opened !== opened || q.change.kind === "features") {
-          kept.push(q);
-        }
-      }
-      this.queue = kept;
-      this.queueHead = 0;
-      opened.queued = opened.queuedSets;
-      opened.queuedAll = 0;
-      this.enqueue(opened, { kind: "invalidate" });
-      this.reportOverflow(
-        opened,
-        "collapsed",
-        where,
-        `more than ${MAX_QUEUED_CHANGES} changes queued between ticks; its invalidations collapse into one invalidation of everything, and its change sets stay.`,
-      );
-    }
-    if (change.kind !== "features") {
-      return true; // the invalidation of everything covers it
-    }
-    if (opened.queued < MAX_QUEUED_CHANGES) {
-      this.enqueue(opened, change);
-      return true;
-    }
-    this.reportOverflow(
+  private collapse(opened: Opened): void {
+    this.queue = this.queue
+      .slice(this.queueHead)
+      .filter((q) => q.opened !== opened);
+    this.queueHead = 0;
+    this.queue.push({
       opened,
-      "dropped",
-      where,
-      `more than ${MAX_QUEUED_CHANGES} change sets queued between ticks; others' edits are dropped until its queue drains, and a reload doesn't bring them back.`,
+      change: { kind: "invalidate" },
+      ops: 1,
+      collapse: true,
+    });
+    opened.queued = 1;
+    opened.collapsed = true;
+    this.report(
+      `the "${opened.content.kind}" source's push`,
+      new Error(
+        `more than ${MAX_QUEUED_CHANGES} ops queued between ticks: its queue, change sets included, collapses into one invalidation of everything, and its source loads committed state again.`,
+      ),
     );
-    return false;
-  }
-
-  /** Reports an overflow of `opened`'s queue once until its queue drains. */
-  private reportOverflow(
-    opened: Opened,
-    what: "collapsed" | "dropped",
-    where: string,
-    message: string,
-  ): void {
-    if (!opened.overflowReported.has(what)) {
-      opened.overflowReported.add(what);
-      this.report(where, new Error(message));
-    }
   }
 
   /**
@@ -606,9 +577,13 @@ export class SourceRuntime {
         this.compactQueue();
         return false;
       }
-      const { opened, change } = this.queue[this.queueHead]!;
+      const queued = this.queue[this.queueHead]!;
+      const { opened, change } = queued;
       this.queue[this.queueHead++] = undefined!; // let it go
-      this.dequeued(opened, change);
+      opened.queued -= queued.ops;
+      if (queued.collapse) {
+        opened.collapsed = false;
+      }
       applied++;
       if (opened.content.destroyed) {
         continue;
@@ -651,19 +626,6 @@ export class SourceRuntime {
     }
     this.compactSamples();
     return finished;
-  }
-
-  /** A queued change left the queue: its source's counts follow. */
-  private dequeued(opened: Opened, change: SourceChange): void {
-    opened.queued--;
-    if (change.kind === "features") {
-      opened.queuedSets--;
-    } else if (invalidatesAll(change)) {
-      opened.queuedAll--;
-    }
-    if (opened.queued === 0) {
-      opened.overflowReported.clear(); // a later overflow is news again
-    }
   }
 
   /**
@@ -720,9 +682,6 @@ export class SourceRuntime {
     const keys =
       change.keys ?? (change.region === undefined ? [...rows.keys()] : []);
     rows.drop(keys);
-    if (invalidatesAll(change)) {
-      rows.dropFeed(); // its source loads committed state again
-    }
     for (const key of keys) {
       opened.client.release(key);
     }
@@ -730,19 +689,30 @@ export class SourceRuntime {
   }
 
   /**
-   * Others' committed change set from the source's feed (CS-1085 A):
-   * checked and resolved by its keys (a malformed one, or one whose IDs
-   * aren't its keys', is dropped whole and reported), then applied to what
-   * is resident, under this client's edits (`ContentRows.applyFeed`). An op
-   * for a key nothing resident holds is not held: the source's next load
-   * brings committed state. Batches a patch doesn't fit are invalidated, so
-   * the source loads them again.
+   * Others' committed change set from the source's feed (CS-1085 A,
+   * CS-1102 A): checked and resolved by its keys, then applied to what is
+   * resident, under this client's edits (`ContentRows.applyFeed`). An op for
+   * a key nothing resident holds is not held: the source's next load brings
+   * committed state. Batches a patch doesn't fit are invalidated, so the
+   * source loads them again. A change set that fails its check (malformed,
+   * or an ID that isn't its key's) becomes an invalidation of everything,
+   * reported: its good ops are lost no more than a reload loses them.
    */
   private applyFeatures(opened: Opened, changes: ChangeSet): void {
-    checkChangeSet(changes);
     const { content } = opened;
-    // Its own source's feed: no `source` check, since it can only be its own.
-    const stale = content.rows.applyFeed(content.resolveOps(changes.ops));
+    let ops: ChangeOp[];
+    try {
+      checkChangeSet(changes);
+      // Its own source's feed: no `source` check, since it can only be its own.
+      ops = content.resolveOps(changes.ops);
+    } catch (error) {
+      this.reportMessage(
+        `the "${content.kind}" source's change set is refused, and becomes an invalidation of everything, so its source loads committed state again: ${messageOf(error)}`,
+      );
+      this.invalidate(opened, { kind: "invalidate" });
+      return;
+    }
+    const stale = content.rows.applyFeed(ops);
     if (stale.length > 0) {
       this.invalidate(opened, { kind: "invalidate", keys: stale });
     }
@@ -806,9 +776,7 @@ export class SourceRuntime {
   }
 
   private report(where: string, error: unknown): void {
-    this.reportMessage(
-      `${where} threw: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    this.reportMessage(`${where} threw: ${messageOf(error)}`);
   }
 
   private reportMessage(message: string): void {
@@ -837,11 +805,21 @@ function nameOf(
   return declared;
 }
 
-/** An invalidation of everything: neither keys nor a region. */
-function invalidatesAll(change: SourceChange): boolean {
-  return (
-    change.kind === "invalidate" &&
-    change.keys === undefined &&
-    change.region === undefined
-  );
+/** What `error` says: its message, the source's own words. */
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * A change's ops, as counted against `MAX_QUEUED_CHANGES`, read before it is
+ * checked: a change set's ops, an invalidation's keys, else one.
+ */
+function opsOf(change: SourceChange): number {
+  const list =
+    change.kind === "features"
+      ? (change.changes as { ops?: unknown } | null | undefined)?.ops
+      : change.kind === "invalidate"
+        ? change.keys
+        : undefined;
+  return Array.isArray(list) ? Math.max(1, list.length) : 1;
 }
