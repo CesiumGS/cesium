@@ -80,16 +80,16 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "a66c01a0d1b3bf11d32589d177db76af",
-    "canonicalLength": 10230
+    "canonical": "8609532d3c1914c18eeade0c4b44b234",
+    "canonicalLength": 10426
    },
    "positionWgsl": {
-    "canonical": "e5a72a10f7e571f5cab9f34031d8ea2d",
-    "canonicalLength": 7544
+    "canonical": "17172513dcf33b55a3c2b01838f419b9",
+    "canonicalLength": 7740
    },
    "centerConstantsWgsl": {
-    "canonical": "81de43076a2251ee0305186f7454fe4c",
-    "canonicalLength": 14700
+    "canonical": "4fbb7c512ede1011ca08c3239cf81bf2",
+    "canonicalLength": 14791
    },
    "uniformsLayout": {
     "floats": 36,
@@ -182,16 +182,16 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "a66c01a0d1b3bf11d32589d177db76af",
-    "canonicalLength": 10230
+    "canonical": "8609532d3c1914c18eeade0c4b44b234",
+    "canonicalLength": 10426
    },
    "positionWgsl": {
-    "canonical": "e5a72a10f7e571f5cab9f34031d8ea2d",
-    "canonicalLength": 7544
+    "canonical": "17172513dcf33b55a3c2b01838f419b9",
+    "canonicalLength": 7740
    },
    "centerConstantsWgsl": {
-    "canonical": "81de43076a2251ee0305186f7454fe4c",
-    "canonicalLength": 14700
+    "canonical": "4fbb7c512ede1011ca08c3239cf81bf2",
+    "canonicalLength": 14791
    },
    "uniformsLayout": {
     "floats": 36,
@@ -284,16 +284,16 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "a66c01a0d1b3bf11d32589d177db76af",
-    "canonicalLength": 10230
+    "canonical": "8609532d3c1914c18eeade0c4b44b234",
+    "canonicalLength": 10426
    },
    "positionWgsl": {
-    "canonical": "e5a72a10f7e571f5cab9f34031d8ea2d",
-    "canonicalLength": 7544
+    "canonical": "17172513dcf33b55a3c2b01838f419b9",
+    "canonicalLength": 7740
    },
    "centerConstantsWgsl": {
-    "canonical": "81de43076a2251ee0305186f7454fe4c",
-    "canonicalLength": 14700
+    "canonical": "4fbb7c512ede1011ca08c3239cf81bf2",
+    "canonicalLength": 14791
    },
    "uniformsLayout": {
     "floats": 36,
@@ -386,16 +386,16 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "e7fd15e5ada9b794ee7f38fb85098dff",
-    "canonicalLength": 7181
+    "canonical": "122f749cd67193086ce03b57fef89572",
+    "canonicalLength": 7377
    },
    "positionWgsl": {
-    "canonical": "08aa365a3e4baece438b711ba6024c60",
-    "canonicalLength": 7475
+    "canonical": "560c719c8d79e1f8059792a2e2c42715",
+    "canonicalLength": 7671
    },
    "centerConstantsWgsl": {
-    "canonical": "ae9c5f6514aa92f79666698c432a5451",
-    "canonicalLength": 11937
+    "canonical": "1af3689181d1e561083351f388126fc7",
+    "canonicalLength": 12028
    },
    "uniformsLayout": {
     "floats": 32,

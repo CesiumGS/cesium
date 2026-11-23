@@ -1,16 +1,16 @@
 {
  "exact": {
   "wgsl": {
-   "canonical": "ea3fc98457408b81f7773bca85a5182e",
-   "canonicalLength": 150848
+   "canonical": "7d6a7540173ea35881fd76ffb0435db5",
+   "canonicalLength": 151044
   },
   "positionWgsl": {
-   "canonical": "66083239e7f70b8c061ef4a63fb9f720",
-   "canonicalLength": 33775
+   "canonical": "9798c5ddd763b568edec2d51109901ca",
+   "canonicalLength": 33971
   },
   "centerConstantsWgsl": {
-   "canonical": "b8c95e9eee655bcc11e4a1f521138a33",
-   "canonicalLength": 186146
+   "canonical": "ecaad6e35bac9f035cf2037436130f86",
+   "canonicalLength": 186237
   },
   "uniformsLayout": {
    "floats": 48,
@@ -92,12 +92,12 @@
  },
  "linear": {
   "wgsl": {
-   "canonical": "b280fe90e67b9de3b05b1c683aebc63c",
-   "canonicalLength": 83182
+   "canonical": "861a41705eb438a0b350842e45150d5e",
+   "canonicalLength": 83378
   },
   "positionWgsl": {
-   "canonical": "80f8b7d218cf04e017aa7c0d38c2ad67",
-   "canonicalLength": 31762
+   "canonical": "8c4b7d8c2d6d19b650adf661f3786604",
+   "canonicalLength": 31958
   },
   "centerConstantsWgsl": null,
   "uniformsLayout": {
@@ -170,12 +170,12 @@
  },
  "auto": {
   "wgsl": {
-   "canonical": "b280fe90e67b9de3b05b1c683aebc63c",
-   "canonicalLength": 83182
+   "canonical": "861a41705eb438a0b350842e45150d5e",
+   "canonicalLength": 83378
   },
   "positionWgsl": {
-   "canonical": "80f8b7d218cf04e017aa7c0d38c2ad67",
-   "canonicalLength": 31762
+   "canonical": "8c4b7d8c2d6d19b650adf661f3786604",
+   "canonicalLength": 31958
   },
   "centerConstantsWgsl": null,
   "uniformsLayout": {
@@ -248,16 +248,16 @@
  },
  "none": {
   "wgsl": {
-   "canonical": "52bda0969a2b1631ddf7ab222312445f",
-   "canonicalLength": 30073
+   "canonical": "78ca8da464ef76f7b9735888f4a1a726",
+   "canonicalLength": 30269
   },
   "positionWgsl": {
-   "canonical": "b0b7082744f5f12aff8892ecabae5ffa",
-   "canonicalLength": 30415
+   "canonical": "0484ab9e5b1a726267ff4f6566d75d68",
+   "canonicalLength": 30611
   },
   "centerConstantsWgsl": {
-   "canonical": "c61b62d985f1996c0c65a8295512285f",
-   "canonicalLength": 45428
+   "canonical": "a287513d92ba5157c753b0e32fd0a706",
+   "canonicalLength": 45519
   },
   "uniformsLayout": {
    "floats": 44,

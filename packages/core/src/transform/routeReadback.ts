@@ -30,6 +30,7 @@ import {
   centerTermBound,
   centerTermExact,
   fixParts,
+  fromFixParts,
   type CenterInputs,
 } from "./centerTerm.ts";
 import { compileRoute, type CompiledRoute } from "./compile.ts";
@@ -139,15 +140,38 @@ export const POSITION: Bound = { abs: 0, rel: 4e-5 };
 export const CENTER: Bound = { abs: 0, rel: 1 };
 /**
  * The parts against the float64 map: the CPU's inputs, shared by every
- * backend. Each value in the exact form is its float64 to 2⁻⁴⁹ units; what
- * is left is two float64 computations' agreement: the record's F(c) and G(c)
- * (G a difference of two evaluations, each as large as |F(c)|, times the
- * parameter) against `Route.forward`. That agreement isn't derived: 10⁻⁷ m
- * is the ceiling CS-921 measured it under (6.6 × 10⁻⁸ m, flatten), kept so
- * it can't grow unseen. A value past 2³¹ units is float32 (`fixParts`): its
- * case adds 2⁻²⁴ of its scale.
+ * backend, with its scale (`inputsScaleOf`) (1 + Σⱼ|sⱼ|)·(|F(c)| + |eye|).
+ * Each value in the exact form is its float64 to 2⁻⁴⁹ units; what is left is
+ * float64 evaluations' agreement: the record's F(c), and each G(c), a
+ * difference of two evaluations as large as |F(c)| times the parameter s,
+ * against `Route.forward`. That is 2 + 2J evaluations, weighted 1 or |s|.
+ * Taking each within one float64 ulp of the scale (2⁻⁵² of it) gives rel
+ * 2·2⁻⁵². For flatten's 150 m at the Earth's surface that is 6 × 10⁻⁷ m
+ * (measured 6.6 × 10⁻⁸ m, a ratio of 0.11), where a fixed 10⁻⁷ m had less
+ * room than the plausible worst, 150 ulps of 6.4 × 10⁶ m (1.4 × 10⁻⁷ m).
+ * The one ulp is an assumption about the built-ins' float64 programs, not a
+ * derivation from them. abs 10⁻⁹ is measured, not derived: routes whose
+ * float64 work runs through values larger than their output (geocentric to
+ * geographic, 5 × 10⁻¹⁰) agree to it. A value past 2³⁰ units is float32
+ * (`fixParts`): its case adds 2⁻²⁴ of its scale.
  */
-export const INPUTS: Bound = { abs: 1e-7, rel: 0 };
+export const INPUTS: Bound = { abs: 1e-9, rel: 2 * 2 ** -52 };
+
+/**
+ * `INPUTS`' scale on one axis: (1 + Σⱼ|sⱼ|)·(|F(c)| + |eye|), the separable
+ * parameters' values from the parts the center term reads.
+ */
+export function inputsScaleOf(
+  x: CenterInputs,
+  image: number,
+  eye: number,
+): number {
+  let s = 1;
+  for (const [p] of x.terms) {
+    s += Math.abs(fromFixParts(p.p, p.at));
+  }
+  return s * (Math.abs(image) + Math.abs(eye));
+}
 /** float32 on J's entries, against the largest: measured at most 3.5 × 10⁻⁷ of it. */
 export const JACOBIAN: Bound = { abs: 0, rel: 2e-6 };
 
@@ -530,7 +554,7 @@ function expectations(c: RouteCase): Expected {
         e.drawn[lane] = q[a]! - eye[a]!;
         e.centerBound[lane] = centerTermBound(inputs, t);
         e.map[lane] = u.image[a]! - eye[a]!;
-        e.inputsScale[lane] = Math.abs(u.image[a]!) + Math.abs(eye[a]!);
+        e.inputsScale[lane] = inputsScaleOf(inputs, u.image[a]!, eye[a]!);
         e.gpu[at + a] = t + e.change[lane]!;
         e.gpu[at + 3 + a] = t;
         for (let col = 0; col < 3; col++) {

@@ -511,9 +511,11 @@ export function routeCases(): RouteCase[] {
   for (const name of EYE_ROUTES) {
     const b = BUILTINS.find((k) => k.name === name)!;
     const route = builtinRoute(b);
+    const offsets = offsetsOf(b.half);
     b.centers.forEach((center, k) => {
       const unit = unitOf(route, center);
-      const eyes = eyeOffsets().map((d): Vec3 => [
+      const away = eyeOffsets();
+      const eyes = away.map((d): Vec3 => [
         unit.image[0]! + d[0],
         unit.image[1]! + d[1],
         unit.image[2]! + d[2],
@@ -522,8 +524,15 @@ export function routeCases(): RouteCase[] {
         name: `route: ${b.name} @${k}, the eye away`,
         units: b.units,
         routes: [unit],
-        // The center term doesn't read the offset: each row is the center.
-        rows: eyes.map((): Vec3 => [0, 0, 0]),
+        // The rows with the eye within 1 km take a corner of the draw's box,
+        // so the change and J are read with the eye away too. Farther, the
+        // change (the position less the center term, both float32 of values
+        // as large as the eye's distance) costs half a float32 ulp of that
+        // distance, 0.004 m at 100 km, more than the change's bound: those
+        // rows are the center.
+        rows: away.map((d, i): Vec3 =>
+          Math.hypot(d[0], d[1], d[2]) <= 1e3 ? offsets[1 + i]! : [0, 0, 0],
+        ),
         eyes,
         position: b.position ?? POSITION,
         center: CENTER,
@@ -533,10 +542,10 @@ export function routeCases(): RouteCase[] {
     });
   }
   // Past the exact range: a draw 3 × 10⁹ m out, whose F(c) fixParts writes
-  // as float32 on x and z (6 × 10⁹ m and −2.6 × 10⁹ m after the scale), with
-  // the eye at the image and 1,234.5678 m away.
+  // as float32 on x and z (6 × 10⁹ m and −2.6 × 10⁹ m after the scale; y is
+  // −7.5 × 10⁸ m, exact), with the eye at the image and 1,234.5678 m away.
   const far = BUILTINS.find((b) => b.name === "scaleAbout")!;
-  const farUnit = unitOf(builtinRoute(far), [3e9, -2.5e9, 1.75e9]);
+  const farUnit = unitOf(builtinRoute(far), [3e9, -1.5e9, 1.75e9]);
   const farEyes = [
     [0, 0, 0],
     [1234.5678, -0.25, 17.125],
@@ -554,6 +563,26 @@ export function routeCases(): RouteCase[] {
     position: POSITION,
     center: CENTER,
     // Each value past 2³¹ units is float32: 2⁻²⁴ of it.
+    inputs: { abs: INPUTS.abs, rel: 2 ** -24 },
+    jacobian: JACOBIAN,
+  });
+  // F(c) and the eye on either side of the origin, past 2³⁰ m: F(c) less
+  // the eye is 3 × 10⁹ m on x and y, past 2³¹, which as whole units would
+  // wrap. Every value at or past 2³⁰ falls back to float32, so none does. On
+  // z, F(c) (1.2 × 10⁹ m) falls back and the eye (−8 × 10⁸ m) is exact.
+  const sides = unitOf(builtinRoute(far), [7.5e8 + 1.5, -3e9 + 2, 1 - 8e8]);
+  const sidesEyes = [
+    [0, 0, 0],
+    [1234.5678, -0.25, 17.125],
+  ].map((d): Vec3 => [-1.5e9 + d[0]!, 1.5e9 + d[1]!, -8e8 + d[2]!]);
+  out.push({
+    name: "route: scaleAbout, F(c) and the eye either side of the origin past 2^30 m",
+    units: far.units,
+    routes: [sides],
+    rows: sidesEyes.map((): Vec3 => [0, 0, 0]),
+    eyes: sidesEyes,
+    position: POSITION,
+    center: CENTER,
     inputs: { abs: INPUTS.abs, rel: 2 ** -24 },
     jacobian: JACOBIAN,
   });
