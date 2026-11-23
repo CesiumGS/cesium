@@ -2,7 +2,7 @@
 id: CS-1091
 title: "2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-609
 needs: [CS-951, CS-1090]
