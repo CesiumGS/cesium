@@ -2,10 +2,14 @@
 id: CS-1079
 title: Merge CS-939, the camera rename on pick results
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge."
+answered_at: 2026-11-23T05:00:49.511Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
