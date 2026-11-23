@@ -454,8 +454,14 @@ CS-195 Benchmarks, parity and image regression
       ← CS-328 Network profiles: a link-shaping content server and a throttled scenario
   CS-542  Every parity result names its oracle
       ← CS-541 The parity tests compare against CesiumJS 1.147.0, pinned
+  CS-1121  The memory ledger's report call: bytes by owner and kind, on the engine-wide budget
+      ← CS-322 One engine-wide GPU and cache budget, with GPU texture transcoding
 
 CS-196 Infrastructure and geoscience capabilities
+  CS-338  Per-element overrides at scale, through the styling language
+      ← CS-266 Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?
+  CS-340  Printing to scale
+      ← CS-218 The orthographic camera, `fitBounds` and the dolly between projections
   CS-341  WebXR, including aligning a model with its site
       ← CS-213 The rig and the controller seam
 
@@ -468,12 +474,7 @@ CS-197 Ray queries and path tracing
 
 CS-389 Dyno as the development harness
   CS-396  The α study through Dyno (acceptance A)
-      ← CS-395 Reference images and the sweep view
-        CS-405 The Studies page
-  CS-397  Image checks for development scenes and sweeps
-      ← CS-395 Reference images and the sweep view
-  CS-405  The Studies page
-      ← CS-395 Reference images and the sweep view
+      ← CS-405 The Studies page
   CS-407  The runner and remote runs
       ← CS-406 The local certificate authority, the hub and pairing
   CS-408  The device lab
@@ -496,6 +497,8 @@ CS-389 Dyno as the development harness
         CS-738 Trends, charts, baselines and alerts keep devices apart
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
+  CS-1145  The handbook becomes Dyno's Docs page, with an export to one self-contained page on demand
+      ← CS-1027 The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -538,6 +541,9 @@ CS-18 The work tracker
         CS-1020 The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A)
         CS-1021 Instant hides its storage behind methods and states its resolution (CS-1019 A)
         CS-1027 The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
+        CS-218 The orthographic camera, `fitBounds` and the dolly between projections
+        CS-1117 The camera record carries a general projective transform, and the engine derives level of detail, culling, picking and depth from it
+        CS-1124 @cesium/navigation: camera utilities, transitions and flights, and orbit, globe and inspect controllers, on core's public API
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -609,6 +615,10 @@ CS-18 The work tracker
         CS-1014 The engine's format limits are named public constants a host can read and raise (CS-1012 A)
         CS-1022 A missing accuracy reads as unstated, and a time-dependent operation with no epoch reports undefined accuracy (CS-1016, CS-1017)
         CS-1028 Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A)
+        CS-1116 A feature mask that post stages read, with one reference outline stage outside core
+        CS-1118 Draw layers replace DrawOptions.underlay: layer, depth mode and order, sharing names with render features' slots
+        CS-1119 One clip primitive: a region, its targets and its effect, shared by clip sets, cut tints, planar masks and classification
+        CS-338 Per-element overrides at scale, through the styling language
   CS-532  Release 2.0.0-rc.1
       ← CS-531 Release 2.0.0-beta.1
         CS-416 WebGL 2 reaches parity with WebGPU
@@ -764,5 +774,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-230 blocked
+232 blocked
 ```

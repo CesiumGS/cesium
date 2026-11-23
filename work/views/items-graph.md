@@ -116,6 +116,23 @@ graph LR
     CS_1078["CS-1078 A compiled route's center term wraps when F(c) minus the eye p"]:::proposed
     CS_1096["CS-1096 How does CS-921's center term handle values past 2³⁰ units?"]:::done
     CS_1104["CS-1104 Merge CS-921, the center term as integers with a derived bound"]:::done
+    CS_1128["CS-1128 CS-921's remaining minors: the rounding assumption, overflow w"]:::proposed
+    CS_1129["CS-1129 Where does the shared styling runtime's code live?"]:::done
+    CS_1130["CS-1130 Where does Cesium IR's spec live?"]:::done
+    CS_1131["CS-1131 Is the styling runtime's boundary: it plans and compiles, the "]:::done
+    CS_1132["CS-1132 Where do custom shaders compose with the style stage?"]:::done
+    CS_1133["CS-1133 May Rust and WebAssembly reach 2.0's production builds?"]:::done
+    CS_1134["CS-1134 Which evaluator does per-feature style work in 2.0?"]:::done
+    CS_1135["CS-1135 What do WebGL 2 viewers do with GPU-side generators?"]:::done
+    CS_1136["CS-1136 How does Cesium IR grow for the styling runtime?"]:::done
+    CS_1137["CS-1137 Which parts of label placement run on the GPU?"]:::done
+    CS_1138["CS-1138 What happens when a generator overflows its GPU buffer?"]:::done
+    CS_1139["CS-1139 Are units IR types?"]:::done
+    CS_1140["CS-1140 Does a styling language of our own ship with 2.0?"]:::done
+    CS_1141["CS-1141 What is the styling color model?"]:::done
+    CS_1142["CS-1142 What does a missing property read as?"]:::done
+    CS_1143["CS-1143 When does a styling proposal go to the 3D Tiles group?"]:::done
+    CS_1146["CS-1146 docs/design/styling-runtime.md lands: the shared styling runti"]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -405,9 +422,9 @@ graph LR
     CS_261["CS-261 Wide lines, polygons and decals, with vector sources and vector"]:::open
     CS_262["CS-262 Real-time tracks: cull small shadow casters, and one glTF asset"]:::open
     CS_263["CS-263 Real-time tracks polish: model and symbol crossfade, MIL-STD-25"]:::proposed
-    CS_264["CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery s"]:::proposed
-    CS_265["CS-265 The styling language: its form, where its spec lives, and when "]:::decision
-    CS_266["CS-266 Styling semantics: element-wise overrides, strings and 64-bit I"]:::decision
+    CS_264["CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery s"]:::open
+    CS_265["CS-265 The styling language: its form, where its spec lives, and when "]:::dropped
+    CS_266["CS-266 Styling semantics: element-wise overrides, strings and 64-bit I"]:::dropped
     CS_267["CS-267 The styling language on Cesium IR, over points, lines, polygons"]:::proposed
     CS_268["CS-268 Style features through the IR: tiles culled by interval 'show',"]:::proposed
     CS_654["CS-654 The surface-projection design: classification, draping and deca"]:::open
@@ -528,6 +545,21 @@ graph LR
     CS_1101["CS-1101 What may a declared content name look like, and what leaves th"]:::done
     CS_1102["CS-1102 How does a peer's insert of a new feature appear?"]:::done
     CS_1103["CS-1103 Does CS-847's tightening land before it merges?"]:::done
+    CS_1108["CS-1108 Is per-feature state the answer to per-element overrides, with"]:::done
+    CS_1109["CS-1109 Do hilite, emphasis and flash stay out of 2.0 as named feature"]:::done
+    CS_1110["CS-1110 Does DrawOptions.underlay become a draw layer before beta.1?"]:::done
+    CS_1111["CS-1111 Does the camera record gain a projection kind in alpha.1?"]:::done
+    CS_1112["CS-1112 Does the surface-projection design adopt the shared clip vocab"]:::done
+    CS_1113["CS-1113 Is CAD lighting the host's, with 2.0 adding product reads for "]:::done
+    CS_1114["CS-1114 What does 2.0 keep from CS-340?"]:::done
+    CS_1116["CS-1116 A feature mask that post stages read, with one reference outli"]:::open
+    CS_1117["CS-1117 The camera record carries a general projective transform, and "]:::open
+    CS_1118["CS-1118 Draw layers replace DrawOptions.underlay: layer, depth mode an"]:::open
+    CS_1119["CS-1119 One clip primitive: a region, its targets and its effect, shar"]:::open
+    CS_1120["CS-1120 A host-set light rig and render-product reads for looks, so a "]:::open
+    CS_1122["CS-1122 Does the camera record carry a general projective transform, w"]:::done
+    CS_1123["CS-1123 Where do camera utilities and controllers live?"]:::done
+    CS_1147["CS-1147 May a derived content name leave the engine?"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -628,12 +660,14 @@ graph LR
     CS_1063["CS-1063 Tile content skips the job queue's priorities, and every byte "]:::proposed
     CS_1064["CS-1064 Picks are served one a tick for the whole engine, from unbound"]:::proposed
     CS_1065["CS-1065 Per-view passes create GPU objects and arrays every tick; the "]:::proposed
+    CS_1115["CS-1115 Is the memory ledger part of CS-322?"]:::done
+    CS_1121["CS-1121 The memory ledger's report call: bytes by owner and kind, on t"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
-    CS_338["CS-338 Per-element overrides at scale, through the styling language"]:::proposed
+    CS_338["CS-338 Per-element overrides at scale, through the styling language"]:::open
     CS_339["CS-339 Volumes: voxel grids, ray-marched or as isosurfaces"]:::open
-    CS_340["CS-340 Printing to scale"]:::proposed
+    CS_340["CS-340 Printing to scale"]:::open
     CS_341["CS-341 WebXR, including aligning a model with its site"]:::open
     CS_342["CS-342 The infrastructure and geoscience gallery examples"]:::proposed
     CS_343["CS-343 Gallery: a vehicle's lidar over the design"]:::proposed
@@ -657,6 +691,7 @@ graph LR
     CS_673["CS-673 A sensor module"]:::open
     CS_854["CS-854 GPU rays hit Gaussian splats through an acceleration structure "]:::proposed
     CS_933["CS-933 Ray casts are watertight at the shared edge of two draws"]:::proposed
+    CS_1125["CS-1125 An optional ray model for physical cameras: sensor area, thin "]:::open
   end
   subgraph CS_198["GPU-driven rendering and capacities"]
     CS_350["CS-350 The Slang gate and probes on Windows (D3D12)"]:::open
@@ -710,6 +745,8 @@ graph LR
     CS_1040["CS-1040 Wall-clock assertions in the unit suite fail under load and tr"]:::proposed
     CS_1041["CS-1041 Source scans that pass when they find no files"]:::proposed
     CS_1106["CS-1106 Dyno refuses to start a run whose scenes need an ion token whe"]:::proposed
+    CS_1126["CS-1126 How do headless Dyno runs get the ion token?"]:::done
+    CS_1127["CS-1127 Dyno's headless runner seeds the ion token into the page at ru"]:::open
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -717,7 +754,7 @@ graph LR
     CS_392["CS-392 Finding runs from the terminal ('runs', 'show', 'pin')"]:::done
     CS_393["CS-393 The settings registry and multi-axis sweeps"]:::done
     CS_394["CS-394 Example scenes and the development metrics"]:::done
-    CS_395["CS-395 Reference images and the sweep view"]:::open
+    CS_395["CS-395 Reference images and the sweep view"]:::done
     CS_396["CS-396 The α study through Dyno (acceptance A)"]:::open
     CS_397["CS-397 Image checks for development scenes and sweeps"]:::open
     CS_398["CS-398 Recordings as runs"]:::open
@@ -812,6 +849,7 @@ graph LR
     CS_1095["CS-1095 Merge CS-395, reference images and the sweep view"]:::done
     CS_1099["CS-1099 Example captures without the host's warning banner"]:::proposed
     CS_1107["CS-1107 The sweep view reads at a glance: a UX pass on CS-395's small "]:::proposed
+    CS_1145["CS-1145 The handbook becomes Dyno's Docs page, with an export to one s"]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -979,6 +1017,8 @@ graph LR
     CS_1091["CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup"]:::open
     CS_1092["CS-1092 Merge CS-951, the pnpm spike's write-up"]:::done
     CS_1105["CS-1105 Merge CS-1091, 2.0 installs with pnpm"]:::done
+    CS_1124["CS-1124 @cesium/navigation: camera utilities, transitions and flights,"]:::open
+    CS_1144["CS-1144 Who reads the handbook once it moves into Dyno?"]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1570,6 +1610,9 @@ graph LR
   CS_1020 --> CS_530
   CS_1021 --> CS_530
   CS_1027 --> CS_530
+  CS_218 --> CS_530
+  CS_1117 --> CS_530
+  CS_1124 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1641,6 +1684,10 @@ graph LR
   CS_1014 --> CS_531
   CS_1022 --> CS_531
   CS_1028 --> CS_531
+  CS_1116 --> CS_531
+  CS_1118 --> CS_531
+  CS_1119 --> CS_531
+  CS_338 --> CS_531
   CS_528 --> CS_532
   CS_531 --> CS_532
   CS_416 --> CS_532
@@ -1979,6 +2026,23 @@ graph LR
   CS_966 --> CS_1098
   CS_394 --> CS_1099
   CS_395 --> CS_1107
+  CS_1109 --> CS_1116
+  CS_1122 --> CS_1117
+  CS_1110 --> CS_1118
+  CS_1112 --> CS_1119
+  CS_1113 --> CS_1120
+  CS_322 --> CS_1121
+  CS_1115 --> CS_1121
+  CS_1123 --> CS_1124
+  CS_1122 --> CS_1125
+  CS_1126 --> CS_1127
+  CS_921 --> CS_1128
+  CS_1027 --> CS_1145
+  CS_1144 --> CS_1145
+  CS_1129 --> CS_1146
+  CS_1130 --> CS_1146
+  CS_1131 --> CS_1146
+  CS_1132 --> CS_1146
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

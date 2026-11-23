@@ -33,6 +33,7 @@ CS-10 Cesium IR
   CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
   CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
   CS-989  Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
+  CS-1146  docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -127,8 +128,7 @@ CS-189 Frames and engineering coordinates follow-ups
 CS-190 Vector drawing and the styling language
   CS-258  The vector drawing design: lines, polygons, labels and CAD styles on one path
   CS-262  Real-time tracks: cull small shadow casters, and one glTF asset in several worlds
-  CS-265  decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?
-  CS-266  decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?
+  CS-264  Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1
 
 CS-191 Content sources and formats
   CS-270  decision: Where does 2.0's default evaluation token come from?
@@ -160,6 +160,11 @@ CS-191 Content sources and formats
   CS-970  Feature IDs and feature counts from content are checked, so one tile can't name another item's features
   CS-972  A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
   CS-1014  The engine's format limits are named public constants a host can read and raise (CS-1012 A)
+  CS-1116  A feature mask that post stages read, with one reference outline stage outside core
+  CS-1117  The camera record carries a general projective transform, and the engine derives level of detail, culling, picking and depth from it
+  CS-1118  Draw layers replace DrawOptions.underlay: layer, depth mode and order, sharing names with render features' slots
+  CS-1119  One clip primitive: a region, its targets and its effect, shared by clip sets, cut tints, planar masks and classification
+  CS-1120  A host-set light rig and render-product reads for looks, so a host builds its own CAD lighting
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -233,15 +238,17 @@ CS-199 Dyno hardening, packaging and CI
   CS-982  decision: Where does the merge bar live: one gate script, or policy.json's lists?
   CS-983  Every Lab parity suite gives a verdict: no regression against the last accepted run, plus the design's thresholds (CS-979 C)
   CS-984  Baseline and golden changes carry a logged reason, and every merge decision lists them (CS-980 A)
+  CS-1127  Dyno's headless runner seeds the ion token into the page at run time, never into a build, a URL or a log
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
-  CS-395  Reference images and the sweep view
+  CS-397  Image checks for development scenes and sweeps
   CS-398  Recordings as runs
   CS-399  Test results in Dyno: the vitest reporter and the Tests view
   CS-400  Archives: export and import (the manual fallback)
   CS-401  Lab pages and their results in the store
   CS-402  "Measuring with Dyno" in AGENTS.md, and its skill
+  CS-405  The Studies page
   CS-406  The local certificate authority, the hub and pairing
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
@@ -304,6 +311,10 @@ CS-18 The work tracker
 CS-609 A clean 2.0 branch and a modern build
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
   CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
+  CS-1124  @cesium/navigation: camera utilities, transitions and flights, and orbit, globe and inspect controllers, on core's public API
 
-236 ready
+CS-197 Ray queries and path tracing
+  CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
+
+245 ready
 ```

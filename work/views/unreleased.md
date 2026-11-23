@@ -68,6 +68,7 @@ CS-389 Dyno as the development harness
   CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
   CS-393  The settings registry and multi-axis sweeps
   CS-394  Example scenes and the development metrics
+  CS-395  Reference images and the sweep view
   CS-403  Dyno's navigation rail, regrouped by what people come to do
   CS-404  Studies: the model, the files and the commands
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
@@ -138,5 +139,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-103 merged item(s) not in a release
+104 merged item(s) not in a release
 ```

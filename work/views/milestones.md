@@ -261,8 +261,8 @@ CS-478 Every run says what it was for [Planned], under CS-389 Dyno as the develo
 
 CS-479 Sweeps measure development cases [Planned], under CS-389 Dyno as the development harness
   outcome: Example scenes with parameters and a pose are development cases, the settings registry sweeps them on several axes with reference images and image checks, and Lab pages keep their results in the store.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-395, CS-397, CS-401; check not passed)
+  constraints: 1 of 3 done
+  unmet: not linked to a clause yet (open: CS-397, CS-401; check not passed)
   to shape: done_when; check; link CS-395, CS-397, CS-401 to a clause
 
 CS-480 Studies turn runs into verdicts [Planned], under CS-389 Dyno as the development harness

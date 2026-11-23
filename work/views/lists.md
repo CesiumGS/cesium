@@ -81,7 +81,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 32 of 62 done, 13 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 47 of 79 done, 14 ready, 10 blocked, 8 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -156,6 +156,23 @@ No milestone
 - [?] CS-1078 A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
 - [x] CS-1096 decision: How does CS-921's center term handle values past 2³⁰ units?. Done.
 - [x] CS-1104 decision: Merge CS-921, the center term as integers with a derived bound. Done.
+- [?] CS-1128 CS-921's remaining minors: the rounding assumption, overflow wording, the wide floor, the tie note and the corridor budget. Proposed. Needs CS-921.
+- [x] CS-1129 decision: Where does the shared styling runtime's code live?. Done.
+- [x] CS-1130 decision: Where does Cesium IR's spec live?. Done.
+- [x] CS-1131 decision: Is the styling runtime's boundary: it plans and compiles, the viewer executes?. Done.
+- [x] CS-1132 decision: Where do custom shaders compose with the style stage?. Done.
+- [x] CS-1133 decision: May Rust and WebAssembly reach 2.0's production builds?. Done.
+- [x] CS-1134 decision: Which evaluator does per-feature style work in 2.0?. Done.
+- [x] CS-1135 decision: What do WebGL 2 viewers do with GPU-side generators?. Done.
+- [x] CS-1136 decision: How does Cesium IR grow for the styling runtime?. Done.
+- [x] CS-1137 decision: Which parts of label placement run on the GPU?. Done.
+- [x] CS-1138 decision: What happens when a generator overflows its GPU buffer?. Done.
+- [x] CS-1139 decision: Are units IR types?. Done.
+- [x] CS-1140 decision: Does a styling language of our own ship with 2.0?. Done.
+- [x] CS-1141 decision: What is the styling color model?. Done.
+- [x] CS-1142 decision: What does a missing property read as?. Done.
+- [x] CS-1143 decision: When does a styling proposal go to the 3D Tiles group?. Done.
+- [ ] CS-1146 docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23. Needs CS-1129, CS-1130, CS-1131 and CS-1132.
 
 ### Live MaterialX graph editing
 
@@ -451,8 +468,8 @@ No milestone
 - [x] CS-527 decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] CS-528 decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] CS-529 decision: Which milestones does 2.0.0 need?. Done.
-- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats), CS-906 (Content sources and formats), CS-921 (Cesium IR), CS-939 (public API reviews), CS-940 (public API reviews), CS-943 (public API reviews), CS-955 (Cesium IR), CS-961 (Content sources and formats), CS-962 (Content sources and formats), CS-966 (Content sources and formats), CS-969 (Content sources and formats), CS-970 (Content sources and formats), CS-971 (Engine profiles), CS-972 (Content sources and formats), CS-977 (public API reviews), CS-978 (public API reviews), CS-1001 (public API reviews), CS-1020 (Infrastructure and geoscience capabilities), CS-1021 (Infrastructure and geoscience capabilities) and CS-1027 (A clean 2.0 branch and a modern build).
-- [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory), CS-830 (Sandcastle as 2.0's gallery), CS-963 (Content sources and formats), CS-964 (Content sources and formats), CS-965 (Content sources and formats), CS-484 (Benchmarks, parity and image regression), CS-985 (public API reviews), CS-989 (Cesium IR), CS-990 (public API reviews), CS-103 (worker-mode façade), CS-104 (worker-mode façade), CS-105 (worker-mode façade), CS-106 (worker-mode façade), CS-107 (worker-mode façade), CS-108 (worker-mode façade), CS-322 (Budgeted selection and memory), CS-1007 (Benchmarks, parity and image regression), CS-1010 (Benchmarks, parity and image regression), CS-1014 (Content sources and formats), CS-1022 (Infrastructure and geoscience capabilities) and CS-1028 (Benchmarks, parity and image regression).
+- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats), CS-906 (Content sources and formats), CS-921 (Cesium IR), CS-939 (public API reviews), CS-940 (public API reviews), CS-943 (public API reviews), CS-955 (Cesium IR), CS-961 (Content sources and formats), CS-962 (Content sources and formats), CS-966 (Content sources and formats), CS-969 (Content sources and formats), CS-970 (Content sources and formats), CS-971 (Engine profiles), CS-972 (Content sources and formats), CS-977 (public API reviews), CS-978 (public API reviews), CS-1001 (public API reviews), CS-1020 (Infrastructure and geoscience capabilities), CS-1021 (Infrastructure and geoscience capabilities), CS-1027 (A clean 2.0 branch and a modern build), CS-218 (Earth to Moon (frames 5c to 5h)), CS-1117 (Content sources and formats) and CS-1124 (A clean 2.0 branch and a modern build).
+- [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory), CS-830 (Sandcastle as 2.0's gallery), CS-963 (Content sources and formats), CS-964 (Content sources and formats), CS-965 (Content sources and formats), CS-484 (Benchmarks, parity and image regression), CS-985 (public API reviews), CS-989 (Cesium IR), CS-990 (public API reviews), CS-103 (worker-mode façade), CS-104 (worker-mode façade), CS-105 (worker-mode façade), CS-106 (worker-mode façade), CS-107 (worker-mode façade), CS-108 (worker-mode façade), CS-322 (Budgeted selection and memory), CS-1007 (Benchmarks, parity and image regression), CS-1010 (Benchmarks, parity and image regression), CS-1014 (Content sources and formats), CS-1022 (Infrastructure and geoscience capabilities), CS-1028 (Benchmarks, parity and image regression), CS-1116 (Content sources and formats), CS-1118 (Content sources and formats), CS-1119 (Content sources and formats) and CS-338 (Infrastructure and geoscience capabilities).
 - [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] CS-533 Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
 - [x] CS-536 decision: Approve a store device. Done.
@@ -603,7 +620,7 @@ No milestone
 
 ### Vector drawing and the styling language
 
-CS-190, Planned, led by owner: 0 of 14 done, 4 ready, 6 blocked, 4 proposed. Plan: [styling-language.md](docs/design/styling-language.md).
+CS-190, Planned, led by owner: 0 of 12 done, 3 ready, 6 blocked, 3 proposed, 2 dropped. Plan: [styling-language.md](docs/design/styling-language.md).
 
 Milestone: Lines, polygons, labels and CAD styles draw on one path (CS-499, Planned)
 
@@ -616,8 +633,8 @@ Milestone: Real-time tracks stay cheap at scale (CS-500, Planned)
 
 Milestone: The styling language's form and semantics are decided (CS-501, Planned)
 
-- [ ] CS-265 decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?. Needs nothing. Decided by owner.
-- [ ] CS-266 decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?. Needs nothing. Decided by owner.
+- [-] CS-265 decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?. Dropped: Superseded by the owner's piecewise answers of 2026-11-23: any language lowers to Cesium IR, whose JSON and conformance vectors live in the Rust workspace's IR crate (CS-1130); an experimental language of our own plus a 1.x front end ship with 2.0 (CS-1140); a proposal goes to the 3D Tiles group after the plan settles (CS-1143). Closed as superseded on the owner's word.
+- [-] CS-266 decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?. Dropped: Superseded by the owner's piecewise answers of 2026-11-23: per-feature state (CS-1108), strings and an item rate in the IR (CS-1136), the color model (CS-1141), missing values (CS-1142), label placement (CS-1137), units (CS-1139); 64-bit IDs are CS-898 and CS-936. The key's width on the GPU moves to CS-1081. Closed as superseded on the owner's word.
 
 Milestone: Content projects onto any surface (CS-657, Planned)
 
@@ -630,13 +647,13 @@ Milestone: Content projects onto any surface (CS-657, Planned)
 No milestone
 
 - [?] CS-263 Real-time tracks polish: model and symbol crossfade, MIL-STD-2525 symbols, wide-area clamping. Proposed. Needs nothing.
-- [?] CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1. Proposed. Needs nothing.
+- [ ] CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1. Needs nothing.
 - [?] CS-267 The styling language on Cesium IR, over points, lines, polygons and B-rep faces. Proposed. Needs CS-265 and CS-55 (Cesium IR).
 - [?] CS-268 Style features through the IR: tiles culled by interval `show`, legends, explicit colour spaces. Proposed. Needs CS-50 (Cesium IR) and CS-55 (Cesium IR).
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 45 of 113 done, 29 ready, 20 blocked, 19 proposed.
+CS-191, Planned, led by owner: 55 of 128 done, 34 ready, 20 blocked, 19 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -768,6 +785,21 @@ No milestone
 - [x] CS-1101 decision: What may a declared content name look like, and what leaves the engine?. Done.
 - [x] CS-1102 decision: How does a peer's insert of a new feature appear?. Done.
 - [x] CS-1103 decision: Does CS-847's tightening land before it merges?. Done.
+- [x] CS-1108 decision: Is per-feature state the answer to per-element overrides, with no separate override table?. Done.
+- [x] CS-1109 decision: Do hilite, emphasis and flash stay out of 2.0 as named features?. Done.
+- [x] CS-1110 decision: Does DrawOptions.underlay become a draw layer before beta.1?. Done.
+- [x] CS-1111 decision: Does the camera record gain a projection kind in alpha.1?. Done.
+- [x] CS-1112 decision: Does the surface-projection design adopt the shared clip vocabulary?. Done.
+- [x] CS-1113 decision: Is CAD lighting the host's, with 2.0 adding product reads for looks and a host-set light rig?. Done.
+- [x] CS-1114 decision: What does 2.0 keep from CS-340?. Done.
+- [ ] CS-1116 A feature mask that post stages read, with one reference outline stage outside core. Needs CS-1109.
+- [ ] CS-1117 The camera record carries a general projective transform, and the engine derives level of detail, culling, picking and depth from it. Needs CS-1122.
+- [ ] CS-1118 Draw layers replace DrawOptions.underlay: layer, depth mode and order, sharing names with render features' slots. Needs CS-1110.
+- [ ] CS-1119 One clip primitive: a region, its targets and its effect, shared by clip sets, cut tints, planar masks and classification. Needs CS-1112.
+- [ ] CS-1120 A host-set light rig and render-product reads for looks, so a host builds its own CAD lighting. Needs CS-1113.
+- [x] CS-1122 decision: Does the camera record carry a general projective transform, with physical cameras as an optional ray model?. Done.
+- [x] CS-1123 decision: Where do camera utilities and controllers live?. Done.
+- [x] CS-1147 decision: May a derived content name leave the engine?. Done.
 
 ### Sky, light and atmosphere
 
@@ -870,7 +902,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-CS-195, Planned, led by owner: 6 of 41 done, 18 ready, 6 blocked, 11 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
+CS-195, Planned, led by owner: 7 of 43 done, 18 ready, 7 blocked, 11 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines (CS-482, Planned)
 
@@ -927,16 +959,18 @@ No milestone
 - [?] CS-1063 Tile content skips the job queue's priorities, and every byte crosses the main thread. Proposed. Needs nothing.
 - [?] CS-1064 Picks are served one a tick for the whole engine, from unbounded queues. Proposed. Needs nothing.
 - [?] CS-1065 Per-view passes create GPU objects and arrays every tick; the zero-allocation target isn't measured. Proposed. Needs nothing.
+- [x] CS-1115 decision: Is the memory ledger part of CS-322?. Done.
+- [ ] CS-1121 The memory ledger's report call: bytes by owner and kind, on the engine-wide budget. Needs CS-322 (Budgeted selection and memory) and CS-1115.
 
 ### Infrastructure and geoscience capabilities
 
-CS-196, Planned, led by owner: 4 of 16 done, 4 ready, 1 blocked, 7 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
+CS-196, Planned, led by owner: 4 of 16 done, 4 ready, 3 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
 
 Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Planned)
 
 - [?] CS-337 Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-265 (Vector drawing and the styling language).
-- [?] CS-338 Per-element overrides at scale, through the styling language. Proposed. Needs CS-266 (Vector drawing and the styling language).
-- [?] CS-340 Printing to scale. Proposed. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
+- [ ] CS-338 Per-element overrides at scale, through the styling language. Needs CS-266 (Vector drawing and the styling language).
+- [ ] CS-340 Printing to scale. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 - [?] CS-342 The infrastructure and geoscience gallery examples. Proposed. Needs nothing.
 - [?] CS-343 Gallery: a vehicle's lidar over the design. Proposed. Needs CS-276 (Content sources and formats).
 
@@ -956,7 +990,7 @@ No milestone
 
 ### Ray queries and path tracing
 
-CS-197, Planned, led by owner: 0 of 9 done, 0 ready, 2 blocked, 7 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
+CS-197, Planned, led by owner: 0 of 10 done, 1 ready, 2 blocked, 7 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
 
 Milestone: Rays query the scene on the GPU (CS-535, Planned)
 
@@ -972,6 +1006,7 @@ No milestone
 - [ ] CS-673 A sensor module. Needs CS-654 (Vector drawing and the styling language) and CS-348.
 - [?] CS-854 GPU rays hit Gaussian splats through an acceleration structure over ellipsoids. Proposed. Needs nothing.
 - [?] CS-933 Ray casts are watertight at the shared edge of two draws. Proposed. Needs nothing.
+- [ ] CS-1125 An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products. Needs CS-1122 (Content sources and formats).
 
 ### GPU-driven rendering and capacities
 
@@ -997,7 +1032,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 10 of 40 done, 17 ready, 0 blocked, 13 proposed.
+CS-199, Planned, led by owner: 11 of 42 done, 18 ready, 0 blocked, 13 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -1047,10 +1082,12 @@ No milestone
 - [?] CS-1040 Wall-clock assertions in the unit suite fail under load and train reruns. Proposed. Needs nothing.
 - [?] CS-1041 Source scans that pass when they find no files. Proposed. Needs nothing.
 - [?] CS-1106 Dyno refuses to start a run whose scenes need an ion token when it has none, instead of recording invalid runs. Proposed. Needs nothing.
+- [x] CS-1126 decision: How do headless Dyno runs get the ion token?. Done.
+- [ ] CS-1127 Dyno's headless runner seeds the ion token into the page at run time, never into a build, a URL or a log. Needs CS-1126.
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 61 of 100 done, 16 ready, 13 blocked, 10 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 62 of 101 done, 17 ready, 12 blocked, 10 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -1062,7 +1099,7 @@ Milestone: Every run says what it was for (CS-478, Planned)
 
 Milestone: Sweeps measure development cases (CS-479, Planned)
 
-- [ ] CS-395 Reference images and the sweep view. Needs CS-393 and CS-394.
+- [x] CS-395 Reference images and the sweep view. Done.
 - [ ] CS-397 Image checks for development scenes and sweeps. Needs CS-394 and CS-395.
 - [ ] CS-401 Lab pages and their results in the store. Needs CS-390 and CS-394.
 
@@ -1178,6 +1215,7 @@ No milestone
 - [x] CS-1095 decision: Merge CS-395, reference images and the sweep view. Done.
 - [?] CS-1099 Example captures without the host's warning banner. Proposed. Needs CS-394.
 - [?] CS-1107 The sweep view reads at a glance: a UX pass on CS-395's small multiples, image grid and noise wording. Proposed. Needs CS-395.
+- [ ] CS-1145 The handbook becomes Dyno's Docs page, with an export to one self-contained page on demand. Needs CS-1027 (A clean 2.0 branch and a modern build) and CS-1144 (A clean 2.0 branch and a modern build).
 
 ### The public API reviews
 
@@ -1335,7 +1373,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 36 of 52 done, 2 ready, 0 blocked, 14 proposed.
+CS-609, Planned, led by owner: 37 of 54 done, 3 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1394,6 +1432,8 @@ No milestone
 - [ ] CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A). Needs CS-951 and CS-1090.
 - [x] CS-1092 decision: Merge CS-951, the pnpm spike's write-up. Done.
 - [x] CS-1105 decision: Merge CS-1091, 2.0 installs with pnpm. Done.
+- [ ] CS-1124 @cesium/navigation: camera utilities, transitions and flights, and orbit, globe and inspect controllers, on core's public API. Needs CS-1123 (Content sources and formats).
+- [x] CS-1144 decision: Who reads the handbook once it moves into Dyno?. Done.
 
 ### Packaging and package names
 

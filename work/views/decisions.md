@@ -25,12 +25,6 @@ CS-189 Frames and engineering coordinates follow-ups
   CS-256  When do the upstream proposals go to the 3D Tiles and glTF groups, and who takes them? (owner)
   CS-257  Should a frame with `geoidFallback` and `allowBallpark` take the ballpark? (owner)
 
-CS-190 Vector drawing and the styling language
-  CS-265  The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group? (owner)
-      waited on by CS-267, CS-337
-  CS-266  Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order? (owner)
-      waited on by CS-338
-
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
@@ -63,5 +57,5 @@ CS-199 Dyno hardening, packaging and CI
 CS-16 Streaming robustness
   CS-1032  Merge CS-144, the fault-injection harness (owner)
 
-19 open decision(s) for owner
+17 open decision(s) for owner
 ```
