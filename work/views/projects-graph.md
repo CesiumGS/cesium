@@ -29,7 +29,7 @@ graph LR
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>10 of 32 done"]
   CS_389["Dyno as the development harness<br/>60 of 97 done"]
-  CS_437["public API reviews<br/>29 of 53 done"]
+  CS_437["public API reviews<br/>30 of 53 done"]
   CS_579["Editing<br/>8 of 22 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
@@ -78,7 +78,7 @@ graph LR
   CS_628 -->|3| CS_18
   CS_596 -->|3| CS_18
   CS_389 -->|8| CS_18
-  CS_437 -->|12| CS_18
+  CS_437 -->|11| CS_18
   CS_190 -->|4| CS_18
   CS_193 -->|5| CS_18
   CS_579 -->|1| CS_18

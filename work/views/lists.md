@@ -1132,7 +1132,7 @@ No milestone
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 29 of 53 done, 17 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 30 of 53 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1184,7 +1184,7 @@ No milestone
 - [x] CS-936 decision: CS-815 Q4: how does a bigint StableId reach JSON?. Done.
 - [ ] CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Needs CS-815.
 - [ ] CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
-- [ ] CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Needs nothing.
+- [x] CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Done.
 - [x] CS-944 decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
 - [ ] CS-950 decision: Merge CS-940, stableIdToHex and parseStableId. Needs nothing. Decided by owner.
 - [x] CS-974 decision: What does alpha.1 say about core's names that the package map moves elsewhere?. Done.

@@ -1189,7 +1189,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 29 of 53 done, 17 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 30 of 53 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1241,7 +1241,7 @@ No milestone
 - [x] [CS-936](./items/CS-936-cs-815-q4-how-does-a-bigint-stableid-reach-json.md) decision: CS-815 Q4: how does a bigint StableId reach JSON?. Done.
 - [ ] [CS-939](./items/CS-939-pickpositionresult-and-corepick-say-camera-not.md) PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Needs CS-815.
 - [ ] [CS-940](./items/CS-940-stableidtohex-and-parsestableid-a-bigint.md) stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
-- [ ] [CS-943](./items/CS-943-route-routestep-and-recordable-are-exported-so.md) Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Needs nothing.
+- [x] [CS-943](./items/CS-943-route-routestep-and-recordable-are-exported-so.md) Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Done.
 - [x] [CS-944](./items/CS-944-cs-939-corepick-already-has-a-camera-field-how.md) decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
 - [ ] [CS-950](./items/CS-950-merge-cs-940-stableidtohex-and-parsestableid.md) decision: Merge CS-940, stableIdToHex and parseStableId. Needs nothing. Decided by owner.
 - [x] [CS-974](./items/CS-974-what-does-alpha-1-say-about-core-s-names-that.md) decision: What does alpha.1 say about core's names that the package map moves elsewhere?. Done.

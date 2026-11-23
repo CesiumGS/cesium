@@ -801,7 +801,7 @@ graph LR
     CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::done
     CS_939["CS-939 PickPositionResult and CorePick say camera, not cameraRecord (C"]:::open
     CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::open
-    CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::open
+    CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::done
     CS_944["CS-944 CS-939: CorePick already has a camera field; how is CorePick na"]:::done
     CS_950["CS-950 Merge CS-940, stableIdToHex and parseStableId"]:::decision
     CS_974["CS-974 What does alpha.1 say about core's names that the package map m"]:::done

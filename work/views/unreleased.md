@@ -96,6 +96,7 @@ CS-437 The public API reviews
   CS-815  Scene content has stable identity and semantic labels that don't depend on load order
   CS-832  A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
   CS-833  A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
+  CS-943  Route, RouteStep and Recordable are exported, so the library build's declaration check passes
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
@@ -132,5 +133,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-97 merged item(s) not in a release
+98 merged item(s) not in a release
 ```

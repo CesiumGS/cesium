@@ -528,7 +528,6 @@ CS-18 The work tracker
         CS-921 A compiled route's center term subtracts its highs as integers on both emitters
         CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
         CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
-        CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes
         CS-955 The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
         CS-961 Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
         CS-962 Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)
