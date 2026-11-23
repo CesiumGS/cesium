@@ -135,6 +135,17 @@ export default [
     },
   },
   {
+    // The core rule reports parameter names in function types as unused.
+    files: ["packages/gltf/**/*.ts"],
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { vars: "all", args: "none", caughtErrors: "none" },
+      ],
+    },
+  },
+  {
     files: ["**/*.js"],
     plugins: { jsdoc },
     settings: {

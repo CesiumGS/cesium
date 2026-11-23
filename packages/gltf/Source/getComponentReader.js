@@ -2,6 +2,8 @@
 
 import { ComponentDatatype, RuntimeError } from "@cesium/core";
 
+/** @import { ComponentReader } from "./ComponentReader.js"; */
+
 /**
  * Returns a function to read and convert data from a DataView into an array.
  *
@@ -69,18 +71,5 @@ function getComponentReader(componentType) {
       throw new RuntimeError(`Unsupported component type: ${componentType}`);
   }
 }
-
-/**
- * A function that reads consecutive components from a DataView into an array.
- * @callback ComponentReader
- *
- * @param {DataView} dataView The data view to read from.
- * @param {number} byteOffset The byte offset applied when reading from the data view.
- * @param {number} numberOfComponents The number of components to read.
- * @param {number[]} result An array storing the components that are read.
- * @returns {void}
- *
- * @internal
- */
 
 export default getComponentReader;

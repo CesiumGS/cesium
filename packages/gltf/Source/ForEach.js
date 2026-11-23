@@ -3,6 +3,10 @@
 import { defined } from "@cesium/core";
 import usesExtension from "./usesExtension.js";
 
+/** @import { ForEachElementHandler } from "./ForEachElementHandler.js"; */
+/** @import { ForEachIdHandler } from "./ForEachIdHandler.js"; */
+/** @import { ForEachNamedHandler } from "./ForEachNamedHandler.js"; */
+
 /**
  * Contains traversal functions for processing elements of the glTF hierarchy.
  * @namespace ForEach
@@ -667,37 +671,5 @@ ForEach.technique = function (gltf, handler) {
 ForEach.texture = function (gltf, handler) {
   return ForEach.topLevel(gltf, "textures", handler);
 };
-
-/**
- * A function called with each value of a keyed collection. A defined return value stops the iteration.
- * @callback ForEachNamedHandler
- *
- * @param {*} value The value.
- * @param {string} name The key of the value.
- * @returns {*}
- *
- * @private
- */
-
-/**
- * A function called with an id. A defined return value stops the iteration.
- * @callback ForEachIdHandler
- *
- * @param {number} id The id.
- * @returns {*}
- *
- * @private
- */
-
-/**
- * A function called with each glTF object. A defined return value stops the iteration.
- * @callback ForEachElementHandler
- *
- * @param {*} element The glTF object.
- * @param {number|string} index The element's index, or its id in glTF 1.0.
- * @returns {*}
- *
- * @internal
- */
 
 export default ForEach;

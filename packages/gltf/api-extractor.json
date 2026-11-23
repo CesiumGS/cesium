@@ -1,11 +1,11 @@
 {
   "projectFolder": ".",
-  "mainEntryPointFilePath": "<projectFolder>/Build/Types/index.d.ts",
+  "mainEntryPointFilePath": "<projectFolder>/gltf.entry.d.ts",
   "bundledPackages": [],
   "compiler": {
     "overrideTsconfig": {
       "extends": "../../tsconfig.types.base.json",
-      "files": ["./Build/Types/index.d.ts"]
+      "files": ["./gltf.entry.d.ts"]
     }
   },
   "apiReport": { "enabled": false },
@@ -19,6 +19,7 @@
   "newlineKind": "lf",
   "messages": {
     "extractorMessageReporting": {
+      "ae-forgotten-export": { "logLevel": "error" },
       "ae-internal-missing-underscore": { "logLevel": "none" },
       "ae-missing-release-tag": { "logLevel": "none" },
       "ae-unresolved-link": { "logLevel": "none" }

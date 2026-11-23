@@ -1,6 +1,7 @@
 // @ts-check
 
 import { execSync } from "node:child_process";
+import { globSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
 
@@ -11,6 +12,18 @@ execSync("npx tsc -p packages/gltf/tsconfig.declarations.json", {
   cwd: rootDirectory,
   stdio: "inherit",
 });
+
+// tsc keeps `@import` comment blocks in its output, and API Extractor would
+// copy them into the rollup. See https://github.com/microsoft/TypeScript/issues/58921
+const importCommentRegex =
+  /^[ \t]*\/\*\*[\s*]*@import\b[\s\S]*?\*\/[ \t]*\r?\n/gm;
+for (const declarationFile of globSync("Build/Types/**/*.d.ts", {
+  cwd: packageDirectory,
+})) {
+  const declarationPath = join(packageDirectory, declarationFile);
+  const declarations = readFileSync(declarationPath, "utf8");
+  writeFileSync(declarationPath, declarations.replace(importCommentRegex, ""));
+}
 
 const extractorResult = Extractor.invoke(
   ExtractorConfig.loadFileAndPrepare(

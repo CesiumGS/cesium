@@ -2,7 +2,7 @@
 
 import ForEach from "./ForEach.js";
 
-/** @import { ForEachElementHandler } from "./ForEach.js"; */
+/** @import { ForEachElementHandler } from "./ForEachElementHandler.js"; */
 
 /**
  * Calls the handler with each buffer in a glTF.
