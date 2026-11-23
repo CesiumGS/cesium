@@ -149,6 +149,25 @@ describe("Scene/QuadtreePrimitive", function () {
       }).toThrowDeveloperError();
     });
 
+    it("tileLoadTimeSlice defaults to 5 and honors the option", function () {
+      expect(quadtree.tileLoadTimeSlice).toBe(5);
+
+      const customTileProvider = new GlobeSurfaceTileProvider({
+        terrainProvider: mockTerrain,
+        imageryLayers: imageryLayerCollection,
+        surfaceShaderSet: surfaceShaderSet,
+        vectorProvider: new VectorProvider({
+          tilingScheme: mockTerrain.tilingScheme,
+        }),
+      });
+      const customQuadtree = new QuadtreePrimitive({
+        tileProvider: customTileProvider,
+        tileLoadTimeSlice: 50,
+      });
+      expect(customQuadtree.tileLoadTimeSlice).toBe(50);
+      customQuadtree.destroy();
+    });
+
     it("selects nothing when the root tiles are not yet ready", function () {
       quadtree.render(frameState);
       expect(quadtree._tilesToRender.length).toBe(0);
