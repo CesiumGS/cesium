@@ -1,30 +1,36 @@
 // StableId text form (CS-940): a bigint to and from 16 hex digits.
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   parseStableId,
   stableIdOf,
   stableIdToHex,
+  type StableId,
 } from "../packages/core/src/scene/identity.ts";
 
 const MAX = (1n << 64n) - 1n;
 
+/** A made-up ID: the engine brands only real ones. */
+const asId = (n: bigint) => n as StableId;
+
 describe("stableIdToHex", () => {
   it("writes zero as 16 zeros", () => {
-    expect(stableIdToHex(0n)).toBe("0000000000000000");
+    expect(stableIdToHex(asId(0n))).toBe("0000000000000000");
   });
   it("writes the largest 64-bit value as 16 lowercase f", () => {
-    expect(stableIdToHex(MAX)).toBe("ffffffffffffffff");
+    expect(stableIdToHex(asId(MAX))).toBe("ffffffffffffffff");
   });
   it("zero-pads and uses lowercase", () => {
-    expect(stableIdToHex(0xabcn)).toBe("0000000000000abc");
+    expect(stableIdToHex(asId(0xabcn))).toBe("0000000000000abc");
   });
   it("refuses a value outside 0 to 2^64 - 1", () => {
-    expect(() => stableIdToHex(-1n)).toThrow(RangeError);
-    expect(() => stableIdToHex(MAX + 1n)).toThrow(/outside 0 to 2\^64 - 1/);
+    expect(() => stableIdToHex(asId(-1n))).toThrow(RangeError);
+    expect(() => stableIdToHex(asId(MAX + 1n))).toThrow(
+      /outside 0 to 2\^64 - 1/,
+    );
   });
   it("refuses a value that is not a bigint", () => {
-    expect(() => stableIdToHex(5 as unknown as bigint)).toThrow(TypeError);
-    expect(() => stableIdToHex("5" as unknown as bigint)).toThrow(/bigint/);
+    expect(() => stableIdToHex(5 as unknown as StableId)).toThrow(TypeError);
+    expect(() => stableIdToHex("5" as unknown as StableId)).toThrow(/bigint/);
   });
 });
 
@@ -45,7 +51,7 @@ describe("parseStableId", () => {
   it("round-trips through JSON with a replacer and a reviver", () => {
     const id = 0x0123456789abcdefn;
     const text = JSON.stringify({ id }, (_k, v) =>
-      typeof v === "bigint" ? stableIdToHex(v) : v,
+      typeof v === "bigint" ? stableIdToHex(v as StableId) : v,
     );
     expect(() => JSON.stringify({ id })).toThrow(TypeError);
     const back = JSON.parse(text, (k, v) =>
@@ -79,5 +85,18 @@ describe("parseStableId", () => {
       expect((e as Error).message.length).toBeLessThan(200);
       expect((e as Error).message).toMatch(/5000/);
     }
+  });
+});
+
+describe("the StableId brand (CS-997)", () => {
+  it("is not a plain bigint", () => {
+    expectTypeOf<bigint>().not.toExtend<StableId>();
+    expectTypeOf<StableId>().toExtend<bigint>();
+    // @ts-expect-error a plain bigint is not a StableId
+    stableIdToHex(5n);
+  });
+  it("is what stableIdOf and parseStableId return", () => {
+    expectTypeOf(stableIdOf).returns.toEqualTypeOf<StableId>();
+    expectTypeOf(parseStableId).returns.toEqualTypeOf<StableId>();
   });
 });

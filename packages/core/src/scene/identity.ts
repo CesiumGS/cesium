@@ -48,8 +48,25 @@
  */
 import type { FeatureTable, FeatureValue } from "../io/gltfTypes.ts";
 
-/** A thing's identity: a 64-bit hash of its `StableKey` (never 0). */
-export type StableId = bigint;
+declare const stableIdBrand: unique symbol;
+
+/**
+ * A thing's identity: a 64-bit hash of its `StableKey`. It is a `bigint` at
+ * run time, branded so that a plain `bigint` (a 64-bit property value, say)
+ * is a type error where an ID is wanted. Only `stableIdOf` and
+ * `parseStableId` make one for a caller; inside the engine, `brandId` (not
+ * exported) brands the places that turn a slot's two words back into an ID.
+ *
+ * Zero is a `StableId` too: it is the "none" value of the slot table
+ * (`idOfSlot`, `resolveSlots`), never the ID of a real thing.
+ * `stableIdOf` never returns it; `parseStableId("0000000000000000")` does.
+ */
+export type StableId = bigint & { readonly [stableIdBrand]: true };
+
+/** @internal Brands a bigint as a `StableId`; the one place the engine does. */
+function brandId(value: bigint): StableId {
+  return value as StableId;
+}
 
 /**
  * Taxonomy name to labels: `{ class: ["car"] }`. Labels in a taxonomy are a
@@ -509,7 +526,7 @@ export function canonicalKey(key: StableKey): string {
 export function hashKey(text: string): StableId {
   const [h1, h2] = murmur3x86x128(ENCODER.encode(text));
   const id = (BigInt(h2) << 32n) | BigInt(h1);
-  return id === 0n ? 1n : id;
+  return brandId(id === 0n ? 1n : id);
 }
 
 /** A key's `StableId`: the first 64 bits of MurmurHash3_x86_128 of its canonical text. */
@@ -533,7 +550,7 @@ const U64_MAX = (1n << 64n) - 1n;
  * ```
  *
  * Refuses a value that isn't a bigint (`TypeError`) or is outside 0 to
- * 2^64 - 1 (`RangeError`). It accepts 0, the "none" value of `idOfSlot`.
+ * 2^64 - 1 (`RangeError`). It accepts 0, the "none" StableId of `idOfSlot`.
  */
 export function stableIdToHex(id: StableId): string {
   if (typeof id !== "bigint") {
@@ -555,7 +572,7 @@ export function stableIdToHex(id: StableId): string {
  *
  * `"0000000000000000"` reads as 0n, not as an error. `hashKey` never makes 0,
  * but 0 is the "none" value (`idOfSlot`), and a list of IDs that holds a "none"
- * has to round-trip. Check for 0n if you need a real `StableId`.
+ * has to round-trip. It is a `StableId` (the "none" one, see the type), so check for 0n if you need a real one.
  *
  * See `stableIdToHex` for the `JSON.parse` reviver.
  */
@@ -568,7 +585,7 @@ export function parseStableId(text: string): StableId {
       `parseStableId: expected exactly 16 hex digits, got ${text.length} characters or a non-hex one`,
     );
   }
-  return BigInt(`0x${text}`);
+  return brandId(BigInt(`0x${text}`));
 }
 
 /** Hosts whose `v` query parameter is the asset's version, not a token. */
@@ -1218,8 +1235,9 @@ export class IdentityTable implements Identity {
       if (slots.length === 0) {
         this.index.delete(low);
       }
-      if (this.collided.has(ids[local]!)) {
-        this.recheckCollision(ids[local]!);
+      const id = brandId(ids[local]!);
+      if (this.collided.has(id)) {
+        this.recheckCollision(id);
       }
     }
   }
@@ -1431,7 +1449,7 @@ export class IdentityTable implements Identity {
     }
     const local = slot - entry.first;
     return {
-      id: entry.ids[local]!,
+      id: brandId(entry.ids[local]!),
       key: this.keyOf(entry, local),
       scope: this.scopeOf(entry, local),
       local,
@@ -1441,7 +1459,7 @@ export class IdentityTable implements Identity {
 
   /** A slot's `StableId` (0 for none). */
   idOfSlot(slot: number): StableId {
-    return this.slot(slot)?.id ?? 0n;
+    return this.slot(slot)?.id ?? brandId(0n);
   }
 
   private scopeOf(entry: DrawIds, local: number): "global" | "tile" {

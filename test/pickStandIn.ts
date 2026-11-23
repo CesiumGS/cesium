@@ -1,6 +1,7 @@
 // A stand-in pick result (`View.pick`) for tests that fake a view's picks.
 import type { CameraRecord } from "../packages/core/src/scene/Camera.ts";
 import type { FrameKey } from "../packages/core/src/camera/frameResolver.ts";
+import type { StableId } from "../packages/core/src/scene/identity.ts";
 import type { PickResult } from "../packages/core/src/scene/View.ts";
 
 const RECORD: CameraRecord = {
@@ -26,7 +27,7 @@ const RECORD: CameraRecord = {
 export function standInPick(id: bigint, draw?: PickResult["draw"]): PickResult {
   return {
     ...(draw && { draw }),
-    id,
+    id: id as StableId,
     key: { kind: "host", item: "", key: `stand-in ${id}` },
     scope: "global",
     labels: {},

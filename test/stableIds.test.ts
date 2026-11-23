@@ -13,7 +13,10 @@ import type { CastOptions } from "../packages/core/src/scene/world/types.ts";
 import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import type { RayQuery } from "../packages/core/src/query/queries.ts";
-import { stableIdOf } from "../packages/core/src/scene/identity.ts";
+import {
+  stableIdOf,
+  type StableId,
+} from "../packages/core/src/scene/identity.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;
@@ -106,7 +109,7 @@ describe("stable IDs through the engine", () => {
 
   /** Each loaded tile's features by content URI: slot and stable ID. */
   function idsByContent(world: World, tileset: Tileset3D) {
-    const out = new Map<string, Array<{ slot: number; id: bigint }>>();
+    const out = new Map<string, Array<{ slot: number; id: StableId }>>();
     const visit = (t: Tile) => {
       const draw = t.placement?.draws[0];
       if (draw) {

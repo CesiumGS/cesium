@@ -15,10 +15,14 @@ import {
   stableIdOf,
   type DrawIdentity,
   type ItemIdentity,
+  type StableId,
 } from "../packages/core/src/scene/identity.ts";
 import type { FeatureTable } from "../packages/core/src/io/gltfTypes.ts";
 
 const ENCODER = new TextEncoder();
+
+/** A made-up ID for a test (the engine brands only real ones). */
+const asId = (n: bigint) => n as StableId;
 
 describe("the hash", () => {
   it("is MurmurHash3_x86_128: SMHasher's verification value", () => {
@@ -39,7 +43,7 @@ describe("the hash", () => {
 
   it("hashes the empty input with seed 0 to zeros, and never gives 0 as an ID", () => {
     expect(murmur3x86x128(new Uint8Array(0))).toEqual([0, 0, 0, 0]);
-    expect(hashKey("")).toBe(1n);
+    expect(hashKey("")).toBe(asId(1n));
   });
 
   it("gives a 64-bit ID from a key's canonical text, the same every time", () => {
@@ -282,7 +286,7 @@ describe("reserved names", () => {
 function table(options: {
   tables?: Record<number, FeatureTable>;
   items?: Record<number, ItemIdentity>;
-  hash?: (text: string) => bigint;
+  hash?: (text: string) => StableId;
 }) {
   const reports: string[] = [];
   const tables: Array<FeatureTable | undefined> = [];
@@ -381,7 +385,7 @@ describe("the identity table", () => {
   });
 
   it("reports a collision naming both keys, and merges neither", () => {
-    const { ids, reports } = table({ hash: () => 42n });
+    const { ids, reports } = table({ hash: () => asId(42n) });
     ids.register(
       { index: 0, generation: 1 },
       1,
@@ -402,15 +406,15 @@ describe("the identity table", () => {
     expect(ids.idOfSlot(2)).toBe(42n);
     expect(reports).toHaveLength(1);
     expect(reports[0]).toMatch(/a\.glb.*b\.glb/);
-    expect(ids.collisions.get(42n)).toHaveLength(2);
-    expect(ids.identify(42n)).toBeUndefined();
+    expect(ids.collisions.get(asId(42n))).toHaveLength(2);
+    expect(ids.identify(asId(42n))).toBeUndefined();
     // Each pick still names its own key.
     expect(ids.slot(1)!.key).toMatchObject({ content: "a.glb#n0/p0" });
     expect(ids.slot(2)!.key).toMatchObject({ content: "b.glb#n0/p0" });
   });
 
   it("reports one collision once, and clears it when a colliding draw leaves", () => {
-    const { ids, reports } = table({ hash: () => 42n });
+    const { ids, reports } = table({ hash: () => asId(42n) });
     const add = (index: number, first: number, name: string) => {
       ids.register(
         { index, generation: 1 },
@@ -427,18 +431,22 @@ describe("the identity table", () => {
     // a.glb's feature drawn a second time meets b.glb's the other way round.
     add(2, 3, "a.glb");
     expect(reports).toHaveLength(1);
-    expect(ids.identify(42n)).toBeUndefined();
+    expect(ids.identify(asId(42n))).toBeUndefined();
     // b.glb leaves: a.glb's key is the only one left, drawn twice.
     ids.unregister(1);
-    expect(ids.collisions.has(42n)).toBe(false);
-    expect(ids.identify(42n)!.key).toMatchObject({ content: "a.glb#n0/p0" });
+    expect(ids.collisions.has(asId(42n))).toBe(false);
+    expect(ids.identify(asId(42n))!.key).toMatchObject({
+      content: "a.glb#n0/p0",
+    });
     // One of a.glb's draws leaving keeps it identified.
     ids.unregister(0);
-    expect(ids.identify(42n)!.key).toMatchObject({ content: "a.glb#n0/p0" });
+    expect(ids.identify(asId(42n))!.key).toMatchObject({
+      content: "a.glb#n0/p0",
+    });
     // b.glb back: the same collision again, not reported a second time.
     add(1, 4, "b.glb");
-    expect(ids.collisions.get(42n)).toHaveLength(2);
-    expect(ids.identify(42n)).toBeUndefined();
+    expect(ids.collisions.get(asId(42n))).toHaveLength(2);
+    expect(ids.identify(asId(42n))).toBeUndefined();
     expect(reports).toHaveLength(1);
   });
 
@@ -469,7 +477,7 @@ describe("the identity table", () => {
       "https:user:secret@tiles.test/site/tileset.json",
       "https:/user:pw?secret@tiles.test/site/tileset.json",
     ];
-    const { ids, reports } = table({ hash: () => 42n });
+    const { ids, reports } = table({ hash: () => asId(42n) });
     sources.forEach((source, index) => {
       ids.register(
         { index, generation: 1 },
