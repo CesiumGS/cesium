@@ -525,7 +525,6 @@ CS-18 The work tracker
         CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
         CS-904 Source-declared axis and scale, corrected through placement
         CS-906 Variant selections and payload policy as open options, and their change as invalidation
-        CS-921 A compiled route's center term subtracts its highs as integers on both emitters
         CS-955 The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
         CS-961 Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
         CS-962 Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)

@@ -81,7 +81,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 31 of 62 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 32 of 62 done, 13 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -143,7 +143,7 @@ No milestone
 - [x] CS-839 decision: Merge CS-814, camera records with intrinsics, an off-center principal point and a named distortion. Done.
 - [x] CS-860 decision: Merge CS-837, Cesium IR's JSON format is experimental at cesium-ir/0.1. Done.
 - [x] CS-920 decision: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?. Done.
-- [ ] CS-921 A compiled route's center term subtracts its highs as integers on both emitters. Needs CS-54.
+- [x] CS-921 A compiled route's center term subtracts its highs as integers on both emitters. Done.
 - [x] CS-925 decision: Merge CS-54, routes on both emitters. Done.
 - [ ] CS-941 A compiled route's residual statements go through Cesium IR's emitters (CS-920 B). Needs CS-54.
 - [x] CS-954 decision: Does alpha.1 wait for a measurement of the df64 route-center pass on Apple GPUs?. Done.

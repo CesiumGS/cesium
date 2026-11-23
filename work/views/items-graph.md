@@ -103,7 +103,7 @@ graph LR
     CS_839["CS-839 Merge CS-814, camera records with intrinsics, an off-center pri"]:::done
     CS_860["CS-860 Merge CS-837, Cesium IR's JSON format is experimental at cesium"]:::done
     CS_920["CS-920 Do a route's residual statements go through Cesium IR's emitter"]:::done
-    CS_921["CS-921 A compiled route's center term subtracts its highs as integers "]:::open
+    CS_921["CS-921 A compiled route's center term subtracts its highs as integers "]:::done
     CS_925["CS-925 Merge CS-54, routes on both emitters"]:::done
     CS_941["CS-941 A compiled route's residual statements go through Cesium IR's e"]:::open
     CS_954["CS-954 Does alpha.1 wait for a measurement of the df64 route-center pa"]:::done
