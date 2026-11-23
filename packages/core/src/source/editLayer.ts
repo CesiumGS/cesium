@@ -31,13 +31,23 @@ export type Override =
   | { readonly kind: "insert"; readonly feature: FeatureData };
 
 /**
- * Hides, replaces and inserts features by feature ID, for every item of its content.
+ * Hides, replaces and inserts features by feature ID, for every item of its
+ * content. A content's layer (`SourceContent.edits`) takes an instance ID of
+ * one of its items' draws too, as that draw's feature ID (CS-957 A).
  * @experimental
  */
 export class EditLayer {
   private readonly overrides = new Map<FeatureId, Override>();
   private readonly listeners = new Set<(ids: readonly FeatureId[]) => void>();
   private revision_ = 0;
+
+  /**
+   * @internal `featureOf` maps an ID it is given to the feature ID it is
+   * kept by (an instance ID to its feature's); by default, itself.
+   */
+  constructor(
+    private readonly featureOf: (id: FeatureId) => FeatureId = (id) => id,
+  ) {}
 
   /** Stops drawing `id` wherever it is: every tile, level and draw that holds it. */
   hide(id: FeatureId): void {
@@ -59,8 +69,9 @@ export class EditLayer {
 
   /** Drops `id`'s override: the source's own content shows again. */
   clear(id: FeatureId): void {
-    if (this.overrides.delete(id)) {
-      this.bump([id]);
+    const feature = this.featureOf(id);
+    if (this.overrides.delete(feature)) {
+      this.bump([feature]);
     }
   }
 
@@ -75,12 +86,12 @@ export class EditLayer {
 
   /** `id`'s override, if it has one. */
   get(id: FeatureId): Override | undefined {
-    return this.overrides.get(id);
+    return this.overrides.get(this.featureOf(id));
   }
 
   /** Whether the source's own `id` draws: false when hidden or replaced. */
   showsBase(id: FeatureId): boolean {
-    const o = this.overrides.get(id);
+    const o = this.overrides.get(this.featureOf(id));
     return o === undefined || o.kind === "insert";
   }
 
@@ -111,8 +122,9 @@ export class EditLayer {
         "EditLayer: an ID is a feature ID (an unsigned 64-bit bigint, not 0).",
       );
     }
-    this.overrides.set(id, override);
-    this.bump([id]);
+    const feature = this.featureOf(id);
+    this.overrides.set(feature, override);
+    this.bump([feature]);
   }
 
   private bump(ids: readonly FeatureId[]): void {

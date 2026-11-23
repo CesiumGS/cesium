@@ -721,13 +721,20 @@ export class SourceRuntime {
 
   /**
    * Others' change set from the source's feed: checked and resolved by its
-   * keys (a malformed one, or one whose IDs aren't its keys', is dropped
-   * and reported), then applied under this client's edits.
+   * keys (a malformed one, one for other content, or one whose IDs aren't
+   * its keys', is dropped whole and reported), then applied under this
+   * client's edits. An update or a delete naming a key no row, draw or
+   * override of the content has is applied, as an override that holds until
+   * one loads, and reported, never dropped silently.
    */
   private applyFeatures(opened: Opened, changes: ChangeSet): void {
     checkChangeSet(changes);
     const { content } = opened;
-    for (const op of content.resolve(changes).ops) {
+    const resolved = content.resolve(changes).ops;
+    const unknown = resolved.flatMap((op, index) =>
+      op.op !== "insert" && !content.holds(op.id!) ? [index] : [],
+    );
+    for (const op of resolved) {
       const id = op.id!;
       if (op.op === "insert") {
         content.feed.insert(id, op.feature);
@@ -736,6 +743,12 @@ export class SourceRuntime {
       } else {
         content.feed.replace(id, patched(feedBase(content, id), op.patch));
       }
+    }
+    content.noteKeys(resolved);
+    if (unknown.length > 0) {
+      this.reportMessage(
+        `the "${content.kind}" source's features change: ${unknown.length === 1 ? "op" : "ops"} ${unknown.join(", ")} ${unknown.length === 1 ? "names a key" : "name keys"} no row, draw or edit of its content has; applied as overrides that hold until the features load.`,
+      );
     }
   }
 

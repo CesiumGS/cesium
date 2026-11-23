@@ -11,7 +11,9 @@
  * ID and canonical source) and its batch's `names` entry (the source's own
  * key, the same at every level), or else from the batch's key and its index:
  * never from a scene item, so every item of the content shares it. A
- * writable source must name every row (CS-831's S7).
+ * writable source must name every row (CS-831's S7). A source's keys are one
+ * space: a row named `k` and a draw whose `DrawOptions.id` is `k` are one
+ * feature.
  */
 import { stableIdOf, type StableId } from "../scene/identity.ts";
 import type {
@@ -53,20 +55,20 @@ export interface RowIdentityContext {
 }
 
 /**
- * The feature ID of the row its source names `name` in content
- * `identity` (`FeatureId`): CS-815's `named` key, with the content's ID
- * where the key has its item, until CS-961 gives feature IDs a key kind of
- * their own.
+ * The feature ID of what its source keys `key` in content `identity`
+ * (`FeatureId`): a row it names `key`, or a draw without features whose
+ * `DrawOptions.id` is `key`. Its key kind is `feature`, which has no item,
+ * so it is never an instance ID (CS-957 A).
  */
 export function featureIdOf(
   identity: RowIdentityContext,
-  name: string,
+  key: string,
 ): StableId {
   return stableIdOf({
-    kind: "named",
-    item: identity.content,
+    kind: "feature",
+    content: identity.content,
     source: identity.source,
-    name,
+    key,
   });
 }
 
@@ -341,12 +343,11 @@ export class ContentRows {
         ids[i] = id;
       } else {
         ids[i] = stableIdOf({
-          kind: "content",
-          item: content,
+          kind: "feature",
+          content,
           source,
-          content: batch.key,
-          set: 0,
-          feature: i,
+          key: batch.key,
+          row: i,
         });
       }
     }

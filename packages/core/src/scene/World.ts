@@ -950,8 +950,8 @@ export class World {
    * items there (`ContentItem`), each with every draw its source writes and
    * its own instance IDs (CS-957 A); feature IDs and edits are the
    * content's, the same in every item. An item's key (`ContentItem.key`) is
-   * `options.id`, else the content ID for the first, then the content ID
-   * with an ordinal (`#2`), reported. Throws for a destroyed world, content
+   * `options.id`, else the content ID while no item holds it, else the
+   * content ID with an ordinal (`#2`), reported. Throws for a destroyed world, content
    * of another world, destroyed content, an `id` an item holds or another
    * open content's ID, and identity options `SceneItemOptions` refuses.
    * @experimental
@@ -975,14 +975,9 @@ export class World {
           `World.add: an item or another open content has the key "${options.id}": each item's key is its own.`,
         );
       }
-      // The content ID is its first item's key while that item stays; a
-      // later item without an id takes an ordinal after it.
-      const ownKeyFree = !content.items.some((i) => i.key === content.id);
-      const identity = makeItemIdentity(
-        this,
-        { ...options, id: options.id ?? (ownKeyFree ? content.id : undefined) },
-        content.id,
-      );
+      // Without an id, the content ID by the ordinal rule: its own while no
+      // item holds it (its reservation doesn't count), else an ordinal after.
+      const identity = makeItemIdentity(this, options, content.id, content.id);
       return content.addItem(this, identity, options, () =>
         this.identities.releaseItemKey(identity.key),
       );

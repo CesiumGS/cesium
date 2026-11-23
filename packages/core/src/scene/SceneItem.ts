@@ -230,9 +230,10 @@ export function itemIdentity(
   world: Pick<World, "identities">,
   options: Pick<SceneItemOptions, "id" | "labels" | "taxonomies" | "identity">,
   derived: string,
+  own?: string,
 ): ItemIdentity {
   return {
-    key: world.identities.claimItemKey(options.id, derived),
+    key: world.identities.claimItemKey(options.id, derived, own),
     ...(options.labels && { labels: checkLabels(options.labels, "item") }),
     ...(options.taxonomies && { taxonomies: [...options.taxonomies] }),
     ...(options.identity && { identity: { ...options.identity } }),

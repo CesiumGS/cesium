@@ -635,7 +635,8 @@ export function Architecture() {
             feature ID made from the content and the source's own key for the
             feature, the same wherever the content is placed, which edits and
             live updates key by; and an instance ID for each placement, which
-            its draws carry.
+            its draws carry and which is never its feature ID. Labels and edits
+            set by feature ID reach every placement.
           </li>
         </ul>
         <p>

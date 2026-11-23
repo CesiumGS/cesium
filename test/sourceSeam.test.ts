@@ -248,12 +248,13 @@ describe("Engine.open and World.add", () => {
       "Roads",
       "Image a",
     ]);
-    // Feature IDs from the source's own names (CS-815): the same in another run.
+    // Feature IDs from the source's own names: the same in another run, and
+    // of their own key kind, with no item (CS-957 A).
     const road = stableIdOf({
-      kind: "named",
-      item: content.id,
+      kind: "feature",
+      content: content.id,
       source: content.source,
-      name: "road-1",
+      key: "road-1",
     });
     expect(content.featureId("road-1")).toBe(road);
     expect(content.keyOf(road)).toBe("road-1");
@@ -621,13 +622,14 @@ describe("the edit layer (CS-865)", () => {
     const item = place(content);
     rt.tick();
     rt.tick();
-    const id = (name: string) =>
+    const id = (key: string) =>
       stableIdOf({
-        kind: "named",
-        item: content.id,
+        kind: "feature",
+        content: content.id,
         source: content.source,
-        name,
+        key,
       });
+    // The box's instance ID in its item: the edit layer takes it as its feature's.
     const drawId = stableIdOf({
       kind: "draw",
       item: item.identity.key,
@@ -1333,13 +1335,7 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
       rt.open({ url: "https://data.test/b.sample" }, { id: "mine" }),
     ).rejects.toThrow(/the id "mine" is open already/);
     // Their rows' IDs differ.
-    const road = (content: SourceContent) =>
-      stableIdOf({
-        kind: "named",
-        item: content.id,
-        source: content.source,
-        name: "road-0",
-      });
+    const road = (content: SourceContent) => content.featureId("road-0");
     expect(road(first)).not.toBe(road(second));
   });
 
@@ -1597,12 +1593,7 @@ describe("the bounds keep others' edits and say what they drop", () => {
     jobs.apply(Infinity);
     rt.tick();
     jobs.apply(Infinity);
-    const road0 = stableIdOf({
-      kind: "named",
-      item: "city",
-      source: content.source,
-      name: "road-0",
-    });
+    const road0 = content.featureId("road-0");
     const source = sourceOf(content);
     source.push({ kind: "features", changes: set(0, "road-0") });
     for (let i = 0; i < MAX_QUEUED_CHANGES; i++) {
@@ -1786,15 +1777,11 @@ describe("two IDs, change sets by the source's keys, and the scene clock (CS-957
         RecordFlags.hidden) !==
       0;
 
-    // Edits name the feature ID: one edit, every item. The box's feature
-    // ID is made with the content ID (the first item's instance ID until CS-961).
-    const box = stableIdOf({
-      kind: "draw",
-      item: content.id,
-      source: content.source,
-      content: "a/box",
-    });
+    // Edits name the feature ID: one edit, every item. The box's feature ID
+    // is its source's key for it, and neither item's instance ID.
+    const box = content.featureId("a/box");
     expect([...content.features()].map((f) => f.id)).toContain(box);
+    expect([westBox, eastBox]).not.toContain(box);
     content.edits.hide(box);
     expect([hidden(westDraw), hidden(eastDraw)]).toEqual([true, true]);
     content.edits.clear(box);
@@ -1971,5 +1958,244 @@ describe("two IDs, change sets by the source's keys, and the scene clock (CS-957
     };
     engine.sources.tick();
     expect(recorded).toBe(scene - 3600);
+  });
+});
+
+describe("feature IDs and instance IDs apart, and a featureless draw by its key (CS-957 A)", () => {
+  let engine: Engine;
+  let world: World;
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+  });
+  afterEach(() => engine.destroy());
+
+  const instanceOf = (content: SourceContent, key: string) =>
+    stableIdOf({
+      kind: "draw",
+      item: key,
+      source: content.source,
+      content: "a/box",
+    });
+
+  /** Two items of one content, loaded: their instance IDs of the box, and its draws. */
+  async function twoItems() {
+    const content = await engine.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
+    const west = world.add(content);
+    const east = world.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    const westBox = instanceOf(content, west.key);
+    const eastBox = instanceOf(content, east.key);
+    const drawOf = (id: bigint) => world.identity.identify(id)!.draw!.index;
+    const hidden = (index: number) =>
+      (world.draws.recordsU32[index * RECORD_WORDS + FLAGS_WORD]! &
+        RecordFlags.hidden) !==
+      0;
+    return { content, west, east, westBox, eastBox, drawOf, hidden };
+  }
+
+  it("gives the first item instance IDs that aren't its feature IDs", async () => {
+    const { content, west, westBox, eastBox } = await twoItems();
+    expect(west.key).toBe(content.id); // the first item's key is the content ID
+    const box = content.featureId("a/box");
+    expect(westBox).not.toBe(box);
+    expect(eastBox).not.toBe(box);
+    expect(world.identity.identify(westBox)).toMatchObject({
+      id: westBox,
+      key: { kind: "draw", item: "city" },
+      feature: box,
+    });
+    expect(world.identity.identify(eastBox)!.feature).toBe(box);
+  });
+
+  it("shows labels set by feature ID on both placements, and finds a feature by its ID while one placement still draws it", async () => {
+    const { content, west, westBox, eastBox, drawOf } = await twoItems();
+    const box = content.featureId("a/box");
+    world.identity.setLabels(box, "class", ["kiosk"]);
+    expect(world.identity.identify(westBox)!.labels.class).toEqual(["kiosk"]);
+    expect(world.identity.identify(eastBox)!.labels.class).toEqual(["kiosk"]);
+    // A label set on one placement's instance ID wins there, and only there.
+    world.identity.setLabels(eastBox, "class", ["stall"]);
+    expect(world.identity.identify(westBox)!.labels.class).toEqual(["kiosk"]);
+    expect(world.identity.identify(eastBox)!.labels.class).toEqual(["stall"]);
+    // identify by the feature ID: as a placement that draws it shows it.
+    expect(world.identity.identify(box)).toMatchObject({
+      id: box,
+      key: { kind: "feature", content: "city", key: "a/box" },
+      feature: box,
+      labels: { class: ["kiosk"] },
+    });
+    west.remove();
+    const found = world.identity.identify(box)!;
+    expect(found.draw!.index).toBe(drawOf(eastBox));
+    expect(found.labels.class).toEqual(["kiosk"]); // not the east's own
+  });
+
+  it("hides the feature everywhere from an edit made with the second item's pick", async () => {
+    const { content, westBox, eastBox, drawOf, hidden } = await twoItems();
+    const westDraw = drawOf(westBox);
+    const eastDraw = drawOf(eastBox);
+    // What a pick on the east item reports: its instance ID.
+    const picked = world.identity.identify(eastBox)!;
+    content.edits.hide(picked.id);
+    expect([hidden(westDraw), hidden(eastDraw)]).toEqual([true, true]);
+    expect(content.edits.get(content.featureId("a/box"))?.kind).toBe("hide");
+    expect(content.feature(content.featureId("a/box"))).toBeUndefined();
+    content.edits.clear(picked.feature!);
+    expect([hidden(westDraw), hidden(eastDraw)]).toEqual([false, false]);
+  });
+
+  it("hides, replaces and deletes a draw without features by a key-only change set, and knows its key", async () => {
+    const { content, westBox, eastBox, drawOf, hidden } = await twoItems();
+    const box = content.featureId("a/box");
+    const draws = [drawOf(westBox), drawOf(eastBox)];
+    const shown = () => draws.map((d) => !hidden(d));
+    expect(content.keyOf(box)).toBe("a/box");
+    expect(shown()).toEqual([true, true]);
+    const source = sourceOf(content);
+    const feed = (id: string, ops: ChangeSet["ops"]) => {
+      source.push({
+        kind: "features",
+        changes: { id, source: "city", ops },
+      });
+      engine.scene.workers.jobs.apply(Infinity);
+    };
+    // A feed's delete by the draw's key hides it in both items.
+    feed("cs-1", [{ op: "delete", key: "a/box" }]);
+    expect(content.feed.get(box)?.kind).toBe("hide");
+    expect(shown()).toEqual([false, false]);
+    expect(content.feature(box)).toBeUndefined();
+    // Its update replaces it: the source's draw stays hidden under the replacement.
+    feed("cs-2", [
+      { op: "update", key: "a/box", patch: { properties: { open: true } } },
+    ]);
+    expect(content.feature(box)).toEqual({ properties: { open: true } });
+    expect(shown()).toEqual([false, false]);
+    content.feed.clear(box);
+    expect(shown()).toEqual([true, true]);
+    // A client's key-only change set resolves to the same ID, for its edits.
+    const mine = content.resolve({
+      id: "cs-mine",
+      source: content.source, // the canonical source, which a server knows
+      ops: [{ op: "delete", key: "a/box" }],
+    });
+    expect(mine.ops[0]!.id).toBe(box);
+    content.edits.hide(mine.ops[0]!.id!);
+    expect(shown()).toEqual([false, false]);
+    // CS-815's draw key for it is not its feature ID: such an op is refused whole.
+    expect(() =>
+      content.resolve({
+        id: "cs-old",
+        source: "city",
+        ops: [
+          {
+            op: "delete",
+            key: "a/box",
+            id: stableIdOf({
+              kind: "draw",
+              item: "city",
+              source: content.source,
+              content: "a/box",
+            }),
+          },
+        ],
+      }),
+    ).toThrow(/op 0: its id isn't its key's feature ID/);
+  });
+
+  it("reports a feed's op naming a key its content hasn't, and applies it as an override", async () => {
+    const reports: string[] = [];
+    engine.errors.on((e) => reports.push(e.message));
+    const { content } = await twoItems();
+    sourceOf(content).push({
+      kind: "features",
+      changes: {
+        id: "cs-1",
+        source: "city",
+        ops: [
+          { op: "delete", key: "road-0" },
+          { op: "delete", key: "n3/p0" },
+          { op: "insert", key: "new-1", feature: {} },
+        ],
+      },
+    });
+    engine.scene.workers.jobs.apply(Infinity);
+    expect(reports.filter((m) => m.includes("features change"))).toEqual([
+      'the "sample" source\'s features change: op 1 names a key no row, draw or edit of its content has; applied as overrides that hold until the features load.',
+    ]);
+    expect(content.feed.get(content.featureId("n3/p0"))?.kind).toBe("hide");
+    expect(content.keyOf(content.featureId("n3/p0"))).toBe("n3/p0");
+    expect(content.keyOf(content.featureId("new-1"))).toBe("new-1");
+    // A key is kept only while an override holds it.
+    content.feed.clear(content.featureId("new-1"));
+    expect(content.keyOf(content.featureId("new-1"))).toBeUndefined();
+  });
+
+  it("refuses a change set for other content, and records no key from a refused one", async () => {
+    const { content } = await twoItems();
+    expect(() =>
+      content.resolve({
+        id: "cs-b",
+        source: "https://data.test/other.sample",
+        ops: [{ op: "delete", key: "road-0" }],
+      }),
+    ).toThrow(/neither this content's canonical source nor its ID/);
+    const refused = {
+      id: "cs-c",
+      source: "city",
+      ops: [
+        { op: "insert" as const, key: "ghost", feature: {} },
+        { op: "delete" as const, key: "road-0", id: 1n },
+      ],
+    };
+    sourceOf(content).push({ kind: "features", changes: refused });
+    engine.scene.workers.jobs.apply(Infinity);
+    expect(content.feed.size).toBe(0);
+    expect(content.keyOf(content.featureId("ghost"))).toBeUndefined();
+  });
+
+  it("refuses a source's own DrawOptions.identity", async () => {
+    const content = await engine.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
+    world.add(content);
+    const { sinks } = sourceOf(content).host;
+    expect(() =>
+      sinks.draws.addDraw({
+        mesh: sinks.draws.addMesh(createBox()),
+        id: "own/box",
+        origin: Float64Array.of(0, 0, 0),
+        identity: {
+          source: "elsewhere",
+          content: "own/box",
+          set: -1,
+          scope: "tile",
+        },
+      }),
+    ).toThrow(/not DrawOptions\.identity/);
+  });
+
+  it("gives content an ordinal when a tileset item holds its ID and no id is given", async () => {
+    const reports: string[] = [];
+    engine.errors.on((e) => reports.push(e.message));
+    const content = await engine.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
+    // A tileset item takes the key "city" (its host's id).
+    world.identities.claimItemKey("city", "https://data.test/tileset.json");
+    const item = world.add(content);
+    expect(item.key).toBe("city#2");
+    // An explicit id the tileset holds is still refused, naming it.
+    expect(() => world.add(content, { id: "city" })).toThrow(
+      /the id "city" is drawn already/,
+    );
   });
 });

@@ -83,6 +83,12 @@ export type Labels = Readonly<Record<string, readonly string[]>>;
  *   of detail.
  * - `draw`: content with no features.
  * - `host`: a host's own key (`DrawOptions.id`).
+ * - `feature`: a content source's feature (`FeatureId`, CS-957 A): its
+ *   content's ID (`SourceContent.id`), its canonical source and the source's
+ *   own key for it (a row's name, a draw's `DrawOptions.id`). It has no
+ *   item, so every placement of the content shares it, and it is never an
+ *   instance ID. With `row`, it is row `row` of the batch keyed `key`, a row
+ *   its source didn't name.
  *
  * `item` is the scene item's key (`SceneItemOptions.id`, else the content's
  * source); `source` is the asset's canonical reference (`canonicalSource`),
@@ -110,7 +116,14 @@ export type StableKey =
       readonly source: string;
       readonly content: string;
     }
-  | { readonly kind: "host"; readonly item: string; readonly key: string };
+  | { readonly kind: "host"; readonly item: string; readonly key: string }
+  | {
+      readonly kind: "feature";
+      readonly content: string;
+      readonly source: string;
+      readonly key: string;
+      readonly row?: number;
+    };
 
 /** How a pick's answer was made: from a surface, a point, a splat or a field. */
 export type PickBasis = "surface" | "point" | "splat" | "field";
@@ -174,6 +187,13 @@ export interface Identified {
   readonly properties?: Readonly<Record<string, FeatureValue>>;
   /** The draw that drew it, while it is loaded (a named ID's first, when several do). */
   readonly draw?: { readonly index: number; readonly generation: number };
+  /**
+   * The feature ID of what it names, for a content source's feature
+   * (CS-957 A): what that content's rows, edits and change sets name. For an
+   * instance ID, its feature's; for a feature ID, the ID itself. Absent for
+   * what no content source drew, and for a feature CS-961 gives an ID later.
+   */
+  readonly feature?: StableId;
 }
 
 /**
@@ -181,9 +201,14 @@ export interface Identified {
  * `StableId`s, and this resolves them (`World.identity`).
  *
  * Labels' precedence, per taxonomy (the nearest level that sets it wins;
- * sets are never merged across levels): labels the host set on the feature
- * (`setLabels`), then the feature's own (`TaxonomyDeclaration`), then its
- * content's, then its scene item's (`SceneItemOptions.labels`).
+ * sets are never merged across levels): labels the host set on the ID
+ * (`setLabels`), then those it set on its feature ID (`Identified.feature`,
+ * which every placement of a content source's feature shares), then the
+ * feature's own (`TaxonomyDeclaration`), then its content's, then its scene
+ * item's (`SceneItemOptions.labels`).
+ *
+ * `identify` takes a feature ID too: it answers as the first placement that
+ * draws the feature shows it, without that placement's own host labels.
  */
 export interface Identity {
   /**
@@ -519,6 +544,12 @@ export function canonicalKey(key: StableKey): string {
       return JSON.stringify(["draw", key.item, key.source, key.content]);
     case "host":
       return JSON.stringify(["host", key.item, key.key]);
+    case "feature":
+      return JSON.stringify(
+        key.row === undefined
+          ? ["feature", key.content, key.source, key.key]
+          : ["feature", key.content, key.source, key.key, key.row],
+      );
   }
 }
 
@@ -1024,6 +1055,13 @@ export interface DrawIdentity {
   readonly item?: ItemIdentity;
   /** Labels its content sets (3D Tiles content, tile and group metadata: CS-272). */
   readonly contentLabels?: Labels;
+  /**
+   * A content source's draw (CS-957 A): its content's ID and the source's
+   * key for the draw, for its features' feature IDs, kept beside their
+   * instance IDs. A draw without features has one feature ID, from `key`; a
+   * named feature's is from its name. CS-961 gives the others theirs.
+   */
+  readonly feature?: { readonly content: string; readonly key: string };
 }
 
 /** One `EXT_mesh_features` feature-ID set of a primitive, as read (`GltfMesh.featureSets`). */
@@ -1078,6 +1116,8 @@ interface DrawIds {
   item?: ItemIdentity;
   /** Per local feature, the named key's name, when the feature is named. */
   names?: Array<string | undefined>;
+  /** Per local feature, its feature ID (0: none), for a content source's draw. */
+  features?: BigUint64Array;
 }
 
 /** What a slot resolves to: its ID, key and how it was drawn. */
@@ -1087,6 +1127,8 @@ export interface SlotIdentity {
   readonly scope: "global" | "tile";
   readonly local: number;
   readonly draw: { readonly index: number; readonly generation: number };
+  /** Its feature ID, for a content source's feature (`Identified.feature`). */
+  readonly feature?: StableId;
 }
 
 /**
@@ -1104,6 +1146,8 @@ export class IdentityTable implements Identity {
   private readonly pending = new Set<DrawIds>();
   /** Slots by the low 32 bits of their ID; full IDs compared after. */
   private readonly index = new Map<number, number[]>();
+  /** Slots by their feature ID, for content sources' features (CS-957 A). */
+  private readonly featureSlots = new Map<StableId, number[]>();
   /** Slot to draw, sorted by first slot. */
   private readonly ranges: DrawIds[] = [];
   /** Host labels, by ID and taxonomy: kept across reloads. */
@@ -1144,9 +1188,15 @@ export class IdentityTable implements Identity {
   /**
    * An item key for a new item: `explicit` (the host's, which must be unused),
    * else `derived`, with an ordinal from the second item on (`#2`), which
-   * then depends on the order items were added: reported.
+   * then depends on the order items were added: reported. `own` is a key the
+   * new item's own content reserves (its content ID): the ordinal rule takes
+   * it while no item holds it.
    */
-  claimItemKey(explicit: string | undefined, derived: string): string {
+  claimItemKey(
+    explicit: string | undefined,
+    derived: string,
+    own?: string,
+  ): string {
     if (explicit !== undefined) {
       if (typeof explicit !== "string" || explicit.length === 0) {
         throw new Error("an item's id is a non-empty string");
@@ -1163,7 +1213,9 @@ export class IdentityTable implements Identity {
     // host's id that looks like an ordinal ("wall#2") is skipped, never shared.
     const keyOf = (n: number) => (n === 1 ? derived : `${derived}#${n}`);
     let ordinal = 1;
-    while (this.holdsItemKey(keyOf(ordinal))) {
+    const held = (key: string) =>
+      key === own ? this.itemKeys.has(key) : this.holdsItemKey(key);
+    while (held(keyOf(ordinal))) {
       ordinal++;
     }
     const key = keyOf(ordinal);
@@ -1230,6 +1282,7 @@ export class IdentityTable implements Identity {
     if (!ids) {
       return;
     }
+    this.unindexFeatures(entry);
     // A draw without features indexed its first slot only.
     const indexed = entry.featured ? entry.count : 1;
     for (let local = 0; local < indexed; local++) {
@@ -1280,11 +1333,13 @@ export class IdentityTable implements Identity {
    */
   recompute(): void {
     this.index.clear();
+    this.featureSlots.clear();
     this.collided.clear();
     for (const entry of this.draws.values()) {
       entry.ids = undefined;
       entry.item = undefined;
       entry.names = undefined;
+      entry.features = undefined;
       this.pending.add(entry);
     }
   }
@@ -1318,6 +1373,7 @@ export class IdentityTable implements Identity {
       ids.fill(id);
       this.insert(entry, 0, id, text);
       entry.ids = ids;
+      this.indexFeatures(entry);
       return;
     }
     const table = this.world.scene.featureTables[entry.index];
@@ -1339,6 +1395,85 @@ export class IdentityTable implements Identity {
       this.insert(entry, local, id, text);
     }
     entry.ids = ids;
+    this.indexFeatures(entry);
+  }
+
+  /**
+   * A content source's draw's feature key of local feature `local`
+   * (CS-957 A): none for other draws, and none yet for an unnamed feature
+   * of a draw with features (CS-961).
+   */
+  private featureKeyOf(entry: DrawIds, local: number): StableKey | undefined {
+    const identity = entry.identity;
+    const feature = identity?.feature;
+    if (!feature) {
+      return undefined;
+    }
+    const key = entry.featured ? entry.names?.[local] : feature.key;
+    return key === undefined
+      ? undefined
+      : {
+          kind: "feature",
+          content: feature.content,
+          source: identity.source,
+          key,
+        };
+  }
+
+  /** Indexes a content source's draw's slots by their feature IDs. */
+  private indexFeatures(entry: DrawIds): void {
+    if (!entry.identity?.feature) {
+      return;
+    }
+    // A draw without features has one feature: its first slot stands for it.
+    const indexed = entry.featured ? entry.count : 1;
+    const features = new BigUint64Array(entry.count);
+    for (let local = 0; local < indexed; local++) {
+      const key = this.featureKeyOf(entry, local);
+      if (key === undefined) {
+        continue;
+      }
+      const id = this.hash(canonicalKey(key));
+      features[local] = id;
+      let slots = this.featureSlots.get(id);
+      if (!slots) {
+        slots = [];
+        this.featureSlots.set(id, slots);
+      }
+      slots.push(entry.first + local);
+    }
+    if (!entry.featured) {
+      features.fill(features[0]!);
+    }
+    entry.features = features;
+  }
+
+  private unindexFeatures(entry: DrawIds): void {
+    const features = entry.features;
+    if (!features) {
+      return;
+    }
+    const indexed = entry.featured ? entry.count : 1;
+    for (let local = 0; local < indexed; local++) {
+      const id = features[local]!;
+      const slots = id === 0n ? undefined : this.featureSlots.get(id);
+      if (!slots) {
+        continue;
+      }
+      const k = slots.indexOf(entry.first + local);
+      if (k >= 0) {
+        slots.splice(k, 1);
+      }
+      if (slots.length === 0) {
+        this.featureSlots.delete(id);
+      }
+    }
+  }
+
+  /** Local feature `local`'s feature ID, when it has one. */
+  private featureOf(entry: DrawIds, local: number): StableId | undefined {
+    const id = entry.features?.[local];
+    return id === undefined || id === 0n ? undefined : id;
   }
 
   private insert(
@@ -1458,12 +1593,14 @@ export class IdentityTable implements Identity {
       return undefined;
     }
     const local = slot - entry.first;
+    const feature = this.featureOf(entry, local);
     return {
       id: brandId(entry.ids[local]!),
       key: this.keyOf(entry, local),
       scope: this.scopeOf(entry, local),
       local,
       draw: { index: entry.index, generation: entry.generation },
+      ...(feature !== undefined && { feature }),
     };
   }
 
@@ -1488,13 +1625,21 @@ export class IdentityTable implements Identity {
     return this.labelsOf(this.at(slot)!, s.local, s.id, only);
   }
 
+  /**
+   * Local feature `local`'s labels: the host's on `id` (its instance ID;
+   * undefined to answer for its feature ID alone), then the host's on its
+   * feature ID, then the lower levels.
+   */
   private labelsOf(
     entry: DrawIds,
     local: number,
-    id: StableId,
+    id: StableId | undefined,
     only?: readonly string[],
   ): Labels {
-    const host = this.hostLabels.get(id);
+    const host = id === undefined ? undefined : this.hostLabels.get(id);
+    const featureId = this.featureOf(entry, local);
+    const featureHost =
+      featureId === undefined ? undefined : this.hostLabels.get(featureId);
     const own: Record<string, readonly string[]> = {};
     const table = this.world.scene.featureTables[entry.index];
     for (const t of entry.item?.taxonomies ?? []) {
@@ -1508,6 +1653,7 @@ export class IdentityTable implements Identity {
     return resolveLabels(
       [
         host ? Object.fromEntries(host) : undefined,
+        featureHost ? Object.fromEntries(featureHost) : undefined,
         own,
         entry.identity?.contentLabels,
         entry.item?.labels,
@@ -1588,6 +1734,7 @@ export class IdentityTable implements Identity {
         entry.index,
         local,
       );
+      const feature = this.featureOf(entry, local);
       return {
         id,
         key: this.keyOf(entry, local),
@@ -1596,6 +1743,40 @@ export class IdentityTable implements Identity {
         ...(name !== undefined && { name }),
         ...(properties && { properties }),
         draw: { index: entry.index, generation: entry.generation },
+        ...(feature !== undefined && { feature }),
+      };
+    }
+    return this.identifyFeature(id, options.taxonomies);
+  }
+
+  /**
+   * A content source's feature ID (CS-957 A), as the first placement still
+   * drawing it shows it, without that placement's own host labels.
+   */
+  private identifyFeature(
+    id: StableId,
+    taxonomies: readonly string[] | undefined,
+  ): Identified | undefined {
+    for (const slot of this.featureSlots.get(id) ?? []) {
+      const entry = this.at(slot);
+      const local = slot - (entry?.first ?? 0);
+      const key = entry && this.featureKeyOf(entry, local);
+      if (!entry || !key || this.featureOf(entry, local) !== id) {
+        continue;
+      }
+      const { name, properties } = this.world.featureProperties(
+        entry.index,
+        local,
+      );
+      return {
+        id,
+        key,
+        scope: "global",
+        labels: this.labelsOf(entry, local, undefined, taxonomies),
+        ...(name !== undefined && { name }),
+        ...(properties && { properties }),
+        draw: { index: entry.index, generation: entry.generation },
+        feature: id,
       };
     }
     return undefined;

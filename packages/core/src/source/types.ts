@@ -61,27 +61,27 @@ export type ContentKey = string;
 
 /**
  * A feature's ID (CS-957 A): made from its content and the source's own key
- * for the feature (`RowIdentity.names`), never from the scene item that
- * places it, so it is the same wherever the content is placed. Rows, the
- * edit layer, change sets, metadata and labels name it.
+ * for the feature (a row's `RowIdentity.names` entry, a draw's
+ * `DrawOptions.id`), never from the scene item that places it, so it is the
+ * same wherever the content is placed. Rows, the edit layer, change sets,
+ * metadata and labels name it.
  *
- * Until CS-961 gives it a key kind of its own, it is CS-815's `named` key
- * (or `content` key, for an unnamed row) with the content's ID
- * (`SourceContent.id`) where that key has its item.
+ * Its key kind is `feature` (`StableKey`): the content's ID
+ * (`SourceContent.id`), its canonical source and the source's key, with no
+ * item, so it is never an instance ID.
  * @experimental
  */
 export type FeatureId = StableId;
 
 /**
- * A placed feature's ID (CS-957 A): its feature ID with the placement, the
- * scene item, that draws it. Each item's draws carry its own, so one content
- * placed twice gives two; picks, ray hits and the ID image report it beside
- * the feature ID (CS-961).
+ * A placed feature's ID (CS-957 A): its feature with the placement, the
+ * scene item, that draws it. Each item's draws carry their own, so one
+ * content placed twice gives two, and neither is its feature ID. Picks and
+ * ray hits report it; `Identity.identify` gives its feature ID
+ * (`Identified.feature`), and CS-961 puts the feature ID beside it in picks
+ * and the ID image.
  *
- * Until CS-961 gives it an encoding of its own, it is the ID CS-815 makes
- * with the item's key (`ContentItem.key`). The first item's key is the
- * content's ID, so its instance IDs equal its feature IDs; a second item's
- * differ.
+ * It is the ID CS-815 makes with the item's key (`ContentItem.key`).
  * @experimental
  */
 export type InstanceId = StableId;
