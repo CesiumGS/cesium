@@ -199,10 +199,13 @@ describe("corridorUnroll's compiled source", () => {
     if (!compiled.ok) {
       throw new Error(compiled.reason);
     }
-    // A regression budget at today's size (34,260 characters, 416 floats per
+    // A regression budget at today's size (37,811 characters, 416 floats per
     // draw, 200 dynamic parameters): the program grows with the element
-    // count, which a table lookup in the IR would remove.
-    expect(compiled.wgsl.length).toBeLessThan(36_000);
+    // count, which a table lookup in the IR would remove. 3,551 of those
+    // characters are the center term's integer helpers (CS-921, CS-1096 A:
+    // centerTerm.ts), which every route module carries once, whatever its
+    // element count.
+    expect(compiled.wgsl.length).toBeLessThan(39_500);
     expect(compiled.perDrawLayout.floats).toBeLessThan(440);
   });
 });

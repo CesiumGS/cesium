@@ -66,6 +66,70 @@ function diffTestOf(
   throw new Error(`tg_diff: an unknown test for a wrap: ${line}`);
 }
 
+type Env = Readonly<Record<string, number | boolean>>;
+
+/** The `||` terms of a wide test, as the shader text has them. */
+function wideTermsOf(text: string, fn: "tg_addMul" | "tg_value"): string[] {
+  const pattern =
+    fn === "tg_addMul"
+      ? /tg_addMul\([^]*?(?:let|bool) wide = (.+);/
+      : /tg_value\([^]*?return (?:select\(exact, s\.v, (.+)\)|(.+) \? s\.v : exact);/;
+  const m = pattern.exec(text);
+  const line = m?.[1] ?? m?.[2];
+  if (!line) {
+    throw new Error(`${fn}: no wide test`);
+  }
+  return line.split(" || ");
+}
+
+/**
+ * `tg_addMul`'s or `tg_value`'s wide test, as the WGSL has it, emulated
+ * term by term over the shader's names: a term deleted from the shader is
+ * deleted here too.
+ */
+function wideTestOf(
+  wgsl: string,
+  fn: "tg_addMul" | "tg_value",
+): (env: Env) => boolean {
+  const tests = wideTermsOf(wgsl, fn).map((term): ((env: Env) => boolean) => {
+    if (term === "abs(f32(pw) * f32(gw)) >= 2147483136.0") {
+      return (e) =>
+        Math.abs(f(f(e.pw as number) * f(e.gw as number))) >= 2147483136;
+    }
+    if (term === "s.wide") {
+      return (e) => e["s.wide"] as boolean;
+    }
+    const m = /^tg_wraps\(([\w.]+), ([\w.]+), ([\w.]+)\)$/.exec(term);
+    if (m) {
+      const [a, b, sum] = [m[1]!, m[2]!, m[3]!];
+      for (const name of [a, b, sum]) {
+        if (!(name in WIDE_NAMES[fn])) {
+          throw new Error(`${fn}: an unknown name in its wide test: ${name}`);
+        }
+      }
+      return (e) => wraps(e[a] as number, e[b] as number, e[sum] as number);
+    }
+    throw new Error(`${fn}: an unknown term in its wide test: ${term}`);
+  });
+  return (env) => tests.some((t) => t(env));
+}
+
+/** The names each wide test may read. */
+const WIDE_NAMES = {
+  tg_addMul: {
+    "s.w": 0,
+    pg: 0,
+    w0: 0,
+    w1: 0,
+    w2: 0,
+    w3: 0,
+    "x.x": 0,
+    "y.x": 0,
+    c: 0,
+  },
+  tg_value: { "s.w": 0, c: 0, w: 0 },
+} as const;
+
 const whole = (v: ArrayLike<number>, at: number) =>
   (Math.imul(i32(v[at]!), 65536) + i32(v[at + 1]!)) | 0;
 /** `tg_float`: a value's parts as one float32. */
@@ -107,6 +171,7 @@ function addMul(
   pi: number,
   g: ArrayLike<number>,
   gi: number,
+  wgsl = CENTER_TERM_WGSL,
 ): Sum {
   const [ph, pl, pk] = [i32(p[pi]!), i32(p[pi + 1]!), i32(p[pi + 2]!)];
   const [gh, gl, gk] = [i32(g[gi]!), i32(g[gi + 1]!), i32(g[gi + 2]!)];
@@ -123,12 +188,22 @@ function addMul(
   const w1 = (w0 + x[0]) | 0;
   const w2 = (w1 + y[0]) | 0;
   const w3 = (w2 + c) | 0;
-  const wide =
-    Math.abs(f(f(pw) * f(gw))) >= 2147483136 ||
-    wraps(s.w, pg, w0) ||
-    wraps(w0, x[0], w1) ||
-    wraps(w1, y[0], w2) ||
-    wraps(w2, c, w3);
+  const wide = wideTestOf(
+    wgsl,
+    "tg_addMul",
+  )({
+    pw,
+    gw,
+    "s.w": s.w,
+    pg,
+    w0,
+    w1,
+    w2,
+    w3,
+    "x.x": x[0],
+    "y.x": y[0],
+    c,
+  });
   const rests = f(
     f(f(f(pw) * g[gi + 3]!) + f(p[pi + 3]! * f(gw))) + f(pf * gf),
   );
@@ -140,13 +215,18 @@ function addMul(
     wide: s.wide || wide,
   };
 }
-function value(s: Sum): number {
-  const q = (s.q + 8388608) | 0;
-  const c = q >> 24;
+/** Whether `tg_value` takes the float32 sum, as the WGSL has its test. */
+function valueWide(s: Sum, wgsl = CENTER_TERM_WGSL): boolean {
+  const c = ((s.q + 8388608) | 0) >> 24;
   const w = (s.w + c) | 0;
+  return wideTestOf(wgsl, "tg_value")({ "s.wide": s.wide, "s.w": s.w, c, w });
+}
+function value(s: Sum, wgsl = CENTER_TERM_WGSL): number {
+  const q = (s.q + 8388608) | 0;
   const fraction = ((q & 16777215) - 8388608) | 0;
-  const exact = f(f(w) + f(f(fraction * UNIT) + s.f));
-  return s.wide || wraps(s.w, c, w) ? s.v : exact;
+  const c = q >> 24;
+  const exact = f(f((s.w + c) | 0) + f(f(fraction * UNIT) + s.f));
+  return valueWide(s, wgsl) ? s.v : exact;
 }
 
 describe("the center term's parts", () => {
@@ -369,18 +449,15 @@ describe("the center term's integer limbs (tg_wk)", () => {
 function emulateSum(x: CenterInputs, wgsl = CENTER_TERM_WGSL): Sum {
   let s = diff(x.value.p, x.value.at, x.eye.p, x.eye.at, wgsl);
   for (const [p, g] of x.terms) {
-    s = addMul(s, p.p, p.at, g.p, g.at);
+    s = addMul(s, p.p, p.at, g.p, g.at, wgsl);
   }
   return s;
 }
 const emulate = (x: CenterInputs, wgsl = CENTER_TERM_WGSL): number =>
-  value(emulateSum(x, wgsl));
+  value(emulateSum(x, wgsl), wgsl);
 /** Whether the emulation takes the float32 sum, as tg_value decides. */
-function emulateWide(x: CenterInputs): boolean {
-  const s = emulateSum(x);
-  const c = ((s.q + 8388608) | 0) >> 24;
-  return s.wide || wraps(s.w, c, (s.w + c) | 0);
-}
+const emulateWide = (x: CenterInputs, wgsl = CENTER_TERM_WGSL): boolean =>
+  valueWide(emulateSum(x, wgsl), wgsl);
 
 /** A value's parts, for a term written by hand. */
 function partsOf(v: number): PartsAt {
@@ -635,6 +712,64 @@ describe("the center term at int32's edges (CS-1096 A)", () => {
     within(x);
   });
 
+  // One case for each term of tg_addMul's and tg_value's wide tests, which
+  // only that term catches.
+  const guarded: [string, CenterInputs][] = [
+    // p·g is 2^31: the product wraps to -2^31, and 0 + -2^31 doesn't wrap.
+    ["abs(f32(pw) * f32(gw)) >= 2147483136.0", term(0, 0, [[65536, 32768]])],
+    // F(c) - eye = 2^31 - 2, then p·g = 2.
+    ["tg_wraps(s.w, pg, w0)", term(2 ** 30 - 1, -(2 ** 30 - 1), [[2, 1]])],
+    // Then p's whole units times g's 2^-24 units: 2^20 · 0.25.
+    [
+      "tg_wraps(w0, x.x, w1)",
+      term(2 ** 30 - 1, -(2 ** 30 - 1), [[2 ** 20, 0.25]]),
+    ],
+    // And g's whole units times p's 2^-24 units.
+    [
+      "tg_wraps(w1, y.x, w2)",
+      term(2 ** 30 - 1, -(2 ** 30 - 1), [[0.25, 2 ** 20]]),
+    ],
+    // F(c) - eye = 2^31 - 1 + 0.75, then p·g = 0.25: the 2^-24 units carry 1.
+    [
+      "tg_wraps(w2, c, w3)",
+      term(2 ** 30 + 0.375, -(2 ** 30 - 1) - 0.375, [[0.25, 1]]),
+    ],
+    // F(c) - eye = 2^31 - 1 + 0.75: tg_value's rounding carries 1.
+    ["tg_wraps(s.w, c, w)", term(2 ** 30 + 0.375, -(2 ** 30 - 1) - 0.375)],
+    // A difference that wrapped, then a parameter that doesn't.
+    ["s.wide", term(1.5e9, -1.5e9, [[2, 3]])],
+  ];
+
+  it("catches each guarded wrap, and each term of the wide tests is needed", () => {
+    for (const [name, x] of guarded) {
+      expect(centerTermWide(x), name).toBe(true);
+      const t = centerTermExact(x);
+      expect(Math.abs(emulate(x) - t), name).toBeLessThanOrEqual(
+        centerTermBound(x, t),
+      );
+      // The shader without that one term: the case wraps by 2^32 units.
+      const fn =
+        name === "tg_wraps(s.w, c, w)" || name === "s.wide"
+          ? "tg_value"
+          : "tg_addMul";
+      const terms = wideTermsOf(CENTER_TERM_WGSL, fn);
+      expect(terms, name).toContain(name);
+      const kept = terms.filter((k) => k !== name).join(" || ");
+      const without = CENTER_TERM_WGSL.replace(
+        terms.join(" || "),
+        kept === "" ? "false" : kept,
+      );
+      expect(Math.abs(emulate(x, without) - t), name).toBeGreaterThan(2 ** 31);
+    }
+    // Every term has its case.
+    const named = new Set(guarded.map(([n]) => n));
+    for (const fn of ["tg_addMul", "tg_value"] as const) {
+      for (const k of wideTermsOf(CENTER_TERM_WGSL, fn)) {
+        expect(named.has(k), k).toBe(true);
+      }
+    }
+  });
+
   it("gives NaN for a value that isn't finite, as fixParts writes it", () => {
     const x = term(Number.NaN, 6378137.25, [[150, 0.5]]);
     expect(emulate(x)).toBeNaN();
@@ -884,7 +1019,9 @@ describe("the end's float32 sum, in any order relaxed math may make", () => {
     ] as const;
   const big = () => sign() * (2 ** 30 - 1 - pick(4096));
   const cases: CenterInputs[] = [];
-  while (cases.length < 3000) {
+  // Ten times the attempts the cases need, so a centerTermWide that is
+  // always one answer fails the count below instead of looping forever.
+  for (let tries = 0; cases.length < 3000 && tries < 30000; tries++) {
     const [ka, ra] = fractionParts();
     const [kb, rb] = fractionParts();
     const near = next() < 0.4;
@@ -914,7 +1051,7 @@ describe("the end's float32 sum, in any order relaxed math may make", () => {
   // The float32 sum's (wide) cases: F(c) and the eye near ±2^31 on either
   // side of the origin, with the same parameters.
   const wideCases: CenterInputs[] = [];
-  while (wideCases.length < 1000) {
+  for (let tries = 0; wideCases.length < 1000 && tries < 10000; tries++) {
     const [ka, ra] = fractionParts();
     const [kb, rb] = fractionParts();
     const wa = sign() * (2 ** 31 - 1 - pick(2 ** 30));
@@ -937,6 +1074,11 @@ describe("the end's float32 sum, in any order relaxed math may make", () => {
       wideCases.push(x);
     }
   }
+
+  it("makes its cases within its attempts", () => {
+    expect(cases.length).toBe(3000);
+    expect(wideCases.length).toBe(1000);
+  });
 
   it("stays within the derived bound over random summation trees, with and without fused multiply-adds", () => {
     let worst = 0;
@@ -986,6 +1128,16 @@ describe("the center term's helpers", () => {
     const names = (text: string) =>
       [...text.matchAll(/\b(tg_\w+)\(/g)].map((m) => m[1]).sort();
     expect(names(CENTER_TERM_GLSL)).toEqual(names(CENTER_TERM_WGSL));
+  });
+
+  it("test tg_addMul's and tg_value's sums for a wrap the same way in WGSL and GLSL ES", () => {
+    for (const fn of ["tg_addMul", "tg_value"] as const) {
+      const wgsl = wideTermsOf(CENTER_TERM_WGSL, fn);
+      expect(wgsl.length).toBeGreaterThan(1);
+      expect(wideTermsOf(CENTER_TERM_GLSL, fn)).toEqual(
+        wgsl.map((k) => k.replace("f32(", "float(").replace("f32(", "float(")),
+      );
+    }
   });
 
   it("test tg_diff's difference for a wrap the same way in WGSL and GLSL ES", () => {
