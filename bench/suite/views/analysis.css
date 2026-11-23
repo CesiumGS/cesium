@@ -115,6 +115,10 @@
   padding-inline-start: var(--stratakit-space-500);
   max-width: 900px;
 }
+.sweep-answer-note {
+  margin: 0 0 var(--stratakit-space-300);
+  max-width: 900px;
+}
 .sweep-answer li + li {
   margin-block-start: var(--stratakit-space-100);
 }

@@ -12,6 +12,9 @@ import { cellKey, type Cell, type Summary } from "../data.ts";
 import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
 import {
   differenceWords,
+  floorFor,
+  noFloorWords,
+  verdict,
   WHOLE,
   type Difference,
   type ReferenceRecord,
@@ -27,6 +30,10 @@ import {
 export const ENGINE = "engine";
 /** Every scene, as one choice (the geometric mean). */
 export const ALL = "*";
+/** A cell's scenario when it names none (the catalog's default). */
+export const DEFAULT_SCENARIO = "cold-orbit";
+export const scenarioOf = (c: { scenario?: string }) =>
+  c.scenario ?? DEFAULT_SCENARIO;
 
 export interface Dimension {
   id: string;
@@ -419,33 +426,21 @@ export function floorField(metric: string): keyof Difference | undefined {
 /** A reference metric's region: the crop after the dot, or the whole image. */
 export const regionOf = (metric: string) => metric.split(".")[1] ?? WHOLE;
 
-/**
- * The noise floor of a metric in the scenes shown: the largest over them
- * (one scene's, or every scene's), or undefined without one.
- */
-export function floorOf(
-  record: ReferenceRecord | undefined,
-  metric: string,
-  scene: string,
+/** The scenes and scenarios shown: one scene's, or every scene's. */
+export function shownScenes(
   s: Summary,
-): number | undefined {
-  const field = floorField(metric);
-  if (!record || !field) {
-    return undefined;
+  scene: string,
+): Array<{ scene: string; scenario: string }> {
+  const seen = new Map<string, { scene: string; scenario: string }>();
+  for (const c of s.scenes) {
+    if (scene === ALL || cellKey(c) === scene) {
+      seen.set(`${c.scene}|${scenarioOf(c)}`, {
+        scene: c.scene,
+        scenario: scenarioOf(c),
+      });
+    }
   }
-  const region = regionOf(metric);
-  const keys = new Set(
-    s.scenes
-      .filter((c) => scene === ALL || cellKey(c) === scene)
-      .map((c) => `${c.scene}|${c.scenario ?? "cold-orbit"}`),
-  );
-  const values = record.floors
-    .filter((f) => keys.has(`${f.scene}|${f.scenario}`))
-    .map((f) => f.regions?.[region]?.[field])
-    .filter((v): v is number => Number.isFinite(v));
-  return values.length === keys.size && values.length
-    ? Math.max(...values)
-    : undefined;
+  return [...seen.values()];
 }
 
 /** A point's image entry in the reference record, for one scene. */
@@ -461,8 +456,114 @@ export function referencePoint(
 }
 
 /**
- * A point's image difference in words for one scene and region: "within
- * noise", "4.1% of pixels", "reference", or "not compared".
+ * A point's verdict on one metric in the scenes shown, by the one rule
+ * (reference.mjs, `verdict`): each scene's difference in the metric's
+ * region and field against the point's own reference's floor. `judged`
+ * counts the scenes with a floor, `within` those within it; `floor` (one
+ * scene only, for the chart's band) is that floor's value, and `noFloor`
+ * why one scene has none.
+ */
+export interface PointVerdict {
+  reference: boolean;
+  scenes: number;
+  judged: number;
+  within: number;
+  pairs: number[];
+  pooled: boolean;
+  floor?: number;
+  noFloor?: string;
+}
+
+export function pointVerdict(
+  record: ReferenceRecord | undefined,
+  s: Summary,
+  config: string,
+  metric: string,
+  scene: string,
+): PointVerdict | undefined {
+  const field = floorField(metric);
+  if (!record || !field) {
+    return undefined;
+  }
+  const region = regionOf(metric);
+  const out: PointVerdict = {
+    reference: false,
+    scenes: 0,
+    judged: 0,
+    within: 0,
+    pairs: [],
+    pooled: false,
+  };
+  const shown = shownScenes(s, scene);
+  for (const at of shown) {
+    const p = referencePoint(record, at.scene, at.scenario, config);
+    if (!p) {
+      continue;
+    }
+    out.scenes++;
+    if (p.reference) {
+      // A reference point's band is its own floor.
+      out.reference = true;
+      const own = floorFor(record, p)?.regions?.[region]?.[field];
+      if (shown.length === 1 && Number.isFinite(own)) {
+        out.floor = own;
+      }
+      continue;
+    }
+    const v = verdict(record, p, region, field);
+    out.pooled ||= !!v.pooled;
+    if (v.within === undefined) {
+      if (shown.length === 1) {
+        out.noFloor = p.mismatch ?? noFloorWords(v);
+      }
+      continue;
+    }
+    out.judged++;
+    out.pairs.push(v.pairs);
+    if (v.within) {
+      out.within++;
+    }
+    if (shown.length === 1) {
+      out.floor = v.floor;
+    }
+  }
+  return out.scenes ? out : undefined;
+}
+
+/** "3 pairs", "2 to 3 pairs" (", pooled" for a pooled floor). */
+function pairsText(pairs: number[], pooled: boolean) {
+  const lo = Math.min(...pairs);
+  const hi = Math.max(...pairs);
+  return `${lo === hi ? lo : `${lo} to ${hi}`} pair${hi === 1 ? "" : "s"}${pooled ? ", pooled" : ""}`;
+}
+
+/**
+ * A verdict as a table note: "reference", "within noise (3 pairs)",
+ * "within noise in 1 of 2 scenes", "no floor: reference captured once",
+ * or nothing for a point beyond noise in one scene.
+ */
+export function verdictNote(v: PointVerdict | undefined): string | undefined {
+  if (!v) {
+    return undefined;
+  }
+  if (v.reference) {
+    return "reference";
+  }
+  if (!v.judged) {
+    return `no floor${v.noFloor ? `: ${v.noFloor}` : ""}`;
+  }
+  if (v.scenes > 1) {
+    return `within noise in ${v.within} of ${v.judged} scenes`;
+  }
+  return v.within
+    ? `within noise (${pairsText(v.pairs, v.pooled)})`
+    : undefined;
+}
+
+/**
+ * A point's image difference in words for one scene and region, by its
+ * own reference's floor: "within noise (3 pairs)", "4.1% of pixels",
+ * "reference", "not compared".
  */
 export function pointWords(
   record: ReferenceRecord | undefined,
@@ -475,11 +576,9 @@ export function pointWords(
   if (!p) {
     return "not compared";
   }
-  const floor = record!.floors.find(
-    (f) => f.scene === scene && f.scenario === scenario,
-  );
-  return differenceWords(p.regions?.[region], floor?.regions?.[region], {
+  return differenceWords(p.regions?.[region], verdict(record, p, region), {
     reference: !!p.reference,
+    ...(p.mismatch ? { mismatch: p.mismatch } : {}),
   });
 }
 
@@ -605,60 +704,94 @@ export function colorIndexes(lines: Line[]): number[] {
 }
 
 /**
- * The image answer for the scenes shown: how many compared points are
- * within the noise floor of their reference, by region, and which are
- * not (with their words). Undefined without reference images.
+ * The image answer for the scenes shown, by the one rule: per region, how
+ * many compared points are within their own reference's floor, on how
+ * many pairs, and which are not (with their words); the scenes with no
+ * floor at all, and why; whether the floors are pooled (a record from
+ * before per-reference floors). Undefined without reference images.
  */
+export interface NoiseAnswer {
+  pooled: boolean;
+  noFloor: Array<{ scene: string; scenario: string; why: string }>;
+  regions: Array<{
+    region: string;
+    compared: number;
+    within: number;
+    pairs: number[];
+    beyond: Array<{ config: string; scene: string; words: string }>;
+  }>;
+}
+
 export function noiseSummary(
   record: ReferenceRecord | undefined,
   s: Summary,
   model: SweepModel,
   scene: string,
-):
-  | {
-      floor: boolean;
-      regions: Array<{
-        region: string;
-        compared: number;
-        within: number;
-        beyond: Array<{ config: string; scene: string; words: string }>;
-      }>;
-    }
-  | undefined {
+): NoiseAnswer | undefined {
   if (!record) {
     return undefined;
   }
-  const cells = new Set(
-    s.scenes
-      .filter((c) => scene === ALL || cellKey(c) === scene)
-      .map((c) => `${c.scene}|${c.scenario ?? "cold-orbit"}`),
-  );
+  const shown = shownScenes(s, scene);
+  const at = new Set(shown.map((x) => `${x.scene}|${x.scenario}`));
   const configs = new Set(model.points.map((p) => p.config));
   const points = record.points.filter(
     (p) =>
       !p.reference &&
-      p.regions &&
       configs.has(p.config) &&
-      cells.has(`${p.scene}|${p.scenario}`),
+      at.has(`${p.scene}|${p.scenario}`),
   );
   const floors = record.floors.filter((f) =>
-    cells.has(`${f.scene}|${f.scenario}`),
+    at.has(`${f.scene}|${f.scenario}`),
   );
   const names = [...new Set(floors.flatMap((f) => f.regionNames ?? [WHOLE]))];
+  // Scenes where no reference point has a floor, and why.
+  const noFloor = shown.flatMap((x) => {
+    const own = record.references?.filter(
+      (r) => r.scene === x.scene && r.scenario === x.scenario,
+    );
+    if (own) {
+      if (own.some((r) => r.regions)) {
+        return [];
+      }
+      const r = own[0];
+      return [
+        {
+          ...x,
+          why: r
+            ? noFloorWords({ captures: r.captures, expected: r.expected })
+            : "no reference point was captured",
+        },
+      ];
+    }
+    const f = floors.find(
+      (y) => y.scene === x.scene && y.scenario === x.scenario,
+    );
+    return f?.regions
+      ? []
+      : [{ ...x, why: noFloorWords({ expected: f?.reps ?? 1, captures: 1 }) }];
+  });
   return {
-    floor: floors.length > 0 && floors.every((f) => !!f.regions),
+    pooled: !record.references,
+    noFloor,
     regions: names.map((region) => {
-      const compared = points.filter((p) => p.regions![region]);
-      const beyond = compared.filter((p) => p.within?.[region] !== true);
+      const compared = points.filter((p) => p.regions?.[region] || p.mismatch);
+      const verdicts = compared.map((p) => ({
+        p,
+        v: verdict(record, p, region),
+      }));
+      const within = verdicts.filter((x) => x.v.within === true);
       return {
         region,
         compared: compared.length,
-        within: compared.length - beyond.length,
-        beyond: beyond.map((p) => ({
-          config: p.config,
-          scene: p.scene,
-          words: pointWords(record, p.scene, p.scenario, p.config, region),
-        })),
+        within: within.length,
+        pairs: within.map((x) => x.v.pairs),
+        beyond: verdicts
+          .filter((x) => x.v.within !== true)
+          .map(({ p }) => ({
+            config: p.config,
+            scene: p.scene,
+            words: pointWords(record, p.scene, p.scenario, p.config, region),
+          })),
       };
     }),
   };

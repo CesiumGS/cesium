@@ -119,7 +119,8 @@ async function processFrame(test: string, reference: string | null) {
  * A sweep point's capture against its reference's (reference.mjs): per
  * region (the whole image and each named crop), the pixel difference at
  * full size and FLIP over the same region of FLIP's error map, and the
- * whole image's heatmap when `heatmap` is set.
+ * whole image's heatmap when `heatmap` is set; `{ mismatch }` when the
+ * two images' sizes differ.
  */
 async function compareFrames(
   test: string,
@@ -130,8 +131,13 @@ async function compareFrames(
   const image = await decode(test);
   const other = await decode(reference);
   const { width, height } = image;
+  // Never rescaled: a reference of another size isn't compared.
+  if (other.width !== width || other.height !== height) {
+    return {
+      mismatch: `sizes differ: ${width}×${height} against ${other.width}×${other.height}`,
+    };
+  }
   const a = pixels(image, width, height);
-  // The reference drawn at the test's size, should the two differ.
   const b = pixels(other, width, height);
   const f = await flipOf(image, other);
   const out: Record<

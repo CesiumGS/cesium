@@ -50,7 +50,8 @@ export interface ExampleRunSpec {
   scene: ExampleScene;
   config: EngineConfig;
   /** Screenshot the settled view (the CLI's first repetition). */
-  capture?: boolean;
+  /** Captures the settled view ("end"); a sweep reference's repeats say "end". */
+  capture?: boolean | "end";
   /** A second page load for `probe=sse` only: no other metric is read. */
   probe?: boolean;
   /** Ticks of GPU time per pass, rendered continuously after settling. */

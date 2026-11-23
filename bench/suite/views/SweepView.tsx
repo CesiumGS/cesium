@@ -27,8 +27,6 @@ import {
   colorIndexes,
   coordsWords,
   defaultLayout,
-  floorOf,
-  isImageMetric,
   metricGroups,
   moveDimension,
   noiseSummary,
@@ -36,9 +34,11 @@ import {
   type Line,
   type Panel,
   pointValue,
+  pointVerdict,
   pointWords,
+  scenarioOf,
+  verdictNote,
   referencePoint,
-  regionOf,
   sweepModelOf,
   type SweepModel,
   type SweepPoint,
@@ -103,9 +103,11 @@ function formatValue(metric: string, value: number | undefined): string {
         ? v.toFixed(0)
         : abs >= 10
           ? v.toFixed(1)
-          : abs >= 0.01 || v === 0
-            ? v.toFixed(2)
-            : v.toPrecision(2);
+          : v === 0
+            ? "0"
+            : abs >= 0.01
+              ? v.toFixed(2)
+              : v.toPrecision(2);
   return unit ? `${text} ${unit}` : text;
 }
 
@@ -292,7 +294,7 @@ function SweepBody({
           title={group.label}
           description={[
             `Along x: ${dims.find((d) => d.id === layout.x)!.label}.`,
-            groupNote(group.id, model, record, results, unsettled),
+            groupNote(group.id, model, record, results, unsettled, scene),
           ]
             .filter(Boolean)
             .join(" ")}
@@ -375,40 +377,73 @@ function NoiseAnswer({
   if (!answer) {
     return null;
   }
-  if (!answer.floor) {
-    return (
-      <Typography variant="body-md" render={<p />} className="sweep-answer">
-        No noise floor: each reference point was captured once, so no difference
-        can be called within noise. Run with <code>--reference-reps 3</code> for
-        one.
-      </Typography>
-    );
-  }
   const several = model.scenes.length > 1 && scene === ALL;
+  const titleOf = (sceneId: string) =>
+    s.scenes.find((c) => c.scene === sceneId)?.title ?? sceneId;
   const where = (config: string, sceneId: string) => {
     const p = model.points.find((x) => x.config === config);
-    const title = s.scenes.find((c) => c.scene === sceneId)?.title ?? sceneId;
-    return `${p ? sentence(coordsWords(model, p.coords)) : config}${several ? ` in ${title}` : ""}`;
+    return `${p ? sentence(coordsWords(model, p.coords)) : config}${several ? ` in ${titleOf(sceneId)}` : ""}`;
   };
+  const pairs = (list: number[]) => {
+    const lo = Math.min(...list);
+    const hi = Math.max(...list);
+    return `${lo === hi ? lo : `${lo} to ${hi}`} pair${hi === 1 ? "" : "s"} each`;
+  };
+  const items = answer.regions
+    .filter((r) => r.compared)
+    .map((r) => {
+      const all =
+        r.compared === 1
+          ? "the one compared point is"
+          : r.compared === 2
+            ? "both compared points are"
+            : `all ${r.compared} compared points are`;
+      const floors = answer.pooled
+        ? "the pooled floor"
+        : `its own reference's floor, ${pairs(r.pairs)}`;
+      return (
+        <li key={r.region}>
+          <Typography variant="body-md" render={<span />}>
+            <b>{r.region === WHOLE ? "Whole image" : `Crop “${r.region}”`}:</b>{" "}
+            {r.within === r.compared
+              ? `${all} within noise (each judged by ${floors}).`
+              : `${r.within} of ${r.compared} within noise${r.within ? ` (${floors})` : ""}; not within it: ${r.beyond
+                  .map((b) => `${where(b.config, b.scene)} (${b.words})`)
+                  .join("; ")}.`}
+          </Typography>
+        </li>
+      );
+    });
   return (
-    <ul className="sweep-answer">
-      {answer.regions
-        .filter((r) => r.compared)
-        .map((r) => (
-          <li key={r.region}>
-            <Typography variant="body-md" render={<span />}>
-              <b>
-                {r.region === WHOLE ? "Whole image" : `Crop “${r.region}”`}:
-              </b>{" "}
-              {r.within === r.compared
-                ? `${r.compared === 1 ? "the one compared point is" : r.compared === 2 ? "both compared points are" : `all ${r.compared} compared points are`} within noise of their reference.`
-                : `${r.within} of ${r.compared} points are within noise; beyond it: ${r.beyond
-                    .map((b) => `${where(b.config, b.scene)} (${b.words})`)
-                    .join("; ")}.`}
-            </Typography>
-          </li>
-        ))}
-    </ul>
+    <>
+      {answer.noFloor.length ? (
+        <Typography
+          variant="body-md"
+          render={<p />}
+          className="sweep-answer-note"
+        >
+          No noise floor in{" "}
+          {answer.noFloor
+            .map((x) => `${titleOf(x.scene)} (${x.why})`)
+            .join("; ")}
+          , so no difference there can be called within noise. Run with{" "}
+          <code>--reference-reps 3</code> for one.
+        </Typography>
+      ) : null}
+      {answer.pooled && items.length ? (
+        <Typography
+          variant="body-sm"
+          color="textSecondary"
+          render={<p />}
+          className="sweep-answer-note"
+        >
+          This run was recorded before each point had its own reference's floor:
+          its verdicts use one floor per scene, pooled over every reference
+          point and engine, so they may call too much within noise.
+        </Typography>
+      ) : null}
+      {items.length ? <ul className="sweep-answer">{items}</ul> : null}
+    </>
   );
 }
 
@@ -434,7 +469,9 @@ function SweepSentence({
     .join(" × ");
   const grid = model.points.filter((p) => !(ref?.outside && p.reference));
   const reps = ref?.reps ?? 1;
-  const floors = record?.floors.filter((f) => f.regions) ?? [];
+  const floored = record?.references
+    ? record.references.some((r) => r.regions)
+    : !!record?.floors.some((f) => f.regions);
   return (
     <Typography variant="body-md" render={<p />} className="sweep-sentence">
       {sentence(axes)}: {grid.length} point{grid.length === 1 ? "" : "s"} on{" "}
@@ -446,8 +483,10 @@ function SweepSentence({
           {ref.outside ? ", run beside every point" : ""}, captured{" "}
           {reps === 1 ? "once" : `${reps} times`} a point
           {record
-            ? floors.length
-              ? "; the shaded band is the noise floor."
+            ? floored
+              ? record.references
+                ? "; each point is judged by its own reference point's noise floor."
+                : "; its noise floor is pooled over every reference point."
               : "; one capture gives no noise floor, so differences can't be called within noise."
             : results === undefined
               ? "."
@@ -468,6 +507,7 @@ function groupNote(
   record: ReferenceRecord | undefined,
   results: Json,
   unsettled: number,
+  scene: string,
 ): string | undefined {
   if (id === "image") {
     if (!record) {
@@ -476,9 +516,16 @@ function groupNote(
         : "Image differences need a sweep run with --reference.";
     }
     const reps = model.reference?.reps ?? 1;
-    return reps > 1
-      ? `Each point's settled view against its reference's, same engine. A pixel changes when its linear luminance moves by more than ${record.threshold}. The band is the noise floor: the largest difference between two of the ${reps} captures of one reference point.`
-      : `Each point's settled view against its reference's, same engine. A pixel changes when its linear luminance moves by more than ${record.threshold}. Run with --reference-reps 3 for a noise floor.`;
+    const base = `Each point's settled view against its reference's, same engine. A pixel changes when its linear luminance moves by more than ${record.threshold}.`;
+    if (reps < 2) {
+      return `${base} Run with --reference-reps 3 for a noise floor.`;
+    }
+    const floor = record.references
+      ? `The shaded band around each line is each point's noise floor: the largest difference between two of its own reference point's ${reps} captures, same engine.`
+      : "The shaded band is the noise floor, pooled over every reference point (this run was recorded before per-reference floors).";
+    return model.scenes.length > 1 && scene === ALL
+      ? `${base} Over every scene there is no band, since each scene has its own floors; the tables count the scenes each point is within noise in.`
+      : `${base} ${floor}`;
   }
   return unsettled
     ? `${unsettled} point${unsettled === 1 ? "" : "s"} didn't settle within the scene's cap, drawn hollow.`
@@ -509,7 +556,14 @@ function MetricRow({
     () => arrange(s, model, layout, metric, scene),
     [s, model, layout, metric, scene],
   );
-  const floor = floorOf(record, metric, scene, s);
+  // Each point's verdict, by the one rule (its own reference's floor).
+  const verdicts = useMemo(() => {
+    const out = new Map<string, ReturnType<typeof pointVerdict>>();
+    for (const p of model.points) {
+      out.set(p.config, pointVerdict(record, s, p.config, metric, scene));
+    }
+    return out;
+  }, [record, s, model, metric, scene]);
   const x = model.dims.find((d) => d.id === layout.x)!;
   const lineLabel = (line: Line) => line.name || x.label;
   const charts = useMemo(() => {
@@ -521,8 +575,13 @@ function MetricRow({
     if (!values.length) {
       return [];
     }
-    const top =
-      Math.max(...values, floor !== undefined ? floor / scale : 0) * 1.08 || 1;
+    const floors = [...verdicts.values()]
+      .map((v) => v?.floor)
+      .filter((v): v is number => Number.isFinite(v))
+      .map((v) => v / scale);
+    const top = Math.max(...values, ...floors) * 1.08 || 1;
+    // A record from before per-reference floors: one floor per scene.
+    const pooled = [...verdicts.values()].some((v) => v?.pooled);
     const refX =
       model.reference && !model.reference.outside && model.reference.id === x.id
         ? x.values.indexOf(model.reference.value)
@@ -553,14 +612,24 @@ function MetricRow({
           hollow: line.points
             .map((p, xi) => (p && !p.settled ? xi : -1))
             .filter((xi) => xi >= 0),
+          // Each point's own noise floor, from 0 (one scene only); a
+          // pooled floor is one band for the panel, below.
+          band: pooled
+            ? []
+            : line.points.flatMap((p, xi) => {
+                const f = p && verdicts.get(p.config)?.floor;
+                return f !== undefined && f !== null && Number.isFinite(f)
+                  ? [[xi, 0, f / scale] as [number, number, number]]
+                  : [];
+              }),
         })),
         hbands:
-          floor !== undefined
+          pooled && floors.length
             ? [
                 {
                   y0: 0,
-                  y1: floor / scale,
-                  label: `Noise floor: up to ${formatValue(metric, floor)}`,
+                  y1: Math.max(...floors),
+                  label: `Noise floor, pooled: up to ${formatValue(metric, Math.max(...floors) * scale)}`,
                   color: "var(--muted)",
                 },
               ]
@@ -574,7 +643,7 @@ function MetricRow({
         legend: false,
       });
     });
-  }, [panels, floor, scale, unit, metric, model, layout, name, x, narrow]);
+  }, [panels, verdicts, scale, unit, metric, model, layout, name, x, narrow]);
   if (!charts.length) {
     return null;
   }
@@ -623,10 +692,7 @@ function MetricRow({
         layout={layout}
         metric={metric}
         panels={panels}
-        record={record}
-        scene={scene}
-        floor={floor}
-        s={s}
+        verdicts={verdicts}
       />
     </div>
   );
@@ -638,51 +704,30 @@ function TableTwin({
   layout,
   metric,
   panels,
-  record,
-  scene,
-  floor,
-  s,
+  verdicts,
 }: {
   model: SweepModel;
   layout: Layout;
   metric: string;
   panels: Panel[];
-  record: ReferenceRecord | undefined;
-  scene: string;
-  floor: number | undefined;
-  s: Summary;
+  verdicts: Map<string, ReturnType<typeof pointVerdict>>;
 }) {
   const x = model.dims.find((d) => d.id === layout.x)!;
   const panelDim = model.dims.find((d) => d.id === layout.panels);
   const lineDim = model.dims.find((d) => d.id === layout.lines);
-  const image = isImageMetric(metric) && metric !== "flipEnd";
-  const region = regionOf(metric);
-  const cell =
-    scene !== ALL ? s.scenes.find((c) => cellKey(c) === scene) : undefined;
+  // The chart's verdicts: this metric's own field and region.
   const notes = (p: NonNullable<Line["points"][number]>) => {
     const out: string[] = [];
-    if (p.reference) {
+    const note = verdictNote(verdicts.get(p.config));
+    if (note) {
+      out.push(note);
+    } else if (p.reference) {
       out.push("reference");
-    } else if (image && cell && record) {
-      const words = pointWords(
-        record,
-        cell.scene,
-        cell.scenario ?? "cold-orbit",
-        p.config,
-        region,
-      );
-      if (words === "within noise") {
-        out.push(words);
-      }
-    } else if (image && floor !== undefined && p.value !== undefined) {
-      if (p.value <= floor) {
-        out.push("within noise");
-      }
     }
     if (!p.settled) {
       out.push("not settled");
     }
-    return out.length ? ` (${out.join(", ")})` : "";
+    return out.map((n) => ` · ${n}`).join("");
   };
   return (
     <details className="sweep-twin">
@@ -725,9 +770,6 @@ function TableTwin({
             )}
           </tbody>
         </table>
-        {floor !== undefined ? (
-          <p>Noise floor: up to {formatValue(metric, floor)}.</p>
-        ) : null}
       </div>
     </details>
   );
@@ -756,7 +798,7 @@ function imageOf(
     (results?.filmstrips as Json[] | undefined)?.find(
       (f) =>
         f.scene === scene &&
-        (f.scenario ?? "cold-orbit") === scenario &&
+        scenarioOf(f) === scenario &&
         f.moment === REFERENCE_MOMENT,
     )?.images?.[config];
   return file && results?.assets ? `${results.assets}${file}` : undefined;
@@ -789,7 +831,7 @@ function ImageGrid({
   if (!cell) {
     return null;
   }
-  const scenario = cell.scenario ?? "cold-orbit";
+  const scenario = scenarioOf(cell);
   const x = model.dims.find((d) => d.id === layout.x)!;
   const panelDim = model.dims.find((d) => d.id === layout.panels);
   const lineDim = model.dims.find((d) => d.id === layout.lines);
@@ -1032,8 +1074,13 @@ function CompareDialog({
               .map(
                 ([name, d]) =>
                   `${name === WHOLE ? "whole image" : `crop “${name}”`} ${percent(d.share)} of pixels changed, FLIP ${d.flip?.toFixed(3) ?? "–"}${
-                    pointWords(record, scene, scenario, b.config, name) ===
-                    "within noise"
+                    pointWords(
+                      record,
+                      scene,
+                      scenario,
+                      b.config,
+                      name,
+                    ).startsWith("within noise")
                       ? " (within noise)"
                       : ""
                   }`,

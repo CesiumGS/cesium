@@ -1326,16 +1326,19 @@ be one.
     metric group. Image metrics come first when the run has reference
     images; otherwise tiles and triangles.
   - The answer first: above the image charts, per region (the whole
-    image, each crop), how many points are within noise of their
-    reference, and which are not, in words ("Exaggeration factor 10,
-    error exponent 0.5, shadows off (25% of pixels)"). Each crop's pixels
+    image, each crop), how many points are within noise of their own
+    reference, on how many pairs, and which are not, in words
+    ("Exaggeration factor 10, error exponent 0.5, shadows off (25% of
+    pixels)"). Scenes with no floor are named, with why: the reference
+    was captured once, or its repeats failed. Each crop's pixels
     changed come before its FLIP. Beside reference images, the FLIP
     against the run's baseline configuration is left out: in a sweep
     that configuration is one of its own points.
   - Each metric: its heading with its unit, one line naming the x axis
     and keying the lines, the panels, and a "Table" twin with every
-    point's value and its notes ("reference", "within noise", "not
-    settled"). Charts carry no legend or title of their own; a panel's
+    point's value and its notes ("reference", "within noise (3 pairs)",
+    "within noise in 1 of 2 scenes", "not settled"), each judged by that
+    table's own metric. Charts carry no legend or title of their own; a panel's
     caption is its value.
   - The reference: a dashed vertical mark when it lies along x, a dashed
     line when it is a line or a setting outside the grid (beside its
@@ -1343,11 +1346,21 @@ be one.
   - A point that didn't settle is hollow in every chart, and its image
     carries a "Not settled" badge. A group's description says so only
     when its scenes record settling.
-  - The noise floor is a shaded band from 0 on image-difference charts:
-    the largest difference between two captures of one reference point.
-    Its value is in the band's hover title and under the table. Without
-    repeated references there is no band, and words never claim "within
-    noise": "4.1% of pixels (no noise floor)".
+  - The noise floor is per point: the largest difference between two
+    captures of that point's own reference point, same scene and engine,
+    in the metric's own field and region (never pooled over other
+    reference points or engines). One rule (`verdict` in
+    `reference.mjs`) gives the words, the answer, the tables and the
+    bands. Charts shade each point's floor from 0 around its line, in
+    its color, for one scene; over every scene there is no band, since
+    each scene has its own floors, and the tables count the scenes.
+    Without repeated references there is no floor, and words never claim
+    "within noise": "4.1% of pixels (reference captured once)". A record
+    from before per-reference floors has one floor per scene: its
+    verdicts say "pooled", a note says they may call too much within
+    noise, and its band is one gray band.
+  - Two images of different sizes are never rescaled: "not compared
+    (sizes differ)".
   - The images: per panel, a table with lines down and x across, the
     panels side by side where they fit; each thumbnail says its
     difference in words ("Within noise", "25% of pixels", "Reference"). Over every scene, an "Images of" choice picks

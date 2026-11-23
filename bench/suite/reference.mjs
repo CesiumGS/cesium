@@ -163,11 +163,12 @@ export function referenceIndex(sweep) {
 }
 
 /**
- * The noise floor of one scene and scenario from its reference points'
- * repeated captures: per region, the largest pixel difference (`share`,
- * `mean`) and FLIP (`flip`, `flipP95`) between two captures of the same
- * reference point, with the number of pairs it rests on. Undefined
- * without a pair (one capture of each reference point).
+ * The noise floor of one reference point (one engine's configuration in
+ * one scene and scenario) from its repeated captures: per region, the
+ * largest pixel difference (`share`, `mean`) and FLIP (`flip`, `flipP95`)
+ * between two of its captures, with the number of pairs it rests on.
+ * FLIP's fields are absent when no pair has a finite FLIP. Undefined
+ * without a pair (fewer than two captures).
  */
 export function noiseFloor(pairs) {
   if (!pairs.length) {
@@ -176,19 +177,13 @@ export function noiseFloor(pairs) {
   const regions = {};
   for (const pair of pairs) {
     for (const [name, d] of Object.entries(pair.regions)) {
-      const r = (regions[name] ??= {
-        share: 0,
-        mean: 0,
-        flip: 0,
-        flipP95: 0,
-      });
+      const r = (regions[name] ??= { share: 0, mean: 0 });
       r.share = Math.max(r.share, d.share);
       r.mean = Math.max(r.mean, d.mean);
-      if (Number.isFinite(d.flip)) {
-        r.flip = Math.max(r.flip, d.flip);
-      }
-      if (Number.isFinite(d.flipP95)) {
-        r.flipP95 = Math.max(r.flipP95, d.flipP95);
+      for (const field of ["flip", "flipP95"]) {
+        if (Number.isFinite(d[field])) {
+          r[field] = Math.max(r[field] ?? 0, d[field]);
+        }
       }
     }
   }
@@ -197,14 +192,79 @@ export function noiseFloor(pairs) {
 
 /**
  * Whether a point's difference from its reference is within the noise
- * floor, by the share of pixels changed: true, false, or undefined when
- * there is no floor or no difference to judge ("can't tell").
+ * floor, by one field (the share of pixels changed unless another is
+ * named): true, false, or undefined when there is no floor or no
+ * difference to judge ("can't tell").
  */
-export function withinNoise(difference, floor) {
-  if (!difference || !floor || !Number.isFinite(difference.share)) {
+export function withinNoise(difference, floor, field = "share") {
+  if (
+    !difference ||
+    !floor ||
+    !Number.isFinite(difference[field]) ||
+    !Number.isFinite(floor[field])
+  ) {
     return undefined;
   }
-  return difference.share <= floor.share;
+  return difference[field] <= floor[field];
+}
+
+/** "3 pairs", "1 pair". */
+const pairsWords = (n) => `${n} pair${n === 1 ? "" : "s"}`;
+
+/**
+ * The floor a compared point is judged by: its own reference point's
+ * (same scene, scenario and engine), `{ captures, expected, pairs,
+ * regions?, mismatched? }`. A record from before per-reference floors
+ * (no `references`) has only one floor per scene, pooled over every
+ * reference point and engine: it comes back with `pooled: true`.
+ */
+export function floorFor(record, point) {
+  if (!record || !point) {
+    return undefined;
+  }
+  if (record.references) {
+    return record.references.find(
+      (r) =>
+        r.scene === point.scene &&
+        r.scenario === point.scenario &&
+        r.config === (point.reference ? point.config : point.against),
+    );
+  }
+  const f = record.floors?.find(
+    (x) => x.scene === point.scene && x.scenario === point.scenario,
+  );
+  return f && { ...f, pooled: true };
+}
+
+/**
+ * One rule for every reader (words, the answer, tables, charts): a point's
+ * difference in one region and field against its own reference's floor.
+ * `{ within: true | false | undefined, floor?: number, pairs, captures,
+ * expected, pooled? }`; `within` is undefined without a floor for that
+ * field ("can't tell").
+ */
+export function verdict(record, point, region = WHOLE, field = "share") {
+  const floor = floorFor(record, point);
+  const value = floor?.regions?.[region]?.[field];
+  return {
+    within: withinNoise(point?.regions?.[region], floor?.regions?.[region], field),
+    ...(Number.isFinite(value) ? { floor: value } : {}),
+    pairs: floor?.pairs ?? 0,
+    captures: floor?.captures,
+    expected: floor?.expected ?? record?.reference?.reps,
+    ...(floor?.pooled ? { pooled: true } : {}),
+  };
+}
+
+/** Why a point has no floor, in words: "reference captured once", … */
+export function noFloorWords(v) {
+  if (v.pooled) {
+    return "no noise floor";
+  }
+  if ((v.expected ?? 1) < 2) {
+    return "reference captured once";
+  }
+  return `reference repeats failed: ${v.captures ?? 0} of ${v.expected} captures`;
 }
 
 /** A share as a percentage with no more precision than it has. */
@@ -220,23 +280,27 @@ export function percent(share) {
 }
 
 /**
- * A point's pixel difference in words: "reference", "within noise",
- * "4.1% of pixels" (and "no noise floor" beside it when the run has none),
- * or "not compared".
+ * A point's pixel difference in words, judged by its own reference's
+ * floor (`verdict`): "reference", "within noise (3 pairs)", "4.1% of
+ * pixels", "4.1% of pixels (reference captured once)", or "not compared".
+ * A pooled floor (a record from before per-reference floors) says so.
  */
-export function differenceWords(difference, floor, { reference } = {}) {
+export function differenceWords(difference, v, { reference, mismatch } = {}) {
   if (reference) {
     return "reference";
+  }
+  if (mismatch) {
+    return `not compared (${mismatch})`;
   }
   if (!difference || !Number.isFinite(difference.share)) {
     return "not compared";
   }
-  const within = withinNoise(difference, floor);
-  if (within) {
-    return "within noise";
+  const pooled = v?.pooled ? ", pooled" : "";
+  if (v?.within) {
+    return `within noise (${pairsWords(v.pairs)}${pooled})`;
   }
   const words = `${percent(difference.share)} of pixels`;
-  return floor ? words : `${words} (no noise floor)`;
+  return v?.within === false ? words : `${words} (${noFloorWords(v ?? {})})`;
 }
 
 /** The metric keys a region's difference is recorded under. */
@@ -279,8 +343,9 @@ const key = (f) => `${f.scene}|${f.scenario}`;
  *   sweep    the run's sweep record (axes, reference, points with configs)
  *   scenes   the scenes by id (their `crop`)
  *   compare  async (test, ref, regions) → { regions: { <name>: { share,
- *            mean, flip?, flipP95? } }, heatmap? }: `heatmap` a PNG
- *            (base64) of the whole image's FLIP, or nothing
+ *            mean, flip?, flipP95? } }, heatmap? }, or { mismatch } when
+ *            the two images' sizes differ: `heatmap` a PNG (base64) of
+ *            the whole image's FLIP, or nothing
  *   save     async (name, base64, type) → the file's name in the run's
  *            assets: a reference repeat's JPEG, a heatmap's PNG
  *   image    (shot) → the file name of a first capture's JPEG (the
@@ -288,10 +353,13 @@ const key = (f) => `${f.scene}|${f.scenario}`;
  *   encode   async (shot) → a JPEG (base64) of a repeat's capture
  *
  * Returns the record the run keeps as `results.reference`:
- * { moment, threshold, reference, floors: [{ scene, scenario, pairs, reps,
- * regionNames, regions? }], points: [{ scene, scenario, config, image,
- * reference?, against?, regions?, within?, heatmap? }], repeats: [{ scene,
- * scenario, config, repeat, image }] },
+ * { moment, threshold, reference, floors: [{ scene, scenario, reps,
+ * regionNames, references, withFloor }], references: [{ scene, scenario,
+ * config, captures, expected, pairs, mismatched?, regions? }] (each
+ * reference point's own floor, per engine), points: [{ scene, scenario,
+ * config, image, reference?, against?, mismatch?, regions?, within?,
+ * heatmap? }] (`within` judged by the point's own reference's floor),
+ * repeats: [{ scene, scenario, config, repeat, image }] },
  * or undefined for a sweep without a reference.
  */
 export async function compareSweep({
@@ -317,13 +385,15 @@ export async function compareSweep({
   }
   const groups = [...new Set(shots.map(key))];
   const floors = [];
+  const allReferences = [];
   const points = [];
   const repeats = [];
   for (const group of groups) {
     const [scene, scenario] = group.split("|");
     const regions = regionsOf(scenes[scene]);
-    // The noise floor: every pair of one reference point's captures.
-    const pairs = [];
+    // Each reference point's own floor, engine by engine: every pair of
+    // its captures.
+    const references = [];
     for (const point of sweep.points.filter((p) => p.reference)) {
       for (const config of point.configs) {
         const list = shotsOf.get(`${group}|${config}`) ?? [];
@@ -337,26 +407,39 @@ export async function compareSweep({
             image: await save(`${shotName(s)}.jpg`, jpeg, "jpeg"),
           });
         }
+        const pairs = [];
+        let mismatched = 0;
         for (let i = 0; i < list.length; i++) {
           for (let j = i + 1; j < list.length; j++) {
             const r = await compare(list[j].png, list[i].png, regions);
-            pairs.push({
-              config,
-              repeats: [list[i].repeat ?? 0, list[j].repeat ?? 0],
-              regions: r.regions,
-            });
+            if (r.mismatch) {
+              mismatched++;
+              continue;
+            }
+            pairs.push({ regions: r.regions });
           }
         }
+        const floor = noiseFloor(pairs);
+        references.push({
+          scene,
+          scenario,
+          config,
+          captures: list.length,
+          expected: sweep.reference.reps ?? 1,
+          pairs: pairs.length,
+          ...(mismatched ? { mismatched } : {}),
+          ...(floor ? { regions: floor.regions } : {}),
+        });
       }
     }
-    const floor = noiseFloor(pairs);
+    allReferences.push(...references);
     floors.push({
       scene,
       scenario,
-      pairs: floor?.pairs ?? 0,
       reps: sweep.reference.reps ?? 1,
       regionNames: regions.map((r) => r.name),
-      ...(floor ? { regions: floor.regions } : {}),
+      references: references.length,
+      withFloor: references.filter((r) => r.regions).length,
     });
     // Each point against its reference, engine by engine.
     for (const [index, point] of sweep.points.entries()) {
@@ -378,11 +461,16 @@ export async function compareSweep({
         }
         entry.against = against;
         const r = await compare(first.png, ref.png, regions);
+        if (r.mismatch) {
+          entry.mismatch = r.mismatch;
+          continue;
+        }
         entry.regions = r.regions;
+        const own = references.find((x) => x.config === against);
         entry.within = Object.fromEntries(
           Object.entries(r.regions).map(([name, d]) => [
             name,
-            withinNoise(d, floor?.regions[name]) ?? null,
+            withinNoise(d, own?.regions?.[name]) ?? null,
           ]),
         );
         if (r.heatmap) {
@@ -400,6 +488,7 @@ export async function compareSweep({
     threshold: PIXEL_THRESHOLD,
     reference: sweep.reference,
     floors,
+    references: allReferences,
     points,
     repeats,
   };

@@ -1446,8 +1446,9 @@ async function run() {
             config,
             unsupported: unsupportedReason(catalog, scene, config.engine),
             // The first repetition captures; a reference point's repeats
-            // too, since they set the noise floor (reference.mjs).
-            capture: rep === 0 && !opts["no-capture"],
+            // capture the settled view alone, since they set its noise
+            // floor (reference.mjs): no start shot, no stepwise settle.
+            capture: rep === 0 && !opts["no-capture"] && (repeat ? "end" : true),
             render,
             ...(example ? { gpuTicks } : {}),
           };
@@ -1871,7 +1872,7 @@ async function runOne(browser, base, spec, results) {
     // When each request started, to split bytes at the motion's start.
     const startedAt = request.timing().startTime - runStart;
     starts.push(size.then((bytes) => [startedAt, bytes]));
-    if (spec.capture) {
+    if (spec.capture === true) {
       const t = request.timing();
       waterfall.push(
         size.then((bytes) => [

@@ -25,15 +25,38 @@ export interface Region {
 }
 export interface NoiseFloor {
   pairs: number;
-  regions: Record<string, Required<Difference>>;
+  regions: Record<string, Difference>;
 }
+/** A scene's floors in brief; `pairs` and `regions` only in records from before per-reference floors (pooled). */
 export interface ReferenceFloor {
   scene: string;
   scenario: string;
-  pairs: number;
   reps: number;
   regionNames: string[];
-  regions?: Record<string, Required<Difference>>;
+  references?: number;
+  withFloor?: number;
+  pairs?: number;
+  regions?: Record<string, Difference>;
+}
+/** One reference point's own floor, per engine. */
+export interface ReferenceEntry {
+  scene: string;
+  scenario: string;
+  config: string;
+  captures: number;
+  expected: number;
+  pairs: number;
+  mismatched?: number;
+  regions?: Record<string, Difference>;
+}
+/** A point's difference judged against its own reference's floor. */
+export interface Verdict {
+  within: boolean | undefined;
+  floor?: number;
+  pairs: number;
+  captures?: number;
+  expected?: number;
+  pooled?: true;
 }
 export interface ReferencePoint {
   scene: string;
@@ -42,6 +65,7 @@ export interface ReferencePoint {
   image: string;
   reference?: true;
   against?: string;
+  mismatch?: string;
   regions?: Record<string, Difference>;
   within?: Record<string, boolean | null>;
   heatmap?: string;
@@ -51,6 +75,8 @@ export interface ReferenceRecord {
   threshold: number;
   reference: SweepReference;
   floors: ReferenceFloor[];
+  /** Absent in records from before per-reference floors. */
+  references?: ReferenceEntry[];
   points: ReferencePoint[];
   repeats: Array<{
     scene: string;
@@ -104,12 +130,24 @@ export function noiseFloor(
 export function withinNoise(
   difference: Difference | undefined,
   floor: Difference | undefined,
+  field?: keyof Difference,
 ): boolean | undefined;
+export function floorFor(
+  record: ReferenceRecord | undefined,
+  point: ReferencePoint | undefined,
+): (Partial<ReferenceEntry> & { regions?: Record<string, Difference>; pooled?: true }) | undefined;
+export function verdict(
+  record: ReferenceRecord | undefined,
+  point: ReferencePoint | undefined,
+  region?: string,
+  field?: keyof Difference,
+): Verdict;
+export function noFloorWords(v: Partial<Verdict>): string;
 export function percent(share: number): string;
 export function differenceWords(
   difference: Difference | undefined,
-  floor: Difference | undefined,
-  options?: { reference?: boolean },
+  v: Partial<Verdict> | undefined,
+  options?: { reference?: boolean; mismatch?: string },
 ): string;
 export function referenceKeys(region: string): {
   share: string;
@@ -128,7 +166,10 @@ export function compareSweep(options: {
     test: unknown,
     ref: unknown,
     regions: Region[],
-  ) => Promise<{ regions: Record<string, Difference>; heatmap?: string }>;
+  ) => Promise<
+    | { regions: Record<string, Difference>; heatmap?: string; mismatch?: undefined }
+    | { mismatch: string; regions?: undefined; heatmap?: undefined }
+  >;
   save: (name: string, base64: string, type: "jpeg" | "png") => Promise<string>;
   image: (shot: Shot) => string;
   encode: (shot: Shot) => Promise<string>;

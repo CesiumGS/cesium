@@ -67,7 +67,8 @@ export interface RunSpec {
   /** Set by the CLI when the engine can't draw a dataset. */
   unsupported?: string;
   /** Screenshot the settled views (filmstrips): the CLI's first repetition. */
-  capture?: boolean;
+  /** Capture every moment; "end" alone for a sweep reference's repeats. */
+  capture?: boolean | "end";
   /** Render settings (the catalog's, then the configuration's). */
   render?: RenderSettings;
 }
@@ -153,7 +154,10 @@ async function captureMoment(spec: RunSpec, moment: string): Promise<void> {
   const capture = (
     globalThis as { captureMoment?: (moment: string) => Promise<void> }
   ).captureMoment;
-  if (spec.capture && capture) {
+  if (
+    capture &&
+    (spec.capture === true || (spec.capture && spec.capture === moment))
+  ) {
     await capture(moment);
   }
 }
@@ -1877,7 +1881,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       metrics.purposeStats = purposeStats;
     }
     const purposes = adapter.requestPurposes?.();
-    if (spec.capture && purposes?.length) {
+    if (spec.capture === true && purposes?.length) {
       metrics.purposes = [...purposes];
     }
     await endMeasurement();
@@ -1888,7 +1892,7 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
     // guardrail): a policy that draws less than 1.x's selection shows
     // there, apart from renderer differences.
     if (
-      spec.capture &&
+      spec.capture === true &&
       settledEnd &&
       adapter.setPolicy &&
       spec.config.policy !== "stepwise"

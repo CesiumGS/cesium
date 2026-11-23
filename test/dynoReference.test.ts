@@ -17,6 +17,7 @@ import {
   referenceIndex,
   regionsOf,
   shotName,
+  verdict,
   withinNoise,
   type Region,
   type Shot,
@@ -27,10 +28,11 @@ import {
   ALL,
   arrange,
   defaultLayout,
-  floorOf,
   metricGroups,
   moveDimension,
   noiseSummary,
+  pointVerdict,
+  verdictNote,
   pointWords,
   sweepModelOf,
 } from "../bench/suite/views/sweepModel.ts";
@@ -140,23 +142,56 @@ describe("the noise floor", () => {
     expect(noiseFloor([])).toBeUndefined();
   });
 
+  it("has no FLIP floor when no pair has a finite FLIP", () => {
+    const floor = noiseFloor([
+      { regions: { whole: { share: 0.01, mean: 0.002, flip: NaN } } },
+      { regions: { whole: { share: 0.02, mean: 0.001 } } },
+    ])!;
+    expect(floor.regions.whole).toEqual({ share: 0.02, mean: 0.002 });
+    expect(
+      withinNoise({ share: 0, mean: 0, flip: 0 }, floor.regions.whole, "flip"),
+    ).toBeUndefined();
+  });
+
   it("says within noise, a share of pixels, or that there is no floor", () => {
     const floor = { share: 0.02, mean: 0.01 };
     expect(withinNoise({ share: 0.02, mean: 0 }, floor)).toBe(true);
     expect(withinNoise({ share: 0.041, mean: 0 }, floor)).toBe(false);
     expect(withinNoise({ share: 0.041, mean: 0 }, undefined)).toBeUndefined();
-    expect(differenceWords({ share: 0.015, mean: 0 }, floor)).toBe(
-      "within noise",
+    const v = (within: boolean | undefined, more = {}) => ({
+      within,
+      pairs: 3,
+      captures: 3,
+      expected: 3,
+      ...more,
+    });
+    expect(differenceWords({ share: 0.015, mean: 0 }, v(true))).toBe(
+      "within noise (3 pairs)",
     );
-    expect(differenceWords({ share: 0.041, mean: 0 }, floor)).toBe(
+    expect(
+      differenceWords({ share: 0.015, mean: 0 }, v(true, { pooled: true })),
+    ).toBe("within noise (3 pairs, pooled)");
+    expect(differenceWords({ share: 0.041, mean: 0 }, v(false))).toBe(
       "4.1% of pixels",
     );
-    expect(differenceWords({ share: 0.041, mean: 0 }, undefined)).toBe(
-      "4.1% of pixels (no noise floor)",
-    );
-    expect(differenceWords(undefined, floor, { reference: true })).toBe(
+    expect(
+      differenceWords(
+        { share: 0.041, mean: 0 },
+        v(undefined, { pairs: 0, captures: 1, expected: 1 }),
+      ),
+    ).toBe("4.1% of pixels (reference captured once)");
+    expect(
+      differenceWords(
+        { share: 0.041, mean: 0 },
+        v(undefined, { pairs: 0, captures: 1, expected: 3 }),
+      ),
+    ).toBe("4.1% of pixels (reference repeats failed: 1 of 3 captures)");
+    expect(differenceWords(undefined, v(true), { reference: true })).toBe(
       "reference",
     );
+    expect(
+      differenceWords(undefined, undefined, { mismatch: "sizes differ" }),
+    ).toBe("not compared (sizes differ)");
     expect(percent(0.0004)).toBe("under 0.1%");
     expect(percent(0.25)).toBe("25%");
   });
@@ -316,11 +351,16 @@ describe("comparing a sweep with its reference", () => {
       compare,
       ...io,
     }))!;
-    // Four reference points, three captures each: three pairs each.
+    // Four reference points, three captures each: three pairs each, a
+    // floor each (not one pooled over all four).
     const [floor] = record.floors;
-    expect(floor!.pairs).toBe(12);
+    expect(floor).toMatchObject({ references: 4, withFloor: 4, reps: 3 });
+    expect(record.references).toHaveLength(4);
+    for (const r of record.references!) {
+      expect(r).toMatchObject({ captures: 3, expected: 3, pairs: 3 });
+      expect(r.regions!.whole!.share).toBe(2 / 32);
+    }
     // Two captures differ by at most two pixels of 32 (1 and 2 changed).
-    expect(floor!.regions!.whole!.share).toBe(2 / 32);
     expect(floor!.regionNames).toEqual(["whole", "cliff"]);
     expect(record.repeats).toHaveLength(8);
     const near = record.points.find(
@@ -338,7 +378,7 @@ describe("comparing a sweep with its reference", () => {
     expect(near.within).toEqual({ whole: true, cliff: true });
     expect(
       pointWords(record, "vex-x10-zermatt", "cold-orbit", near.config),
-    ).toBe("within noise");
+    ).toBe("within noise (3 pairs)");
     const far = record.points.find(
       (p) =>
         p.config ===
@@ -368,13 +408,15 @@ describe("comparing a sweep with its reference", () => {
       compare,
       ...io,
     }))!;
-    expect(record.floors[0]!.pairs).toBe(0);
-    expect(record.floors[0]!.regions).toBeUndefined();
+    expect(record.floors[0]).toMatchObject({ references: 4, withFloor: 0 });
+    expect(record.references!.every((r) => !r.regions && r.pairs === 0)).toBe(
+      true,
+    );
     const near = record.points.find((p) => !p.reference)!;
     expect(near.within).toEqual({ whole: null, cliff: null });
     expect(
       pointWords(record, "vex-x10-zermatt", "cold-orbit", near.config),
-    ).toBe("3.1% of pixels (no noise floor)");
+    ).toBe("3.1% of pixels (reference captured once)");
   });
 
   it("is nothing for a sweep without a reference", async () => {
@@ -503,10 +545,20 @@ describe("the sweep view's model", () => {
     });
   });
 
-  it("draws the noise floor on image metrics, and offers them first", async () => {
+  it("draws each point's own floor on image metrics, and offers them first", async () => {
     const { s, m, record } = await model();
-    expect(floorOf(record, "pixelDiffShare", ALL, s)).toBe(2 / 32);
-    expect(floorOf(record, "tiles.terrain", ALL, s)).toBeUndefined();
+    const near = configOf({
+      "param.x": 4,
+      "view.lodExponent": 0.5,
+      "view.shadows": true,
+    });
+    expect(pointVerdict(record, s, near, "pixelDiffShare", ALL)).toMatchObject({
+      floor: 2 / 32,
+      judged: 1,
+      within: 1,
+      pairs: [3],
+    });
+    expect(pointVerdict(record, s, near, "tiles.terrain", ALL)).toBeUndefined();
     const groups = metricGroups(s, m);
     expect(groups[0]!.id).toBe("image");
     expect(groups[0]!.keys).toContain("pixelDiffShare.cliff");
@@ -533,10 +585,15 @@ describe("the sweep view's model", () => {
   it("states the answer: how many points are within noise, and which aren't", async () => {
     const { s, m, record } = await model();
     const answer = noiseSummary(record, s, m, ALL)!;
-    expect(answer.floor).toBe(true);
+    expect(answer).toMatchObject({ pooled: false, noFloor: [] });
     const [whole, cliff] = answer.regions;
     // ×4 matches its reference but for noise; ×10 changes a row of pixels.
-    expect(whole).toMatchObject({ region: "whole", compared: 4, within: 2 });
+    expect(whole).toMatchObject({
+      region: "whole",
+      compared: 4,
+      within: 2,
+      pairs: [3, 3],
+    });
     expect(whole!.beyond.map((b) => b.words)).toEqual([
       "25% of pixels",
       "25% of pixels",
@@ -560,7 +617,13 @@ describe("the sweep view's model", () => {
     }))!;
     const { s, m } = await model();
     const answer = noiseSummary(record, s, m, ALL)!;
-    expect(answer.floor).toBe(false);
+    expect(answer.noFloor).toEqual([
+      {
+        scene: "vex-x10-zermatt",
+        scenario: "cold-orbit",
+        why: "reference captured once",
+      },
+    ]);
     expect(answer.regions[0]!.within).toBe(0);
   });
 
@@ -639,5 +702,287 @@ describe("the sweep view's charts", () => {
         series: [{ label: "a", color: "c", points: [[0, 1]] }],
       }),
     ).toContain('class="twin"');
+  });
+});
+
+// One axis (error exponent 0.5 against the reference 1) by shadows, on
+// any engines and scenes, with each reference point's captures and each
+// point's change set by hand: a pixel changed per entry.
+type Noise = Record<string, number>;
+function oneAxisSweep(engines: string[], reps = 3): SweepRecord {
+  const points = [];
+  for (const a of [0.5, 1]) {
+    for (const sh of [true, false]) {
+      points.push({
+        coords: { "view.lodExponent": a, "view.shadows": sh },
+        configs: engines.map((e) => `${e}+lodExponent=${a}+shadows=${sh}`),
+        ...(a === 1 ? { reference: true as const } : {}),
+      });
+    }
+  }
+  return {
+    axes: [
+      { id: "view.lodExponent", values: [0.5, 1] },
+      { id: "view.shadows", values: [true, false] },
+    ],
+    reference: { id: "view.lodExponent", value: 1, reps },
+    engines,
+    points,
+  };
+}
+/** `n` pixels of row `y` set to 230 (each a change above the threshold). */
+const row = (n: number, y = 1): Array<[number, number, number]> =>
+  [...Array(n).keys()].map((x) => [x, y, 230]);
+
+/**
+ * Shots: each reference config's repeats differ by `noise[config]` pixels
+ * (repeat r changes r × that many, so the largest pair is 2 × noise with
+ * 3 captures); each compared point changes `change[config]` pixels.
+ */
+function shotsFor(
+  sweep: SweepRecord,
+  sceneIds: string[],
+  noise: Noise,
+  change: Noise,
+  reps = 3,
+) {
+  const shots = [];
+  for (const scene of sceneIds) {
+    for (const p of sweep.points) {
+      for (const config of p.configs) {
+        const base = { scene, scenario: "cold-orbit", config, moment: "end" };
+        if (p.reference) {
+          const n = noise[`${scene}|${config}`] ?? noise[config] ?? 0;
+          for (let r = 0; r < reps; r++) {
+            shots.push({ ...base, repeat: r, png: image(128, row(r * n, 0)) });
+          }
+        } else {
+          const n = change[`${scene}|${config}`] ?? change[config] ?? 0;
+          shots.push({ ...base, repeat: 0, png: image(128, row(n)) });
+        }
+      }
+    }
+  }
+  return shots;
+}
+
+/** A summary of those shots' run, every config settled. */
+async function runOf(
+  sweep: SweepRecord,
+  sceneIds: string[],
+  noise: Noise,
+  change: Noise,
+) {
+  const reference = await compareSweep({
+    shots: shotsFor(sweep, sceneIds, noise, change),
+    sweep,
+    scenes: {},
+    compare,
+    ...io,
+  });
+  const runs = sceneIds.flatMap((scene) =>
+    sweep.points.flatMap((p) =>
+      p.configs.map((config) => ({
+        scene,
+        sceneTitle: scene,
+        group: "D",
+        scenario: "cold-orbit",
+        config,
+        engine: "2.0",
+        rep: 0,
+        metrics: { status: "ok", settled: true, dev: {} },
+      })),
+    ),
+  );
+  const s = {
+    ...(summarizeRun({
+      date: "2026-11-23T12:00:00Z",
+      commit: "0123456789",
+      environment: {},
+      sweep,
+      reference,
+      runs,
+    }) as object),
+    name: "run.json",
+  } as unknown as Summary;
+  return { s, m: sweepModelOf(s)!, record: reference! };
+}
+
+describe("each point against its own reference's floor", () => {
+  const A = "2.0@a";
+  const B = "2.0@b";
+  const cfg = (e: string, a: number, sh: boolean) =>
+    `${e}+lodExponent=${a}+shadows=${sh}`;
+  // Engine A's reference with shadows on is quiet (no noise); every other
+  // reference is noisy (4 pixels between two captures). Every compared
+  // point changes 2 pixels from its reference.
+  const noise = {
+    [cfg(A, 1, true)]: 0,
+    [cfg(A, 1, false)]: 2,
+    [cfg(B, 1, true)]: 2,
+    [cfg(B, 1, false)]: 2,
+  };
+  const change = Object.fromEntries(
+    [A, B].flatMap((e) => [true, false].map((sh) => [cfg(e, 0.5, sh), 2])),
+  );
+
+  it("judges a point beside a quiet reference by the quiet floor, per engine", async () => {
+    const sweep = oneAxisSweep([A, B]);
+    const { s, record } = await runOf(sweep, ["s1"], noise, change);
+    const byConfig = (c: string) => record.points.find((p) => p.config === c)!;
+    // Each reference config has its own floor, its own pairs.
+    expect(
+      record.references!.map((r) => [r.config, r.regions!.whole!.share]),
+    ).toEqual([
+      [cfg(A, 1, true), 0],
+      [cfg(B, 1, true), 4 / 32],
+      [cfg(A, 1, false), 4 / 32],
+      [cfg(B, 1, false), 4 / 32],
+    ]);
+    // Beside A's quiet reference, 2 pixels are beyond noise...
+    const quiet = byConfig(cfg(A, 0.5, true));
+    expect(quiet.within!.whole).toBe(false);
+    expect(verdict(record, quiet).within).toBe(false);
+    expect(pointWords(record, "s1", "cold-orbit", quiet.config)).toBe(
+      "6.3% of pixels",
+    );
+    // ...and the same change beside B's noisy reference (same coordinates,
+    // other engine) is within it.
+    const noisy = byConfig(cfg(B, 0.5, true));
+    expect(noisy.within!.whole).toBe(true);
+    expect(pointWords(record, "s1", "cold-orbit", noisy.config)).toBe(
+      "within noise (3 pairs)",
+    );
+    // The table and the chart read the same verdict and floor.
+    const v = pointVerdict(record, s, quiet.config, "pixelDiffShare", "s1")!;
+    expect(v).toMatchObject({ judged: 1, within: 0, floor: 0 });
+    expect(verdictNote(v)).toBeUndefined();
+    expect(
+      verdictNote(
+        pointVerdict(record, s, noisy.config, "pixelDiffShare", "s1"),
+      ),
+    ).toBe("within noise (3 pairs)");
+  });
+
+  it("judges each metric by its own field's floor", async () => {
+    // Repeats identical (every floor 0); the point dims 4 pixels by a
+    // change under the luminance threshold: no pixel counts as changed,
+    // but the mean change is above its floor of 0.
+    const sweep = oneAxisSweep([A], 3);
+    const shots = shotsFor(sweep, ["s1"], {}, {}).map((x) =>
+      x.config === cfg(A, 0.5, true)
+        ? {
+            ...x,
+            png: image(
+              128,
+              [0, 1, 2, 3].map((i) => [i, 0, 133] as [number, number, number]),
+            ),
+          }
+        : x,
+    );
+    const record = (await compareSweep({
+      shots,
+      sweep,
+      scenes: {},
+      compare,
+      ...io,
+    }))!;
+    const p = record.points.find((x) => x.config === cfg(A, 0.5, true))!;
+    expect(verdict(record, p, "whole", "share").within).toBe(true);
+    expect(verdict(record, p, "whole", "mean").within).toBe(false);
+  });
+
+  it("says the same thing in the table, the band and the answer across scenes", async () => {
+    // One engine; in s1 the point changes 1 pixel against a floor of 2,
+    // in s2 8 pixels against the same floor.
+    const sweep = oneAxisSweep([A]);
+    const point = cfg(A, 0.5, true);
+    const { s, m, record } = await runOf(
+      sweep,
+      ["s1", "s2"],
+      { [cfg(A, 1, true)]: 1, [cfg(A, 1, false)]: 1 },
+      { [`s1|${point}`]: 1, [`s2|${point}`]: 8 },
+    );
+    // Every scene: counted, no band (each scene has its own floors).
+    const all = pointVerdict(record, s, point, "pixelDiffShare", ALL)!;
+    expect(all).toMatchObject({ scenes: 2, judged: 2, within: 1 });
+    expect(all.floor).toBeUndefined();
+    expect(verdictNote(all)).toBe("within noise in 1 of 2 scenes");
+    // One scene at a time: the note and the band.
+    const one = pointVerdict(record, s, point, "pixelDiffShare", "s1")!;
+    expect(verdictNote(one)).toBe("within noise (3 pairs)");
+    expect(one.floor).toBe(2 / 32);
+    const two = pointVerdict(record, s, point, "pixelDiffShare", "s2")!;
+    expect(verdictNote(two)).toBeUndefined();
+    expect(two.floor).toBe(2 / 32);
+    // The answer counts the same way: within in s1, not in s2.
+    const answer = noiseSummary(record, s, m, ALL)!;
+    const whole = answer.regions.find((r) => r.region === "whole")!;
+    const mine = (scene: string) =>
+      whole.beyond.some((b) => b.config === point && b.scene === scene);
+    expect(mine("s1")).toBe(false);
+    expect(mine("s2")).toBe(true);
+    expect(whole.beyond.find((b) => b.config === point)!.words).toBe(
+      "25% of pixels",
+    );
+  });
+
+  it("reads a record from before per-reference floors as pooled", () => {
+    const record = {
+      moment: "end",
+      threshold: 0.1,
+      reference: { id: "view.lodExponent", value: 1, reps: 3 },
+      floors: [
+        {
+          scene: "s1",
+          scenario: "cold-orbit",
+          reps: 3,
+          pairs: 12,
+          regionNames: ["whole"],
+          regions: { whole: { share: 0.1, mean: 0.1 } },
+        },
+      ],
+      points: [
+        {
+          scene: "s1",
+          scenario: "cold-orbit",
+          config: "p",
+          image: "p.jpg",
+          against: "r",
+          regions: { whole: { share: 0.05, mean: 0 } },
+        },
+      ],
+      repeats: [],
+    };
+    const v = verdict(record, record.points[0]);
+    expect(v).toMatchObject({ within: true, pooled: true, pairs: 12 });
+    expect(pointWords(record, "s1", "cold-orbit", "p")).toBe(
+      "within noise (12 pairs, pooled)",
+    );
+  });
+
+  it("doesn't compare images of different sizes", async () => {
+    const sweep = oneAxisSweep([A], 2);
+    const point = cfg(A, 0.5, true);
+    const shots = shotsFor(sweep, ["s1"], {}, {}, 2).map((x) =>
+      x.config === point ? { ...x, png: new Uint8ClampedArray(4 * 4 * 4) } : x,
+    );
+    const sized = async (test: unknown, ref: unknown, regions: Region[]) =>
+      (test as Uint8ClampedArray).length !== (ref as Uint8ClampedArray).length
+        ? { mismatch: "sizes differ: 4×4 against 8×4" }
+        : compare(test, ref, regions);
+    const record = (await compareSweep({
+      shots,
+      sweep,
+      scenes: {},
+      compare: sized,
+      ...io,
+    }))!;
+    const p = record.points.find((x) => x.config === point)!;
+    expect(p.mismatch).toBe("sizes differ: 4×4 against 8×4");
+    expect(p.regions).toBeUndefined();
+    expect(pointWords(record, "s1", "cold-orbit", point)).toBe(
+      "not compared (sizes differ: 4×4 against 8×4)",
+    );
   });
 });
