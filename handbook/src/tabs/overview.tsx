@@ -123,10 +123,12 @@ export function Overview() {
       <Section title="Quick start: run Dyno">
         <p>
           Dyno is the app for measuring and exploring the engine. You need Node
-          24 or later, pnpm 11.12 or later (Node's corepack provides the version
-          the repository names: <C>corepack enable pnpm</C>), and a browser with
-          WebGPU. The engine is on the <C>cesium-2.0-webgpu-poc</C> branch of
-          the{" "}
+          24 or later, pnpm 11.12 or later, and a browser with WebGPU. Node 24
+          ships corepack, which provides the pnpm version the repository names
+          once you run <C>corepack enable pnpm</C>. Node 25 and later don't ship
+          it: run <C>npm install --global corepack</C> first, or install pnpm
+          with <C>npm install --global pnpm@11.12.0</C>. The engine is on the{" "}
+          <C>cesium-2.0-webgpu-poc</C> branch of the{" "}
           <a href="https://github.com/CesiumGS/cesium/tree/cesium-2.0-webgpu-poc">
             CesiumGS/cesium
           </a>{" "}

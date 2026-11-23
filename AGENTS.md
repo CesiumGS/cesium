@@ -58,7 +58,7 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
 - Never commit screenshots, downloaded data, or secrets. Data lives in the setup store outside the repo (`npm run setup`; `FRAMES_DATA_DIR`). One exception: images under `handbook/` that the handbook embeds in its single HTML file. Keep them small, and check by eye that none shows a token or anything from an account.
 - A sky data pack (`npm run sky`) is derived data and never ships: it stays in the store outside the repo, and nothing made from one (an image, a binary, a base64 string, a `/sky-pack/` URL) goes in a commit, a build or the handbook. The guard in `scripts/build/vitePluginSkyPack.ts` refuses it in builds.
 - Never write an ion token into code, logs, URLs, test output, screenshots or builds. Examples get theirs from Dyno's token setting, or from `.env.local` in development only.
-- Node 24 (`engines`) and pnpm 11.12.0 or later, the version `packageManager` names, through corepack. pnpm installs; packing and staging a release stay npm's (`npm pack`, `npm stage publish`).
+- Node 24 (`engines`) and pnpm 11.12.0 or later, the version `packageManager` names. Node 24 ships corepack (`corepack enable pnpm`); Node 25 and later don't, so install corepack with `npm install --global corepack`, or pnpm with `npm install --global pnpm@11.12.0`. pnpm installs; packing and staging a release stay npm's (`npm pack`, `npm stage publish`).
 
 ## Testing cadence
 

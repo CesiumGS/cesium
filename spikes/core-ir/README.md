@@ -6,7 +6,7 @@ Spike code for choosing the engine's core IR. Nothing here is part of `@cesium/n
 
 ```sh
 cd spikes/core-ir
-pnpm install --ignore-workspace   # naga-wasm 30.2.0 and onnxruntime-web, in this folder (esbuild comes from the repository root)
+pnpm install --ignore-workspace --ignore-scripts   # naga-wasm 30.2.0 and onnxruntime-web, in this folder (esbuild comes from the repository root)
 node run.mjs         # Node measurements, written to out/node.json
 node size.mjs        # bundle sizes
 ```

@@ -1,7 +1,7 @@
 // Runs the Node measurements: bundles bench.ts (and today's sources) with
 // esbuild, then runs it with naga-wasm, the 1.x styling oracle and, when
 // installed, onnxruntime-web. Writes out/node.json.
-//   cd spikes/core-ir && pnpm install --ignore-workspace && node run.mjs
+//   cd spikes/core-ir && pnpm install --ignore-workspace --ignore-scripts && node run.mjs
 
 // esbuild comes from the repository root; spike tools only.
 // eslint-disable-next-line n/no-extraneous-import

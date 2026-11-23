@@ -53,7 +53,7 @@ Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md). :heart:
 
 ### Build and test from a clone
 
-This branch holds Cesium 2.0's packages (`packages/`). A fresh clone builds and tests with one command, with Node 24 and pnpm 11.12.0 or later (Node's corepack provides the version `package.json` names: `corepack enable pnpm`):
+This branch holds Cesium 2.0's packages (`packages/`). A fresh clone builds and tests with one command, with Node 24 and pnpm 11.12.0 or later. Node 24 ships corepack, which provides the pnpm version `package.json` names once you run `corepack enable pnpm`. Node 25 and later don't ship corepack: install it with `npm install --global corepack` first, or install pnpm itself with `npm install --global pnpm@11.12.0`.
 
 ```sh
 pnpm install --frozen-lockfile && pnpm run build && pnpm test
