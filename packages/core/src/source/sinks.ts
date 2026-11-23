@@ -62,8 +62,11 @@ export interface RowAt {
  * a signature, a signing time or an expiry) would give new feature IDs on
  * every open. OAuth's `access_token`, plain tokens and API keys; AWS S3's
  * and Google Cloud Storage's signed URLs (V4); Azure's shared access
- * signatures; and CloudFront's signed URLs (`Signature`, `Expires`,
- * `Key-Pair-Id`, `Policy`).
+ * signatures; CloudFront's signed URLs (`Signature`, `Expires`,
+ * `Key-Pair-Id`, `Policy`); and other common secrets (`api-key`,
+ * `subscription-key`, `access_key`, `client_secret`, `password`, `auth`,
+ * `jwt`). Every `X-Amz-` and `X-Goog-` parameter is a credential too
+ * (`CREDENTIAL_PREFIX`).
  * @internal
  */
 export const CREDENTIAL_PARAMS: ReadonlySet<string> = new Set(
@@ -92,19 +95,37 @@ export const CREDENTIAL_PARAMS: ReadonlySet<string> = new Set(
     "Expires",
     "Key-Pair-Id",
     "Policy",
+    "api-key",
+    "subscription-key",
+    "access_key",
+    "client_secret",
+    "password",
+    "auth",
+    "jwt",
   ].map((name) => name.toLowerCase()),
 );
+
+/** @internal The signed-URL schemes whose every parameter is a credential: AWS's and Google's. */
+export const CREDENTIAL_PREFIX = /^(?:x-amz-|x-goog-)/i;
+
+/** Whether `name` is on `CREDENTIAL_PARAMS` or has `CREDENTIAL_PREFIX`, without case. */
+function knownCredential(name: string): boolean {
+  return (
+    CREDENTIAL_PARAMS.has(name.toLowerCase()) || CREDENTIAL_PREFIX.test(name)
+  );
+}
 
 /**
  * The query parameters a URL keeps in its canonical source when neither
  * its resolver nor its kind declares any (`SourceIdentity.params`): every
- * one but the credentials and signatures in `CREDENTIAL_PARAMS` (CS-1080 A).
+ * one but the credentials and signatures (`CREDENTIAL_PARAMS`,
+ * `CREDENTIAL_PREFIX`; CS-1080 A).
  * A declaration replaces it. This is the one place the default is made.
  * @internal
  */
 export function undeclaredParams(url: URL): readonly string[] {
   return [...new Set(url.searchParams.keys())].filter(
-    (name) => !CREDENTIAL_PARAMS.has(name.toLowerCase()),
+    (name) => !knownCredential(name),
   );
 }
 
@@ -116,7 +137,7 @@ function isCredential(
 ): boolean {
   const lower = name.toLowerCase();
   return (
-    CREDENTIAL_PARAMS.has(lower) ||
+    knownCredential(name) ||
     declared.has(lower) ||
     Object.keys(asset.credentials?.query ?? {}).some(
       (k) => k.toLowerCase() === lower,

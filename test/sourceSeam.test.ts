@@ -2452,6 +2452,16 @@ describe("what identifies content: declared parameters, versions and options, ne
       "Expires",
       "Key-Pair-Id",
       "Policy",
+      "api-key",
+      "subscription-key",
+      "access_key",
+      "client_secret",
+      "password",
+      "auth",
+      "jwt",
+      // Off the list, by the AWS and Google prefixes.
+      "X-Amz-Algorithm",
+      "X-Goog-SignedHeaders",
     ];
     const plain = "https://api.test/f.json?layer=roads";
     const source = (url: string) =>
@@ -2461,6 +2471,18 @@ describe("what identifies content: declared parameters, versions and options, ne
       for (const spelled of [name, name.toLowerCase(), name.toUpperCase()]) {
         expect(source(`${plain}&${spelled}=s3cret`), spelled).toBe(plain);
         expect(source(`${plain}&${spelled}=other`), spelled).toBe(plain);
+        // Declared as a parameter or an option, it is still kept out.
+        expect(
+          assetSource(
+            {
+              url: new URL(`${plain}&${spelled}=s3cret`),
+              credits: [],
+              options: { [spelled]: "s3cret" },
+            },
+            { params: ["layer", spelled], options: [spelled] },
+          ),
+          spelled,
+        ).toBe(plain);
       }
     }
   });
