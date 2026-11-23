@@ -210,7 +210,7 @@ vec4 sampleAndBlend(
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
 
-#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
+#if defined(APPLY_DAY_NIGHT_ALPHA) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightBlend);
 #endif
 
@@ -342,6 +342,11 @@ void main()
 
 #if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
     float nightBlend = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
+#elif defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_VERTEX_LIGHTING)
+    // Vertex lighting uses the interpolated vertex normal instead of the
+    // geodetic surface normal, since normalEC is only computed for the
+    // day/night shading path.
+    float nightBlend = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * 5.0, 0.0, 1.0);
 #else
     float nightBlend = 0.0;
 #endif
