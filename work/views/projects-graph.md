@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>7 of 23 done"]
   CS_9["WebGL 2 renderer<br/>8 of 21 done"]
-  CS_10["Cesium IR<br/>29 of 57 done"]
+  CS_10["Cesium IR<br/>29 of 60 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 18 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -19,21 +19,21 @@ graph LR
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
-  CS_191["Content sources and formats<br/>32 of 88 done"]
+  CS_191["Content sources and formats<br/>33 of 101 done"]
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 22 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
-  CS_195["Benchmarks, parity and image regression<br/>6 of 36 done"]
-  CS_196["Infrastructure and geoscience capabilities<br/>4 of 14 done"]
+  CS_195["Benchmarks, parity and image regression<br/>6 of 41 done"]
+  CS_196["Infrastructure and geoscience capabilities<br/>4 of 16 done"]
   CS_197["Ray queries and path tracing<br/>0 of 9 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
-  CS_199["Dyno hardening, packaging and CI<br/>10 of 32 done"]
+  CS_199["Dyno hardening, packaging and CI<br/>10 of 39 done"]
   CS_389["Dyno as the development harness<br/>60 of 97 done"]
-  CS_437["public API reviews<br/>30 of 53 done"]
+  CS_437["public API reviews<br/>32 of 62 done"]
   CS_579["Editing<br/>8 of 22 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
-  CS_609["A clean 2.0 branch and a modern build<br/>32 of 40 done"]
+  CS_609["A clean 2.0 branch and a modern build<br/>32 of 48 done"]
   CS_615["Packaging and package names<br/>7 of 12 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
   CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]
@@ -78,7 +78,7 @@ graph LR
   CS_628 -->|3| CS_18
   CS_596 -->|3| CS_18
   CS_389 -->|8| CS_18
-  CS_437 -->|11| CS_18
+  CS_437 -->|10| CS_18
   CS_190 -->|4| CS_18
   CS_193 -->|5| CS_18
   CS_579 -->|1| CS_18

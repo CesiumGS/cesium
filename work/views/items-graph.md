@@ -110,6 +110,9 @@ graph LR
     CS_986["CS-986 What does CS-921 state when done: a bound, or the measured samp"]:::done
     CS_987["CS-987 Do accuracy statements get a drawing term for the GPU's arithme"]:::done
     CS_989["CS-989 Accuracy statements gain a drawing term for the GPU's arithmeti"]:::open
+    CS_1057["CS-1057 The precision seam's test guards four field names; everything "]:::proposed
+    CS_1058["CS-1058 Fitted draws lose their 'exact' center on Apple GPUs too"]:::proposed
+    CS_1078["CS-1078 A compiled route's center term wraps when F(c) minus the eye p"]:::proposed
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -497,6 +500,19 @@ graph LR
     CS_1031["CS-1031 What does a feature ID derive from?"]:::done
     CS_1033["CS-1033 How are cross-origin redirects handled when a source attaches "]:::done
     CS_1034["CS-1034 Does a host's request hook decide what is sent after it rewrit"]:::done
+    CS_1042["CS-1042 Request windows, retries and bytes each have two owners"]:::proposed
+    CS_1043["CS-1043 A host's tile loader can't texture or place what it writes"]:::proposed
+    CS_1044["CS-1044 CS-832's metadata path isn't in the seam that was built"]:::proposed
+    CS_1045["CS-1045 Errors have three channels, and Engine.errors can't say which "]:::proposed
+    CS_1046["CS-1046 'queries see the edit' is on the alpha.1 checklist, and its wo"]:::proposed
+    CS_1047["CS-1047 A stable ID has two text forms"]:::proposed
+    CS_1048["CS-1048 The physics seam has no design to reserve room in"]:::proposed
+    CS_1049["CS-1049 Lifetimes that nothing states"]:::proposed
+    CS_1068["CS-1068 The USD subset reader is not ready for hostile files (a spike "]:::proposed
+    CS_1069["CS-1069 Mesh indices are never checked against the vertex count"]:::proposed
+    CS_1070["CS-1070 Tileset and terrain structure is trusted on the main thread"]:::proposed
+    CS_1071["CS-1071 Small robustness gaps in the decoders"]:::proposed
+    CS_1080["CS-1080 What does a feature ID's canonical source keep of a URL's quer"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -592,6 +608,11 @@ graph LR
     CS_1010["CS-1010 The performance targets restated as budgets per tick on named "]:::open
     CS_1026["CS-1026 Does the package get per-feature entry points with byte budget"]:::done
     CS_1028["CS-1028 Per-feature entry points with byte budgets: three budgeted pag"]:::open
+    CS_1061["CS-1061 One render bundle per world is recorded again on every draw ch"]:::proposed
+    CS_1062["CS-1062 No stored result shows how cost grows with the scene"]:::proposed
+    CS_1063["CS-1063 Tile content skips the job queue's priorities, and every byte "]:::proposed
+    CS_1064["CS-1064 Picks are served one a tick for the whole engine, from unbound"]:::proposed
+    CS_1065["CS-1065 Per-view passes create GPU objects and arrays every tick; the "]:::proposed
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
@@ -608,6 +629,8 @@ graph LR
     CS_1020["CS-1020 The ITRF frame becomes its named realization, confirmed from t"]:::open
     CS_1021["CS-1021 Instant hides its storage behind methods and states its resolu"]:::open
     CS_1022["CS-1022 A missing accuracy reads as unstated, and a time-dependent ope"]:::open
+    CS_1059["CS-1059 Smaller overclaims in the frames and measurement figures"]:::proposed
+    CS_1060["CS-1060 Minor accuracy findings in the frames, time and measurement co"]:::proposed
   end
   subgraph CS_197["Ray queries and path tracing"]
     CS_344["CS-344 The ray-query design: when acceleration structures are built, w"]:::proposed
@@ -664,6 +687,13 @@ graph LR
     CS_983["CS-983 Every Lab parity suite gives a verdict: no regression against t"]:::open
     CS_984["CS-984 Baseline and golden changes carry a logged reason, and every me"]:::open
     CS_999["CS-999 Do Lab runs count as evidence when the machine isn't quiet?"]:::done
+    CS_1035["CS-1035 The bundle check passes on any dist/ that exists, and its 'abs"]:::proposed
+    CS_1036["CS-1036 Dyno suite run --changed measures nothing after a commit, and "]:::proposed
+    CS_1037["CS-1037 A run counts as valid when its conditions weren't recorded"]:::proposed
+    CS_1038["CS-1038 Skips read as passes in the quoted evidence"]:::proposed
+    CS_1039["CS-1039 The gates' own definitions aren't owner paths"]:::proposed
+    CS_1040["CS-1040 Wall-clock assertions in the unit suite fail under load and tr"]:::proposed
+    CS_1041["CS-1041 Source scans that pass when they find no files"]:::proposed
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -799,7 +829,7 @@ graph LR
     CS_934["CS-934 Merge CS-815, stable identity and semantic labels"]:::done
     CS_935["CS-935 CS-815 Q3: rename cameraRecord to camera in PickPositionResult "]:::done
     CS_936["CS-936 CS-815 Q4: how does a bigint StableId reach JSON?"]:::done
-    CS_939["CS-939 PickPositionResult and CorePick say camera, not cameraRecord (C"]:::open
+    CS_939["CS-939 PickPositionResult and CorePick say camera, not cameraRecord (C"]:::done
     CS_940["CS-940 stableIdToHex and parseStableId: a bigint StableId to and from "]:::open
     CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::done
     CS_944["CS-944 CS-939: CorePick already has a camera field; how is CorePick na"]:::done
@@ -818,6 +848,15 @@ graph LR
     CS_1000["CS-1000 How is @cesium/core/internal, the packages' shared utilities, "]:::done
     CS_1001["CS-1001 The packages' shared utilities move from @cesium/core/internal"]:::open
     CS_1015["CS-1015 Merge CS-943, export Route, RouteStep and Recordable"]:::done
+    CS_1050["CS-1050 Loading content has about a dozen shapes, and the content-sour"]:::proposed
+    CS_1051["CS-1051 Public signatures name types the entries don't export, and not"]:::proposed
+    CS_1052["CS-1052 The examples go around the package names, so they don't show w"]:::proposed
+    CS_1053["CS-1053 Errors have no shared shape, and some thrown classes aren't ex"]:::proposed
+    CS_1054["CS-1054 Cancellation, progress and argument shapes differ between like"]:::proposed
+    CS_1055["CS-1055 In-place writes are 139 public members, and the review hasn't "]:::proposed
+    CS_1056["CS-1056 The surface file counts each export twice"]:::proposed
+    CS_1079["CS-1079 Merge CS-939, the camera rename on pick results"]:::done
+    CS_1081["CS-1081 Is StableKey's feature encoding, ['feature', source, key(, row"]:::decision
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -906,6 +945,14 @@ graph LR
     CS_1025["CS-1025 Where do the handbook's performance figures come from?"]:::done
     CS_1027["CS-1027 The handbook catches up with 2026-11-22: generated project sta"]:::open
     CS_1030["CS-1030 CS-613's remaining fail-closed cases: a re-run attempt, a disp"]:::proposed
+    CS_1066["CS-1066 The release pipeline: what remains after five security rounds"]:::proposed
+    CS_1067["CS-1067 Tools and binaries with no pin of their own"]:::proposed
+    CS_1072["CS-1072 The owner's publishing steps outside the repository are tracke"]:::proposed
+    CS_1073["CS-1073 The alpha has no user-facing front door"]:::proposed
+    CS_1074["CS-1074 Each package's license file is 1.x's notice list"]:::proposed
+    CS_1075["CS-1075 Stale items and gates inside the alpha.1 set"]:::proposed
+    CS_1076["CS-1076 api/surface.txt and Engine.ts are shared by many ready items"]:::proposed
+    CS_1077["CS-1077 What alpha.1 must not foreclose for beta.1"]:::proposed
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1899,6 +1946,7 @@ graph LR
   CS_1025 --> CS_1027
   CS_1026 --> CS_1028
   CS_613 --> CS_1030
+  CS_921 --> CS_1078
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

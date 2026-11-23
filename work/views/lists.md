@@ -80,7 +80,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 29 of 57 done, 14 ready, 10 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 29 of 60 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -150,6 +150,9 @@ No milestone
 - [x] CS-986 decision: What does CS-921 state when done: a bound, or the measured sample?. Done.
 - [x] CS-987 decision: Do accuracy statements get a drawing term for the GPU's arithmetic?. Done.
 - [ ] CS-989 Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A). Needs CS-987.
+- [?] CS-1057 The precision seam's test guards four field names; everything else that needs ordered float math is outside it. Proposed. Needs nothing.
+- [?] CS-1058 Fitted draws lose their "exact" center on Apple GPUs too. Proposed. Needs nothing.
+- [?] CS-1078 A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
 
 ### Live MaterialX graph editing
 
@@ -630,7 +633,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 32 of 88 done, 30 ready, 20 blocked, 6 proposed.
+CS-191, Planned, led by owner: 33 of 101 done, 30 ready, 20 blocked, 18 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -737,6 +740,19 @@ No milestone
 - [x] CS-1031 decision: What does a feature ID derive from?. Done.
 - [x] CS-1033 decision: How are cross-origin redirects handled when a source attaches its own headers?. Done.
 - [x] CS-1034 decision: Does a host's request hook decide what is sent after it rewrites the origin?. Done.
+- [?] CS-1042 Request windows, retries and bytes each have two owners. Proposed. Needs nothing.
+- [?] CS-1043 A host's tile loader can't texture or place what it writes. Proposed. Needs nothing.
+- [?] CS-1044 CS-832's metadata path isn't in the seam that was built. Proposed. Needs nothing.
+- [?] CS-1045 Errors have three channels, and Engine.errors can't say which source failed. Proposed. Needs nothing.
+- [?] CS-1046 "queries see the edit" is on the alpha.1 checklist, and its work isn't planned. Proposed. Needs nothing.
+- [?] CS-1047 A stable ID has two text forms. Proposed. Needs nothing.
+- [?] CS-1048 The physics seam has no design to reserve room in. Proposed. Needs nothing.
+- [?] CS-1049 Lifetimes that nothing states. Proposed. Needs nothing.
+- [?] CS-1068 The USD subset reader is not ready for hostile files (a spike today). Proposed. Needs nothing.
+- [?] CS-1069 Mesh indices are never checked against the vertex count. Proposed. Needs nothing.
+- [?] CS-1070 Tileset and terrain structure is trusted on the main thread. Proposed. Needs nothing.
+- [?] CS-1071 Small robustness gaps in the decoders. Proposed. Needs nothing.
+- [x] CS-1080 decision: What does a feature ID's canonical source keep of a URL's query when its kind declares nothing?. Done.
 
 ### Sky, light and atmosphere
 
@@ -839,7 +855,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-CS-195, Planned, led by owner: 6 of 36 done, 18 ready, 6 blocked, 6 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
+CS-195, Planned, led by owner: 6 of 41 done, 18 ready, 6 blocked, 11 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines (CS-482, Planned)
 
@@ -891,10 +907,15 @@ No milestone
 - [ ] CS-1010 The performance targets restated as budgets per tick on named devices, with a like-for-like study against 1.x (CS-1005 B). Needs CS-1005.
 - [x] CS-1026 decision: Does the package get per-feature entry points with byte budgets before beta.1?. Done.
 - [ ] CS-1028 Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A). Needs CS-1026.
+- [?] CS-1061 One render bundle per world is recorded again on every draw change. Proposed. Needs nothing.
+- [?] CS-1062 No stored result shows how cost grows with the scene. Proposed. Needs nothing.
+- [?] CS-1063 Tile content skips the job queue's priorities, and every byte crosses the main thread. Proposed. Needs nothing.
+- [?] CS-1064 Picks are served one a tick for the whole engine, from unbounded queues. Proposed. Needs nothing.
+- [?] CS-1065 Per-view passes create GPU objects and arrays every tick; the zero-allocation target isn't measured. Proposed. Needs nothing.
 
 ### Infrastructure and geoscience capabilities
 
-CS-196, Planned, led by owner: 4 of 14 done, 4 ready, 1 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
+CS-196, Planned, led by owner: 4 of 16 done, 4 ready, 1 blocked, 7 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
 
 Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Planned)
 
@@ -915,6 +936,8 @@ No milestone
 - [ ] CS-1020 The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A). Needs CS-1018.
 - [ ] CS-1021 Instant hides its storage behind methods and states its resolution (CS-1019 A). Needs CS-1019.
 - [ ] CS-1022 A missing accuracy reads as unstated, and a time-dependent operation with no epoch reports undefined accuracy (CS-1016, CS-1017). Needs CS-1016 and CS-1017.
+- [?] CS-1059 Smaller overclaims in the frames and measurement figures. Proposed. Needs nothing.
+- [?] CS-1060 Minor accuracy findings in the frames, time and measurement code. Proposed. Needs nothing.
 
 ### Ray queries and path tracing
 
@@ -959,7 +982,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 10 of 32 done, 17 ready, 0 blocked, 5 proposed.
+CS-199, Planned, led by owner: 10 of 39 done, 17 ready, 0 blocked, 12 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -1001,6 +1024,13 @@ No milestone
 - [ ] CS-983 Every Lab parity suite gives a verdict: no regression against the last accepted run, plus the design's thresholds (CS-979 C). Needs CS-979.
 - [ ] CS-984 Baseline and golden changes carry a logged reason, and every merge decision lists them (CS-980 A). Needs CS-980.
 - [x] CS-999 decision: Do Lab runs count as evidence when the machine isn't quiet?. Done.
+- [?] CS-1035 The bundle check passes on any dist/ that exists, and its "absent" checks have no control. Proposed. Needs nothing.
+- [?] CS-1036 Dyno suite run --changed measures nothing after a commit, and for most packages, and exits 0. Proposed. Needs nothing.
+- [?] CS-1037 A run counts as valid when its conditions weren't recorded. Proposed. Needs nothing.
+- [?] CS-1038 Skips read as passes in the quoted evidence. Proposed. Needs nothing.
+- [?] CS-1039 The gates' own definitions aren't owner paths. Proposed. Needs nothing.
+- [?] CS-1040 Wall-clock assertions in the unit suite fail under load and train reruns. Proposed. Needs nothing.
+- [?] CS-1041 Source scans that pass when they find no files. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1132,7 +1162,7 @@ No milestone
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 30 of 53 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 32 of 62 done, 16 ready, 4 blocked, 10 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1182,7 +1212,7 @@ No milestone
 - [x] CS-934 decision: Merge CS-815, stable identity and semantic labels. Done.
 - [x] CS-935 decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Done.
 - [x] CS-936 decision: CS-815 Q4: how does a bigint StableId reach JSON?. Done.
-- [ ] CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Needs CS-815.
+- [x] CS-939 PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Done.
 - [ ] CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
 - [x] CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Done.
 - [x] CS-944 decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
@@ -1201,6 +1231,15 @@ No milestone
 - [x] CS-1000 decision: How is @cesium/core/internal, the packages' shared utilities, marked as not public?. Done.
 - [ ] CS-1001 The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal. Needs nothing.
 - [x] CS-1015 decision: Merge CS-943, export Route, RouteStep and Recordable. Done.
+- [?] CS-1050 Loading content has about a dozen shapes, and the content-source seam replaces most of them. Proposed. Needs nothing.
+- [?] CS-1051 Public signatures name types the entries don't export, and nothing checks for it. Proposed. Needs nothing.
+- [?] CS-1052 The examples go around the package names, so they don't show what the API lacks. Proposed. Needs nothing.
+- [?] CS-1053 Errors have no shared shape, and some thrown classes aren't exported. Proposed. Needs nothing.
+- [?] CS-1054 Cancellation, progress and argument shapes differ between like calls. Proposed. Needs nothing.
+- [?] CS-1055 In-place writes are 139 public members, and the review hasn't yet designed them. Proposed. Needs nothing.
+- [?] CS-1056 The surface file counts each export twice. Proposed. Needs nothing.
+- [x] CS-1079 decision: Merge CS-939, the camera rename on pick results. Done.
+- [ ] CS-1081 decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -1274,7 +1313,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 32 of 40 done, 2 ready, 0 blocked, 6 proposed.
+CS-609, Planned, led by owner: 32 of 48 done, 2 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1321,6 +1360,14 @@ No milestone
 - [x] CS-1025 decision: Where do the handbook's performance figures come from?. Done.
 - [ ] CS-1027 The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures. Needs CS-1023, CS-1024 and CS-1025.
 - [?] CS-1030 CS-613's remaining fail-closed cases: a re-run attempt, a dispatched ci.yml run on a branch, Snyk's path findings, and the 35-day window. Proposed. Needs CS-613.
+- [?] CS-1066 The release pipeline: what remains after five security rounds. Proposed. Needs nothing.
+- [?] CS-1067 Tools and binaries with no pin of their own. Proposed. Needs nothing.
+- [?] CS-1072 The owner's publishing steps outside the repository are tracked by no item. Proposed. Needs nothing.
+- [?] CS-1073 The alpha has no user-facing front door. Proposed. Needs nothing.
+- [?] CS-1074 Each package's license file is 1.x's notice list. Proposed. Needs nothing.
+- [?] CS-1075 Stale items and gates inside the alpha.1 set. Proposed. Needs nothing.
+- [?] CS-1076 api/surface.txt and Engine.ts are shared by many ready items. Proposed. Needs nothing.
+- [?] CS-1077 What alpha.1 must not foreclose for beta.1. Proposed. Needs nothing.
 
 ### Packaging and package names
 

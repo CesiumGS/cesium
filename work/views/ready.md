@@ -263,7 +263,6 @@ CS-437 The public API reviews
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-939  PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
   CS-940  stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
   CS-950  decision: Merge CS-940, stableIdToHex and parseStableId
   CS-977  Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
@@ -271,6 +270,7 @@ CS-437 The public API reviews
   CS-985  A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
   CS-990  GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
   CS-1001  The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal
+  CS-1081  decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample

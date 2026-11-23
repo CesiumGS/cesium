@@ -137,7 +137,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 29 of 57 done, 14 ready, 10 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 29 of 60 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -207,6 +207,9 @@ No milestone
 - [x] [CS-986](./items/CS-986-what-does-cs-921-state-when-done-a-bound-or-the.md) decision: What does CS-921 state when done: a bound, or the measured sample?. Done.
 - [x] [CS-987](./items/CS-987-do-accuracy-statements-get-a-drawing-term-for.md) decision: Do accuracy statements get a drawing term for the GPU's arithmetic?. Done.
 - [ ] [CS-989](./items/CS-989-accuracy-statements-gain-a-drawing-term-for-the.md) Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A). Needs CS-987.
+- [?] [CS-1057](./items/CS-1057-the-precision-seam-s-test-guards-four-field.md) The precision seam's test guards four field names; everything else that needs ordered float math is outside it. Proposed. Needs nothing.
+- [?] [CS-1058](./items/CS-1058-fitted-draws-lose-their-exact-center-on-apple.md) Fitted draws lose their "exact" center on Apple GPUs too. Proposed. Needs nothing.
+- [?] [CS-1078](./items/CS-1078-a-compiled-route-s-center-term-wraps-when-f-c.md) A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
 
 ### Live MaterialX graph editing
 
@@ -687,7 +690,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 32 of 88 done, 30 ready, 20 blocked, 6 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 33 of 101 done, 30 ready, 20 blocked, 18 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -794,6 +797,19 @@ No milestone
 - [x] [CS-1031](./items/CS-1031-what-does-a-feature-id-derive-from.md) decision: What does a feature ID derive from?. Done.
 - [x] [CS-1033](./items/CS-1033-how-are-cross-origin-redirects-handled-when-a.md) decision: How are cross-origin redirects handled when a source attaches its own headers?. Done.
 - [x] [CS-1034](./items/CS-1034-does-a-host-s-request-hook-decide-what-is-sent.md) decision: Does a host's request hook decide what is sent after it rewrites the origin?. Done.
+- [?] [CS-1042](./items/CS-1042-request-windows-retries-and-bytes-each-have-two.md) Request windows, retries and bytes each have two owners. Proposed. Needs nothing.
+- [?] [CS-1043](./items/CS-1043-a-host-s-tile-loader-can-t-texture-or-place.md) A host's tile loader can't texture or place what it writes. Proposed. Needs nothing.
+- [?] [CS-1044](./items/CS-1044-cs-832-s-metadata-path-isn-t-in-the-seam-that.md) CS-832's metadata path isn't in the seam that was built. Proposed. Needs nothing.
+- [?] [CS-1045](./items/CS-1045-errors-have-three-channels-and-engine-errors.md) Errors have three channels, and Engine.errors can't say which source failed. Proposed. Needs nothing.
+- [?] [CS-1046](./items/CS-1046-queries-see-the-edit-is-on-the-alpha-1.md) "queries see the edit" is on the alpha.1 checklist, and its work isn't planned. Proposed. Needs nothing.
+- [?] [CS-1047](./items/CS-1047-a-stable-id-has-two-text-forms.md) A stable ID has two text forms. Proposed. Needs nothing.
+- [?] [CS-1048](./items/CS-1048-the-physics-seam-has-no-design-to-reserve-room.md) The physics seam has no design to reserve room in. Proposed. Needs nothing.
+- [?] [CS-1049](./items/CS-1049-lifetimes-that-nothing-states.md) Lifetimes that nothing states. Proposed. Needs nothing.
+- [?] [CS-1068](./items/CS-1068-the-usd-subset-reader-is-not-ready-for-hostile.md) The USD subset reader is not ready for hostile files (a spike today). Proposed. Needs nothing.
+- [?] [CS-1069](./items/CS-1069-mesh-indices-are-never-checked-against-the.md) Mesh indices are never checked against the vertex count. Proposed. Needs nothing.
+- [?] [CS-1070](./items/CS-1070-tileset-and-terrain-structure-is-trusted-on-the.md) Tileset and terrain structure is trusted on the main thread. Proposed. Needs nothing.
+- [?] [CS-1071](./items/CS-1071-small-robustness-gaps-in-the-decoders.md) Small robustness gaps in the decoders. Proposed. Needs nothing.
+- [x] [CS-1080](./items/CS-1080-what-does-a-feature-id-s-canonical-source-keep.md) decision: What does a feature ID's canonical source keep of a URL's query when its kind declares nothing?. Done.
 
 ### Sky, light and atmosphere
 
@@ -896,7 +912,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 6 of 36 done, 18 ready, 6 blocked, 6 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
+[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 6 of 41 done, 18 ready, 6 blocked, 11 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines ([CS-482](./milestones/CS-482-benchmarks-run-per-merge-on-dedicated-machines.md), Planned)
 
@@ -948,10 +964,15 @@ No milestone
 - [ ] [CS-1010](./items/CS-1010-the-performance-targets-restated-as-budgets-per.md) The performance targets restated as budgets per tick on named devices, with a like-for-like study against 1.x (CS-1005 B). Needs CS-1005.
 - [x] [CS-1026](./items/CS-1026-does-the-package-get-per-feature-entry-points.md) decision: Does the package get per-feature entry points with byte budgets before beta.1?. Done.
 - [ ] [CS-1028](./items/CS-1028-per-feature-entry-points-with-byte-budgets.md) Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A). Needs CS-1026.
+- [?] [CS-1061](./items/CS-1061-one-render-bundle-per-world-is-recorded-again.md) One render bundle per world is recorded again on every draw change. Proposed. Needs nothing.
+- [?] [CS-1062](./items/CS-1062-no-stored-result-shows-how-cost-grows-with-the.md) No stored result shows how cost grows with the scene. Proposed. Needs nothing.
+- [?] [CS-1063](./items/CS-1063-tile-content-skips-the-job-queue-s-priorities.md) Tile content skips the job queue's priorities, and every byte crosses the main thread. Proposed. Needs nothing.
+- [?] [CS-1064](./items/CS-1064-picks-are-served-one-a-tick-for-the-whole.md) Picks are served one a tick for the whole engine, from unbounded queues. Proposed. Needs nothing.
+- [?] [CS-1065](./items/CS-1065-per-view-passes-create-gpu-objects-and-arrays.md) Per-view passes create GPU objects and arrays every tick; the zero-allocation target isn't measured. Proposed. Needs nothing.
 
 ### Infrastructure and geoscience capabilities
 
-[CS-196](./projects/CS-196-infrastructure-and-geoscience-capabilities.md), Planned, led by owner: 4 of 14 done, 4 ready, 1 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](../../../docs/design/infrastructure-and-geoscience-capabilities.md).
+[CS-196](./projects/CS-196-infrastructure-and-geoscience-capabilities.md), Planned, led by owner: 4 of 16 done, 4 ready, 1 blocked, 7 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](../../../docs/design/infrastructure-and-geoscience-capabilities.md).
 
 Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestones/CS-534-infrastructure-and-geoscience-data-shows-in-2-0.md), Planned)
 
@@ -972,6 +993,8 @@ No milestone
 - [ ] [CS-1020](./items/CS-1020-the-itrf-frame-becomes-its-named-realization.md) The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A). Needs CS-1018.
 - [ ] [CS-1021](./items/CS-1021-instant-hides-its-storage-behind-methods-and.md) Instant hides its storage behind methods and states its resolution (CS-1019 A). Needs CS-1019.
 - [ ] [CS-1022](./items/CS-1022-a-missing-accuracy-reads-as-unstated-and-a-time.md) A missing accuracy reads as unstated, and a time-dependent operation with no epoch reports undefined accuracy (CS-1016, CS-1017). Needs CS-1016 and CS-1017.
+- [?] [CS-1059](./items/CS-1059-smaller-overclaims-in-the-frames-and.md) Smaller overclaims in the frames and measurement figures. Proposed. Needs nothing.
+- [?] [CS-1060](./items/CS-1060-minor.md) Minor accuracy findings in the frames, time and measurement code. Proposed. Needs nothing.
 
 ### Ray queries and path tracing
 
@@ -1016,7 +1039,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 10 of 32 done, 17 ready, 0 blocked, 5 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 10 of 39 done, 17 ready, 0 blocked, 12 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -1058,6 +1081,13 @@ No milestone
 - [ ] [CS-983](./items/CS-983-every-lab-parity-suite-gives-a-verdict-no.md) Every Lab parity suite gives a verdict: no regression against the last accepted run, plus the design's thresholds (CS-979 C). Needs CS-979.
 - [ ] [CS-984](./items/CS-984-baseline-and-golden-changes-carry-a-logged.md) Baseline and golden changes carry a logged reason, and every merge decision lists them (CS-980 A). Needs CS-980.
 - [x] [CS-999](./items/CS-999-do-lab-runs-count-as-evidence-when-the-machine.md) decision: Do Lab runs count as evidence when the machine isn't quiet?. Done.
+- [?] [CS-1035](./items/CS-1035-the-bundle-check-passes-on-any-dist-that-exists.md) The bundle check passes on any dist/ that exists, and its "absent" checks have no control. Proposed. Needs nothing.
+- [?] [CS-1036](./items/CS-1036-dyno-suite-run-changed-measures-nothing-after-a.md) Dyno suite run --changed measures nothing after a commit, and for most packages, and exits 0. Proposed. Needs nothing.
+- [?] [CS-1037](./items/CS-1037-a-run-counts-as-valid-when-its-conditions-weren.md) A run counts as valid when its conditions weren't recorded. Proposed. Needs nothing.
+- [?] [CS-1038](./items/CS-1038-skips-read-as-passes-in-the-quoted-evidence.md) Skips read as passes in the quoted evidence. Proposed. Needs nothing.
+- [?] [CS-1039](./items/CS-1039-the-gates-own-definitions-aren-t-owner-paths.md) The gates' own definitions aren't owner paths. Proposed. Needs nothing.
+- [?] [CS-1040](./items/CS-1040-wall-clock-assertions-in-the-unit-suite-fail.md) Wall-clock assertions in the unit suite fail under load and train reruns. Proposed. Needs nothing.
+- [?] [CS-1041](./items/CS-1041-source-scans-that-pass-when-they-find-no-files.md) Source scans that pass when they find no files. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1189,7 +1219,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 30 of 53 done, 16 ready, 4 blocked, 3 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 32 of 62 done, 16 ready, 4 blocked, 10 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1239,7 +1269,7 @@ No milestone
 - [x] [CS-934](./items/CS-934-merge-cs-815-stable-identity-and-semantic-labels.md) decision: Merge CS-815, stable identity and semantic labels. Done.
 - [x] [CS-935](./items/CS-935-cs-815-q3-rename-camerarecord-to-camera-in.md) decision: CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?. Done.
 - [x] [CS-936](./items/CS-936-cs-815-q4-how-does-a-bigint-stableid-reach-json.md) decision: CS-815 Q4: how does a bigint StableId reach JSON?. Done.
-- [ ] [CS-939](./items/CS-939-pickpositionresult-and-corepick-say-camera-not.md) PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Needs CS-815.
+- [x] [CS-939](./items/CS-939-pickpositionresult-and-corepick-say-camera-not.md) PickPositionResult and CorePick say camera, not cameraRecord (CS-935). Done.
 - [ ] [CS-940](./items/CS-940-stableidtohex-and-parsestableid-a-bigint.md) stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Needs CS-815.
 - [x] [CS-943](./items/CS-943-route-routestep-and-recordable-are-exported-so.md) Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Done.
 - [x] [CS-944](./items/CS-944-cs-939-corepick-already-has-a-camera-field-how.md) decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
@@ -1258,6 +1288,15 @@ No milestone
 - [x] [CS-1000](./items/CS-1000-how-is-cesium-core-internal-the-packages-shared.md) decision: How is @cesium/core/internal, the packages' shared utilities, marked as not public?. Done.
 - [ ] [CS-1001](./items/CS-1001-the-packages-shared-utilities-move-from-cesium.md) The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal. Needs nothing.
 - [x] [CS-1015](./items/CS-1015-merge-cs-943-export-route-routestep-and.md) decision: Merge CS-943, export Route, RouteStep and Recordable. Done.
+- [?] [CS-1050](./items/CS-1050-loading-content-has-about-a-dozen-shapes-and.md) Loading content has about a dozen shapes, and the content-source seam replaces most of them. Proposed. Needs nothing.
+- [?] [CS-1051](./items/CS-1051-public-signatures-name-types-the-entries-don-t.md) Public signatures name types the entries don't export, and nothing checks for it. Proposed. Needs nothing.
+- [?] [CS-1052](./items/CS-1052-the-examples-go-around-the-package-names-so.md) The examples go around the package names, so they don't show what the API lacks. Proposed. Needs nothing.
+- [?] [CS-1053](./items/CS-1053-errors-have-no-shared-shape-and-some-thrown.md) Errors have no shared shape, and some thrown classes aren't exported. Proposed. Needs nothing.
+- [?] [CS-1054](./items/CS-1054-cancellation-progress-and-argument-shapes.md) Cancellation, progress and argument shapes differ between like calls. Proposed. Needs nothing.
+- [?] [CS-1055](./items/CS-1055-in-place-writes-are-139-public-members-and-the.md) In-place writes are 139 public members, and the review hasn't yet designed them. Proposed. Needs nothing.
+- [?] [CS-1056](./items/CS-1056-the-surface-file-counts-each-export-twice.md) The surface file counts each export twice. Proposed. Needs nothing.
+- [x] [CS-1079](./items/CS-1079-merge-cs-939-the-camera-rename-on-pick-results.md) decision: Merge CS-939, the camera rename on pick results. Done.
+- [ ] [CS-1081](./items/CS-1081-is-stablekey-s-feature-encoding-feature-source.md) decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -1331,7 +1370,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 32 of 40 done, 2 ready, 0 blocked, 6 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 32 of 48 done, 2 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1378,6 +1417,14 @@ No milestone
 - [x] [CS-1025](./items/CS-1025-where-do-the-handbook-s-performance-figures.md) decision: Where do the handbook's performance figures come from?. Done.
 - [ ] [CS-1027](./items/CS-1027-the-handbook-catches-up-with-2026-11-22.md) The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures. Needs CS-1023, CS-1024 and CS-1025.
 - [?] [CS-1030](./items/CS-1030-cs-613-s-remaining-fail-closed-cases-a-re-run.md) CS-613's remaining fail-closed cases: a re-run attempt, a dispatched ci.yml run on a branch, Snyk's path findings, and the 35-day window. Proposed. Needs CS-613.
+- [?] [CS-1066](./items/CS-1066-the-release-pipeline-what-remains-after-five.md) The release pipeline: what remains after five security rounds. Proposed. Needs nothing.
+- [?] [CS-1067](./items/CS-1067-tools-and-binaries-with-no-pin-of-their-own.md) Tools and binaries with no pin of their own. Proposed. Needs nothing.
+- [?] [CS-1072](./items/CS-1072-the-owner-s-publishing-steps-outside-the.md) The owner's publishing steps outside the repository are tracked by no item. Proposed. Needs nothing.
+- [?] [CS-1073](./items/CS-1073-the-alpha-has-no-user-facing-front-door.md) The alpha has no user-facing front door. Proposed. Needs nothing.
+- [?] [CS-1074](./items/CS-1074-each-package-s-license-file-is-1-x-s-notice-list.md) Each package's license file is 1.x's notice list. Proposed. Needs nothing.
+- [?] [CS-1075](./items/CS-1075-stale-items-and-gates-inside-the-alpha-1-set.md) Stale items and gates inside the alpha.1 set. Proposed. Needs nothing.
+- [?] [CS-1076](./items/CS-1076-api-surface-txt-and-engine-ts-are-shared-by.md) api/surface.txt and Engine.ts are shared by many ready items. Proposed. Needs nothing.
+- [?] [CS-1077](./items/CS-1077-what-alpha-1-must-not-foreclose-for-beta-1.md) What alpha.1 must not foreclose for beta.1. Proposed. Needs nothing.
 
 ### Packaging and package names
 
