@@ -19,7 +19,8 @@ function checkCount(src: Uint8Array, n: number): void {
 
 /** Bytes the decoded stream can take for `n` values of `width` bytes, as OpenUSD sizes its buffer. */
 function workingSize(n: number, width: 4 | 8): number {
-  return width + ((n * 2 + 7) >> 3) + n * width;
+  // Division, not a shift: a large n mustn't wrap through 32-bit arithmetic.
+  return width + Math.floor((n * 2 + 7) / 8) + n * width;
 }
 
 /** Decodes `n` 32-bit integers (signed) from a compressed buffer. */
@@ -33,7 +34,7 @@ export function decodeInts32(src: Uint8Array, n: number): Int32Array {
   const view = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
   const common = view.getInt32(0, true);
   const codesStart = 4;
-  let v = codesStart + ((n * 2 + 7) >> 3);
+  let v = codesStart + Math.floor((n * 2 + 7) / 8);
   let prev = 0;
   for (let i = 0; i < n; i++) {
     const code = (raw[codesStart + (i >> 2)]! >> ((i & 3) * 2)) & 3;
@@ -67,7 +68,7 @@ export function decodeInts64(src: Uint8Array, n: number): Float64Array {
   const view = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
   const common = view.getBigInt64(0, true);
   const codesStart = 8;
-  let v = codesStart + ((n * 2 + 7) >> 3);
+  let v = codesStart + Math.floor((n * 2 + 7) / 8);
   let prev = 0n;
   for (let i = 0; i < n; i++) {
     const code = (raw[codesStart + (i >> 2)]! >> ((i & 3) * 2)) & 3;

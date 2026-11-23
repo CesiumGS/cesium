@@ -803,7 +803,9 @@ export class Stage {
     const cycles = (s: Site): boolean => {
       let hit = false;
       for (const n of chain) {
-        this.budget.charge(1 + (Math.min(n.path.length, s.path.length) >>> 4));
+        this.budget.charge(
+          1 + Math.floor(Math.min(n.path.length, s.path.length) / 16),
+        );
         if (
           n.layer === s.stack[0] &&
           (hasPrefix(n.path, s.path) || hasPrefix(s.path, n.path))

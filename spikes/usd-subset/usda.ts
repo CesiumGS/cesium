@@ -28,7 +28,9 @@ function tokenize(text: string, budget: Budget): Tok[] {
   const out = {
     push(t: Tok): void {
       // Two units: every token of a layer is held until it's parsed.
-      budget.charge(2 + (typeof t.v === "string" ? t.v.length >>> 4 : 0));
+      budget.charge(
+        2 + (typeof t.v === "string" ? Math.floor(t.v.length / 16) : 0),
+      );
       raw.push(t);
     },
   };

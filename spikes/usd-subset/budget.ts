@@ -83,7 +83,7 @@ export class Budget {
 
   /** Spends for a string copied or compared: one unit, and one per 16 characters. */
   text(s: string): void {
-    this.charge(1 + (s.length >>> 4));
+    this.charge(1 + Math.floor(s.length / 16));
   }
 
   /** Spends for `n` objects the stage keeps. */

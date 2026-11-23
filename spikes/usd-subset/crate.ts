@@ -191,20 +191,22 @@ class Cursor {
     return out;
   }
   compressedInts32(n: number): Int32Array {
+    // Division, not a shift: a declared count past 2^32 must not wrap to a small charge.
+    this.budget.charge(1 + Math.floor(n / 16));
     const size = this.u64();
     const src = this.take(size);
-    this.budget.charge(1 + (n >>> 4));
     return decodeInts32(src, n);
   }
   compressedInts64(n: number): Float64Array {
+    // Division, not a shift: a declared count past 2^32 must not wrap to a small charge.
+    this.budget.charge(1 + Math.floor(n / 16));
     const size = this.u64();
     const src = this.take(size);
-    this.budget.charge(1 + (n >>> 4));
     return decodeInts64(src, n);
   }
   /** TfFastCompression, charged one unit per 16 bytes it declares before they're allocated. */
   decompress(src: Uint8Array, size: number): Uint8Array {
-    this.budget.charge(1 + (size >>> 4));
+    this.budget.charge(1 + Math.floor(size / 16));
     return tfFastDecompress(src, size);
   }
 }
