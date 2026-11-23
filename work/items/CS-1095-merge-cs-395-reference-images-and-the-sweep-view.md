@@ -2,10 +2,15 @@
 id: CS-1095
 title: Merge CS-395, reference images and the sweep view
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge; the executor's server can then be stopped."
+rationale: the sweep view is hard to parse; tweak the UX later
+answered_at: 2026-11-23T22:36:18.526Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
