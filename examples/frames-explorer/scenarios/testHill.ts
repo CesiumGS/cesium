@@ -22,8 +22,11 @@ const Q = 32767;
 /**
  * A terrain tree's level-zero geometric error (m), as the engine's terrain
  * states it (1.x's heightmap value, R·2π·0.25 / (65·2)); each level halves it.
+ * This is a copy of `LEVEL_ZERO_ERROR` in `packages/core/src/globe/TerrainSource.ts`,
+ * which is off core's entry now; `test/testHillLevelZero.test.ts` fails if the
+ * two differ.
  */
-const LEVEL_ZERO_ERROR = (6378137 * 2 * Math.PI * 0.25) / (65 * 2);
+export const LEVEL_ZERO_ERROR = (6378137 * 2 * Math.PI * 0.25) / (65 * 2);
 const deg = Math.PI / 180;
 
 export interface TestHill {

@@ -41,6 +41,11 @@ export {
   type SectionRequest,
   type SectionRunner,
 } from "./sectionHost.ts";
+export {
+  SectionClient,
+  type SectionClientOptions,
+  type SectionWorkerLike,
+} from "./sectionClient.ts";
 export { readBrepExtension, writeBrepExtension } from "./gltf.ts";
 export {
   tessellateBrep,

@@ -317,6 +317,8 @@ entry	name	kind	tier
 .	SceneItem	class	-
 .	SceneItemOptions	interface	-
 .	SdfGeometryOptions	interface	-
+.	SectionClient	class	-
+.	SectionClientOptions	interface	-
 .	SectionOptions	interface	-
 .	SectionOutcome	interface	-
 .	SectionPlaneInput	interface	-
@@ -324,6 +326,7 @@ entry	name	kind	tier
 .	SectionRequest	interface	-
 .	SectionResult	interface	-
 .	SectionRunner	interface	-
+.	SectionWorkerLike	interface	-
 .	SegmentDistance	interface	-
 .	SelectionView	interface	-
 .	ShaderControl	interface	-
@@ -1205,6 +1208,8 @@ ui	zoneOf	function	-
 @cesium/core	SceneItem	class	-
 @cesium/core	SceneItemOptions	interface	-
 @cesium/core	SdfGeometryOptions	interface	-
+@cesium/core	SectionClient	class	-
+@cesium/core	SectionClientOptions	interface	-
 @cesium/core	SectionOptions	interface	-
 @cesium/core	SectionOutcome	interface	-
 @cesium/core	SectionPlaneInput	interface	-
@@ -1212,6 +1217,7 @@ ui	zoneOf	function	-
 @cesium/core	SectionRequest	interface	-
 @cesium/core	SectionResult	interface	-
 @cesium/core	SectionRunner	interface	-
+@cesium/core	SectionWorkerLike	interface	-
 @cesium/core	SegmentDistance	interface	-
 @cesium/core	SelectionView	interface	-
 @cesium/core	ShaderControl	interface	-

@@ -632,7 +632,7 @@ const TESTS = [
   {
     file: "test/capsOffThread.test.ts",
     covers:
-      "`SectionJob` doing `sectionBrep`'s work in steps; `BrepCaps` rebuilding within a budget and keeping the old caps until the new ones are whole; naming its draws for picks; a runner that sections off the thread, a clip that moves or goes while it runs, a failure thrown once; and the section worker's transfer.",
+      "`SectionJob` (internal to core, off its entry) doing `sectionBrep`'s work in steps; `BrepCaps` rebuilding within a budget and keeping the old caps until the new ones are whole; naming its draws for picks; a runner that sections off the thread, a clip that moves or goes while it runs, a failure thrown once; and the section worker's transfer.",
   },
   {
     file: "test/caps.test.ts",
@@ -1220,10 +1220,10 @@ export function Clipping() {
           no more than once in 100 ms for one cap, so a dragged plane leaves its
           cap a few times a second and the last position always lands. A
           b-rep&apos;s section runs in steps of one face within the budget, or
-          off this thread in the section worker (<C>runner</C>), and the caps
-          already drawn stay until the new set is whole, so no tick is without a
-          cap. Mesh caps cut tiles within the budget, and draw when every tile
-          has its cut.
+          off this thread in the section worker (<C>runner</C>, as a{" "}
+          <C>SectionClient</C>), and the caps already drawn stay until the new
+          set is whole, so no tick is without a cap. Mesh caps cut tiles within
+          the budget, and draw when every tile has its cut.
         </p>
         <h3>Picks and measurement on caps</h3>
         <p>

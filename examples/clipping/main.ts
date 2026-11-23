@@ -2,6 +2,7 @@ import "./clipping.css";
 import {
   CapScheduler,
   InspectController,
+  SectionClient,
   enuBasis,
   orbitPose,
   type BrepForm,
@@ -22,7 +23,6 @@ import {
 } from "../brep-first-look/kernels.ts";
 import { filletedBlockBrep } from "../brep-first-look/fixtures.ts";
 import { formBounds } from "../../packages/core/src/brep/formBounds.ts";
-import { SectionClient } from "../../packages/core/src/brep/sectionClient.ts";
 import type { Dispose, ExampleContext } from "../types.ts";
 import { SectionCaps, type CapPart, type CapsReport } from "./caps.ts";
 import { SectionOverlay } from "./overlay.ts";
