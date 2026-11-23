@@ -7,8 +7,6 @@ entry	name	kind	tier
 .	AffinePlacement	interface	-
 .	AnchorHandle	interface	-
 .	Attribution	interface	-
-.	BASE_BINDING_LIMITS	const	-
-.	BASE_CAPACITY_LIMITS	const	-
 .	BREP_CAP_NAME	const	-
 .	BezierCurves	interface	-
 .	BingImagery	class	-
@@ -341,7 +339,6 @@ entry	name	kind	tier
 .	SlangCache	interface	-
 .	SlangPostLayout	interface	-
 .	SlangPostShader	interface	-
-.	SlicePool	class	-
 .	SliceScheduler	interface	-
 .	SliceUser	interface	-
 .	SpatialQueries	interface	-
@@ -913,8 +910,6 @@ ui	zoneOf	function	-
 @cesium/core	AffinePlacement	interface	-
 @cesium/core	AnchorHandle	interface	-
 @cesium/core	Attribution	interface	-
-@cesium/core	BASE_BINDING_LIMITS	const	-
-@cesium/core	BASE_CAPACITY_LIMITS	const	-
 @cesium/core	BREP_CAP_NAME	const	-
 @cesium/core	BezierCurves	interface	-
 @cesium/core	BingImagery	class	-
@@ -1247,7 +1242,6 @@ ui	zoneOf	function	-
 @cesium/core	SlangCache	interface	-
 @cesium/core	SlangPostLayout	interface	-
 @cesium/core	SlangPostShader	interface	-
-@cesium/core	SlicePool	class	-
 @cesium/core	SliceScheduler	interface	-
 @cesium/core	SliceUser	interface	-
 @cesium/core	SpatialQueries	interface	-
@@ -1491,6 +1485,7 @@ ui	zoneOf	function	-
 @cesium/core/internal	PlainEdge	type	-
 @cesium/core/internal	Route	interface	-
 @cesium/core/internal	RouteStep	type	-
+@cesium/core/internal	SlicePool	class	-
 @cesium/core/internal	TermWeight	interface	-
 @cesium/core/internal	TileVolume	type	-
 @cesium/core/internal	TilesetBodyError	class	-

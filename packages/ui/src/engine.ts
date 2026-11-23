@@ -4,8 +4,8 @@
  * pools.
  */
 import { parseAlpha } from "./urlAlpha.ts";
+import { SlicePool } from "@cesium/core/internal";
 import {
-  SlicePool,
   TICK_REASONS,
   modelUsage,
   type ContentSummary,

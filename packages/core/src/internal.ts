@@ -59,6 +59,8 @@ export type {
   CurvilinearTerms,
   TermWeight,
 } from "./scene/curvilinearTerms.ts";
+/** The imagery slice pool, for the inspector's memory rows (`SlicePool.usage`). */
+export { SlicePool } from "./globe/SlicePool.ts";
 export { TilesetBodyError, tilesetBody } from "./streaming/tilesetBody.ts";
 export {
   obbDistanceSquaredTo,

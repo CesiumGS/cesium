@@ -438,12 +438,8 @@ export {
   type SurfacePatch,
 } from "./scene/meshes.ts";
 export { GpuDevice, type Capabilities } from "./gpu/GpuDevice.ts";
-export {
-  BASE_BINDING_LIMITS,
-  BASE_CAPACITY_LIMITS,
-  type LimitsTier,
-} from "./gpu/limits.ts";
-export { SlicePool, type SliceUser } from "./globe/SlicePool.ts";
+export type { LimitsTier } from "./gpu/limits.ts";
+export type { SliceUser } from "./globe/SlicePool.ts";
 export { CapacityError, isCapacityError } from "./scene/CapacityError.ts";
 export {
   Ellipsoid,
