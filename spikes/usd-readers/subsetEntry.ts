@@ -3,7 +3,12 @@
 // opens a stage from files in memory and returns its records. Spike code
 // for CS-900; not part of @cesium/next.
 
-import { loadLayers, Stage, type AssetIo } from "../usd-subset/compose.ts";
+import {
+  loadLayers,
+  quoted,
+  Stage,
+  type AssetIo,
+} from "../usd-subset/compose.ts";
 import type { StageRecord } from "./facts.ts";
 import { subsetRecords } from "./subsetRecords.ts";
 
@@ -31,7 +36,9 @@ export async function open(
       const rootError = layers.get(root)?.error;
       return subsetRecords(stage, prim, [
         ...(rootError
-          ? [`Could not open root layer @${root}@: ${rootError}.`]
+          ? [
+              `Could not open root layer @${quoted(root)}@: ${quoted(rootError)}.`,
+            ]
           : []),
         ...stage.errors,
       ]);

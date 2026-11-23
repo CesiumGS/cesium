@@ -101,7 +101,13 @@ function summarize(c: Coverage): [string, string][] {
       `${c.counts.sublayers} sublayers, ${c.counts.references} references, ${c.counts.payloads} payloads, ${c.counts.inherits} inherits, ${c.counts.specializes} specializes`,
     ],
     ["Variants", c.counts.selected.join(", ") || "none"],
-    ["Unresolved", c.counts.unresolved.join(", ") || "none"],
+    [
+      "Unresolved",
+      (c.counts.unresolved.join(", ") || "none") +
+        (c.counts.unresolvedOmitted
+          ? `, and ${c.counts.unresolvedOmitted} more`
+          : ""),
+    ],
     ["Prims", `${c.prims}: ${j(c.typeNames)}`],
     [
       "SemanticsLabelsAPI",

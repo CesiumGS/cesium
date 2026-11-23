@@ -46,7 +46,7 @@ export interface LoadedLayer {
   readonly anchor?: string;
 }
 
-/** Joins an asset path to the directory of the layer that names it. Returns undefined for URLs and search paths it can't resolve. */
+/** Joins an asset path to the directory of the layer that names it. Returns undefined for URLs, search paths it can't resolve, and paths that climb above the root. */
 export function resolveAsset(
   anchor: string,
   asset: string,
@@ -71,6 +71,10 @@ export function resolveAsset(
       continue;
     }
     if (p === "..") {
+      // Climbing above the root would reach files outside the asset's tree.
+      if (!out.length) {
+        return undefined;
+      }
       out.pop();
     } else {
       out.push(p);
@@ -218,7 +222,19 @@ export interface ComposeCounts {
   instanceable: number;
   /** Variant sets and what was selected: "Physics=PhysX", or "Physics=(none)". */
   selected: string[];
+  /** Arcs that didn't resolve, as authored: the first MAX_LISTED, then a count. */
   unresolved: string[];
+  unresolvedOmitted: number;
+}
+
+type ArcKind =
+  "root" | "inherit" | "variant" | "reference" | "payload" | "specialize";
+
+/** A node of a prim's composition graph: its layer stack (by root layer), path and the arc that added it. */
+interface Node {
+  readonly layer: string;
+  readonly path: string;
+  readonly arc: ArcKind;
 }
 
 interface Site {
@@ -227,6 +243,110 @@ interface Site {
   /** Maps this site's namespace to the stage's: a prefix in the layer and the prim it lands on. */
   readonly from: string;
   readonly to: string;
+  readonly arc: ArcKind;
+  /** The nodes between the prim's root node and this site, root first, at this prim's namespace depth. */
+  readonly chain: readonly Node[];
+}
+
+/** How many errors, and unresolved arcs, a stage lists before it only counts them. */
+export const MAX_LISTED = 100;
+/** The deepest namespace the composer descends into: a guard on untrusted input. */
+export const MAX_NAMESPACE_DEPTH = 256;
+/** The longest layer name or path an error message quotes in full. */
+const MAX_QUOTED = 200;
+
+/** A layer name or path for an error message: control characters replaced, long ones cut. */
+export function quoted(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  const clean = text.replace(/[\u0000-\u001f\u007f-\u009f]/g, "?");
+  return clean.length > MAX_QUOTED
+    ? `${clean.slice(0, MAX_QUOTED)}… (${clean.length} characters)`
+    : clean;
+}
+
+/** SdfPath::HasPrefix, with a variant selection as a path element. */
+function hasPrefix(path: string, prefix: string): boolean {
+  return (
+    path === prefix ||
+    prefix === "/" ||
+    path.startsWith(`${prefix}/`) ||
+    path.startsWith(`${prefix}{`) ||
+    (prefix.endsWith("}") && path.startsWith(prefix))
+  );
+}
+
+// PcpErrorArcCycle::ToString's wording for each arc, then for the arc that closes the cycle.
+const CYCLE_VERB: Record<ArcKind, readonly [string, string]> = {
+  root: ["refers to", "refer to"],
+  inherit: ["inherits from", "inherit from"],
+  variant: ["uses variant", "use variant"],
+  reference: ["references", "reference"],
+  payload: ["gets payload from", "get payload from"],
+  // Pcp's switch has no case for specializes: it falls to the default.
+  specialize: ["refers to", "refer to"],
+};
+
+/** PcpErrorArcCycle::ToString. OpenUSD also names the stage's session layer in the root layer stack; the subset reader has none. */
+function cycleMessage(segments: readonly Node[]): string {
+  let msg = "Cycle detected:\n";
+  segments.forEach((seg, i) => {
+    if (i > 0) {
+      const [verb, cannot] = CYCLE_VERB[seg.arc];
+      msg += i + 1 < segments.length ? `${verb}:\n` : `CANNOT ${cannot}:\n`;
+    }
+    msg += `@${quoted(seg.layer)}@<${quoted(seg.path)}>\n`;
+    if (i > 0 && i + 1 < segments.length) {
+      msg += "which ";
+    }
+  });
+  return msg;
+}
+
+/** An arc after anchoring: its asset resolved against the layer that authored it. */
+interface AnchoredArc {
+  readonly arc: Arc;
+  /** The layer that authored it, the strongest one when several did. */
+  readonly source: string;
+  /** The asset path as the layer wrote it. */
+  readonly authored: string;
+  /** The resolved layer id; undefined when it can't be resolved; "" for an internal arc. */
+  readonly resolved: string | undefined;
+}
+
+function toArc(item: Value): Arc | undefined {
+  if (isArc(item)) {
+    return item;
+  }
+  return typeof item === "string"
+    ? { kind: "arc", asset: item, primPath: "" }
+    : undefined;
+}
+
+/** Applies f to every item a list op names (deleted ones too), keeping its shape. */
+function mapListOp(
+  v: Value | undefined,
+  f: (item: Value) => Value,
+): Value | undefined {
+  if (v === undefined || v === null) {
+    return v;
+  }
+  if (Array.isArray(v)) {
+    return (v as readonly Value[]).map(f);
+  }
+  if (typeof v === "object" && "kind" in v && v.kind === "listOp") {
+    const op = v as ListOp;
+    const m = (l?: readonly Value[]) => l?.map(f);
+    return {
+      kind: "listOp",
+      explicit: m(op.explicit),
+      prepended: m(op.prepended),
+      appended: m(op.appended),
+      added: m(op.added),
+      deleted: m(op.deleted),
+      ordered: m(op.ordered),
+    };
+  }
+  return f(v);
 }
 
 const STRIP_VARIANTS = /\{[^}]*\}/g;
@@ -246,12 +366,14 @@ export class Stage {
     instanceable: 0,
     selected: [],
     unresolved: [],
+    unresolvedOmitted: 0,
   };
   /** Children by parent path, per layer. */
   private readonly childIndex = new Map<string, Map<string, string[]>>();
   private readonly propIndex = new Map<string, Map<string, string[]>>();
-  /** What failed to compose, in OpenUSD's wording, once each, in the order found. */
-  readonly errors: string[] = [];
+  private readonly errorSeen = new Set<string>();
+  private readonly errorList: string[] = [];
+  private errorsOmitted = 0;
 
   constructor(layers: Map<string, LoadedLayer>, root: string) {
     this.layers = layers;
@@ -281,9 +403,33 @@ export class Stage {
     return this.layers.get(id)?.layer;
   }
 
+  /** What failed to compose, in OpenUSD's wording, once each, in the order found: the first MAX_LISTED, then a count. */
+  get errors(): readonly string[] {
+    return this.errorsOmitted
+      ? [
+          ...this.errorList,
+          `${this.errorsOmitted} more composition errors not listed.`,
+        ]
+      : this.errorList;
+  }
+
   private report(message: string): void {
-    if (!this.errors.includes(message)) {
-      this.errors.push(message);
+    if (this.errorSeen.has(message)) {
+      return;
+    }
+    this.errorSeen.add(message);
+    if (this.errorList.length < MAX_LISTED) {
+      this.errorList.push(message);
+    } else {
+      this.errorsOmitted++;
+    }
+  }
+
+  private unresolved(what: string): void {
+    if (this.counts.unresolved.length < MAX_LISTED) {
+      this.counts.unresolved.push(quoted(what));
+    } else {
+      this.counts.unresolvedOmitted++;
     }
   }
 
@@ -304,12 +450,12 @@ export class Stage {
         this.counts.sublayers++;
         out.push(...this.stack(r, seen));
       } else if (typeof sub === "string") {
-        this.counts.unresolved.push(sub);
+        this.unresolved(sub);
         // PcpErrorInvalidSublayerPath::ToString.
         const why = r ? this.layers.get(r)?.error : undefined;
         this.report(
-          `Could not load sublayer @${r ?? sub}@ of layer @${id}@${
-            why && why !== "missing" ? ` -- ${why}` : ""
+          `Could not load sublayer @${quoted(r ?? sub)}@ of layer @${quoted(id)}@${
+            why && why !== "missing" ? ` -- ${quoted(why)}` : ""
           }; skipping.`,
         );
       }
@@ -359,50 +505,102 @@ export class Stage {
     const specs = this.specsAt(site);
     const field = (name: string) =>
       composeList(specs.map((s) => s.spec.fields.get(name)));
-    const arcTarget = (
-      item: Value,
-      kind: "references" | "payloads",
-    ): Site | undefined => {
-      // The layer that authored the arc: its asset paths are relative to it.
-      const fieldName = kind === "references" ? "references" : "payload";
-      const itemKey = JSON.stringify(item);
-      const source =
-        specs.find(({ spec }) =>
-          listItems(spec.fields.get(fieldName)).some(
-            (x) => JSON.stringify(x) === itemKey,
-          ),
-        )?.id ?? site.stack[0]!;
-      const arc: Arc | undefined = isArc(item)
-        ? item
-        : typeof item === "string"
-          ? { kind: "arc", asset: item, primPath: "" }
-          : undefined;
-      if (!arc) {
-        return undefined;
+    // The nodes a new arc from this site hangs under, root first.
+    const chain: readonly Node[] = [
+      ...site.chain,
+      { layer: site.stack[0]!, path: site.path, arc: site.arc },
+    ];
+    /** pcp/primIndex.cpp, _CheckForCycle: an arc to a site in the same layer stack whose path is an ancestor or descendant of a node it hangs under. Reports it and returns true. */
+    const cycles = (s: Site): boolean => {
+      const hit = chain.some(
+        (n) =>
+          n.layer === s.stack[0] &&
+          (hasPrefix(n.path, s.path) || hasPrefix(s.path, n.path)),
+      );
+      if (hit) {
+        this.report(
+          cycleMessage([
+            ...chain,
+            { layer: s.stack[0]!, path: s.path, arc: s.arc },
+          ]),
+        );
       }
+      return hit;
+    };
+    const follow = (s: Site | undefined): void => {
+      // A variant selection isn't checked: /A{v=x} under /A is a branch, not a cycle.
+      if (s && (s.arc === "variant" || !cycles(s))) {
+        this.expand(s, out, depth + 1, inherited);
+      }
+    };
+    /**
+     * pcp/composeSite.cpp: references and payloads are anchored to the layer
+     * that authored them before their list ops compose, so the same relative
+     * path in two layers of a stack stays two arcs when it resolves to two
+     * files.
+     */
+    const anchoredArcs = (fieldName: "references" | "payload") => {
+      const info = new Map<string, AnchoredArc>();
+      const opinions = specs.map(({ id, spec }) => {
+        const anchor = (item: Value): AnchoredArc | undefined => {
+          const arc = toArc(item);
+          if (!arc) {
+            return undefined;
+          }
+          const resolved = arc.asset
+            ? resolveAsset(this.anchor(id), arc.asset)
+            : "";
+          return {
+            arc: { ...arc, asset: resolved ?? arc.asset },
+            source: id,
+            authored: arc.asset,
+            resolved,
+          };
+        };
+        // The strongest layer that adds an arc is its source.
+        for (const item of listItems(spec.fields.get(fieldName))) {
+          const a = anchor(item);
+          const key = a && JSON.stringify(a.arc);
+          if (a && key && !info.has(key)) {
+            info.set(key, a);
+          }
+        }
+        return mapListOp(
+          spec.fields.get(fieldName),
+          (item) => anchor(item)?.arc ?? item,
+        );
+      });
+      return composeList(opinions)
+        .map((v) => info.get(JSON.stringify(v)))
+        .filter((a): a is AnchoredArc => a !== undefined);
+    };
+    const arcTarget = (
+      a: AnchoredArc,
+      kind: "reference" | "payload",
+    ): Site | undefined => {
       let stack = site.stack;
-      if (arc.asset) {
-        const r = resolveAsset(this.anchor(source), arc.asset);
+      if (a.authored) {
+        const r = a.resolved;
         if (!r || !this.layer(r)) {
-          this.counts.unresolved.push(arc.asset);
+          this.unresolved(a.authored);
           // PcpErrorInvalidAssetPath::ToString: the arc type is "reference" or "payload".
           const why = r ? this.layers.get(r)?.error : undefined;
           this.report(
-            `Could not open asset @${r ?? arc.asset}@ for ${
-              kind === "references" ? "reference" : "payload"
-            } introduced by @${source}@<${site.path}>${
-              why && why !== "missing" ? ` -- ${why}` : ""
+            `Could not open asset @${quoted(r ?? a.authored)}@ for ${kind} introduced by @${quoted(
+              a.source,
+            )}@<${quoted(site.path)}>${
+              why && why !== "missing" ? ` -- ${quoted(why)}` : ""
             }.`,
           );
           return undefined;
         }
         stack = this.stack(r);
-      } else if (kind === "references") {
+      } else if (kind === "reference") {
         this.counts.internalReferences++;
       }
-      const target = arc.primPath || this.defaultPrim(stack);
+      const target = a.arc.primPath || this.defaultPrim(stack);
       if (!target) {
-        this.counts.unresolved.push(`${arc.asset} (no default prim)`);
+        this.unresolved(`${a.authored} (no default prim)`);
         return undefined;
       }
       return {
@@ -410,25 +608,29 @@ export class Stage {
         path: target,
         from: target,
         to: this.mapToStage(site, site.path),
+        arc: kind,
+        chain,
       };
     };
     // Inherits and specializes name paths in this site's layers.
-    const classArc = (p: Value): Site | undefined =>
+    const classArc = (
+      p: Value,
+      arc: "inherit" | "specialize",
+    ): Site | undefined =>
       typeof p === "string"
         ? {
             stack: site.stack,
             path: p,
             from: p,
             to: this.mapToStage(site, site.path),
+            arc,
+            chain,
           }
         : undefined;
 
     for (const p of field("inheritPaths")) {
       this.counts.inherits++;
-      const s = classArc(p);
-      if (s) {
-        this.expand(s, out, depth + 1, inherited);
-      }
+      follow(classArc(p, "inherit"));
     }
     for (const setName of field("variantSetNames")) {
       if (typeof setName !== "string") {
@@ -443,29 +645,20 @@ export class Stage {
       if (sel) {
         this.counts.variantSelections++;
         const vpath = `${site.path}{${setName}=${sel}}`;
-        this.expand({ ...site, path: vpath }, out, depth + 1, inherited);
+        follow({ ...site, path: vpath, arc: "variant", chain });
       }
     }
-    for (const item of field("references")) {
+    for (const a of anchoredArcs("references")) {
       this.counts.references++;
-      const s = arcTarget(item, "references");
-      if (s) {
-        this.expand(s, out, depth + 1, inherited);
-      }
+      follow(arcTarget(a, "reference"));
     }
-    for (const item of field("payload")) {
+    for (const a of anchoredArcs("payload")) {
       this.counts.payloads++;
-      const s = arcTarget(item, "payloads");
-      if (s) {
-        this.expand(s, out, depth + 1, inherited);
-      }
+      follow(arcTarget(a, "payload"));
     }
     for (const p of field("specializes")) {
       this.counts.specializes++;
-      const s = classArc(p);
-      if (s) {
-        this.expand(s, out, depth + 1, inherited);
-      }
+      follow(classArc(p, "specialize"));
     }
   }
 
@@ -515,11 +708,18 @@ export class Stage {
   /** Composes the whole stage from the root layer's default prim down, or from "/". */
   compose(): Prim {
     const stack = this.stack(this.root);
-    const root: Site = { stack, path: "/", from: "/", to: "/" };
+    const root: Site = {
+      stack,
+      path: "/",
+      from: "/",
+      to: "/",
+      arc: "root",
+      chain: [],
+    };
     return this.composePrim("/", [root]);
   }
 
-  composePrim(path: string, sites: readonly Site[]): Prim {
+  composePrim(path: string, sites: readonly Site[], depth = 0): Prim {
     const all: Site[] = [];
     if (path === "/") {
       all.push(...sites);
@@ -625,10 +825,22 @@ export class Stage {
       }
     }
     const children: Prim[] = [];
+    if (childNames.length && depth >= MAX_NAMESPACE_DEPTH) {
+      // Not OpenUSD's: a guard on untrusted input, which no real asset reaches.
+      this.report(
+        `Namespace deeper than ${MAX_NAMESPACE_DEPTH} prims at <${quoted(path)}>; its children are not composed.`,
+      );
+      childNames.length = 0;
+    }
     for (const n of childNames) {
       const childPath = path === "/" ? `/${n}` : `${path}/${n}`;
-      const childSites = all.map((s) => ({ ...s, path: joinChild(s.path, n) }));
-      const child = this.composePrim(childPath, childSites);
+      // Each node of the parent's graph has a counterpart one name deeper.
+      const childSites = all.map((s): Site => ({
+        ...s,
+        path: joinChild(s.path, n),
+        chain: s.chain.map((c) => ({ ...c, path: joinChild(c.path, n) })),
+      }));
+      const child = this.composePrim(childPath, childSites, depth + 1);
       if (child.fields.get("active") === false) {
         continue;
       }

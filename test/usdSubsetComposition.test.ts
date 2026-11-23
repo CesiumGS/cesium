@@ -7,7 +7,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { describe, expect, it } from "vitest";
-import { loadLayers, Stage } from "../spikes/usd-subset/compose.ts";
+import {
+  loadLayers,
+  MAX_LISTED,
+  quoted,
+  resolveAsset,
+  Stage,
+} from "../spikes/usd-subset/compose.ts";
 import { stageFacts } from "../spikes/usd-readers/facts.ts";
 import { open } from "../spikes/usd-readers/subsetEntry.ts";
 
@@ -305,6 +311,303 @@ def Xform "World"
   });
 });
 
+// pcp/primIndex.cpp, _CheckForCycle: an arc to a site in the same layer
+// stack whose path is an ancestor or a descendant of a node it hangs under is
+// a cycle. OpenUSD drops the arc, reports PcpErrorArcCycle and composes the
+// rest. Without the check, each of these recursed until the stack overflowed.
+describe("arc cycles", () => {
+  it("a prim that references its own parent", async () => {
+    const out = await compose(
+      {
+        "c/root.usda": `${HEAD}
+def Xform "World"
+{
+    def Xform "B" (
+        prepend references = </World>
+    )
+    {
+        def Scope "Own" {}
+    }
+    def Xform "Other" {}
+}
+`,
+      },
+      "c/root.usda",
+    );
+    expect(out.paths).toEqual([
+      "/World",
+      "/World/B",
+      "/World/B/Own",
+      "/World/Other",
+    ]);
+    expect(out.errors).toEqual([
+      "Cycle detected:\n@c/root.usda@</World/B>\nCANNOT reference:\n@c/root.usda@</World>\n",
+    ]);
+  });
+
+  it("a reference to an ancestor two levels up", async () => {
+    const out = await compose(
+      {
+        "c/root.usda": `${HEAD}
+def Xform "World"
+{
+    def Xform "Mid"
+    {
+        def Xform "Leaf" (
+            prepend references = </World>
+        )
+        {
+        }
+    }
+    def Xform "Other" {}
+}
+`,
+      },
+      "c/root.usda",
+    );
+    expect(out.paths).toEqual([
+      "/World",
+      "/World/Mid",
+      "/World/Mid/Leaf",
+      "/World/Other",
+    ]);
+    expect(out.errors).toEqual([
+      "Cycle detected:\n@c/root.usda@</World/Mid/Leaf>\nCANNOT reference:\n@c/root.usda@</World>\n",
+    ]);
+  });
+
+  it("a payload cycle between two layers", async () => {
+    const out = await compose(
+      {
+        "c/root.usda": `${HEAD}
+def Xform "World"
+{
+    def Xform "P" (
+        prepend payload = @./a.usda@</A>
+    )
+    {
+    }
+    def Xform "Other" {}
+}
+`,
+        "c/a.usda": `#usda 1.0
+def Xform "A" (
+    prepend payload = @./b.usda@</B>
+)
+{
+    def Scope "Kept" {}
+}
+`,
+        "c/b.usda": `#usda 1.0
+def Xform "B" (
+    prepend payload = @./a.usda@</A>
+)
+{
+    def Scope "AlsoKept" {}
+}
+`,
+      },
+      "c/root.usda",
+    );
+    expect([...out.paths].sort()).toEqual(
+      [
+        "/World",
+        "/World/P",
+        "/World/P/Kept",
+        "/World/P/AlsoKept",
+        "/World/Other",
+      ].sort(),
+    );
+    expect(out.errors).toEqual([
+      "Cycle detected:\n@c/root.usda@</World/P>\ngets payload from:\n@c/a.usda@</A>\nwhich gets payload from:\n@c/b.usda@</B>\nwhich CANNOT get payload from:\n@c/a.usda@</A>\n",
+    ]);
+  });
+
+  it("a cycle below a referenced prim, through two layers", async () => {
+    const out = await compose(
+      {
+        "c/root.usda": `${HEAD}
+def Xform "World"
+{
+    def Xform "R" (
+        prepend references = @./x.usda@</X>
+    )
+    {
+    }
+}
+`,
+        "c/x.usda": `#usda 1.0
+def Xform "X"
+{
+    def Xform "B" (
+        prepend references = @./y.usda@</Y>
+    )
+    {
+    }
+}
+`,
+        "c/y.usda": `#usda 1.0
+def Xform "Y" (
+    prepend references = @./x.usda@</X>
+)
+{
+    def Scope "Part" {}
+}
+`,
+      },
+      "c/root.usda",
+    );
+    expect(out.paths).toEqual([
+      "/World",
+      "/World/R",
+      "/World/R/B",
+      "/World/R/B/Part",
+    ]);
+    expect(out.errors).toEqual([
+      "Cycle detected:\n@c/root.usda@</World/R/B>\nreferences:\n@c/x.usda@</X/B>\nwhich references:\n@c/y.usda@</Y>\nwhich CANNOT reference:\n@c/x.usda@</X>\n",
+    ]);
+  });
+});
+
+describe("bounds on untrusted input", () => {
+  it("lists the first errors and unresolved arcs, then counts the rest", async () => {
+    const n = MAX_LISTED + 50;
+    const prims = Array.from(
+      { length: n },
+      (_, i) =>
+        `    def Xform "P${i}" (\n        prepend references = @./missing${i}.usda@\n    )\n    {\n    }\n`,
+    ).join("");
+    const root = `${HEAD}def Xform "World"\n{\n${prims}}\n`;
+    const layers = await loadLayers("e/root.usda", {
+      read: (p) =>
+        Promise.resolve(
+          p === "e/root.usda" ? new TextEncoder().encode(root) : undefined,
+        ),
+      exists: (p) => Promise.resolve(p === "e/root.usda"),
+    });
+    const stage = new Stage(layers, "e/root.usda");
+    const prim = stage.compose();
+    expect(prim.children[0]!.children).toHaveLength(n);
+    expect(stage.errors).toHaveLength(MAX_LISTED + 1);
+    expect(stage.errors[0]).toBe(
+      "Could not open asset @e/missing0.usda@ for reference introduced by @e/root.usda@</World/P0>.",
+    );
+    expect(stage.errors.at(-1)).toBe("50 more composition errors not listed.");
+    expect(stage.counts.unresolved).toHaveLength(MAX_LISTED);
+    expect(stage.counts.unresolvedOmitted).toBe(50);
+  });
+
+  it("cuts long paths and replaces control characters in messages", async () => {
+    expect(quoted("a\u0007b\nc\u009b")).toBe("a?b?c?");
+    const long = "x".repeat(500);
+    const out = await compose(
+      {
+        "l/root.usda": `${HEAD}
+def Xform "World" (
+    prepend references = @./${long}.usda@
+)
+{
+}
+`,
+      },
+      "l/root.usda",
+    );
+    expect(out.paths).toEqual(["/World"]);
+    expect(out.errors).toHaveLength(1);
+    expect(out.errors[0]!.length).toBeLessThan(400);
+    expect(out.errors[0]).toContain(
+      `@l/${"x".repeat(198)}… (507 characters)@ for reference`,
+    );
+  });
+
+  it("refuses a path that climbs above the root, and names it as written", async () => {
+    expect(resolveAsset("a/b/root.usda", "../../x.usda")).toBe("x.usda");
+    expect(resolveAsset("a/root.usda", "../../x.usda")).toBeUndefined();
+    expect(resolveAsset("/a/root.usda", "../../x.usda")).toBeUndefined();
+    const out = await compose(
+      {
+        "d/root.usda": `${HEAD}
+def Xform "World"
+{
+    def Xform "Up" (
+        prepend references = @../../../x.usda@
+    )
+    {
+    }
+}
+`,
+        // What the clamped path used to reach, silently.
+        "x.usda": `#usda 1.0
+(
+    defaultPrim = "X"
+)
+def Xform "X"
+{
+    def Scope "Outside" {}
+}
+`,
+      },
+      "d/root.usda",
+    );
+    expect(out.paths).toEqual(["/World", "/World/Up"]);
+    expect(out.errors).toEqual([
+      "Could not open asset @../../../x.usda@ for reference introduced by @d/root.usda@</World/Up>.",
+    ]);
+  });
+});
+
+describe("arcs anchored to the layer that authored them", () => {
+  // pcp/composeSite.cpp anchors each reference before its list op composes,
+  // so the same relative path in two layers of a stack is two arcs when it
+  // names two files.
+  it("keeps the same relative reference from two layers as two arcs", async () => {
+    const { paths } = await compose(
+      {
+        "r/root.usda": `#usda 1.0
+(
+    defaultPrim = "World"
+    subLayers = [@./sub/s.usda@]
+)
+def Xform "World" (
+    prepend references = @./thing.usda@
+)
+{
+}
+`,
+        "r/sub/s.usda": `#usda 1.0
+over "World" (
+    prepend references = @./thing.usda@
+)
+{
+}
+`,
+        "r/thing.usda": `#usda 1.0
+(
+    defaultPrim = "T"
+)
+def Xform "T"
+{
+    def Scope "Top" {}
+}
+`,
+        "r/sub/thing.usda": `#usda 1.0
+(
+    defaultPrim = "T"
+)
+def Xform "T"
+{
+    def Scope "Sub" {}
+}
+`,
+      },
+      "r/root.usda",
+    );
+    expect([...paths].sort()).toEqual(
+      ["/World", "/World/Sub", "/World/Top"].sort(),
+    );
+  });
+});
+
 // The pallet sample is data in the setup store (npm run setup), never in the
 // repository. OpenUSD's facts for it, from run
 // 2026-11-22T10-56-32-200Z-apple-metal-3, are what CS-900's rule compares with.
@@ -339,6 +642,13 @@ describe.skipIf(!existsSync(SAMPLES + PALLET))(
       expect(paths).not.toContain("/Tagging/ThumbRig");
       expect(paths).toContain(
         "/RootNode/industrialplasticpallet_a01_inst/PhysicsMaterials/plastic",
+      );
+      // The two layers the sample names but doesn't ship, by name, as OpenUSD reports them.
+      expect([...stage.errors].sort()).toEqual(
+        [
+          "Could not open asset @common_assets/materials/physics/physics_plastic.usda@ for reference introduced by @common_assets/props_general/industrialplasticpallet_a01/simready_usd/industrialplasticpallet_a01_inst_base.usd@</RootNode{PhysicsVariant=RigidBody}PhysicsMaterials/plastic>.",
+          "Could not open asset @common_assets/common_tools/content_tagging/thumbnail_rigs/thumb_rig_prop.usd@ for payload introduced by @common_assets/props_general/industrialplasticpallet_a01/simready_usd/industrialplasticpallet_a01.usd@</Tagging/ThumbRig>.",
+        ].sort(),
       );
     });
   },

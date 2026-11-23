@@ -154,6 +154,8 @@ function flatten(v: Value, out: number[]): boolean {
 class Parser {
   readonly toks: Tok[];
   i = 0;
+  /** Inside a reference or payload field, where a bare path is an internal arc. */
+  inArcs = false;
   readonly specs = new Map<string, Spec>();
   readonly undecoded = new Map<string, number>();
   constructor(toks: Tok[]) {
@@ -215,7 +217,10 @@ class Parser {
       case "str":
         return t.v;
       case "path":
-        return t.v;
+        // In a reference or payload, a bare path is an internal arc: </A>.
+        return this.inArcs
+          ? this.arcTail({ kind: "arc", asset: "", primPath: t.v })
+          : t.v;
       case "asset": {
         const p = this.peek();
         if (p?.t === "path") {
@@ -321,8 +326,10 @@ class Parser {
         continue;
       } // A bare key: no value.
       this.i++;
-      const v = this.value();
       const field = FIELD_NAMES[key] ?? key;
+      this.inArcs = field === "references" || field === "payload";
+      const v = this.value();
+      this.inArcs = false;
       if (op === "reorder") {
         continue;
       }
