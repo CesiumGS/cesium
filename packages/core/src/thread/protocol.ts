@@ -127,7 +127,7 @@ const TABLE: Record<string, EntryTable> = {
       KindRef ModuleRef OpenOptions Override PlainData PlainValue PointBatch
       PropertyColumn RasterImage ResolvedAsset RowIdentity SampleBatch
       SourceCapabilities SourceChange SourceClock SourceExtent SourceGrant
-      SourceIdentity SourceJobSpec SourceTick SourceView Want WantClass WriteCapabilities
+      SourceJobSpec SourceTick SourceView Want WantClass WriteCapabilities
       LoadProgress LodTransitions MaterialOptions MeasureIn MeasureInOptions
       MeshCapHit MeshCapRegion MeshCapReport
       MeshCapSurface MeshCapSurfaceHit MeshCapTile MeshCapsOptions
@@ -609,8 +609,8 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       "cannot-cross": `
         addItem asset attach baseFeature contentSource drawCount drawSink feed
         hasBase holdPending holds noteInvalidated noteKeys onDestroy
-        placedDraws refreshDraws restoreInvalidated rows shown showsBase
-        takeInvalidated takeStrayEdits viewMask
+        placedDraws refreshDraws resolveOps restoreInvalidated rows shown
+        showsBase takeInvalidated takeStrayEdits viewMask
       `,
     },
     SourceHost: {
@@ -625,7 +625,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     },
     SourceKind: {
       snapshot: `
-        decoders id identity renderFeatures
+        decoders id renderFeatures
       `,
       callback: `
         accepts open

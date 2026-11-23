@@ -511,7 +511,6 @@ export {
   type SourceExtent,
   type SourceGrant,
   type SourceHost,
-  type SourceIdentity,
   type SourceJobs,
   type SourceJobSpec,
   type SourceKind,

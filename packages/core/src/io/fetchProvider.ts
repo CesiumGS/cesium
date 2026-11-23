@@ -853,25 +853,66 @@ function setHeader(
 }
 
 /**
- * Query parameters that carry a token by convention (OAuth's
- * `access_token`, service keys, signed URLs' signatures), stripped, with a
- * credential's own, from a URL a proxy wasn't allowed credentials for.
+ * Query parameters that are credentials or signatures by convention,
+ * compared without case: OAuth's `access_token`, plain tokens and API keys;
+ * AWS S3's and Google Cloud Storage's signed URLs (V4; every `X-Amz-` and
+ * `X-Goog-` parameter, `CREDENTIAL_PREFIX`); Azure's shared access
+ * signatures; CloudFront's signed URLs (`Signature`, `Expires`,
+ * `Key-Pair-Id`, `Policy`); and other common secrets. The engine's one list
+ * (CS-1080 A): stripped, with a credential's own, from a URL a proxy wasn't
+ * allowed credentials for, and left out of a plain URL's name
+ * (`urlName`), so a re-signed URL keeps its name.
+ * @internal
  */
-const TOKEN_PARAMETERS = new Set([
-  "access_token",
-  "accesstoken",
-  "token",
-  "key",
-  "api_key",
-  "apikey",
-  "sig",
-  "signature",
-  "x-amz-credential",
-  "x-amz-security-token",
-  "x-amz-signature",
-  "x-goog-credential",
-  "x-goog-signature",
-]);
+export const CREDENTIAL_PARAMETERS: ReadonlySet<string> = new Set(
+  [
+    "access_token",
+    "accesstoken",
+    "token",
+    "key",
+    "api_key",
+    "apikey",
+    "api-key",
+    "subscription-key",
+    "access_key",
+    "client_secret",
+    "password",
+    "auth",
+    "jwt",
+    "sig",
+    "signature",
+    "se",
+    "st",
+    "sp",
+    "sv",
+    "sr",
+    "expires",
+    "key-pair-id",
+    "policy",
+  ].map((name) => name.toLowerCase()),
+);
+
+/** @internal The signed-URL schemes whose every parameter is a credential: AWS's and Google's. */
+export const CREDENTIAL_PREFIX = /^(?:x-amz-|x-goog-)/i;
+
+/**
+ * @internal Whether query parameter `name` is a credential: on
+ * `CREDENTIAL_PARAMETERS`, with `CREDENTIAL_PREFIX`, or one of `credential`'s
+ * own (`Credential.query`), without case.
+ */
+export function isCredentialParameter(
+  name: string,
+  credential?: Credential,
+): boolean {
+  const lower = name.toLowerCase();
+  return (
+    CREDENTIAL_PARAMETERS.has(lower) ||
+    CREDENTIAL_PREFIX.test(name) ||
+    Object.keys(credential?.query ?? {}).some(
+      (own) => own.toLowerCase() === lower,
+    )
+  );
+}
 
 /** `url` without a credential's query parameters or token parameters. */
 function withoutTokens(
@@ -884,13 +925,9 @@ function withoutTokens(
   } catch {
     return url;
   }
-  const own = new Set(
-    Object.keys(credential?.query ?? {}).map((name) => name.toLowerCase()),
-  );
   let changed = false;
   for (const name of [...parsed.searchParams.keys()]) {
-    const lower = name.toLowerCase();
-    if (TOKEN_PARAMETERS.has(lower) || own.has(lower)) {
+    if (isCredentialParameter(name, credential)) {
       parsed.searchParams.delete(name);
       changed = true;
     }

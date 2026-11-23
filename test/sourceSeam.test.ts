@@ -26,7 +26,7 @@ import {
 } from "../packages/core/src/render/layout.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
-  canonicalSource,
+  FeatureNamespace,
   stableIdOf,
 } from "../packages/core/src/scene/identity.ts";
 import { createBox } from "../packages/core/src/scene/meshes.ts";
@@ -53,11 +53,8 @@ import {
   MAX_QUEUED_CHANGES,
   SourceRuntime,
 } from "../packages/core/src/source/runtime.ts";
-import {
-  ContentRows,
-  assetSource,
-  undeclaredParams,
-} from "../packages/core/src/source/sinks.ts";
+import { urlName } from "../packages/core/src/source/registry.ts";
+import { ContentRows } from "../packages/core/src/source/sinks.ts";
 import type { SourceClock } from "../packages/core/src/source/types.ts";
 import { SUM, SampleSource } from "./fixtures/sources/sampleKind.ts";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -297,9 +294,7 @@ describe("Engine.open and World.add", () => {
   it("refuses a URL no kind accepts, and a relative URL without a page", async () => {
     await expect(
       engine.open({ url: "https://data.test/x.json" }),
-    ).rejects.toThrow(
-      /no registered kind accepts https:\/\/data\.test\/x\.json/,
-    );
+    ).rejects.toThrow(/no registered kind accepts "url:[0-9a-f]{32}"/);
     await expect(engine.open({ url: "city.sample" })).rejects.toThrow(
       /neither absolute nor relative to a page/,
     );
@@ -1332,8 +1327,10 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     const { rt, reports } = runtime();
     const first = await rt.open({ url: "https://data.test/city.sample" });
     const second = await rt.open({ url: "https://data.test/city.sample" });
-    expect(first.id).toBe("https://data.test/city.sample");
-    expect(second.id).toBe("https://data.test/city.sample#2");
+    // Its name, the URL's digest, is its ID when none is given.
+    expect(first.id).toBe(first.source);
+    expect(first.id).toBe(urlName(new URL("https://data.test/city.sample")));
+    expect(second.id).toBe(`${first.source}#2`);
     expect(reports).toEqual([
       expect.stringContaining("is open or drawn already; without an id"),
     ]);
@@ -1341,26 +1338,24 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     await expect(
       rt.open({ url: "https://data.test/b.sample" }, { id: "mine" }),
     ).rejects.toThrow(/the id "mine" is open already/);
-    // Their feature IDs are one source's: the same (CS-1031 A).
+    // Their feature IDs are one name's: the same (CS-1087 A).
     const road = (content: SourceContent) => content.featureId("road-0");
     expect(road(first)).toBe(road(second));
   });
 
-  it("names a data URI by its hash, never its payload, when no kind accepts it", async () => {
+  it("names a data URI by its name, a digest, never its payload, when no kind accepts it", async () => {
     const { rt } = runtime();
     const error = await rt
       .open({ url: "data:text/plain,secret-payload" })
       .catch((e: Error) => e.message);
-    expect(error).toMatch(
-      /no registered kind accepts data:text\/plain;murmur3-128=/,
-    );
+    expect(error).toMatch(/no registered kind accepts "url:[0-9a-f]{32}"/);
     expect(error).not.toContain("secret-payload");
   });
 });
 
 describe("what the sinks, the edit layer and the change sets refuse", () => {
   it("refuses offsets that don't increase from 0, and holes outside their feature", () => {
-    const { features } = new ContentRows("s").sinks();
+    const { features } = new ContentRows(FeatureNamespace.of("s")).sinks();
     const lines = (offsets: number[], holes?: number[][]) => ({
       key: "k",
       geometry: "polygon" as const,
@@ -1684,14 +1679,16 @@ describe("content and tileset items take one ordinal rule", () => {
     const tileset = await engine.loadTileset(URL_);
     const tilesetItem = world.add(tileset);
     expect(tilesetItem.identity.key).toBe(URL_);
-    const content = await engine.open({ url: URL_ });
+    // Named as the tileset's item key is: so the two meet.
+    const content = await engine.open({ url: URL_ }, { name: URL_ });
     expect(content.id).toBe(`${URL_}#2`);
     const item = world.add(content);
     expect(item.identity.key).toBe(`${URL_}#2`);
   });
 
   it("gives a tileset item added after content of its URL an ordinal, even while the content isn't placed", async () => {
-    const content = await engine.open({ url: URL_ });
+    // Named as the tileset's item key is: so the two meet.
+    const content = await engine.open({ url: URL_ }, { name: URL_ });
     expect(content.id).toBe(URL_);
     const tileset = await engine.loadTileset(URL_);
     expect(world.add(tileset).identity.key).toBe(`${URL_}#2`);
@@ -1818,10 +1815,12 @@ describe("two IDs, change sets by the source's keys, and the scene clock (CS-957
   });
 
   it("round-trips a change set through a source that knows only its own keys", async () => {
+    // Named "city", as its server names it in its change sets.
     const content = await engine.open(
       { url: "https://data.test/city.sample", options: { writable: true } },
-      { id: "city" },
+      { name: "city" },
     );
+    expect(content.id).toBe("city");
     world.add(content);
     engine.sources.tick();
     engine.sources.tick();
@@ -1833,7 +1832,7 @@ describe("two IDs, change sets by the source's keys, and the scene clock (CS-957
     const road1 = content.featureId("road-1");
     const mine = content.resolve({
       id: "cs-mine",
-      source: content.id,
+      source: content.source,
       ops: [
         {
           op: "update",
@@ -2089,7 +2088,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     // A client's key-only change set resolves to the same ID, for its edits.
     const mine = content.resolve({
       id: "cs-mine",
-      source: content.source, // the canonical source, which a server knows
+      source: content.source, // its name, which a server knows
       ops: [{ op: "delete", key: "a/box" }],
     });
     expect(mine.ops[0]!.id).toBe(box);
@@ -2099,7 +2098,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     expect(() =>
       content.resolve({
         id: "cs-old",
-        source: "city",
+        source: content.source,
         ops: [
           {
             op: "delete",
@@ -2152,7 +2151,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
         source: "https://data.test/other.sample",
         ops: [{ op: "delete", key: "road-0" }],
       }),
-    ).toThrow(/neither this content's canonical source nor its ID/);
+    ).toThrow(/isn't this content's name/);
     const refused = {
       id: "cs-c",
       source: "city",
@@ -2329,8 +2328,8 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
     for (const key of ["road-0", "a/box"]) {
       expect(other.featureId(key)).not.toBe(city.featureId(key));
     }
-    // An ion asset's version is part of its source: a new version, new IDs.
-    // Opened, so the IDs go through canonicalSource and assetSource.
+    // A plain URL's name keeps its query but credentials: ion's `v` gives
+    // a new version new IDs; its token, none.
     engine.sources.registerKind({ id: "layered", module: LAYERED });
     const ion = "https://assets.ion.cesium.com/96188/tileset.json";
     const v1 = await engine.open(
@@ -2341,19 +2340,16 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
       { url: `${ion}?v=2`, kind: "layered" },
       { id: "v2" },
     );
-    expect(v1.source).toBe(canonicalSource(`${ion}?v=1&access_token=x`));
-    expect(v1.source).toBe(`${ion}?v=1`);
-    expect(v2.source).toBe(
-      assetSource({ url: new URL(`${ion}?v=2`), credits: [] }),
-    );
+    expect(v1.source).toBe(urlName(new URL(`${ion}?v=1`)));
+    expect(v2.source).toBe(urlName(new URL(`${ion}?v=2`)));
     expect(v2.featureId("road-0")).not.toBe(v1.featureId("road-0"));
     expect(v1.featureId("road-0")).toBe(
-      stableIdOf({ kind: "feature", source: `${ion}?v=1`, key: "road-0" }),
+      stableIdOf({ kind: "feature", source: v1.source, key: "road-0" }),
     );
   });
 });
 
-describe("what identifies content: declared parameters, versions and options, never a credential (CS-847)", () => {
+describe("named content: a declared name, else a plain URL's digest (CS-1087 A, CS-1080 A, CS-1084 A)", () => {
   let engine: Engine;
   let world: World;
   beforeEach(async () => {
@@ -2361,73 +2357,55 @@ describe("what identifies content: declared parameters, versions and options, ne
     world = engine.createWorld();
     engine.addView({ target: new OffscreenTarget(64, 48), world });
     engine.sources.registerKind({ id: "sample", module: SAMPLE });
-    engine.sources.registerKind({ id: "layered", module: LAYERED });
   });
   afterEach(() => engine.destroy());
 
-  async function placed(ref: Parameters<Engine["open"]>[0], id: string) {
-    const content = await engine.open(ref, { id });
+  async function placed(
+    ref: Parameters<Engine["open"]>[0],
+    options: { id: string; name?: string },
+  ) {
+    const content = await engine.open(ref, options);
     world.add(content);
     engine.sources.tick();
     engine.sources.tick();
     return content;
   }
 
-  it("gives two opens differing only in ?layer= their own feature IDs once the kind declares layer", async () => {
+  it("names a plain URL by a digest of it: ?layer=roads and ?layer=buildings apart, ?a=1&b=2 and ?b=2&a=1 one", async () => {
     const roads = await placed(
-      { url: "https://api.test/features.layers?layer=roads" },
-      "roads",
+      { url: "https://api.test/features.sample?layer=roads" },
+      { id: "roads" },
     );
     const buildings = await placed(
-      { url: "https://api.test/features.layers?layer=buildings" },
-      "buildings",
+      { url: "https://api.test/features.sample?layer=buildings" },
+      { id: "buildings" },
     );
-    expect(roads.source).toBe("https://api.test/features.layers?layer=roads");
+    expect(roads.source).toMatch(/^url:[0-9a-f]{32}$/);
+    expect(buildings.source).not.toBe(roads.source);
     expect(buildings.featureId("road-0")).not.toBe(roads.featureId("road-0"));
-    expect([...buildings.rows.features.get("a")!.ids]).not.toEqual([
-      ...roads.rows.features.get("a")!.ids,
-    ]);
     // Their labels and change sets don't cross.
     world.identity.setLabels(roads.featureId("a/box"), "class", ["road"]);
     expect(
       world.identity.identify(buildings.featureId("a/box"))!.labels.class,
     ).toBeUndefined();
     expect(() =>
-      buildings.resolve(
-        roads.resolve({
-          id: "cs-1",
-          source: roads.source,
-          ops: [{ op: "delete", key: "road-0" }],
-        }),
-      ),
-    ).toThrow(/neither this content's canonical source nor its ID/);
-  });
-
-  it("gives ?layer=roads and ?layer=buildings their own feature IDs with nothing declared (CS-1080 A)", async () => {
-    const roads = await placed(
-      { url: "https://api.test/features.sample?layer=roads" },
-      "roads",
+      buildings.resolve({
+        id: "cs-1",
+        source: roads.source,
+        ops: [{ op: "delete", key: "road-0" }],
+      }),
+    ).toThrow(/isn't this content's name/);
+    const name = (url: string) => urlName(new URL(url));
+    expect(name("https://api.test/f.sample?b=2&a=1")).toBe(
+      name("https://api.test/f.sample?a=1&b=2"),
     );
-    const buildings = await placed(
-      { url: "https://api.test/features.sample?layer=buildings" },
-      "buildings",
+    expect(name("https://u:p@api.test/f.sample?k=1#x")).toBe(
+      name("https://api.test/f.sample?k=1"),
     );
-    // The default keeps the whole query but credentials and signatures.
-    expect(roads.source).toBe("https://api.test/features.sample?layer=roads");
-    expect(buildings.source).not.toBe(roads.source);
-    expect(buildings.featureId("road-0")).not.toBe(roads.featureId("road-0"));
   });
 
-  it("gives ?a=1&b=2 and ?b=2&a=1 one set of feature IDs: kept parameters are sorted", async () => {
-    const ab = await placed({ url: "https://api.test/f.sample?a=1&b=2" }, "ab");
-    const ba = await placed({ url: "https://api.test/f.sample?b=2&a=1" }, "ba");
-    expect(ab.source).toBe("https://api.test/f.sample?a=1&b=2");
-    expect(ba.source).toBe(ab.source);
-    expect(ba.featureId("road-0")).toBe(ab.featureId("road-0"));
-  });
-
-  it("lets no credential or signature parameter, in any case, change a feature ID", () => {
-    // Its own list, so an emptied CREDENTIAL_PARAMS fails here.
+  it("lets no credential or signature parameter, in any case, nor a credential's own, change a plain URL's name", () => {
+    // Its own list, so an emptied CREDENTIAL_PARAMETERS fails here.
     const credentials = [
       "access_token",
       "token",
@@ -2464,159 +2442,72 @@ describe("what identifies content: declared parameters, versions and options, ne
       "X-Goog-SignedHeaders",
     ];
     const plain = "https://api.test/f.json?layer=roads";
-    const source = (url: string) =>
-      assetSource({ url: new URL(url), credits: [] });
-    expect(source(plain)).toBe(plain);
-    for (const name of credentials) {
-      for (const spelled of [name, name.toLowerCase(), name.toUpperCase()]) {
-        expect(source(`${plain}&${spelled}=s3cret`), spelled).toBe(plain);
-        expect(source(`${plain}&${spelled}=other`), spelled).toBe(plain);
-        // Declared as a parameter or an option, it is still kept out.
-        expect(
-          assetSource(
-            {
-              url: new URL(`${plain}&${spelled}=s3cret`),
-              credits: [],
-              options: { [spelled]: "s3cret" },
-            },
-            { params: ["layer", spelled], options: [spelled] },
-          ),
-          spelled,
-        ).toBe(plain);
-      }
+    const name = (url: string, credential?: Credential) =>
+      urlName(new URL(url), credential);
+    for (const spelled of credentials.flatMap((n) => [
+      n,
+      n.toLowerCase(),
+      n.toUpperCase(),
+    ])) {
+      expect(name(`${plain}&${spelled}=s3cret`), spelled).toBe(name(plain));
+      expect(name(`${plain}&${spelled}=other`), spelled).toBe(name(plain));
     }
+    const signed = new Credential({ query: { Session: "s1" } });
+    expect(name(`${plain}&session=s1`, signed)).toBe(name(plain));
+    expect(name(`${plain}&session=s1`)).not.toBe(name(plain));
   });
 
-  it("lets a kind's declaration win over the default: only what it names is kept", async () => {
-    const two = await placed(
-      { url: "https://api.test/f.layers?layer=roads&page=2" },
-      "two",
+  it("names a data URI by its bytes' digest, with no query read, and marks a blob URL as for this session only", () => {
+    const a = urlName(new URL("data:text/plain,a?b=1&token=x"));
+    expect(a).toMatch(/^url:[0-9a-f]{32}$/);
+    expect(urlName(new URL("data:text/plain,a?b=1&token=x"))).toBe(a);
+    expect(urlName(new URL("data:text/plain,a?b=1&token=y"))).not.toBe(a);
+    expect(urlName(new URL("blob:https://app.test/0b5e"))).toMatch(
+      /^session:[0-9a-f]{32}$/,
     );
-    const three = await placed(
-      { url: "https://api.test/f.layers?page=3&layer=roads" },
-      "three",
-    );
-    expect(two.source).toBe("https://api.test/f.layers?layer=roads");
-    expect(three.featureId("road-0")).toBe(two.featureId("road-0"));
-    // A resolver's declaration wins too.
-    expect(
-      assetSource({
-        url: new URL("https://api.test/f.json?b=2&a=1&t=9"),
-        credits: [],
-        identity: { params: ["b", "a"] },
-      }),
-    ).toBe("https://api.test/f.json?a=1&b=2");
   });
 
-  it("makes the default in one function: the canonical source of each URL with nothing declared", () => {
-    const ion = "https://assets.ion.cesium.com/96188/tileset.json";
-    const table: [string, string, string[]][] = [
-      ["https://api.test/f.json", "https://api.test/f.json", []],
-      [
-        "https://api.test/f.json?layer=roads",
-        "https://api.test/f.json?layer=roads",
-        ["layer"],
-      ],
-      [
-        "https://api.test/f.json?b=2&a=1&token=t",
-        "https://api.test/f.json?a=1&b=2",
-        ["b", "a"],
-      ],
-      [
-        "https://api.test/f.json?a=x%20y&a=0",
-        "https://api.test/f.json?a=0&a=x+y",
-        ["a"],
-      ],
-      [
-        "https://u:p@api.test/f.json?k=1#x",
-        "https://api.test/f.json?k=1",
-        ["k"],
-      ],
-      [`${ion}?v=3&access_token=t`, `${ion}?v=3`, ["v"]],
-      [`${ion}?v=3&layer=x`, `${ion}?v=3&layer=x`, ["v", "layer"]],
-      // A `v` that decodes to `&access_token=` stays one encoded value.
-      [
-        `${ion}?v=1%26access_token%3Dabc`,
-        `${ion}?v=1%26access_token%3Dabc`,
-        ["v"],
-      ],
-    ];
-    for (const [url, source, kept] of table) {
-      expect(undeclaredParams(new URL(url)), url).toEqual(kept);
-      expect(assetSource({ url: new URL(url), credits: [] }), url).toBe(source);
-    }
-    expect(
-      assetSource({
-        url: new URL(`${ion}?v=1%26access_token%3Dabc`),
-        credits: [],
-      }),
-    ).not.toContain("access_token=abc");
-    // ion's own `v` never twice, nor its version.
-    expect(
-      assetSource(
-        { url: new URL(`${ion}?v=3&layer=x`), credits: [], version: "3" },
-        { params: ["layer", "v"] },
-      ),
-    ).toBe(`${ion}?v=3&layer=x`);
-    expect(() =>
-      assetSource(
-        { url: new URL("https://api.test/f.json"), credits: [] },
-        { params: [""] },
-      ),
-    ).toThrow(/SourceIdentity\.params/);
-  });
-
-  it("gives an asset's version 1 and 2 their own feature IDs, and folds in the options that select content", async () => {
+  it("gives one declared name one set of feature IDs whatever its URL, and a version new IDs only when the name holds it (CS-1084 A)", async () => {
     engine.sources.addResolver({
-      id: "versioned",
-      accepts: (ref) => "resolver" in ref && ref.resolver === "versioned",
-      resolve: (ref) =>
-        Promise.resolve({
-          url: new URL("https://data.test/city.sample"),
+      id: "datasets",
+      accepts: (ref) => "resolver" in ref && ref.resolver === "datasets",
+      resolve: (ref) => {
+        const [dataset, version] = ("id" in ref ? ref.id : "").split("@");
+        return Promise.resolve({
+          // A new URL each time: signed, moved, a new version's path.
+          url: new URL(
+            `https://cdn${version}.test/${dataset}/v${version}/city.sample?sig=${Math.random()}`,
+          ),
           credits: [],
-          version: "id" in ref ? ref.id : "",
-          options: { style: "Aerial", key: "bing-secret" },
-          identity: { options: ["style", "key"] },
-        }),
-    });
-    const v1 = await placed({ resolver: "versioned", id: "1" }, "v1");
-    const v2 = await placed({ resolver: "versioned", id: "2" }, "v2");
-    expect(v1.source).toBe(
-      "https://data.test/city.sample#version=1&option.style=%22Aerial%22",
-    );
-    expect(v1.source).not.toContain("bing-secret");
-    expect(v2.featureId("road-0")).not.toBe(v1.featureId("road-0"));
-    expect(v2.featureId("a/box")).not.toBe(v1.featureId("a/box"));
-  });
-
-  it("never lets an access_token, a credential's own parameter or a declared credential change a feature ID", async () => {
-    const a = await placed(
-      { url: "https://api.test/features.layers?layer=roads&access_token=a" },
-      "a",
-    );
-    const b = await placed(
-      { url: "https://api.test/features.layers?access_token=b&layer=roads" },
-      "b",
-    );
-    expect(a.source).toBe("https://api.test/features.layers?layer=roads");
-    expect(b.source).toBe(a.source);
-    expect(b.featureId("road-0")).toBe(a.featureId("road-0"));
-    // A resolver's declared credential and its credential's own parameter.
-    const asset = (session: string, signed: string) => ({
-      url: new URL(
-        `https://api.test/f.json?layer=roads&session=${session}&signed=${signed}&X-Amz-Signature=${signed}`,
-      ),
-      credits: [],
-      credentials: new Credential({ query: { Signed: signed } }),
-      identity: {
-        params: ["layer", "session", "signed", "X-Amz-Signature"],
-        credentials: ["SESSION"],
+          name: `datasets:${dataset}`,
+          version,
+        });
       },
     });
-    expect(assetSource(asset("s1", "k1"))).toBe(
-      "https://api.test/f.json?layer=roads",
+    const v1 = await placed(
+      { resolver: "datasets", id: "city@1" },
+      { id: "v1" },
     );
-    expect(assetSource(asset("s2", "k2"))).toBe(assetSource(asset("s1", "k1")));
+    const v2 = await placed(
+      { resolver: "datasets", id: "city@2" },
+      { id: "v2" },
+    );
+    expect(v1.source).toBe("datasets:city");
+    expect(v2.featureId("road-0")).toBe(v1.featureId("road-0"));
+    expect([...v2.rows.features.get("a")!.ids]).toEqual([
+      ...v1.rows.features.get("a")!.ids,
+    ]);
+    // Open's name wins over the resolver's; a name with the version in it
+    // gives new IDs, as ion's resolver names its assets.
+    const pinned = await placed(
+      { resolver: "datasets", id: "city@2" },
+      { id: "pinned", name: "datasets:city@2" },
+    );
+    expect(pinned.source).toBe("datasets:city@2");
+    expect(pinned.featureId("road-0")).not.toBe(v1.featureId("road-0"));
+    await expect(
+      engine.open({ url: "https://data.test/city.sample" }, { name: "" }),
+    ).rejects.toThrow(/a content's name is a non-empty string/);
   });
 });
 

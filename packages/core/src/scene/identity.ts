@@ -84,12 +84,13 @@ export type Labels = Readonly<Record<string, readonly string[]>>;
  * - `draw`: content with no features.
  * - `host`: a host's own key (`DrawOptions.id`).
  * - `feature`: a content source's feature (`FeatureId`, CS-957 A): its
- *   source's canonical reference and the source's own key for it (a row's
- *   name, a draw's `DrawOptions.id`), and nothing else (CS-1031 A). It has
- *   no item and no content ID, so every placement and every open of the
- *   content shares it, in every run, and it is never an instance ID. With
- *   `row`, it is row `row` of the batch keyed `key`, a row its source didn't
- *   name.
+ *   content's name (`source`, which its host or resolver declares,
+ *   CS-1087 A) and the source's own key for it (a row's name, a draw's
+ *   `DrawOptions.id`), and nothing else. It has no item and no content ID,
+ *   so every placement and every open of the content shares it, in every
+ *   run, and it is never an instance ID. With `row`, it is row `row` of the
+ *   batch keyed `key`, a row its source didn't name. Its ID is the key's
+ *   projection in the name's namespace (`FeatureNamespace`).
  *
  * `item` is the scene item's key (`SceneItemOptions.id`, else the content's
  * source); `source` is the asset's canonical reference (`canonicalSource`),
@@ -560,9 +561,89 @@ export function hashKey(text: string): StableId {
   return brandId(id === 0n ? 1n : id);
 }
 
-/** A key's `StableId`: the first 64 bits of MurmurHash3_x86_128 of its canonical text. */
+/**
+ * A key's `StableId`: the first 64 bits of MurmurHash3_x86_128 of its
+ * canonical text. A `feature` key's is its projection in its content's
+ * namespace (`FeatureNamespace.featureId`): the hash of the namespace and
+ * the key.
+ */
 export function stableIdOf(key: StableKey): StableId {
-  return hashKey(canonicalKey(key));
+  return key.kind === "feature"
+    ? FeatureNamespace.of(key.source).featureId(key.key, key.row)
+    : hashKey(canonicalKey(key));
+}
+
+/** @internal The 32 hexadecimal digits of MurmurHash3_x86_128 of `text`'s UTF-8 bytes. */
+export function digestHex(text: string): string {
+  return murmur3x86x128(ENCODER.encode(text))
+    .map((w) => w.toString(16).padStart(8, "0"))
+    .join("");
+}
+
+/** Held by this module alone: only `FeatureNamespace.of` makes a namespace. */
+const NAMESPACE_TOKEN = Symbol("FeatureNamespace");
+
+/**
+ * @internal A content's name (`SourceContent.source`, CS-1087 A), hashed
+ * once into 128 bits: a feature ID is the hash of (namespace, key), and
+ * nothing else enters. The projection runs one way: nothing maps an ID back
+ * to its key but a resident row, a draw or an edit record, which each hold
+ * the key. Only the engine makes one, so a draw that carries one
+ * (`DrawIdentity.namespace`) is a content's.
+ */
+export class FeatureNamespace {
+  readonly #bytes = new Uint8Array(16);
+
+  /** Use `FeatureNamespace.of`. */
+  constructor(
+    token: symbol,
+    /** The content's name. */
+    readonly name: string,
+  ) {
+    if (token !== NAMESPACE_TOKEN) {
+      throw new TypeError("FeatureNamespace: only the engine makes one.");
+    }
+    const view = new DataView(this.#bytes.buffer);
+    murmur3x86x128(ENCODER.encode(JSON.stringify(["namespace", name]))).forEach(
+      (word, i) => view.setUint32(i * 4, word, true),
+    );
+  }
+
+  /** The namespace of the content named `name`. */
+  static of(name: string): FeatureNamespace {
+    return new FeatureNamespace(NAMESPACE_TOKEN, name);
+  }
+
+  /** Whether `value` is a namespace the engine made. */
+  static is(value: unknown): value is FeatureNamespace {
+    return typeof value === "object" && value !== null && #bytes in value;
+  }
+
+  /**
+   * The ID of `text` in this namespace: the first 64 bits of
+   * MurmurHash3_x86_128 of its 16 bytes, then `text`'s UTF-8 bytes (never 0).
+   */
+  id(text: string): StableId {
+    const [h1, h2] = new Murmur3x86x128()
+      .update(this.#bytes)
+      .update(ENCODER.encode(text))
+      .digest();
+    const id = (BigInt(h2) << 32n) | BigInt(h1);
+    return id === 0n ? 1n : id;
+  }
+
+  /**
+   * The feature ID of what its content's source keys `key` (`FeatureId`),
+   * or, with `row`, of row `row` of the batch keyed `key`, a row its source
+   * didn't name.
+   */
+  featureId(key: string, row?: number): StableId {
+    return this.id(
+      JSON.stringify(
+        row === undefined ? ["feature", key] : ["feature", key, row],
+      ),
+    );
+  }
 }
 
 const HEX16 = /^[0-9a-fA-F]{16}$/;
@@ -1464,7 +1545,7 @@ export class IdentityTable implements Identity {
       if (key === undefined) {
         continue;
       }
-      const id = this.hash(canonicalKey(key));
+      const id = stableIdOf(key);
       features[local] = id;
       let slots = this.featureSlots.get(id);
       if (!slots) {

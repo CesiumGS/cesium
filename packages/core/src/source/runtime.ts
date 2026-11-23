@@ -28,7 +28,7 @@
  * - **Close:** destroying content cancels its source's jobs, and its sinks
  *   and `jobs.submit` throw from then on; its pushes are dropped.
  */
-import type { FetchProvider } from "../io/fetchProvider.ts";
+import type { Credential, FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
 import { MAX_PENDING_OVERRIDES, SourceContent } from "./content.ts";
@@ -42,10 +42,10 @@ import {
   SourceKinds,
   UrlResolver,
   moduleHref,
+  urlName,
   type KindRef,
   type ModuleLoader,
 } from "./registry.ts";
-import { assetSource } from "./sinks.ts";
 import type {
   AssetRef,
   AssetResolver,
@@ -110,7 +110,17 @@ export interface SourceRuntimeOptions {
  * @experimental
  */
 export interface OpenOptions {
-  /** The content's ID, for its rows' stable IDs and change sets' `source`. Default: its canonical source. */
+  /**
+   * The content's name, its dataset's (CS-1087 A): what its feature IDs
+   * are projected from and its change sets name it by. It wins over its
+   * resolver's (`ResolvedAsset.name`). Default: the resolver's, else its
+   * URL's digest (`urlName`).
+   */
+  readonly name?: string;
+  /**
+   * The content's ID: its first item's key, for its instance IDs, and
+   * nothing more. Default: its name.
+   */
   readonly id?: string;
   readonly signal?: AbortSignal;
 }
@@ -240,11 +250,12 @@ export class SourceRuntime {
       this.options.pool.loadDecoder(decoder.type, moduleHref(decoder.module));
       types.add(decoder.type);
     }
+    const name = nameOf(options.name ?? asset.name, asset);
     const content = new SourceContent(
-      this.contentId(options.id, assetSource(asset, kind.identity)),
+      this.contentId(options.id, name),
       asset,
       kind.id,
-      kind.identity,
+      name,
     );
     const client = this.budget.client();
     const opened: Opened = {
@@ -739,7 +750,8 @@ export class SourceRuntime {
   private applyFeatures(opened: Opened, changes: ChangeSet): void {
     checkChangeSet(changes);
     const { content } = opened;
-    const resolved = content.resolve(changes).ops;
+    // Its own source's feed: no `source` check, since it can only be its own.
+    const resolved = content.resolveOps(changes.ops);
     const unknown = resolved.flatMap((op, index) =>
       op.op !== "insert" && !content.holds(op.id!) ? [index] : [],
     );
@@ -803,10 +815,9 @@ export class SourceRuntime {
   }
 
   /**
-   * Content `explicit`'s ID, or `derived` (its canonical source) when none
-   * is given. Two open contents never share one, since it is their first
-   * items' key, and so in their instance IDs (feature IDs never depend on
-   * it, CS-1031 A): a second `explicit` is refused, and a second `derived`
+   * Content `explicit`'s ID, or `derived` (its name) when none is given.
+   * Two open contents never share one, since it is their first items' key,
+   * and so in their instance IDs (feature IDs never depend on it): a second `explicit` is refused, and a second `derived`
    * takes an ordinal (`#2`), reported, as a second item of a tileset does.
    * A `derived` one also skips the keys worlds' items hold: content and
    * tileset items take one ordinal rule.
@@ -833,7 +844,7 @@ export class SourceRuntime {
     }
     if (ordinal > 1) {
       this.reportMessage(
-        `open: ${derived} is open or drawn already; without an id this content's ID, and its items' instance IDs, take the ordinal #${ordinal}, which depends on the order it was opened (its feature IDs don't). Give each content an id (OpenOptions.id).`,
+        `open: "${derived}" is open or drawn already; without an id this content's ID, and its items' instance IDs, take the ordinal #${ordinal}, which depends on the order it was opened (its feature IDs don't). Give each content an id (OpenOptions.id).`,
       );
     }
     return idOf(ordinal);
@@ -852,6 +863,23 @@ export class SourceRuntime {
       console.error(message);
     }
   }
+}
+
+/**
+ * A content's name: `declared` (its host's or its resolver's) when it is a
+ * non-empty string, else its URL's (`urlName`).
+ */
+function nameOf(
+  declared: unknown,
+  asset: { readonly url: URL; readonly credentials?: Credential },
+): string {
+  if (declared === undefined) {
+    return urlName(asset.url, asset.credentials);
+  }
+  if (typeof declared !== "string" || declared.length === 0) {
+    throw new TypeError("open: a content's name is a non-empty string.");
+  }
+  return declared;
 }
 
 /** An invalidation of everything: neither keys nor a region. */

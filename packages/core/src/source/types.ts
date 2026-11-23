@@ -60,12 +60,14 @@ export interface ModuleRef {
 export type ContentKey = string;
 
 /**
- * A feature's ID (CS-957 A, CS-1031 A): made from its content's canonical
- * source (`SourceContent.source`) and the source's own key for the feature
- * (a row's `RowIdentity.names` entry, a draw's `DrawOptions.id`), and
- * nothing else: never from the scene item that places it or the content's
- * ID, so it is the same across opens, worlds and runs. Rows, the edit layer,
- * change sets, metadata and labels name it.
+ * A feature's ID (CS-957 A, CS-1087 A): the projection of the source's own
+ * key for the feature (a row's `RowIdentity.names` entry, a draw's
+ * `DrawOptions.id`) in its content's name's namespace (`SourceContent.source`,
+ * hashed once at open), and nothing else: never from the scene item that
+ * places it, the content's ID or its URL, so it is the same across opens,
+ * worlds and runs. It runs one way: the key is the address, and what holds
+ * state (a row, a draw, an edit) holds its key. Hosts save keys, not feature
+ * IDs, until the API review settles the encoding (CS-1081, CS-1088 A).
  *
  * Its key kind is `feature` (`StableKey`), which has no item, so it is never
  * an instance ID.
@@ -195,43 +197,25 @@ export interface ResolvedAsset {
   readonly credentials?: Credential;
   readonly credits: CreditList;
   /**
-   * For invalidation, and for edits' optimistic concurrency. Part of its
-   * canonical source (`assetSource`): a new version, new feature IDs.
+   * The content's name for itself, as its resolver knows it (CS-1087 A):
+   * what its feature IDs and change sets name it by, so the same name gives
+   * the same feature IDs whatever its URL. A dataset's ID, a service and
+   * its layer; ion's resolver names an asset with its version, since its
+   * keys can be positional (CS-1084 A). No URL text: a name is the content's
+   * identity, and the URL is how it is fetched. Absent, the engine names it
+   * as it names a plain URL (`urlName`: a digest, `url:` and 32 hexadecimal
+   * digits). `OpenOptions.name` wins over it.
+   */
+  readonly name?: string;
+  /**
+   * For invalidation, and for edits' optimistic concurrency. It changes
+   * feature IDs only when its resolver puts it in `name` (CS-1084 A).
    */
   readonly version?: string;
   /** Kind-specific, such as Bing's imagery style. */
   readonly options?: PlainData;
   /** What the response said it is, when the resolver read one. */
   readonly mediaType?: string;
-  /**
-   * What selects its content beyond the URL's path, as its resolver knows
-   * it: merged with its kind's (`SourceKind.identity`).
-   */
-  readonly identity?: SourceIdentity;
-}
-
-/**
- * What identifies an asset's content beyond its URL's scheme, host and path,
- * declared by its resolver (`ResolvedAsset.identity`) or its kind
- * (`SourceKind.identity`), the two merged. Its canonical source
- * (`assetSource`), and so its feature IDs, keep what it names. With no
- * declaration of `params`, every query parameter but the credentials and
- * signatures is kept (CS-1080 A); a declaration keeps only what it names,
- * so a kind can leave out a parameter that doesn't select content (a page
- * size, a cache buster). A credential never enters: neither one the engine
- * knows as a credential or a signature (`access_token`, `token`, `key`,
- * `X-Amz-Signature`, Azure's `sig` and the like), nor a parameter of the
- * asset's `credentials`, nor one named in `credentials` here, even when
- * listed in `params`.
- * @experimental
- */
-export interface SourceIdentity {
-  /** Query parameters that select content (`layer`), kept with their values. */
-  readonly params?: readonly string[];
-  /** Keys of `ResolvedAsset.options` that select content (Bing's `style`), kept with their values. */
-  readonly options?: readonly string[];
-  /** Query parameters and option keys that are credentials: never kept. */
-  readonly credentials?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -255,8 +239,6 @@ export interface SourceKind {
   readonly decoders?: readonly DecoderRef[];
   /** The renderer half, when it draws something the renderer doesn't know (CS-841). */
   readonly renderFeatures?: readonly ModuleRef[];
-  /** What selects its content beyond a URL's path, for its feature IDs (`SourceIdentity`). */
-  readonly identity?: SourceIdentity;
 }
 
 /**

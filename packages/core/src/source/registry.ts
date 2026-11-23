@@ -6,7 +6,8 @@
  * URL("./csvSource.js", import.meta.url) }`. Its module's default export
  * is the `SourceKind`, imported the first time an asset needs it.
  */
-import { assetSource } from "./sinks.ts";
+import { isCredentialParameter, type Credential } from "../io/fetchProvider.ts";
+import { canonicalSource, digestHex } from "../scene/identity.ts";
 import type {
   AssetRef,
   AssetResolver,
@@ -114,13 +115,45 @@ export class SourceKinds {
 }
 
 /**
- * An asset for a message: its canonical source (`canonicalSource`), as its
- * IDs are made from: never its query (tokens) or user information, and a
- * data URI's hash rather than its payload. Long ones are cut.
+ * An asset for a message: its name (`ResolvedAsset.name`, else its URL's,
+ * `urlName`), never its URL. Long ones are cut.
  */
 function describe(asset: ResolvedAsset): string {
-  const source = assetSource(asset);
-  return source.length > 200 ? `${source.slice(0, 200)}…` : source;
+  const name =
+    typeof asset.name === "string"
+      ? asset.name
+      : urlName(asset.url, asset.credentials);
+  return `"${name.length > 200 ? `${name.slice(0, 200)}…` : name}"`;
+}
+
+/**
+ * A plain URL's name (CS-1087 A, CS-1080 A): the name of content no host
+ * or resolver names. A digest, `url:` and 32 hexadecimal digits, never
+ * text, of its scheme, host, port and path and its query without the
+ * credentials (`isCredentialParameter`, with `credential`'s own), sorted by
+ * name and then value; never its user information or fragment. So a
+ * re-signed or re-tokened URL keeps its name, and a query that selects
+ * content (`?layer=`) gives its own. A data URI's is the digest of its bytes
+ * (CS-815's), with no query read. A blob URL's is `session:` and a digest:
+ * it names a blob for one page's life only, so its IDs don't last.
+ * This is the one place the engine reads a URL for identity.
+ * @internal
+ */
+export function urlName(url: URL, credential?: Credential): string {
+  if (url.protocol === "data:") {
+    return `url:${/murmur3-128=([0-9a-f]{32})$/.exec(canonicalSource(url.href))![1]}`;
+  }
+  if (url.protocol === "blob:") {
+    return `session:${digestHex(url.href)}`;
+  }
+  const query = [...url.searchParams]
+    .filter(([name]) => !isCredentialParameter(name, credential))
+    .sort(([a, x], [b, y]) =>
+      a < b ? -1 : a > b ? 1 : x < y ? -1 : x > y ? 1 : 0,
+    );
+  return `url:${digestHex(
+    JSON.stringify([`${url.protocol}//${url.host}${url.pathname}`, query]),
+  )}`;
 }
 
 function checkKind(module: unknown, id: string): SourceKind {
@@ -145,9 +178,9 @@ function checkKind(module: unknown, id: string): SourceKind {
 }
 
 /**
- * Plain URLs: `{ url, kind?, options? }` resolves to itself, with no
- * credentials and no credits of its own. A relative URL resolves against
- * the page.
+ * Plain URLs: `{ url, kind?, options? }` resolves to itself, named by its
+ * URL's digest (`urlName`), with no credentials and no credits of its own.
+ * A relative URL resolves against the page.
  * @experimental
  */
 export class UrlResolver implements AssetResolver {
@@ -176,6 +209,7 @@ export class UrlResolver implements AssetResolver {
     return Promise.resolve({
       ...(ref.kind !== undefined ? { kind: ref.kind } : {}),
       url,
+      name: urlName(url),
       credits: [],
       ...(ref.options !== undefined ? { options: ref.options } : {}),
     });

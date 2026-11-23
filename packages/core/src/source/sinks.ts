@@ -7,20 +7,16 @@
  * CS-555, features with CS-557, render features with CS-841's item).
  *
  * The override contract: a source keys everything by its own keys and never
- * sees overrides. A row's feature ID is made from its content's canonical
- * source (`canonicalSource`) and its batch's `names` entry (the source's own
- * key, the same at every level), or else from the batch's key and its index,
- * and nothing else (CS-1031 A): never from a scene item or the content's ID,
- * so every item and every open of the content shares it, in every run. A
- * writable source must name every row (CS-831's S7). A source's keys are one
- * space: a row named `k` and a draw whose `DrawOptions.id` is `k` are one
- * feature.
+ * sees overrides. A row's feature ID is the projection of its batch's
+ * `names` entry (the source's own key, the same at every level), or else of
+ * the batch's key and its index, in its content's namespace (its name,
+ * CS-1087 A), and nothing else: never from a scene item, the content's ID or
+ * its URL, so every item and every open of the content shares it, in every
+ * run. A writable source must name every row (CS-831's S7). A source's keys
+ * are one space: a row named `k` and a draw whose `DrawOptions.id` is `k`
+ * are one feature.
  */
-import {
-  canonicalSource,
-  stableIdOf,
-  type StableId,
-} from "../scene/identity.ts";
+import type { FeatureNamespace, StableId } from "../scene/identity.ts";
 import type {
   ContentKey,
   CreditList,
@@ -28,10 +24,8 @@ import type {
   FeatureBatch,
   PointBatch,
   RasterImage,
-  ResolvedAsset,
   RowSink,
   SampleBatch,
-  SourceIdentity,
 } from "./types.ts";
 
 /** Which sink a row is in. */
@@ -55,229 +49,6 @@ export interface RowAt {
 }
 
 /**
- * Query parameters (and option keys) that are credentials or signatures,
- * never kept in a canonical source, compared without case (CS-1080 A): a
- * feature ID is hashed from its source and saved by hosts and peers, so a
- * secret in it would leak, and a value that changes each session (a token,
- * a signature, a signing time or an expiry) would give new feature IDs on
- * every open. OAuth's `access_token`, plain tokens and API keys; AWS S3's
- * and Google Cloud Storage's signed URLs (V4); Azure's shared access
- * signatures; CloudFront's signed URLs (`Signature`, `Expires`,
- * `Key-Pair-Id`, `Policy`); and other common secrets (`api-key`,
- * `subscription-key`, `access_key`, `client_secret`, `password`, `auth`,
- * `jwt`). Every `X-Amz-` and `X-Goog-` parameter is a credential too
- * (`CREDENTIAL_PREFIX`).
- * @internal
- */
-export const CREDENTIAL_PARAMS: ReadonlySet<string> = new Set(
-  [
-    "access_token",
-    "token",
-    "key",
-    "apikey",
-    "api_key",
-    "X-Amz-Signature",
-    "X-Amz-Credential",
-    "X-Amz-Security-Token",
-    "X-Amz-Date",
-    "X-Amz-Expires",
-    "X-Goog-Signature",
-    "X-Goog-Credential",
-    "X-Goog-Date",
-    "X-Goog-Expires",
-    "sig",
-    "se",
-    "st",
-    "sp",
-    "sv",
-    "sr",
-    "Signature",
-    "Expires",
-    "Key-Pair-Id",
-    "Policy",
-    "api-key",
-    "subscription-key",
-    "access_key",
-    "client_secret",
-    "password",
-    "auth",
-    "jwt",
-  ].map((name) => name.toLowerCase()),
-);
-
-/** @internal The signed-URL schemes whose every parameter is a credential: AWS's and Google's. */
-export const CREDENTIAL_PREFIX = /^(?:x-amz-|x-goog-)/i;
-
-/** Whether `name` is on `CREDENTIAL_PARAMS` or has `CREDENTIAL_PREFIX`, without case. */
-function knownCredential(name: string): boolean {
-  return (
-    CREDENTIAL_PARAMS.has(name.toLowerCase()) || CREDENTIAL_PREFIX.test(name)
-  );
-}
-
-/**
- * The query parameters a URL keeps in its canonical source when neither
- * its resolver nor its kind declares any (`SourceIdentity.params`): every
- * one but the credentials and signatures (`CREDENTIAL_PARAMS`,
- * `CREDENTIAL_PREFIX`; CS-1080 A).
- * A declaration replaces it. This is the one place the default is made.
- * @internal
- */
-export function undeclaredParams(url: URL): readonly string[] {
-  return [...new Set(url.searchParams.keys())].filter(
-    (name) => !knownCredential(name),
-  );
-}
-
-/** Whether `name` is a credential: known, the asset's credential's own, or declared one. */
-function isCredential(
-  name: string,
-  asset: ResolvedAsset,
-  declared: ReadonlySet<string>,
-): boolean {
-  const lower = name.toLowerCase();
-  return (
-    knownCredential(name) ||
-    declared.has(lower) ||
-    Object.keys(asset.credentials?.query ?? {}).some(
-      (k) => k.toLowerCase() === lower,
-    )
-  );
-}
-
-/** A declaration's list: non-empty strings, or a `TypeError` naming the field. */
-function namesOf(
-  list: readonly string[] | undefined,
-  field: string,
-): readonly string[] {
-  if (list === undefined) {
-    return [];
-  }
-  if (
-    !Array.isArray(list) ||
-    list.some((n) => typeof n !== "string" || n.length === 0)
-  ) {
-    throw new TypeError(
-      `SourceIdentity.${field}: a list of non-empty strings.`,
-    );
-  }
-  return list;
-}
-
-/** A plain value's text, its object keys sorted, so equal options give one text. */
-function stableText(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableText).join(",")}]`;
-  }
-  if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([, v]) => v !== undefined)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableText(v)}`).join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "null";
-}
-
-const byName = (a: readonly [string, string], b: readonly [string, string]) =>
-  a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
-
-/**
- * A resolved asset's canonical source: what its content's feature IDs, and
- * every message that names it, are made from (CS-1031 A). The one place the
- * seam makes it, in three parts:
- *
- * - `canonicalSource` of the URL its resolver gave: its scheme, host, port
- *   and path (a token in the path stays: nothing says it is one), with no
- *   user information, query or fragment, except a Cesium ion asset's
- *   version (`v`, percent-encoded); a data URI becomes its bytes' hash.
- * - The query parameters that select its content, with their values,
- *   sorted by name and then value and percent-encoded, after `?` (or `&`
- *   after ion's `v`): those its resolver and its kind declare
- *   (`SourceIdentity.params`), or, with no declaration, every one but the
- *   credentials and signatures (`undeclaredParams`, CS-1080 A).
- * - After `#`, which a canonical URL never holds: its `version` (when it
- *   isn't ion's `v` already) and the options that select its content
- *   (`SourceIdentity.options`), each `option.<key>` with its value as JSON.
- *
- * A credential never enters it (`SourceIdentity`). Two assets whose URLs
- * differ only in what it drops are one source, with one set of feature IDs.
- * @internal
- */
-export function assetSource(
-  asset: ResolvedAsset,
-  kind?: SourceIdentity,
-): string {
-  const declared = [asset.identity, kind];
-  const credentials = new Set(
-    declared.flatMap((d) =>
-      namesOf(d?.credentials, "credentials").map((n) => n.toLowerCase()),
-    ),
-  );
-  // A declaration replaces the default: only what it names is kept.
-  const declaredParams = declared.flatMap((d) =>
-    d?.params === undefined ? [] : [namesOf(d.params, "params")],
-  );
-  const params = new Set(
-    declaredParams.length > 0
-      ? declaredParams.flat()
-      : undeclaredParams(asset.url),
-  );
-  const options = new Set(
-    declared.flatMap((d) => namesOf(d?.options, "options")),
-  );
-  const base = canonicalSource(asset.url.href);
-  // ion's `v`, when canonicalSource kept it: never twice.
-  const ionVersion = /\?v=([^&]*)$/.exec(base)?.[1];
-  const query: [string, string][] = [];
-  for (const [name, value] of asset.url.searchParams) {
-    if (
-      params.has(name) &&
-      !(ionVersion !== undefined && name === "v") &&
-      !isCredential(name, asset, credentials)
-    ) {
-      query.push([name, value]);
-    }
-  }
-  query.sort(byName);
-  let source = base;
-  if (query.length > 0) {
-    source += `${ionVersion !== undefined ? "&" : "?"}${new URLSearchParams(query)}`;
-  }
-  const tail: [string, string][] = [];
-  if (
-    asset.version !== undefined &&
-    !(
-      ionVersion !== undefined &&
-      decodeURIComponent(ionVersion) === asset.version
-    )
-  ) {
-    tail.push(["version", String(asset.version)]);
-  }
-  for (const key of [...options].sort()) {
-    const value = asset.options?.[key];
-    if (value !== undefined && !isCredential(key, asset, credentials)) {
-      tail.push([`option.${key}`, stableText(value)]);
-    }
-  }
-  if (tail.length > 0) {
-    source += `#${new URLSearchParams(tail)}`;
-  }
-  return source;
-}
-
-/**
- * The feature ID of what the source at canonical source `source`
- * (`canonicalSource`) keys `key` (`FeatureId`): a row it names `key`, or a
- * draw without features whose `DrawOptions.id` is `key`. A function of the
- * two alone (CS-1031 A), so the same across opens, worlds and runs. Its key
- * kind is `feature`, which has no item, so it is never an instance ID
- * (CS-957 A).
- */
-export function featureIdOf(source: string, key: string): StableId {
-  return stableIdOf({ kind: "feature", source, key });
-}
-
-/**
  * Every row sink of one content, with the index from stable ID to rows.
  * @experimental
  */
@@ -297,8 +68,8 @@ export class ContentRows {
   writable = false;
   private closed = false;
 
-  /** `source`: its content's canonical source, what its rows' feature IDs are made from. */
-  constructor(private readonly source: string) {}
+  /** `namespace`: its content's, what its rows' feature IDs are projected in. */
+  constructor(private readonly namespace: FeatureNamespace) {}
 
   /** The sinks a source writes, over these rows. */
   sinks(): {
@@ -539,21 +310,16 @@ export class ContentRows {
 
   private idsOf(batch: FeatureBatch | PointBatch | CustomRows): BigUint64Array {
     const ids = new BigUint64Array(batch.count);
-    const source = this.source;
+    const namespace = this.namespace;
     for (let i = 0; i < batch.count; i++) {
       const name = batch.names?.[i];
       if (name !== undefined) {
-        const id = featureIdOf(source, name);
+        const id = namespace.featureId(name);
         this.nameIds.set(name, id);
         this.idNames.set(id, name);
         ids[i] = id;
       } else {
-        ids[i] = stableIdOf({
-          kind: "feature",
-          source,
-          key: batch.key,
-          row: i,
-        });
+        ids[i] = namespace.featureId(batch.key, i);
       }
     }
     return ids;

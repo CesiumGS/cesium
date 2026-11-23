@@ -12,12 +12,12 @@
  * same place (CS-554 makes items general, with placement).
  *
  * Two IDs (CS-957 A):
- * - **Feature IDs** (`FeatureId`) are made from the content's canonical
- *   source (`SourceContent.source`) and the source's own key for the
- *   feature (a row's name, a draw's `DrawOptions.id`), and nothing else
- *   (CS-1031 A): never from an item or the content's ID, so one source
- *   opened twice, placed in two worlds or opened in another run gives the
- *   same ones. Their key kind is `feature`, which has no item. Rows, the
+ * - **Feature IDs** (`FeatureId`) are the projection of the source's own
+ *   key for the feature (a row's name, a draw's `DrawOptions.id`) in the
+ *   content's namespace, its name (`SourceContent.source`, CS-1087 A)
+ *   hashed once at open, and nothing else: never from an item, the
+ *   content's ID or its URL, so one content opened twice, placed in two
+ *   worlds or opened in another run under one name gives the same ones. Their key kind is `feature`, which has no item. Rows, the
  *   edit layer, change sets and labels set on them name them; every item
  *   shows the same edits and labels.
  * - **Instance IDs** (`InstanceId`) add the item: each item's draws carry its
@@ -27,7 +27,7 @@
  *   and the edit layer takes either.
  *
  * IDs don't change when an item is removed and the content placed again.
- * Two open contents of one source share feature IDs, and each keeps its own
+ * Two open contents of one name share feature IDs, and each keeps its own
  * edits; their content IDs differ (`Engine.open` refuses or numbers a
  * second of one ID), and so do their items' keys and instance IDs.
  *
@@ -36,6 +36,7 @@
  * so a source's own `destroy` can free what it made.
  */
 import {
+  FeatureNamespace,
   sourceDrawIdentity,
   stableIdOf,
   type ItemIdentity,
@@ -51,12 +52,7 @@ import {
   type GeometryData,
 } from "./editing.ts";
 import { EditLayer } from "./editLayer.ts";
-import {
-  ContentRows,
-  assetSource,
-  featureIdOf,
-  type HeldRows,
-} from "./sinks.ts";
+import { ContentRows, type HeldRows } from "./sinks.ts";
 import type {
   ContentSource,
   CreditList,
@@ -68,7 +64,6 @@ import type {
   PlainValue,
   PointBatch,
   ResolvedAsset,
-  SourceIdentity,
 } from "./types.ts";
 
 /**
@@ -180,12 +175,14 @@ export class SourceContent {
   /** @internal Others' changes from the source's feed (`features` pushes), under `edits`. */
   readonly feed = new EditLayer();
   /**
-   * Its canonical source (`assetSource`): what its feature IDs are made
-   * from, with the source's keys, and nothing else (CS-1031 A). Its URL's
-   * path, the query parameters, version and options that select its
-   * content (`SourceIdentity`), and never a credential.
+   * Its name (CS-1087 A): `OpenOptions.name`, else its resolver's
+   * (`ResolvedAsset.name`), else its URL's digest (`urlName`). Its feature
+   * IDs are its source's keys projected in this name's namespace, and its
+   * change sets name it (`ChangeSet.source`). Never URL text.
    */
   readonly source: string;
+  /** Its name, hashed once: what its feature IDs are projected in. */
+  private readonly namespace: FeatureNamespace;
   private source_: ContentSource | undefined;
   private world_: ContentWorld | undefined;
   private readonly items_: ContentItem[] = [];
@@ -204,15 +201,16 @@ export class SourceContent {
 
   /** @internal Use `Engine.open`. */
   constructor(
-    /** The content's ID: `Engine.open`'s `id`, else its canonical source. */
+    /** The content's ID, its first item's key: `OpenOptions.id`, else its name. */
     readonly id: string,
     readonly asset: ResolvedAsset,
     readonly kind: string,
-    /** Its kind's declaration of what selects its content (`SourceKind.identity`). */
-    identity?: SourceIdentity,
+    /** Its name (`source`). */
+    name: string,
   ) {
-    this.source = assetSource(asset, identity);
-    this.rows = new ContentRows(this.source);
+    this.source = name;
+    this.namespace = FeatureNamespace.of(name);
+    this.rows = new ContentRows(this.namespace);
     this.drawSink = this.makeDrawSink();
     const reapply = (ids: readonly FeatureId[]) => {
       this.refreshDraws(ids);
@@ -347,7 +345,7 @@ export class SourceContent {
    * The feature ID of the feature its source keys `key`: a row it names
    * `key` (`RowIdentity.names`), or a draw without features whose
    * `DrawOptions.id` is `key`. The same in every item, every open of this
-   * source and every run (CS-1031 A).
+   * name and every run (CS-1087 A).
    * @experimental
    */
   featureId(key: string): FeatureId {
@@ -356,7 +354,7 @@ export class SourceContent {
         "SourceContent.featureId: a key is the source's own, a non-empty string.",
       );
     }
-    return featureIdOf(this.source, key);
+    return this.namespace.featureId(key);
   }
 
   /**
@@ -380,28 +378,33 @@ export class SourceContent {
    * a change set from a server or a peer that knows only its own keys is
    * applied. It changes nothing. Throws a `TypeError`, naming the op and
    * never a value, for a change set made for other content: its `source`
-   * is neither this content's canonical source (`source`) nor its ID, or an
-   * op's `id` isn't its key's.
+   * isn't this content's name (`source`), or an op's `id` isn't its key's.
    * @experimental
    */
   resolve(changes: ChangeSet): ChangeSet {
-    if (changes.source !== this.source && changes.source !== this.id) {
+    if (changes.source !== this.source) {
       throw new TypeError(
-        "change set: its source is neither this content's canonical source nor its ID: it was made for other content.",
+        "change set: its source isn't this content's name: it was made for other content.",
       );
     }
-    return {
-      ...changes,
-      ops: changes.ops.map((op, index): ChangeOp => {
-        const id = this.featureId(op.key);
-        if (op.id !== undefined && op.id !== id) {
-          throw new TypeError(
-            `change set: op ${index}: its id isn't its key's feature ID in this content.`,
-          );
-        }
-        return { ...op, id };
-      }),
-    };
+    return { ...changes, ops: this.resolveOps(changes.ops) };
+  }
+
+  /**
+   * @internal `ops` with each feature ID filled from its key: a change set
+   * from its own source's feed needs no `source` check, since it can only
+   * be this content's. Throws as `resolve` does for an `id` not its key's.
+   */
+  resolveOps(ops: readonly ChangeOp[]): ChangeOp[] {
+    return ops.map((op, index): ChangeOp => {
+      const id = this.featureId(op.key);
+      if (op.id !== undefined && op.id !== id) {
+        throw new TypeError(
+          `change set: op ${index}: its id isn't its key's feature ID in this content.`,
+        );
+      }
+      return { ...op, id };
+    });
   }
 
   /**
