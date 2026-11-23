@@ -5,6 +5,7 @@
 // what it doesn't understand as `undecoded`, by name, rather than failing.
 // Spike code for CS-833 and CS-843; not part of @cesium/next.
 
+import { Budget, MAX_FIELD_NAME, MAX_PATH } from "./budget.ts";
 import type { Layer, ListOp, Spec, SpecType, Value } from "./layer.ts";
 
 type Tok =
@@ -16,9 +17,21 @@ type Tok =
   | { t: "p"; v: string };
 
 const PUNCT = new Set(["(", ")", "{", "}", "[", "]", "=", ",", ";", ":"]);
+/** The deepest nesting of values (lists, tuples, dictionaries) the parser follows. */
+const MAX_VALUE_DEPTH = 64;
+/** The deepest nesting of prims and variants the parser follows: more than the composer descends into. */
+const MAX_PRIM_DEPTH = 1024;
 
-function tokenize(text: string): Tok[] {
-  const out: Tok[] = [];
+/** The tokens of a USDA text, each charged to the budget: two units, and one per 16 characters. */
+function tokenize(text: string, budget: Budget): Tok[] {
+  const raw: Tok[] = [];
+  const out = {
+    push(t: Tok): void {
+      // Two units: every token of a layer is held until it's parsed.
+      budget.charge(2 + (typeof t.v === "string" ? t.v.length >>> 4 : 0));
+      raw.push(t);
+    },
+  };
   let i = 0;
   const n = text.length;
   while (i < n) {
@@ -106,7 +119,7 @@ function tokenize(text: string): Tok[] {
     }
     throw new Error(`usda: unexpected "${ch}" at ${i}`);
   }
-  return out;
+  return raw;
 }
 
 const LIST_OPS = new Set(["prepend", "append", "add", "delete", "reorder"]);
@@ -153,13 +166,18 @@ function flatten(v: Value, out: number[]): boolean {
 
 class Parser {
   readonly toks: Tok[];
+  readonly budget: Budget;
   i = 0;
+  /** How deep the parser is in values, and in prims and variants. */
+  valueDepth = 0;
+  primDepth = 0;
   /** Inside a reference or payload field, where a bare path is an internal arc. */
   inArcs = false;
   readonly specs = new Map<string, Spec>();
   readonly undecoded = new Map<string, number>();
-  constructor(toks: Tok[]) {
+  constructor(toks: Tok[], budget: Budget) {
     this.toks = toks;
+    this.budget = budget;
   }
 
   peek(k = 0): Tok | undefined {
@@ -200,9 +218,23 @@ class Parser {
     return { kind: "undecoded", type };
   }
 
+  /** A dictionary key, refused past MAX_PATH: it becomes a property name, which V8 hashes. */
+  key(name: string): string {
+    if (name.length > MAX_PATH) {
+      throw new Error(`usda: a key longer than ${MAX_PATH} characters`);
+    }
+    return name;
+  }
+
   spec(path: string, type: SpecType): Spec {
+    if (path.length > MAX_PATH) {
+      throw new Error(`usda: a path longer than ${MAX_PATH} characters`);
+    }
+    // Paths grow with nesting: a long name repeated down a deep namespace is charged by length.
+    this.budget.text(path);
     let s = this.specs.get(path);
     if (!s) {
+      this.budget.keep();
       s = { type, fields: new Map() };
       this.specs.set(path, s);
     }
@@ -260,7 +292,14 @@ class Parser {
     }
     return arc;
   }
+  /** Guards the parser's recursion: a hostile file can nest without end. */
+  deeper(): void {
+    if (++this.valueDepth > MAX_VALUE_DEPTH) {
+      throw new Error(`usda: values nested deeper than ${MAX_VALUE_DEPTH}`);
+    }
+  }
   seq(close: string): Value[] {
+    this.deeper();
     const out: Value[] = [];
     while (!this.isP(close)) {
       out.push(this.value());
@@ -269,27 +308,30 @@ class Parser {
       }
     }
     this.i++;
+    this.valueDepth--;
     return out;
   }
   dict(): Value {
+    this.deeper();
     const out: Record<string, Value> = {};
     while (!this.isP("}")) {
       // `type key = value`, or `key: value` in time samples.
       const first = this.next();
       if (this.isP(":")) {
         this.i++;
-        out[String(first.v)] = this.value();
+        out[this.key(String(first.v))] = this.value();
       } else {
         const key = this.next();
         const name = key.t === "str" || key.t === "id" ? key.v : String(key.v);
         this.expectP("=");
-        out[name] = this.value();
+        out[this.key(name)] = this.value();
       }
       if (this.isP(",") || this.isP(";")) {
         this.i++;
       }
     }
     this.i++;
+    this.valueDepth--;
     return out;
   }
   skipBalanced(): void {
@@ -322,6 +364,11 @@ class Parser {
         op = String(this.next().v);
       }
       const key = String(this.next().v);
+      if (key.length > MAX_FIELD_NAME) {
+        throw new Error(
+          `usda: a metadata name longer than ${MAX_FIELD_NAME} characters`,
+        );
+      }
       if (!this.isP("=")) {
         continue;
       } // A bare key: no value.
@@ -428,6 +475,9 @@ class Parser {
   }
 
   body(path: string): void {
+    if (++this.primDepth > MAX_PRIM_DEPTH) {
+      throw new Error(`usda: prims nested deeper than ${MAX_PRIM_DEPTH}`);
+    }
     while (!this.isP("}")) {
       const t = this.peek();
       if (!t) {
@@ -450,6 +500,7 @@ class Parser {
       }
       this.property(path);
     }
+    this.primDepth--;
   }
 
   variantSet(path: string): void {
@@ -587,9 +638,9 @@ export function isUsda(bytes: Uint8Array): boolean {
   return new TextDecoder().decode(bytes.subarray(0, 5)) === "#usda";
 }
 
-export function readUsda(bytes: Uint8Array): Layer {
+export function readUsda(bytes: Uint8Array, budget = new Budget()): Layer {
   const text = new TextDecoder().decode(bytes);
-  const p = new Parser(tokenize(text));
+  const p = new Parser(tokenize(text, budget), budget);
   p.layer();
   return { format: "usda", specs: p.specs, undecoded: p.undecoded };
 }

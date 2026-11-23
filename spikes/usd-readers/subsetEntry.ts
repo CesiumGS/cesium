@@ -15,6 +15,8 @@ import { subsetRecords } from "./subsetRecords.ts";
 /** A composed stage, and how to describe it once timing is done. */
 export interface Opened {
   describe(): StageRecord;
+  /** True when the subset reader's work limit stopped it: the records hold only what was composed before. */
+  readonly stopped: boolean;
 }
 
 export async function open(
@@ -29,6 +31,7 @@ export async function open(
   const stage = new Stage(layers, root);
   const prim = stage.compose();
   return {
+    stopped: stage.stopped,
     describe: () => {
       // The composition's errors, in OpenUSD's words (a layer that fails
       // only when composed is named there); a root that doesn't open has

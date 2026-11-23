@@ -177,7 +177,11 @@ for (const root of findRoots(dataDir)) {
     asset: relative(dataDir, root),
     layers: files.length,
     bytes: files.reduce((s, f) => s + f.bytes, 0),
-    errors: files.filter((f) => f.error).map((f) => `${f.file}: ${f.error}`),
+    errors: [
+      // The work limit's stop, first: the rest of the report covers only what was composed.
+      ...(stage.stopped ? [stage.budget.message] : []),
+      ...files.filter((f) => f.error).map((f) => `${f.file}: ${f.error}`),
+    ],
     readMsMedian: median(reads),
     composeMsMedian: median(composes),
     coverage: await coverage(stage, prim, diskIo),

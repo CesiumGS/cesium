@@ -6,20 +6,37 @@
 // from OpenUSD's own run (2026-11-22T10-56-32-200Z-apple-metal-3).
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { Worker } from "node:worker_threads";
 import { describe, expect, it } from "vitest";
 import {
   loadLayers,
   MAX_ARC_DEPTH,
   MAX_LISTED,
+  MAX_LAYER_BYTES,
+  MAX_LAYERS,
   MAX_NAMESPACE_DEPTH,
-  MAX_SITES,
+  MAX_WORK,
+  packagePath,
   quoted,
   resolveAsset,
   Stage,
+  stripVariants,
 } from "../spikes/usd-subset/compose.ts";
 import { stageFacts } from "../spikes/usd-readers/facts.ts";
 import { open } from "../spikes/usd-readers/subsetEntry.ts";
+import {
+  hostileCase,
+  mutatedCrate,
+  readBounded,
+  type HostileCase,
+} from "./usdHostileFiles.ts";
+
+// The samples are data in the setup store (npm run setup), never in the repository.
+const SAMPLES = `${homedir()}/.cesium-bench/simready/foundation-1abf3ae2/`;
+const PALLET =
+  "common_assets/props_general/industrialplasticpallet_a01/simready_usd/industrialplasticpallet_a01.usd";
+/** A crate (USDC) file of the pallet's, for the mutated crate files. */
+const PALLET_BASE =
+  "common_assets/props_general/industrialplasticpallet_a01/simready_usd/industrialplasticpallet_a01_base.usd";
 
 const files = (sources: Record<string, string>) =>
   new Map(
@@ -562,6 +579,21 @@ def Xform "X"
   });
 });
 
+/** A stage over in-memory layers, some given as bytes. */
+async function stageOfBytes(
+  sources: Record<string, string>,
+  raw: Record<string, Uint8Array>,
+  root: string,
+) {
+  const bytes = new Map([...files(sources), ...Object.entries(raw)]);
+  const layers = await loadLayers(root, {
+    read: (p) => Promise.resolve(bytes.get(p)),
+    exists: (p) => Promise.resolve(bytes.has(p)),
+  });
+  const stage = new Stage(layers, root);
+  return { stage, prim: stage.compose() };
+}
+
 /** A stage over in-memory USDA layers, composed, and how long that took. */
 async function stageOf(sources: Record<string, string>, root: string) {
   const bytes = files(sources);
@@ -581,79 +613,23 @@ async function stageOf(sources: Record<string, string>, root: string) {
   return { stage, prim, paths, ms: performance.now() - t0 };
 }
 
-/** What a composition in a worker reports back. */
-interface Bounded {
-  ms: number;
-  heapMb: number;
-  prims: number;
-  paths: string[];
-  errors: string[];
-  counts: Stage["counts"];
-}
+// Hostile files (CS-1097 A). Each is read in a worker thread with a
+// deadline and a heap limit, which it fails by being killed: a test's own
+// timeout can't interrupt a synchronous loop. Times in brackets are this
+// Mac's; the limits leave room for a busy machine. The heap asserted is
+// what reading leaves behind, under a worker limit four times higher, so
+// the assertion can fail before the limit does.
+const WIDE = { deadlineMs: 10_000, heapLimitMb: 1024 } as const;
+const HEAP_MB = 256;
+const stopMessage = `Reading stopped at the subset reader's work limit of ${MAX_WORK} units; the rest of the stage is not read or composed.`;
+const one = (root: string): HostileCase => ({
+  name: "h/root.usda",
+  files: { "h/root.usda": root },
+  root: "h/root.usda",
+});
 
-/**
- * Composes one USDA layer in a worker thread with a heap limit, and kills it
- * at a deadline: a test's own timeout can't interrupt a synchronous loop, so
- * a regression would hang the test instead of failing it.
- */
-function composeBounded(
-  source: string,
-  { ms, heapMb }: { ms: number; heapMb: number },
-): Promise<Bounded> {
-  const code = `
-    const { parentPort, workerData } = require("node:worker_threads");
-    const { getHeapStatistics } = require("node:v8");
-    import(workerData.compose).then(async ({ loadLayers, Stage }) => {
-      const bytes = new TextEncoder().encode(workerData.source);
-      const t0 = performance.now();
-      const layers = await loadLayers("h/root.usda", {
-        read: (p) => Promise.resolve(p === "h/root.usda" ? bytes : undefined),
-        exists: (p) => Promise.resolve(p === "h/root.usda"),
-      });
-      const stage = new Stage(layers, "h/root.usda");
-      const prim = stage.compose();
-      const paths = [];
-      const walk = (p) => { paths.push(p.path); p.children.forEach(walk); };
-      walk(prim);
-      parentPort.postMessage({
-        ms: performance.now() - t0,
-        heapMb: getHeapStatistics().used_heap_size / 2 ** 20,
-        prims: paths.length,
-        paths: paths.slice(0, 1000),
-        errors: [...stage.errors],
-        counts: stage.counts,
-      });
-    });
-  `;
-  const compose = new URL("../spikes/usd-subset/compose.ts", import.meta.url)
-    .href;
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(code, {
-      eval: true,
-      workerData: { compose, source },
-      resourceLimits: { maxOldGenerationSizeMb: heapMb },
-    });
-    const timer = setTimeout(() => {
-      void worker.terminate();
-      reject(new Error(`composition took longer than ${ms} ms`));
-    }, ms);
-    worker.once("message", (m: Bounded) => {
-      clearTimeout(timer);
-      void worker.terminate();
-      resolve(m);
-    });
-    worker.once("error", (e) => {
-      clearTimeout(timer);
-      reject(e);
-    });
-  });
-}
-
-// Hostile files. The worst three compose in a worker with a deadline and a
-// heap limit, which they fail by being killed. The limits are several times
-// what this Mac takes (in brackets), to leave room for a busy machine.
 describe("hostile inputs stay bounded", () => {
-  it("arcs that fan out without a cycle stop at the site limit [0.8 s, about 100 MiB]", async () => {
+  it("arcs that fan out without a cycle stop at the work limit [0.2 s]", async () => {
     // /L_i has two children that both reference /L_(i+1): 2^30 prims.
     const levels = 30;
     let src = `#usda 1.0\n(\n    defaultPrim = "L0"\n)\n`;
@@ -662,15 +638,51 @@ describe("hostile inputs stay bounded", () => {
     }
     src += `def Xform "L${levels}" {}\n`;
     expect(src.length).toBeLessThan(6000);
-    const r = await composeBounded(src, { ms: 10_000, heapMb: 512 });
-    expect(r.ms).toBeLessThan(5000);
-    expect(r.heapMb).toBeLessThan(512);
-    expect(r.paths).toContain("/L0/a/a");
-    expect(r.prims).toBeLessThan(MAX_SITES);
-    // One error, naming the limit and nothing from the file.
-    expect(r.errors).toEqual([
-      `Composition stopped at ${MAX_SITES} sites, the subset reader's limit; the rest of the stage is not composed.`,
-    ]);
+    const [r] = await readBounded([one(src)], WIDE);
+    expect(r!.ms).toBeLessThan(5000);
+    expect(r!.heapMb).toBeLessThan(HEAP_MB);
+    expect(r!.paths).toContain("/L0/a/a");
+    expect(r!.stopped).toBe(true);
+    // One error, first, naming the limit and nothing from the file.
+    expect(r!.errors).toEqual([stopMessage]);
+  }, 30_000);
+
+  // The three inputs of the review that asked for this round, by name.
+  it("the review's variant scan: one prim of 20,000 sites, each with a variant set [34 s before]", async () => {
+    const n = 20_000;
+    const src = `${HEAD}def Xform "R" (\n    prepend references = [${Array.from({ length: n }, (_, i) => `</B${i}>`).join(", ")}]\n)\n{\n}\n${Array.from({ length: n }, (_, i) => `over "B${i}" (\n    variantSets = "v"\n)\n{\n}\n`).join("")}`;
+    expect(src.length).toBeGreaterThan(800_000);
+    const [r] = await readBounded([one(src)], WIDE);
+    expect(r!.ms).toBeLessThan(5000);
+    expect(r!.heapMb).toBeLessThan(HEAP_MB);
+    expect(r!.paths).toContain("/R");
+  }, 30_000);
+
+  it("the review's properties by sites: a 41 KB file, and 5,000 properties [31 s and over 120 s before]", async () => {
+    const file = (props: number) =>
+      `${HEAD}class "C" (\n    prepend references = [${Array.from({ length: 1000 }, (_, i) => `</B${i}>`).join(", ")}]\n)\n{\n}\nover "B0"\n{\n${Array.from({ length: props }, (_, k) => `    float a${k}\n`).join("")}}\n${Array.from({ length: 200 }, (_, i) => `def Xform "P${i}" (\n    inherits = </C>\n)\n{\n}\n`).join("")}`;
+    expect(file(1000).length).toBeLessThan(50_000);
+    const rs = await readBounded([one(file(1000)), one(file(5000))], WIDE);
+    for (const r of rs) {
+      expect(r.ms).toBeLessThan(5000);
+      expect(r.heapMb).toBeLessThan(HEAP_MB);
+    }
+  }, 60_000);
+
+  it("the review's regex inputs: 100,000 open braces in a target, 8,000 '.usdz[' in an asset [4.5 s and 0.25 s before]", async () => {
+    const braces = `${HEAD}def Xform "World"\n{\n    rel r = </${"{".repeat(100_000)}>\n}\n`;
+    const brackets = `${HEAD}def Xform "World" (\n    prepend references = @${".usdz[".repeat(8000)}@\n)\n{\n}\n`;
+    const rs = await readBounded([one(braces), one(brackets)], WIDE);
+    for (const r of rs) {
+      expect(r.ms).toBeLessThan(1000);
+    }
+    // The scans do what the regexes did.
+    expect(stripVariants("/A{v=x}B/C{w=y}")).toBe("/AB/C");
+    expect(stripVariants("/A{{v=x}B{open")).toBe("/AB{open");
+    expect(packagePath("a.usdz[b/c.usda]")).toBe("a.usdz/b/c.usda");
+    expect(packagePath("a.usdz[x].usdz[y]")).toBe("a.usdz[x].usdz/y");
+    expect(packagePath("a.usdz[x]\n]")).toBeUndefined();
+    expect(packagePath("plain.usda")).toBeUndefined();
   }, 30_000);
 
   it("one prim with 60,000 variant sets [0.3 s]", async () => {
@@ -679,69 +691,153 @@ describe("hostile inputs stay bounded", () => {
     const sels = Array.from({ length: n }, (_, i) => `string v${i} = "x"`).join(
       "\n        ",
     );
-    const r = await composeBounded(
-      `${HEAD}def Xform "World" (\n    variants = {\n        ${sels}\n    }\n    prepend variantSets = [${sets}]\n)\n{\n}\n`,
-      { ms: 10_000, heapMb: 512 },
+    const [r] = await readBounded(
+      [
+        one(
+          `${HEAD}def Xform "World" (\n    variants = {\n        ${sels}\n    }\n    prepend variantSets = [${sets}]\n)\n{\n}\n`,
+        ),
+      ],
+      WIDE,
     );
-    expect(r.ms).toBeLessThan(5000);
-    expect(r.counts.variantSelections).toBe(n);
-    expect(r.counts.selected).toHaveLength(MAX_LISTED);
-    expect(r.counts.selected[0]).toBe("v0=x");
-    expect(r.counts.selectedOmitted).toBe(n - MAX_LISTED);
+    expect(r!.ms).toBeLessThan(5000);
+    expect(r!.counts.variantSelections).toBe(n);
+    expect(r!.counts.selected).toHaveLength(MAX_LISTED);
+    expect((r!.counts.selected as string[])[0]).toBe("v0=x");
+    expect(r!.counts.selectedOmitted).toBe(n - MAX_LISTED);
   }, 30_000);
 
-  it("one prim with 60,000 children [0.4 s]", async () => {
+  it("one prim with 60,000 children [0.3 s]", async () => {
     const n = 60_000;
     const kids = Array.from(
       { length: n },
       (_, i) => `    def Scope "c${i}" {}\n`,
     ).join("");
-    const r = await composeBounded(`${HEAD}def Xform "World"\n{\n${kids}}\n`, {
-      ms: 10_000,
-      heapMb: 512,
-    });
-    expect(r.ms).toBeLessThan(5000);
-    expect(r.prims).toBe(n + 2);
-    expect(r.paths.slice(0, 3)).toEqual(["/", "/World", "/World/c0"]);
+    const [r] = await readBounded(
+      [one(`${HEAD}def Xform "World"\n{\n${kids}}\n`)],
+      WIDE,
+    );
+    expect(r!.ms).toBeLessThan(5000);
+    expect(r!.prims).toBe(n + 2);
+    expect(r!.paths.slice(0, 3)).toEqual(["/", "/World", "/World/c0"]);
   }, 30_000);
 
-  it("keeps no error text past the cap", async () => {
+  it("keeps no error text past the cap, and never hides the stop behind it", async () => {
     const n = 5000;
     const prims = Array.from(
       { length: n },
       (_, i) =>
         `    def Xform "P${i}" (\n        prepend references = @./${"m".repeat(100)}${i}.usda@\n    )\n    {\n    }\n`,
     ).join("");
-    const { stage } = await stageOf(
-      { "e/root.usda": `${HEAD}def Xform "World"\n{\n${prims}}\n` },
-      "e/root.usda",
+    const src = `${HEAD}def Xform "World"\n{\n${prims}}\n`;
+    const [full, stopped] = await readBounded(
+      [one(src), { ...one(src), name: "stopped" }],
+      WIDE,
     );
-    expect(stage.errors).toHaveLength(MAX_LISTED + 1);
-    expect(stage.errors.at(-1)).toBe(
-      `${n - MAX_LISTED} more composition errors not listed (a repeated one is counted each time).`,
+    // More layers than MAX_LAYERS are named: that note is the first error.
+    expect(full!.errors[0]).toBe(
+      `The stage names more than ${MAX_LAYERS} layers, the subset reader's limit; the rest are not read.`,
+    );
+    expect(full!.errors).toHaveLength(MAX_LISTED + 1);
+    expect(full!.errors.at(-1)).toBe(
+      `${n - MAX_LISTED + 1} more composition errors not listed (a repeated one is counted each time).`,
     );
     // Only the listed messages are kept.
-    const kept = (stage as unknown as { errorListed: Set<string> }).errorListed;
-    expect(kept.size).toBe(MAX_LISTED);
+    expect(full!.listed).toBe(MAX_LISTED);
+    expect(stopped!.stopped).toBe(false);
+  }, 30_000);
+
+  it("the stop message comes first even when the error list is full", async () => {
+    // 200 failed references fill the list; then 2^30 prims spend the budget.
+    let src = `${HEAD}def Xform "World"\n{\n${Array.from({ length: 200 }, (_, i) => `    def Xform "M${i}" (\n        prepend references = </Gone${i}>\n    )\n    {\n    }\n`).join("")}}\n`;
+    for (let i = 0; i < 30; i++) {
+      src += `def Xform "L${i}"\n{\n    def Xform "a" (\n        prepend references = </L${i + 1}>\n    )\n    {\n    }\n    def Xform "b" (\n        prepend references = </L${i + 1}>\n    )\n    {\n    }\n}\n`;
+    }
+    const [r] = await readBounded([one(src)], WIDE);
+    expect(r!.stopped).toBe(true);
+    expect(r!.errors[0]).toBe(stopMessage);
   }, 30_000);
 
   it("a chain of 12,000 sublayers composes without overflowing the stack", async () => {
     const n = 12_000;
-    const sources: Record<string, string> = {};
+    const files: Record<string, string> = {};
     for (let i = 0; i < n; i++) {
       const next = i + 1 < n ? `\n    subLayers = [@./s${i + 1}.usda@]` : "";
-      sources[`k/s${i}.usda`] =
+      files[`k/s${i}.usda`] =
         `#usda 1.0\n(\n    defaultPrim = "World"${next}\n)\n${
           i === n - 1
             ? `def Xform "World"\n{\n    def Scope "Deep" {}\n}\n`
             : ""
         }`;
     }
-    const { stage, paths } = await stageOf(sources, "k/s0.usda");
-    expect(stage.counts.sublayers).toBe(n - 1);
-    expect(paths).toEqual(["/", "/World", "/World/Deep"]);
-    expect(stage.errors).toEqual([]);
-  }, 30_000);
+    const chain = { name: "chain", files, root: "k/s0.usda" };
+    // Straight to the stage, past loadLayers's cap on layers, for the stack's loop.
+    const [direct] = await readBounded([chain], { ...WIDE, direct: true });
+    expect(direct!.counts.sublayers).toBe(n - 1);
+    expect(direct!.paths).toEqual(["/", "/World", "/World/Deep"]);
+    expect(direct!.errors).toEqual([]);
+    // Through loadLayers: the first MAX_LAYERS are read, and the stage says so.
+    const [loaded] = await readBounded([chain], WIDE);
+    expect(loaded!.counts.sublayers).toBe(MAX_LAYERS - 1);
+    expect(loaded!.errors[0]).toBe(
+      `The stage names more than ${MAX_LAYERS} layers, the subset reader's limit; the rest are not read.`,
+    );
+  }, 60_000);
+
+  it("refuses a layer over the byte limit before parsing it", async () => {
+    const big = new Uint8Array(MAX_LAYER_BYTES + 1);
+    big.set(new TextEncoder().encode("#usda 1.0\n"));
+    const { stage } = await stageOfBytes(
+      {
+        "b/root.usda": `${HEAD}def Xform "World" (\n    prepend references = @./big.usda@\n)\n{\n}\n`,
+      },
+      { "b/big.usda": big },
+      "b/root.usda",
+    );
+    expect(stage.errors).toEqual([
+      `Could not open asset @b/big.usda@ for reference introduced by @b/root.usda@</World> -- ${MAX_LAYER_BYTES + 1} bytes, over the subset reader's limit of ${MAX_LAYER_BYTES} for one layer.`,
+    ]);
+  });
+
+  // The invariant: every input finishes within a stated time and heap. A
+  // few hundred seeded files, each one shape or a mix of two or three, are
+  // read with the reader's own MAX_WORK. Each must finish in 4 s (the
+  // slowest takes about 1.3 s on this Mac when it's idle), or be killed at
+  // 6 s, and leave under 256 MiB, in a worker whose limit is 1 GiB.
+  it("every generated hostile file finishes within 4 s and 256 MiB", async () => {
+    const cases = Array.from({ length: 300 }, (_, i) => hostileCase(9130 + i));
+    const rs = await readBounded(cases, {
+      deadlineMs: 6000,
+      heapLimitMb: 1024,
+    });
+    const worst = rs.reduce((a, b) => (b.ms > a.ms ? b : a));
+    const heaviest = rs.reduce((a, b) => (b.heapMb > a.heapMb ? b : a));
+    console.log(
+      `${rs.length} generated files, ${rs.filter((r) => r.stopped).length} stopped by the budget; slowest ${worst.ms.toFixed(0)} ms (${worst.name}); most heap ${heaviest.heapMb.toFixed(0)} MiB (${heaviest.name})`,
+    );
+    for (const r of rs) {
+      expect(r.ms, r.name).toBeLessThan(4000);
+      expect(r.heapMb, r.name).toBeLessThan(HEAP_MB);
+    }
+  }, 600_000);
+
+  it.skipIf(!existsSync(SAMPLES + PALLET_BASE))(
+    "every mutated crate file finishes within 4 s and 256 MiB (needs the setup store)",
+    async () => {
+      const bytes = new Uint8Array(readFileSync(SAMPLES + PALLET_BASE));
+      const cases = Array.from({ length: 100 }, (_, i) =>
+        mutatedCrate(bytes, 913 + i),
+      );
+      const rs = await readBounded(cases, {
+        deadlineMs: 6000,
+        heapLimitMb: 1024,
+      });
+      for (const r of rs) {
+        expect(r.ms, r.name).toBeLessThan(4000);
+        expect(r.heapMb, r.name).toBeLessThan(HEAP_MB);
+      }
+    },
+    300_000,
+  );
 
   it("reports a library's missing sublayer once, however many arcs use the library", async () => {
     const refs = Array.from(
@@ -865,12 +961,8 @@ def Xform "T"
   });
 });
 
-// The pallet sample is data in the setup store (npm run setup), never in the
-// repository. OpenUSD's facts for it, from run
-// 2026-11-22T10-56-32-200Z-apple-metal-3, are what CS-900's rule compares with.
-const SAMPLES = `${homedir()}/.cesium-bench/simready/foundation-1abf3ae2/`;
-const PALLET =
-  "common_assets/props_general/industrialplasticpallet_a01/simready_usd/industrialplasticpallet_a01.usd";
+// The pallet sample (SAMPLES and PALLET, above). OpenUSD's facts for it, from
+// run 2026-11-22T10-56-32-200Z-apple-metal-3, are what CS-900's rule compares with.
 
 describe.skipIf(!existsSync(SAMPLES + PALLET))(
   "the pallet sample (needs the setup store)",

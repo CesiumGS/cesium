@@ -9,6 +9,7 @@
 // published specification. Spike code for CS-833 and CS-843; not part of
 // @cesium/next.
 
+import { Budget, MAX_FIELD_NAME, MAX_PATH, WorkLimit } from "./budget.ts";
 import { decodeInts32, decodeInts64 } from "./intCoding.ts";
 import { tfFastDecompress } from "./lz4.ts";
 import type { Layer, ListOp, Spec, SpecType, Value } from "./layer.ts";
@@ -135,10 +136,25 @@ function half(bits: number): number {
 class Cursor {
   readonly bytes: Uint8Array;
   readonly view: DataView;
+  readonly budget: Budget;
   pos = 0;
-  constructor(bytes: Uint8Array) {
+  constructor(bytes: Uint8Array, budget: Budget) {
     this.bytes = bytes;
     this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    this.budget = budget;
+  }
+  /**
+   * A count the file declares, checked before anything is allocated for it:
+   * each item takes at least `width` bytes of what's left, so a larger count
+   * is a lie. Charges one unit per `per` items: 1 for items that each make
+   * a value, 16 for bulk numbers copied into a typed array.
+   */
+  count(n: number, width: number, per = 1): number {
+    if (n * width > this.bytes.length - this.pos) {
+      throw new Error(`usdc: ${n} items of ${width} bytes run past the end`);
+    }
+    this.budget.charge(1 + Math.floor(n / per));
+    return n;
   }
   u8(): number {
     return this.view.getUint8(this.pos++);
@@ -176,11 +192,20 @@ class Cursor {
   }
   compressedInts32(n: number): Int32Array {
     const size = this.u64();
-    return decodeInts32(this.take(size), n);
+    const src = this.take(size);
+    this.budget.charge(1 + (n >>> 4));
+    return decodeInts32(src, n);
   }
   compressedInts64(n: number): Float64Array {
     const size = this.u64();
-    return decodeInts64(this.take(size), n);
+    const src = this.take(size);
+    this.budget.charge(1 + (n >>> 4));
+    return decodeInts64(src, n);
+  }
+  /** TfFastCompression, charged one unit per 16 bytes it declares before they're allocated. */
+  decompress(src: Uint8Array, size: number): Uint8Array {
+    this.budget.charge(1 + (size >>> 4));
+    return tfFastDecompress(src, size);
   }
 }
 
@@ -213,11 +238,11 @@ export function isUsdc(bytes: Uint8Array): boolean {
   return new TextDecoder().decode(bytes.subarray(0, 8)) === "PXR-USDC";
 }
 
-export function readUsdc(bytes: Uint8Array): Layer {
+export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
   if (!isUsdc(bytes)) {
     throw new Error("usdc: not a crate file");
   }
-  const c = new Cursor(bytes);
+  const c = new Cursor(bytes, budget);
   const [major, minor, patch] = [bytes[8]!, bytes[9]!, bytes[10]!];
   const version = `${major}.${minor}.${patch}`;
   if (major === 0 && minor < 4) {
@@ -229,7 +254,7 @@ export function readUsdc(bytes: Uint8Array): Layer {
 
   // Table of contents.
   c.pos = tocOffset;
-  const sectionCount = c.u64();
+  const sectionCount = c.count(c.u64(), 32);
   const sections = new Map<string, { start: number; size: number }>();
   for (let i = 0; i < sectionCount; i++) {
     const nameBytes = c.take(16);
@@ -256,7 +281,12 @@ export function readUsdc(bytes: Uint8Array): Layer {
     const count = c.u64();
     const rawSize = c.u64();
     const compSize = c.u64();
-    const raw = tfFastDecompress(c.take(compSize), rawSize);
+    const raw = c.decompress(c.take(compSize), rawSize);
+    // Each token ends in a null byte, so the bytes bound the count.
+    if (count > raw.length) {
+      throw new Error(`usdc: ${count} tokens in ${raw.length} bytes`);
+    }
+    budget.charge(1 + count);
     const text = new TextDecoder().decode(raw);
     const parts = text.split("\0");
     for (let i = 0; i < count; i++) {
@@ -267,7 +297,7 @@ export function readUsdc(bytes: Uint8Array): Layer {
 
   const strings: number[] = [];
   if (seek("STRINGS")) {
-    const count = c.u64();
+    const count = c.count(c.u64(), 4);
     for (let i = 0; i < count; i++) {
       strings.push(c.u32());
     }
@@ -281,7 +311,7 @@ export function readUsdc(bytes: Uint8Array): Layer {
     const count = c.u64();
     fieldNames = c.compressedInts32(count);
     const repsSize = c.u64();
-    fieldReps = tfFastDecompress(c.take(repsSize), count * 8);
+    fieldReps = c.decompress(c.take(repsSize), count * 8);
   }
   const repsView = new DataView(
     fieldReps.buffer,
@@ -300,16 +330,22 @@ export function readUsdc(bytes: Uint8Array): Layer {
   const paths: string[] = [];
   if (seek("PATHS")) {
     const total = c.u64();
-    paths.length = total;
     const n = c.u64();
     const index = c.compressedInts32(n);
     const element = c.compressedInts32(n);
     const jumps = c.compressedInts32(n);
+    // Sparse: nothing is allocated for the total until entries fill it.
+    paths.length = total;
+    // Each run of siblings, on an explicit stack: a hostile file can nest
+    // deeper than the call stack, and its jumps can revisit entries, which
+    // the budget bounds.
+    const runs: [number, string | undefined][] = [];
     const build = (start: number, parent: string | undefined): void => {
       let cur = start;
       let hasChild: boolean;
       let hasSibling: boolean;
       do {
+        budget.charge();
         const here = cur++;
         let path: string;
         if (parent === undefined) {
@@ -325,20 +361,28 @@ export function readUsdc(bytes: Uint8Array): Layer {
             path = parent === "/" ? `/${name}` : `${parent}/${name}`;
           }
         }
+        if (path.length > MAX_PATH) {
+          throw new Error(`usdc: a path longer than ${MAX_PATH} characters`);
+        }
         paths[index[here]!] = path;
         const jump = jumps[here]!;
         hasChild = jump > 0 || jump === -1;
         hasSibling = jump >= 0;
         if (hasChild) {
           if (hasSibling) {
-            build(here + jump, parent);
+            runs.push([here + jump, parent]);
           }
           parent = path;
         }
       } while (hasChild || hasSibling);
     };
     if (n > 0) {
-      build(0, undefined);
+      runs.push([0, undefined]);
+    }
+    // Last in, first out, as the recursion visited them; every path's slot is set by its own entry.
+    while (runs.length) {
+      const [start, parent] = runs.pop()!;
+      build(start, parent);
     }
   }
 
@@ -350,12 +394,12 @@ export function readUsdc(bytes: Uint8Array): Layer {
   };
 
   const at = (offset: number): Cursor => {
-    const r = new Cursor(bytes);
+    const r = new Cursor(bytes, budget);
     r.pos = offset;
     return r;
   };
   const vecOf = <T>(r: Cursor, read: () => T): T[] => {
-    const n = r.u64();
+    const n = r.count(r.u64(), 1);
     const out: T[] = [];
     for (let i = 0; i < n; i++) {
       out.push(read());
@@ -392,7 +436,7 @@ export function readUsdc(bytes: Uint8Array): Layer {
   const skipDictionary = (r: Cursor): void => {
     // Each entry is a key and a relative offset to its ValueRep. The subset
     // reader keeps no dictionary values, so it only steps over them.
-    const n = r.u64();
+    const n = r.count(r.u64(), 12);
     for (let i = 0; i < n; i++) {
       r.u32();
       r.pos += 8;
@@ -421,7 +465,8 @@ export function readUsdc(bytes: Uint8Array): Layer {
   const numeric = (r: Cursor, type: string, count: number): Value => {
     const shape = NUMERIC[type]!;
     const [width, tuple, k] = shape;
-    const n = count * tuple;
+    // Checked against the bytes left before the array is allocated.
+    const n = r.count(count * tuple, width, 16);
     const v = r.view;
     if (k === "f" && width !== 8) {
       const out = new Float32Array(n);
@@ -571,6 +616,14 @@ export function readUsdc(bytes: Uint8Array): Layer {
     const r = at(rp.payload);
     if (rp.isArray) {
       const count = atLeast(7) ? r.u64() : r.u32();
+      if (
+        type === "token" ||
+        type === "asset" ||
+        type === "string" ||
+        type === "bool"
+      ) {
+        r.count(count, type === "bool" ? 1 : 4);
+      }
       if (type === "token" || type === "asset") {
         const out: string[] = [];
         for (let i = 0; i < count; i++) {
@@ -626,10 +679,14 @@ export function readUsdc(bytes: Uint8Array): Layer {
         return vecOf(r, () => r.f64());
       case "variantSelectionMap": {
         const out: Record<string, Value> = {};
-        const n = r.u64();
+        const n = r.count(r.u64(), 8);
         for (let i = 0; i < n; i++) {
           const k = string(r.u32());
-          out[k] = string(r.u32());
+          const v = string(r.u32());
+          // A key past MAX_PATH names no variant set; V8 would hash it by length.
+          if (k.length <= MAX_PATH) {
+            out[k] = v;
+          }
         }
         return out;
       }
@@ -659,11 +716,20 @@ export function readUsdc(bytes: Uint8Array): Layer {
         f < fieldSets.length && fieldSets[f]! !== -1;
         f++
       ) {
+        budget.charge();
         const fi = fieldSets[f]!;
         const name = token(fieldNames[fi]!);
+        if (name.length > MAX_FIELD_NAME) {
+          skip("field with a long name");
+          continue;
+        }
         try {
           fields.set(name, value(rep(repsView, fi * 8)));
         } catch (e) {
+          // Out of budget: stop reading, not one field.
+          if (e instanceof WorkLimit) {
+            throw e;
+          }
           fields.set(
             name,
             skip(`error: ${e instanceof Error ? e.message : String(e)}`),

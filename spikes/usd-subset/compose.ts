@@ -16,7 +16,21 @@
 // beat any `over`) and so does its parent. A variant selection is taken from
 // the strongest site, counting the stronger sites the prim inherits from its
 // parent's namespace.
+//
+// Hostile files (CS-913, CS-1097 A): every loop that works for the file,
+// from the parsers through composition, charges one Budget (budget.ts) in
+// its inner loop. When it runs out, reading stops where it is: the stage
+// keeps the prims composed whole before that point, and `Stage.errors` says
+// so first. Byte and layer caps are checked before anything is parsed.
 
+import {
+  Budget,
+  MAX_LAYER_BYTES,
+  MAX_LAYERS,
+  MAX_PATH,
+  MAX_STAGE_BYTES,
+  WorkLimit,
+} from "./budget.ts";
 import { readUsdc, isUsdc } from "./crate.ts";
 import {
   isArc,
@@ -29,6 +43,18 @@ import {
 } from "./layer.ts";
 import { readUsda, isUsda } from "./usda.ts";
 import { isZip, readUsdz } from "./usdz.ts";
+
+export {
+  Budget,
+  KEPT,
+  MAX_FIELD_NAME,
+  MAX_LAYER_BYTES,
+  MAX_LAYERS,
+  MAX_PATH,
+  MAX_STAGE_BYTES,
+  MAX_WORK,
+  WorkLimit,
+} from "./budget.ts";
 
 /** Where bytes come from: a directory in Node, fetch in a browser. */
 export interface AssetIo {
@@ -51,16 +77,15 @@ export function resolveAsset(
   anchor: string,
   asset: string,
 ): string | undefined {
-  if (!asset) {
+  // Past MAX_PATH, an asset path names no file the reader opens.
+  if (!asset || asset.length > MAX_PATH) {
     return undefined;
   }
+  // Anchored, with one run to scan: linear.
   if (/^[a-z][a-z0-9+.-]*:/i.test(asset)) {
     return undefined;
   } // omniverse://, http://, a URI resolver's.
-  const inPackage = /^(.*\.usdz)\[(.*)\]$/.exec(asset);
-  if (inPackage) {
-    asset = `${inPackage[1]}/${inPackage[2]}`;
-  }
+  asset = packagePath(asset) ?? asset;
   const dir = anchor.includes("/")
     ? anchor.slice(0, anchor.lastIndexOf("/"))
     : "";
@@ -80,109 +105,222 @@ export function resolveAsset(
       out.push(p);
     }
   }
-  return (
-    (asset.startsWith("/") || dir.startsWith("/") ? "/" : "") + out.join("/")
-  );
+  const id =
+    (asset.startsWith("/") || dir.startsWith("/") ? "/" : "") + out.join("/");
+  return id.length > MAX_PATH ? undefined : id;
 }
 
-export function parseLayer(bytes: Uint8Array): Layer {
+/**
+ * A key for a map or set: the string itself, or, past MAX_PATH, its length
+ * and a 64-bit hash of it. V8 hashes a string longer than 16,383 characters
+ * by its length alone, so long keys of one length would all collide.
+ */
+export function keyOf(s: string): string {
+  if (s.length <= MAX_PATH) {
+    return s;
+  }
+  let a = 0x811c9dc5;
+  let b = 0x01000193;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    a = Math.imul(a ^ c, 0x01000193);
+    b = Math.imul(b ^ c, 0x5bd1e995) ^ (b >>> 13);
+  }
+  return `\u0001${s.length}:${(a >>> 0).toString(36)}:${(b >>> 0).toString(36)}`;
+}
+
+/**
+ * `pkg.usdz[inner/path]` as `pkg.usdz/inner/path`. It does what
+ * /^(.*\.usdz)\[(.*)\]$/ did, the last ".usdz[" before a closing "]" at the
+ * end, in one scan instead of the regex's backtracking, which grew with the
+ * square of the path. Like the regex's `.`, it matches no line terminator.
+ */
+export function packagePath(asset: string): string | undefined {
+  if (!asset.endsWith("]") || /[\n\r\u2028\u2029]/.test(asset)) {
+    return undefined;
+  }
+  const k = asset.lastIndexOf(".usdz[", asset.length - 7);
+  return k < 0
+    ? undefined
+    : `${asset.slice(0, k + 5)}/${asset.slice(k + 6, -1)}`;
+}
+
+/**
+ * A path with its variant selections taken out: "/A{v=x}B" is "/A/B"'s
+ * namespace. It does what replace(/\{[^}]*\}/g, "") did, each "{" to the
+ * next "}", in one scan; the regex retried from every "{" without a closing
+ * "}" and grew with the square of the path.
+ */
+export function stripVariants(path: string): string {
+  let out = "";
+  let i = 0;
+  for (;;) {
+    const open = path.indexOf("{", i);
+    const close = open < 0 ? -1 : path.indexOf("}", open + 1);
+    if (close < 0) {
+      return out + path.slice(i);
+    }
+    out += path.slice(i, open);
+    i = close + 1;
+  }
+}
+
+export function parseLayer(bytes: Uint8Array, budget = new Budget()): Layer {
   if (isUsdc(bytes)) {
-    return readUsdc(bytes);
+    return readUsdc(bytes, budget);
   }
   if (isUsda(bytes)) {
-    return readUsda(bytes);
+    return readUsda(bytes, budget);
   }
   throw new Error("not a USD layer (neither PXR-USDC nor #usda)");
 }
 
 const LAYER_FILE = /\.(usd|usda|usdc|usdz)$/i;
 
-/** Loads the root and every layer reachable through sublayers, references and payloads. */
+/** What loading leaves for the stage: the budget it charged, and what it couldn't read. */
+interface LoadInfo {
+  readonly budget: Budget;
+  readonly notes: readonly string[];
+}
+const loadInfo = new WeakMap<Map<string, LoadedLayer>, LoadInfo>();
+
+/**
+ * Loads the root and every layer reachable through sublayers, references and
+ * payloads, once each, up to MAX_LAYERS. A layer over MAX_LAYER_BYTES, or one
+ * that would take the stage past MAX_STAGE_BYTES, is refused before it's
+ * parsed. Parsing charges `budget`; when it runs out, loading stops, and the
+ * Stage made from these layers goes on charging the same budget.
+ */
 export async function loadLayers(
   root: string,
   io: AssetIo,
+  budget = new Budget(),
 ): Promise<Map<string, LoadedLayer>> {
   const loaded = new Map<string, LoadedLayer>();
+  const notes: string[] = [];
   /** USDZ entries, by their path inside the package as a directory. */
   const packaged = new Map<string, Uint8Array>();
   const queue = [root];
-  while (queue.length) {
-    const id = queue.shift()!;
-    if (loaded.has(id)) {
-      continue;
+  const queued = new Set(queue);
+  let head = 0;
+  let stageBytes = 0;
+  const enqueue = (id: string): void => {
+    budget.text(id);
+    if (queued.has(id)) {
+      return;
     }
-    const t0 = performance.now();
-    let bytes = packaged.get(id) ?? (await io.read(id));
-    if (!bytes) {
-      loaded.set(id, { id, bytes: 0, readMs: 0, error: "missing" });
-      continue;
+    if (queued.size >= MAX_LAYERS) {
+      if (!notes.length) {
+        notes.push(
+          `The stage names more than ${MAX_LAYERS} layers, the subset reader's limit; the rest are not read.`,
+        );
+      }
+      return;
     }
-    const layerId = id;
-    try {
-      if (isZip(bytes)) {
-        const entries = readUsdz(bytes);
-        for (const e of entries) {
-          packaged.set(`${id}/${e.name}`, e.bytes);
+    queued.add(id);
+    queue.push(id);
+  };
+  try {
+    while (head < queue.length) {
+      const id = queue[head++]!;
+      const t0 = performance.now();
+      const inPackage = packaged.get(id);
+      let bytes = inPackage ?? (await io.read(id));
+      if (!bytes) {
+        loaded.set(id, { id, bytes: 0, readMs: 0, error: "missing" });
+        continue;
+      }
+      const refuse = (error: string): void => {
+        loaded.set(id, { id, bytes: bytes!.length, readMs: 0, error });
+      };
+      if (bytes.length > MAX_LAYER_BYTES) {
+        refuse(
+          `${bytes.length} bytes, over the subset reader's limit of ${MAX_LAYER_BYTES} for one layer`,
+        );
+        continue;
+      }
+      // A package's files are inside bytes already counted.
+      if (!inPackage) {
+        if (stageBytes + bytes.length > MAX_STAGE_BYTES) {
+          refuse(
+            `over the subset reader's limit of ${MAX_STAGE_BYTES} bytes for a whole stage`,
+          );
+          continue;
         }
-        const first = entries.find((e) => LAYER_FILE.test(e.name));
-        if (!first) {
-          throw new Error("usdz: no layer inside");
+        stageBytes += bytes.length;
+      }
+      try {
+        let anchor = id;
+        if (isZip(bytes)) {
+          const entries = readUsdz(bytes);
+          budget.charge(1 + entries.length);
+          for (const e of entries) {
+            // A name past MAX_PATH names no layer the reader opens.
+            if (id.length + e.name.length < MAX_PATH) {
+              packaged.set(`${id}/${e.name}`, e.bytes);
+            }
+          }
+          const first = entries.find((e) => LAYER_FILE.test(e.name));
+          if (!first) {
+            throw new Error("usdz: no layer inside");
+          }
+          // The package's root layer stands for the package, and its own
+          // relative paths resolve inside the package.
+          bytes = first.bytes;
+          anchor = `${id}/${first.name}`;
         }
-        // The package's root layer stands for the package.
-        bytes = first.bytes;
-        const layer = parseLayer(bytes);
-        // Its own relative paths resolve inside the package.
-        const anchor = `${id}/${first.name}`;
-        loaded.set(layerId, {
-          id: layerId,
+        const layer = parseLayer(bytes, budget);
+        loaded.set(id, {
+          id,
           layer,
           bytes: bytes.length,
           readMs: performance.now() - t0,
-          anchor,
+          ...(anchor !== id ? { anchor } : {}),
         });
-        for (const next of arcsOf(layer, anchor)) {
-          queue.push(next);
+        arcsOf(layer, anchor, budget, enqueue);
+      } catch (e) {
+        if (e instanceof WorkLimit) {
+          throw e;
         }
-        continue;
+        loaded.set(id, {
+          id,
+          bytes: bytes.length,
+          readMs: performance.now() - t0,
+          error: e instanceof Error ? e.message : String(e),
+        });
       }
-      const layer = parseLayer(bytes);
-      loaded.set(layerId, {
-        id: layerId,
-        layer,
-        bytes: bytes.length,
-        readMs: performance.now() - t0,
-      });
-      for (const next of arcsOf(layer, id)) {
-        queue.push(next);
-      }
-    } catch (e) {
-      loaded.set(id, {
-        id,
-        bytes: bytes.length,
-        readMs: performance.now() - t0,
-        error: e instanceof Error ? e.message : String(e),
-      });
+    }
+  } catch (e) {
+    // Out of budget: what's loaded so far stands, and the stage says it stopped.
+    if (!(e instanceof WorkLimit)) {
+      throw e;
     }
   }
+  loadInfo.set(loaded, { budget, notes });
   return loaded;
 }
 
 /** The layer files a layer names: sublayers, external references and payloads. */
-function arcsOf(layer: Layer, anchor: string): string[] {
-  const out: string[] = [];
+function arcsOf(
+  layer: Layer,
+  anchor: string,
+  budget: Budget,
+  found: (id: string) => void,
+): void {
   for (const [, spec] of layer.specs) {
+    budget.charge();
     for (const field of ["subLayers", "references", "payload"]) {
       for (const item of listItems(spec.fields.get(field))) {
         const asset =
           typeof item === "string" ? item : isArc(item) ? item.asset : "";
+        budget.text(asset);
         const r = resolveAsset(anchor, asset);
         if (r) {
-          out.push(r);
+          found(r);
         }
       }
     }
   }
-  return out;
 }
 
 export interface Prop {
@@ -255,24 +393,17 @@ export const MAX_LISTED = 100;
 export const MAX_NAMESPACE_DEPTH = 256;
 /** The most arcs the composer follows from one site of a prim: a guard on untrusted input. */
 export const MAX_ARC_DEPTH = 32;
-/**
- * The most sites the composer gathers for a whole stage, summed over its
- * prims: a guard on untrusted input, where a few kilobytes of arcs that fan
- * out without a cycle name 2^30 prims, all of which OpenUSD would build. The
- * six SimReady samples gather 1 to 359 sites (at most 6.5 a prim), so this
- * leaves room for an asset of about 38,000 prims composed as densely as the
- * densest of them. A file that spends it all costs about a second.
- */
-export const MAX_SITES = 250_000;
 /** The longest layer name or path an error message quotes in full. */
 const MAX_QUOTED = 200;
 
 /** A layer name or path for an error message: control characters replaced, long ones cut. */
 export function quoted(text: string): string {
+  // Cut before cleaning, so a long path costs no more than a short one.
+  const head = text.slice(0, MAX_QUOTED);
   // eslint-disable-next-line no-control-regex
-  const clean = text.replace(/[\u0000-\u001f\u007f-\u009f]/g, "?");
-  return clean.length > MAX_QUOTED
-    ? `${clean.slice(0, MAX_QUOTED)}… (${clean.length} characters)`
+  const clean = head.replace(/[\u0000-\u001f\u007f-\u009f]/g, "?");
+  return text.length > MAX_QUOTED
+    ? `${clean}… (${text.length} characters)`
     : clean;
 }
 
@@ -361,11 +492,32 @@ function mapListOp(
   return f(v);
 }
 
-const STRIP_VARIANTS = /\{[^}]*\}/g;
+/** One site's specs, strongest layer first. */
+interface SiteSpec {
+  readonly id: string;
+  readonly spec: Spec;
+}
+
+/** What one prim's composition has gathered so far. */
+interface Gather {
+  /** Its sites, strongest first. */
+  readonly out: Site[];
+  readonly keys: Set<string>;
+  /** Each site's specs, found once. */
+  readonly specs: Map<Site, SiteSpec[]>;
+  /**
+   * Variant selections by set name, from the sites gathered so far, the
+   * strongest first: indexed as each site arrives, so choosing a selection
+   * is one lookup however many sites and sets the prim has.
+   */
+  readonly selections: Map<string, string>;
+}
 
 export class Stage {
   readonly layers: Map<string, LoadedLayer>;
   readonly root: string;
+  /** Charged by every loop of the composition; shared with loadLayers's parsing. */
+  readonly budget: Budget;
   readonly counts: ComposeCounts = {
     references: 0,
     internalReferences: 0,
@@ -383,7 +535,11 @@ export class Stage {
   };
   /** Children by parent path, per layer, in the order authored. */
   private readonly childIndex = new Map<string, Map<string, Set<string>>>();
-  private readonly propIndex = new Map<string, Map<string, Set<string>>>();
+  /** Property specs by their owner's path, then by name, per layer: found without building a path. */
+  private readonly propIndex = new Map<
+    string,
+    Map<string, Map<string, Spec>>
+  >();
   /** The listed errors; past MAX_LISTED, errors are only counted. */
   private readonly errorList: string[] = [];
   private readonly errorListed = new Set<string>();
@@ -391,30 +547,54 @@ export class Stage {
   private readonly selectedSeen = new Set<string>();
   /** Layer stacks by root layer, computed once each. */
   private readonly stacks = new Map<string, string[]>();
-  /** Sites left in MAX_SITES; at zero, composition stops. */
-  private sitesLeft = MAX_SITES;
 
-  constructor(layers: Map<string, LoadedLayer>, root: string) {
+  constructor(
+    layers: Map<string, LoadedLayer>,
+    root: string,
+    budget = loadInfo.get(layers)?.budget ?? new Budget(),
+  ) {
     this.layers = layers;
     this.root = root;
-    for (const [id, l] of layers) {
-      if (!l.layer) {
-        continue;
-      }
-      const children = new Map<string, Set<string>>();
-      const props = new Map<string, Set<string>>();
-      for (const [path, spec] of l.layer.specs) {
-        if (spec.type === "prim") {
-          const parent = parentOf(path);
-          const name = path.slice(parent.length).replace(/^\//, "");
-          push(children, parent, name);
-        } else if (spec.type === "attribute" || spec.type === "relationship") {
-          const dot = path.lastIndexOf(".");
-          push(props, path.slice(0, dot), path.slice(dot + 1));
+    this.budget = budget;
+    for (const note of loadInfo.get(layers)?.notes ?? []) {
+      this.report(note);
+    }
+    try {
+      for (const [id, l] of layers) {
+        if (!l.layer) {
+          continue;
         }
+        const children = new Map<string, Set<string>>();
+        const props = new Map<string, Map<string, Spec>>();
+        for (const [path, spec] of l.layer.specs) {
+          budget.text(path);
+          budget.keep();
+          if (spec.type === "prim") {
+            const parent = parentOf(path);
+            const name = path.slice(parent.length).replace(/^\//, "");
+            push(children, parent, name);
+          } else if (
+            spec.type === "attribute" ||
+            spec.type === "relationship"
+          ) {
+            const dot = path.lastIndexOf(".");
+            const owner = path.slice(0, dot);
+            let named = props.get(owner);
+            if (!named) {
+              named = new Map();
+              props.set(owner, named);
+            }
+            named.set(path.slice(dot + 1), spec);
+          }
+        }
+        this.childIndex.set(id, children);
+        this.propIndex.set(id, props);
       }
-      this.childIndex.set(id, children);
-      this.propIndex.set(id, props);
+    } catch (e) {
+      // Out of budget: compose() finds it spent and composes nothing more.
+      if (!(e instanceof WorkLimit)) {
+        throw e;
+      }
     }
   }
 
@@ -422,23 +602,36 @@ export class Stage {
     return this.layers.get(id)?.layer;
   }
 
-  /** What failed to compose, in OpenUSD's wording, once each, in the order found: the first MAX_LISTED, then a count. */
+  /** True once the budget ran out: the stage holds only what was composed before. */
+  get stopped(): boolean {
+    return this.budget.exhausted;
+  }
+
+  /**
+   * What failed to compose, in OpenUSD's wording, once each, in the order
+   * found: the first MAX_LISTED, then a count. When the budget ran out, its
+   * message comes first, whatever the cap.
+   */
   get errors(): readonly string[] {
-    return this.errorsOmitted
-      ? [
-          ...this.errorList,
-          `${this.errorsOmitted} more composition errors not listed (a repeated one is counted each time).`,
-        ]
-      : this.errorList;
+    return [
+      ...(this.stopped ? [this.budget.message] : []),
+      ...this.errorList,
+      ...(this.errorsOmitted
+        ? [
+            `${this.errorsOmitted} more composition errors not listed (a repeated one is counted each time).`,
+          ]
+        : []),
+    ];
   }
 
   private report(message: string): void {
-    if (this.errorListed.has(message)) {
+    const key = keyOf(message);
+    if (this.errorListed.has(key)) {
       return;
     }
     if (this.errorList.length < MAX_LISTED) {
       this.errorList.push(message);
-      this.errorListed.add(message);
+      this.errorListed.add(key);
     } else {
       // Nothing kept past the cap, so repeats can't be told apart.
       this.errorsOmitted++;
@@ -467,26 +660,6 @@ export class Stage {
     }
   }
 
-  /** Spends one site of MAX_SITES; false, and reported once, when none are left. */
-  private spend(): boolean {
-    if (this.sitesLeft > 0) {
-      this.sitesLeft--;
-      return true;
-    }
-    if (this.sitesLeft === 0) {
-      this.sitesLeft = -1;
-      this.report(
-        `Composition stopped at ${MAX_SITES} sites, the subset reader's limit; the rest of the stage is not composed.`,
-      );
-    }
-    return false;
-  }
-
-  /** True once MAX_SITES is spent. */
-  get stopped(): boolean {
-    return this.sitesLeft < 0;
-  }
-
   /** A layer and its sublayers, strongest first, depth first; computed once per layer. */
   stack(id: string): string[] {
     const cached = this.stacks.get(id);
@@ -499,6 +672,7 @@ export class Stage {
     const todo = [id];
     while (todo.length) {
       const at = todo.pop()!;
+      this.budget.charge();
       if (seen.has(at)) {
         continue;
       }
@@ -510,6 +684,7 @@ export class Stage {
         if (typeof sub !== "string") {
           continue;
         }
+        this.budget.text(sub);
         const r = resolveAsset(this.anchor(at), sub);
         if (r && this.layer(r)) {
           this.counts.sublayers++;
@@ -540,6 +715,7 @@ export class Stage {
 
   defaultPrim(stack: readonly string[]): string {
     for (const id of stack) {
+      this.budget.charge();
       const d = this.layer(id)?.specs.get("/")?.fields.get("defaultPrim");
       if (typeof d === "string" && d) {
         return d.startsWith("/") ? d : `/${d}`;
@@ -548,8 +724,11 @@ export class Stage {
     return "";
   }
 
-  specsAt(site: Site): { id: string; spec: Spec }[] {
-    const out: { id: string; spec: Spec }[] = [];
+  /** A site's specs, strongest layer first: one unit per layer of its stack. */
+  specsAt(site: Site): SiteSpec[] {
+    this.budget.charge(1 + site.stack.length);
+    this.budget.text(site.path);
+    const out: SiteSpec[] = [];
     for (const id of site.stack) {
       const spec = this.layer(id)?.specs.get(site.path);
       if (spec) {
@@ -559,16 +738,44 @@ export class Stage {
     return out;
   }
 
-  /** The sites of one prim, strongest first, with every arc on them followed. `keys` holds out's sites, for finding repeats. */
-  expand(
-    site: Site,
-    out: Site[],
-    depth = 0,
-    inherited: readonly Site[] = [],
-    keys = new Set(out.map(siteKey)),
-  ): void {
+  /** Adds a site's specs to the prim's gather, and indexes its variant selections: one unit per selection. */
+  private gather(site: Site, g: Gather): SiteSpec[] {
+    const known = g.specs.get(site);
+    if (known) {
+      return known;
+    }
+    const specs = this.specsAt(site);
+    g.specs.set(site, specs);
+    for (const { spec } of specs) {
+      const sel = spec.fields.get("variantSelection");
+      if (
+        sel &&
+        typeof sel === "object" &&
+        !Array.isArray(sel) &&
+        !("kind" in sel)
+      ) {
+        for (const [setName, v] of entriesOf(sel as Record<string, Value>)) {
+          this.budget.charge();
+          // The strongest site that selects wins: the first one gathered.
+          if (
+            typeof v === "string" &&
+            v &&
+            setName.length <= MAX_PATH &&
+            !g.selections.has(setName)
+          ) {
+            g.selections.set(setName, v);
+          }
+        }
+      }
+    }
+    return specs;
+  }
+
+  /** The sites of one prim, strongest first, with every arc on them followed. */
+  expand(site: Site, g: Gather, depth = 0): void {
     const key = siteKey(site);
-    if (keys.has(key)) {
+    this.budget.text(key);
+    if (g.keys.has(key)) {
       return;
     }
     if (depth > MAX_ARC_DEPTH) {
@@ -578,27 +785,35 @@ export class Stage {
       );
       return;
     }
-    if (!this.spend()) {
-      return;
-    }
-    keys.add(key);
-    out.push(site);
-    const specs = this.specsAt(site);
+    g.keys.add(key);
+    g.out.push(site);
+    const specs = this.gather(site, g);
     const field = (name: string) =>
-      composeList(specs.map((s) => s.spec.fields.get(name)));
+      composeList(
+        specs.map((s) => s.spec.fields.get(name)),
+        this.budget,
+      );
     // The nodes a new arc from this site hangs under, root first.
+    this.budget.charge(1 + site.chain.length);
     const chain: readonly Node[] = [
       ...site.chain,
       { layer: site.stack[0]!, path: site.path, arc: site.arc },
     ];
     /** pcp/primIndex.cpp, _CheckForCycle: an arc to a site in the same layer stack whose path is an ancestor or descendant of a node it hangs under. Reports it and returns true. */
     const cycles = (s: Site): boolean => {
-      const hit = chain.some(
-        (n) =>
+      let hit = false;
+      for (const n of chain) {
+        this.budget.charge(1 + (Math.min(n.path.length, s.path.length) >>> 4));
+        if (
           n.layer === s.stack[0] &&
-          (hasPrefix(n.path, s.path) || hasPrefix(s.path, n.path)),
-      );
+          (hasPrefix(n.path, s.path) || hasPrefix(s.path, n.path))
+        ) {
+          hit = true;
+          break;
+        }
+      }
       if (hit) {
+        this.budget.charge(1 + chain.length);
         this.report(
           cycleMessage([
             ...chain,
@@ -609,9 +824,13 @@ export class Stage {
       return hit;
     };
     const follow = (s: Site | undefined): void => {
+      // A path past MAX_PATH names no spec: the parsers refuse them.
+      if (!s || s.path.length > MAX_PATH) {
+        return;
+      }
       // A variant selection isn't checked: /A{v=x} under /A is a branch, not a cycle.
-      if (s && (s.arc === "variant" || !cycles(s))) {
-        this.expand(s, out, depth + 1, inherited, keys);
+      if (s.arc === "variant" || !cycles(s)) {
+        this.expand(s, g, depth + 1);
       }
     };
     /**
@@ -628,6 +847,7 @@ export class Stage {
           if (!arc) {
             return undefined;
           }
+          this.budget.text(arc.asset);
           const resolved = arc.asset
             ? resolveAsset(this.anchor(id), arc.asset)
             : "";
@@ -641,8 +861,12 @@ export class Stage {
         // The strongest layer that adds an arc is its source.
         for (const item of listItems(spec.fields.get(fieldName))) {
           const a = anchor(item);
-          const key = a && JSON.stringify(a.arc);
-          if (a && key && !info.has(key)) {
+          if (!a) {
+            continue;
+          }
+          const key = keyOf(JSON.stringify(a.arc));
+          this.budget.text(key);
+          if (!info.has(key)) {
             info.set(key, a);
           }
         }
@@ -651,8 +875,8 @@ export class Stage {
           (item) => anchor(item)?.arc ?? item,
         );
       });
-      return composeList(opinions)
-        .map((v) => info.get(JSON.stringify(v)))
+      return composeList(opinions, this.budget)
+        .map((v) => info.get(keyOf(JSON.stringify(v))))
         .filter((a): a is AnchoredArc => a !== undefined);
     };
     const arcTarget = (
@@ -714,15 +938,16 @@ export class Stage {
       follow(classArc(p, "inherit"));
     }
     for (const setName of field("variantSetNames")) {
-      if (typeof setName !== "string") {
+      if (typeof setName !== "string" || setName.length > MAX_PATH) {
         continue;
       }
       this.counts.variantSets++;
-      const sel = this.selection(setName, inherited, out);
+      const sel = g.selections.get(setName);
       this.selected(setName, sel);
       if (sel) {
         this.counts.variantSelections++;
         const vpath = `${site.path}{${setName}=${sel}}`;
+        this.budget.text(vpath);
         follow({ ...site, path: vpath, arc: "variant", chain });
       }
     }
@@ -740,36 +965,11 @@ export class Stage {
     }
   }
 
-  /** The strongest variant selection for a set among the sites gathered so far: those inherited from the parent, then the prim's own. */
-  selection(
-    setName: string,
-    ...siteLists: readonly (readonly Site[])[]
-  ): string | undefined {
-    // No copy of the lists: one prim can hold thousands of variant sets.
-    for (const sites of siteLists) {
-      for (const s of sites) {
-        for (const { spec } of this.specsAt(s)) {
-          const sel = spec.fields.get("variantSelection");
-          if (
-            sel &&
-            typeof sel === "object" &&
-            !Array.isArray(sel) &&
-            !("kind" in sel)
-          ) {
-            const v = (sel as Record<string, Value>)[setName];
-            if (typeof v === "string" && v) {
-              return v;
-            }
-          }
-        }
-      }
-    }
-    return undefined;
-  }
-
   mapToStage(site: Site, path: string): string {
-    const clean = path.replace(STRIP_VARIANTS, "");
-    const from = site.from.replace(STRIP_VARIANTS, "");
+    this.budget.text(path);
+    this.budget.text(site.from);
+    const clean = stripVariants(path);
+    const from = stripVariants(site.from);
     if (clean === from) {
       return site.to;
     }
@@ -789,35 +989,71 @@ export class Stage {
     return clean; // Outside the arc's namespace: left as authored.
   }
 
-  /** Composes the whole stage from the root layer's default prim down, or from "/". */
+  /**
+   * Composes the whole stage from "/". When the budget runs out, it returns
+   * the prims composed whole before then, and `errors` says so first.
+   */
   compose(): Prim {
-    const stack = this.stack(this.root);
-    const root: Site = {
-      stack,
-      path: "/",
-      from: "/",
-      to: "/",
-      arc: "root",
-      chain: [],
-    };
-    return this.composePrim("/", [root]);
+    try {
+      const stack = this.stack(this.root);
+      const root: Site = {
+        stack,
+        path: "/",
+        from: "/",
+        to: "/",
+        arc: "root",
+        chain: [],
+      };
+      return this.composePrim("/", [root]);
+    } catch (e) {
+      if (!(e instanceof WorkLimit)) {
+        throw e;
+      }
+      return {
+        path: "/",
+        name: "",
+        typeName: "",
+        specifier: "def",
+        fields: new Map(),
+        apiSchemas: [],
+        props: new Map(),
+        children: [],
+        sites: [],
+      };
+    }
   }
 
   composePrim(path: string, sites: readonly Site[], depth = 0): Prim {
-    const all: Site[] = [];
+    const g: Gather = {
+      out: [],
+      keys: new Set(),
+      specs: new Map(),
+      selections: new Map(),
+    };
     if (path === "/") {
-      all.push(...sites);
-    } else {
-      const keys = new Set<string>();
       for (const s of sites) {
-        // The sites handed down from the parent are all stronger than any
-        // arc this prim's own specs add, so a selection they hold wins.
-        this.expand(s, all, 0, sites, keys);
+        g.out.push(s);
+        this.gather(s, g);
+      }
+    } else {
+      // The sites handed down from the parent are all stronger than any arc
+      // this prim's own specs add, so a selection they hold wins: index
+      // theirs first.
+      for (const s of sites) {
+        this.gather(s, g);
+      }
+      for (const s of sites) {
+        this.expand(s, g, 0);
       }
     }
-    const specs = all.flatMap((s) =>
-      this.specsAt(s).map((x) => ({ ...x, site: s })),
-    );
+    const all = g.out;
+    const specs: (SiteSpec & { site: Site })[] = [];
+    for (const s of all) {
+      for (const x of g.specs.get(s)!) {
+        this.budget.charge(1 + x.spec.fields.size);
+        specs.push({ ...x, site: s });
+      }
+    }
     const strongest = (name: string): Value | undefined => {
       for (const { spec } of specs) {
         const v = spec.fields.get(name);
@@ -831,6 +1067,7 @@ export class Stage {
     for (const { spec } of specs) {
       for (const [k, v] of spec.fields) {
         if (!fields.has(k)) {
+          this.budget.keep();
           fields.set(k, v);
         }
       }
@@ -839,51 +1076,62 @@ export class Stage {
       this.counts.instanceable++;
     }
 
-    // Properties.
-    const props = new Map<string, Prop>();
-    const propNames = new Set<string>();
+    // Properties: each spec found once through the index, in strength order
+    // (sites, then the layers of each), one unit per layer and per spec.
+    const byName = new Map<string, { site: Site; id: string; spec: Spec }[]>();
     for (const s of all) {
       for (const id of s.stack) {
-        for (const n of this.propIndex.get(id)?.get(s.path) ?? []) {
-          propNames.add(n);
+        this.budget.charge();
+        const owned = this.propIndex.get(id)?.get(s.path);
+        if (!owned) {
+          continue;
+        }
+        for (const [n, spec] of owned) {
+          this.budget.charge();
+          let found = byName.get(n);
+          if (!found) {
+            found = [];
+            byName.set(n, found);
+          }
+          found.push({ site: s, id, spec });
         }
       }
     }
-    for (const n of propNames) {
+    const props = new Map<string, Prop>();
+    for (const [n, found] of byName) {
       let typeName: string | undefined;
       let value: Value | undefined;
       let targets: string[] | undefined;
       let timeSamples = false;
       let kind: Prop["kind"] = "attribute";
       let layer = "";
-      for (const s of all) {
-        for (const id of s.stack) {
-          const spec = this.layer(id)?.specs.get(`${s.path}.${n}`);
-          if (!spec) {
-            continue;
-          }
-          if (!layer) {
-            layer = id;
-          }
-          if (spec.type === "relationship") {
-            kind = "relationship";
-          }
-          const f = spec.fields;
-          typeName ??= f.get("typeName") as string | undefined;
-          if (value === undefined && f.has("default")) {
-            value = f.get("default");
-          }
-          if (f.has("timeSamples")) {
-            timeSamples = true;
-          }
-          const t = f.get("connectionPaths") ?? f.get("targetPaths");
-          if (!targets && t !== undefined) {
-            targets = listItems(t)
-              .filter((x): x is string => typeof x === "string")
-              .map((x) => this.mapToStage(s, x));
-          }
+      for (const { site: s, id, spec } of found) {
+        if (!layer) {
+          layer = id;
+        }
+        if (spec.type === "relationship") {
+          kind = "relationship";
+        }
+        const f = spec.fields;
+        typeName ??= f.get("typeName") as string | undefined;
+        if (value === undefined && f.has("default")) {
+          value = f.get("default");
+        }
+        if (f.has("timeSamples")) {
+          timeSamples = true;
+        }
+        const t = f.get("connectionPaths") ?? f.get("targetPaths");
+        if (!targets && t !== undefined) {
+          targets = listItems(t)
+            .filter((x): x is string => typeof x === "string")
+            .map((x) => {
+              this.budget.keep();
+              return this.mapToStage(s, x);
+            });
         }
       }
+      // The property, and the record made from it later.
+      this.budget.keep(2);
       props.set(n, {
         name: n,
         kind,
@@ -895,12 +1143,29 @@ export class Stage {
       });
     }
 
+    // Charged before the children: once the budget runs out, nothing after
+    // them may throw, or the children composed whole would be lost.
+    // The prim, its maps and its record; then each site it names, and each schema.
+    this.budget.keep(4);
+    for (const s of all) {
+      this.budget.keep();
+      this.budget.text(s.path);
+    }
+    const apiSchemas = composeList(
+      specs.map((s) => s.spec.fields.get("apiSchemas")),
+      this.budget,
+    ).filter((x): x is string => typeof x === "string");
+    this.budget.keep(apiSchemas.length);
+
     // Children: the union over every site.
     // Pcp orders children weakest first and appends what stronger sites add.
     const childNames = new Set<string>();
-    for (const s of [...all].reverse()) {
-      for (const id of [...s.stack].reverse()) {
-        for (const n of this.childIndex.get(id)?.get(s.path) ?? []) {
+    for (let i = all.length - 1; i >= 0; i--) {
+      const s = all[i]!;
+      for (let j = s.stack.length - 1; j >= 0; j--) {
+        this.budget.charge();
+        for (const n of this.childIndex.get(s.stack[j]!)?.get(s.path) ?? []) {
+          this.budget.charge();
           childNames.add(n);
         }
       }
@@ -914,25 +1179,47 @@ export class Stage {
       childNames.clear();
     }
     for (const n of childNames) {
-      if (this.stopped) {
-        break;
+      try {
+        const childPath = path === "/" ? `/${n}` : `${path}/${n}`;
+        this.budget.text(childPath);
+        if (childPath.length > MAX_PATH) {
+          // Not OpenUSD's: references can stack namespaces past any real path.
+          this.report(
+            `Prim path longer than ${MAX_PATH} characters at <${quoted(path)}>; not composed.`,
+          );
+          continue;
+        }
+        // Each node of the parent's graph has a counterpart one name deeper;
+        // a site whose path grows past MAX_PATH names no spec, and is left out.
+        const childSites: Site[] = [];
+        for (const s of all) {
+          this.budget.charge(1 + s.chain.length);
+          this.budget.text(s.path);
+          const sitePath = joinChild(s.path, n);
+          if (sitePath.length <= MAX_PATH) {
+            childSites.push({
+              ...s,
+              path: sitePath,
+              chain: s.chain.map((c) => ({ ...c, path: joinChild(c.path, n) })),
+            });
+          }
+        }
+        const child = this.composePrim(childPath, childSites, depth + 1);
+        if (child.fields.get("active") === false) {
+          continue;
+        }
+        // Not defined: no layer says `def` or `class`, so USD doesn't visit it.
+        if (child.specifier === "over") {
+          continue;
+        }
+        children.push(child);
+      } catch (e) {
+        // Out of budget: this child is dropped, and so is every later one.
+        if (e instanceof WorkLimit) {
+          break;
+        }
+        throw e;
       }
-      const childPath = path === "/" ? `/${n}` : `${path}/${n}`;
-      // Each node of the parent's graph has a counterpart one name deeper.
-      const childSites = all.map((s): Site => ({
-        ...s,
-        path: joinChild(s.path, n),
-        chain: s.chain.map((c) => ({ ...c, path: joinChild(c.path, n) })),
-      }));
-      const child = this.composePrim(childPath, childSites, depth + 1);
-      if (child.fields.get("active") === false) {
-        continue;
-      }
-      // Not defined: no layer says `def` or `class`, so USD doesn't visit it.
-      if (child.specifier === "over") {
-        continue;
-      }
-      children.push(child);
     }
 
     const name = path === "/" ? "" : path.slice(path.lastIndexOf("/") + 1);
@@ -942,9 +1229,7 @@ export class Stage {
       typeName: (strongest("typeName") as string | undefined) ?? "",
       specifier: specifier(specs.map((x) => x.spec.fields.get("specifier"))),
       fields,
-      apiSchemas: composeList(
-        specs.map((s) => s.spec.fields.get("apiSchemas")),
-      ).filter((x): x is string => typeof x === "string"),
+      apiSchemas,
       props,
       children,
       sites: all.map((s) => `${s.stack[0]}:${s.path}`),
@@ -986,21 +1271,48 @@ function push(map: Map<string, Set<string>>, key: string, v: string): void {
   }
 }
 
+/**
+ * A variant selection's entries, once per selection: a class's selection is
+ * read again for every prim that inherits it, and a fresh array each time
+ * cost more than the budget's unit.
+ */
+const entries = new WeakMap<object, [string, Value][]>();
+function entriesOf(sel: Record<string, Value>): [string, Value][] {
+  let e = entries.get(sel);
+  if (!e) {
+    e = Object.entries(sel);
+    entries.set(sel, e);
+  }
+  return e;
+}
+
 /** A site's identity within one prim: its layer stack (by root layer) and path. */
 function siteKey(s: Site): string {
   return `${s.stack[0]}\u0000${s.path}`;
 }
 
-/** Composes list ops from strongest to weakest into one list. */
-export function composeList(opinions: readonly (Value | undefined)[]): Value[] {
+/**
+ * Composes list ops from strongest to weakest into one list, charging
+ * `budget` one unit per element it copies or compares, and one more per 64
+ * characters of each element's key.
+ */
+export function composeList(
+  opinions: readonly (Value | undefined)[],
+  budget = new Budget(Infinity),
+): Value[] {
   let result: Value[] = [];
-  const key = (v: Value) => JSON.stringify(v);
+  const key = (v: Value) => {
+    const k = JSON.stringify(v);
+    budget.text(k);
+    return keyOf(k);
+  };
   for (let i = opinions.length - 1; i >= 0; i--) {
     const o = opinions[i];
     if (o === undefined || o === null) {
       continue;
     }
     if (Array.isArray(o)) {
+      budget.charge(1 + o.length);
       result = [...(o as Value[])];
       continue;
     }
@@ -1010,6 +1322,7 @@ export function composeList(opinions: readonly (Value | undefined)[]): Value[] {
     }
     const op = o as ListOp;
     if (op.explicit) {
+      budget.charge(1 + op.explicit.length);
       result = [...op.explicit];
       continue;
     }
@@ -1019,7 +1332,10 @@ export function composeList(opinions: readonly (Value | undefined)[]): Value[] {
     const drop = new Set([...pre, ...app].map(key));
     result = [
       ...pre,
-      ...result.filter((v) => !drop.has(key(v)) && !del.has(key(v))),
+      ...result.filter((v) => {
+        const k = key(v);
+        return !drop.has(k) && !del.has(k);
+      }),
       ...app,
     ];
   }

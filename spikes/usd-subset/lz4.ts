@@ -73,6 +73,18 @@ export function tfFastDecompress(
   size: number,
   exact = true,
 ): Uint8Array {
+  // LZ4 expands at most about 255 times, so more than that is never
+  // allocated: an exact size past it is a lie, refused; a capacity (integer
+  // coding's, not exact) is cut to it.
+  const most = src.length * 256 + 64;
+  if (size > most) {
+    if (exact) {
+      throw new Error(
+        `lz4: ${size} bytes declared from ${src.length} compressed bytes`,
+      );
+    }
+    size = most;
+  }
   const out = new Uint8Array(size);
   const chunks = src[0] ?? 0;
   if (chunks === 0) {

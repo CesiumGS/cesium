@@ -6,6 +6,17 @@
 
 import { tfFastDecompress } from "./lz4.ts";
 
+/**
+ * Refuses a declared count the compressed bytes can't hold, before anything
+ * is allocated: each value takes at least two bits of the decoded stream,
+ * which LZ4 expands from its input at most about 255 times.
+ */
+function checkCount(src: Uint8Array, n: number): void {
+  if (n > src.length * 1100 + 1024) {
+    throw new Error(`ints: ${n} values declared from ${src.length} bytes`);
+  }
+}
+
 /** Bytes the decoded stream can take for `n` values of `width` bytes, as OpenUSD sizes its buffer. */
 function workingSize(n: number, width: 4 | 8): number {
   return width + ((n * 2 + 7) >> 3) + n * width;
@@ -13,6 +24,7 @@ function workingSize(n: number, width: 4 | 8): number {
 
 /** Decodes `n` 32-bit integers (signed) from a compressed buffer. */
 export function decodeInts32(src: Uint8Array, n: number): Int32Array {
+  checkCount(src, n);
   const out = new Int32Array(n);
   if (n === 0) {
     return out;
@@ -46,6 +58,7 @@ export function decodeInts32(src: Uint8Array, n: number): Int32Array {
 
 /** Decodes `n` 64-bit integers (signed) from a compressed buffer, as JavaScript numbers. */
 export function decodeInts64(src: Uint8Array, n: number): Float64Array {
+  checkCount(src, n);
   const out = new Float64Array(n);
   if (n === 0) {
     return out;

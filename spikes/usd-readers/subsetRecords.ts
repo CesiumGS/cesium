@@ -9,21 +9,48 @@ import type { AttrRecord, PrimRecord, StageRecord } from "./facts.ts";
 /** Token arrays longer than this are counted, not kept. */
 const SHORT = 64;
 
+/**
+ * Integer arrays' sums, once per array: a class's array is shared by every
+ * prim that inherits it, and a hostile file can have thousands inherit a
+ * large one. The composer charged its budget for the prims, not for this.
+ */
+const sums = new WeakMap<ArrayLike<number>, number>();
+
+/** Whether an array holds only strings, once per array, for the same reason. */
+const allStrings = new WeakMap<readonly Value[], boolean>();
+
+function stringsOnly(value: readonly Value[]): boolean {
+  let only = allStrings.get(value);
+  if (only === undefined) {
+    only = value.every((x) => typeof x === "string");
+    allStrings.set(value, only);
+  }
+  return only;
+}
+
+function sumOf(data: Int32Array | Uint32Array): number {
+  let sum = sums.get(data);
+  if (sum === undefined) {
+    sum = 0;
+    for (const x of data) {
+      sum += x;
+    }
+    sums.set(data, sum);
+  }
+  return sum;
+}
+
 function attrRecord(typeName: string, value: Value | undefined): AttrRecord {
   const type = typeName || "unknown";
   if (isArray(value)) {
     const n = value.data.length / Math.max(1, value.tuple);
     if (value.data instanceof Int32Array || value.data instanceof Uint32Array) {
-      let sum = 0;
-      for (const x of value.data) {
-        sum += x;
-      }
-      return { type, count: n, sum };
+      return { type, count: n, sum: sumOf(value.data) };
     }
     return { type, count: n };
   }
   if (Array.isArray(value)) {
-    const strings = value.every((x) => typeof x === "string");
+    const strings = stringsOnly(value);
     return strings && value.length <= SHORT
       ? { type, count: value.length, value: value as string[] }
       : { type, count: value.length };
