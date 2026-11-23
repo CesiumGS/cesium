@@ -29,3 +29,7 @@ Recommended: A.
 ## Answer
 
 Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).
+
+## Superseded (2026-11-23)
+
+The owner revisited this after the third architecture review: CS-1149 A gives undeclared content a random session name, with nothing derived from its URL.

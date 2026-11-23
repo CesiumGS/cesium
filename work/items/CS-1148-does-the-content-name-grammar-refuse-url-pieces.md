@@ -28,3 +28,7 @@ Recommended: A.
 ## Answer
 
 Recorded in the front matter (`answer:`, `answered_by`, `answered_at`).
+
+## Superseded (2026-11-23)
+
+CS-1150 A replaces the wording with a character class: no `/` and no `@`.
