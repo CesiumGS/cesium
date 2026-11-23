@@ -6,6 +6,7 @@ state: dropped
 created: 2026-11-22
 project: CS-437
 decider: owner
+reason: "Superseded by CS-1083, the merge decision for CS-940's later tip, after StableId became branded (CS-997 B). Never answered; dropped as a duplicate."
 ---
 
 ## Question
