@@ -2511,10 +2511,6 @@ const defaultUndergroundColorAlphaByDistance = new NearFarScalar();
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const surfaceTile = /** @type {GlobeSurfaceTile} */ (tile.data);
 
-  if (isTileClippedAwayByInversePolygons(tileProvider, surfaceTile)) {
-    return;
-  }
-
   if (!defined(surfaceTile.vertexArray)) {
     if (surfaceTile.fill === undefined) {
       // No fill was created for this tile, probably because this tile is not connected to
@@ -2523,6 +2519,15 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       surfaceTile.fill = new TerrainFillMesh(tile);
     }
     surfaceTile.fill.update(tileProvider, frameState);
+  }
+
+  // A tile clipped away by inverse polygons is not drawn, but its fill
+  // mesh is still needed: a neighboring fill tile stitches its edges
+  // against this tile's mesh, and reading the edge indices of an
+  // undefined mesh crashes the frame (#13967). Keep this check after the
+  // fill update above.
+  if (isTileClippedAwayByInversePolygons(tileProvider, surfaceTile)) {
+    return;
   }
 
   const creditDisplay = frameState.creditDisplay;
