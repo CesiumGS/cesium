@@ -634,7 +634,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 33 of 101 done, 30 ready, 20 blocked, 18 proposed.
+CS-191, Planned, led by owner: 38 of 107 done, 31 ready, 20 blocked, 18 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -754,6 +754,12 @@ No milestone
 - [?] CS-1070 Tileset and terrain structure is trusted on the main thread. Proposed. Needs nothing.
 - [?] CS-1071 Small robustness gaps in the decoders. Proposed. Needs nothing.
 - [x] CS-1080 decision: What does a feature ID's canonical source keep of a URL's query when its kind declares nothing?. Done.
+- [x] CS-1084 decision: Does a new version of the data change feature IDs?. Done.
+- [x] CS-1085 decision: Who holds a feed change for a feature that isn't loaded?. Done.
+- [x] CS-1086 decision: Does CS-847 merge before or after its restructuring?. Done.
+- [x] CS-1087 decision: Where does a content's identity come from?. Done.
+- [x] CS-1089 decision: Do tilesets' own IDs take the declared name too?. Done.
+- [ ] CS-1093 decision: Merge CS-966, credentials and queries kept to their own origins. Needs nothing. Decided by owner.
 
 ### Sky, light and atmosphere
 
@@ -1035,7 +1041,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 60 of 97 done, 16 ready, 13 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 60 of 98 done, 17 ready, 13 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -1160,10 +1166,11 @@ No milestone
 - [x] CS-929 decision: Merge CS-392, finding runs from the terminal (runs, show, pin). Done.
 - [ ] CS-992 Dyno loads an outside module and benchmarks it as it does the built-in sources. Needs nothing.
 - [ ] CS-1008 Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C). Needs CS-1004 (Benchmarks, parity and image regression).
+- [ ] CS-1095 decision: Merge CS-395, reference images and the sweep view. Needs nothing. Decided by owner.
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 34 of 62 done, 14 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 35 of 64 done, 15 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1217,7 +1224,7 @@ No milestone
 - [x] CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936). Done.
 - [x] CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes. Done.
 - [x] CS-944 decision: CS-939: CorePick already has a camera field; how is CorePick named?. Done.
-- [-] CS-950 decision: Merge CS-940, stableIdToHex and parseStableId. Dropped: undefined
+- [-] CS-950 decision: Merge CS-940, stableIdToHex and parseStableId. Dropped: Superseded by CS-1083, the merge decision for CS-940's later tip, after StableId became branded (CS-997 B). Never answered; dropped as a duplicate.
 - [x] CS-974 decision: What does alpha.1 say about core's names that the package map moves elsewhere?. Done.
 - [x] CS-975 decision: Is the stability-tier sort its own pass before the name review?. Done.
 - [x] CS-976 decision: One word for end of life: dispose or destroy?. Done.
@@ -1242,6 +1249,8 @@ No milestone
 - [x] CS-1079 decision: Merge CS-939, the camera rename on pick results. Done.
 - [ ] CS-1081 decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?. Needs nothing. Decided by owner.
 - [x] CS-1083 decision: Merge CS-940, the StableId hex helpers with a branded StableId. Done.
+- [x] CS-1088 decision: May hosts save feature IDs before the API review settles StableKey's encoding?. Done.
+- [ ] CS-1094 decision: Merge CS-977's first part: engine internals leave core's public entry. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -1315,7 +1324,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 32 of 48 done, 2 ready, 0 blocked, 14 proposed.
+CS-609, Planned, led by owner: 35 of 51 done, 2 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1348,7 +1357,7 @@ No milestone
 - [x] CS-938 Packed pre-release builds a host application can install, at a named commit. Done.
 - [x] CS-942 decision: Merge CS-938, packed pre-release sets for a host application. Done.
 - [?] CS-949 The packed-builds guide: scope each override to the 2.0 packages, and say how pnpm hosts set them. Proposed. Needs nothing.
-- [ ] CS-951 A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm. Needs CS-613.
+- [x] CS-951 A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm. Done.
 - [x] CS-953 decision: Do the harness milestones, the spike and the sample stay alpha.1 gates?. Done.
 - [x] CS-973 decision: Which packages publish at alpha.1, and are their names final then?. Done.
 - [x] CS-993 decision: Are surface projection and the MVT, Esri and USD sources alpha.1 gates?. Done.
@@ -1370,6 +1379,9 @@ No milestone
 - [?] CS-1075 Stale items and gates inside the alpha.1 set. Proposed. Needs nothing.
 - [?] CS-1076 api/surface.txt and Engine.ts are shared by many ready items. Proposed. Needs nothing.
 - [?] CS-1077 What alpha.1 must not foreclose for beta.1. Proposed. Needs nothing.
+- [x] CS-1090 decision: The pnpm spike's decision: move 2.0 from npm to pnpm, stay on npm, or take a middle option?. Done.
+- [ ] CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A). Needs CS-951 and CS-1090.
+- [x] CS-1092 decision: Merge CS-951, the pnpm spike's write-up. Done.
 
 ### Packaging and package names
 

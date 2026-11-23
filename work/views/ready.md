@@ -162,6 +162,7 @@ CS-191 Content sources and formats
   CS-970  Feature IDs and feature counts from content are checked, so one tile can't name another item's features
   CS-972  A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
   CS-1014  The engine's format limits are named public constants a host can read and raise (CS-1012 A)
+  CS-1093  decision: Merge CS-966, credentials and queries kept to their own origins
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -253,6 +254,7 @@ CS-389 Dyno as the development harness
   CS-856  Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items
   CS-992  Dyno loads an outside module and benchmarks it as it does the built-in sources
   CS-1008  Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C)
+  CS-1095  decision: Merge CS-395, reference images and the sweep view
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -269,6 +271,7 @@ CS-437 The public API reviews
   CS-990  GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
   CS-1001  The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal
   CS-1081  decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?
+  CS-1094  decision: Merge CS-977's first part: engine internals leave core's public entry
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -304,8 +307,8 @@ CS-18 The work tracker
   CS-680  Triage the open items that fit no release
 
 CS-609 A clean 2.0 branch and a modern build
-  CS-951  A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
+  CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
 
-238 ready
+241 ready
 ```

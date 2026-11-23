@@ -64,7 +64,7 @@ CS-190 Vector drawing and the styling language [Planned], led by owner
   waits on: CS-10 Cesium IR (2)
   waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2); CS-18 The work tracker (4); CS-191 Content sources and formats (2); CS-642 Geometry generators (1); CS-197 Ray queries and path tracing (1)
 CS-191 Content sources and formats [Planned], led by owner
-  33 of 101 done, 30 ready, 20 blocked, 18 proposed
+  38 of 107 done, 31 ready, 20 blocked, 18 proposed
   waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-190 Vector drawing and the styling language (2); CS-647 Conditional content and motion (1)
   waited on by: CS-16 Streaming robustness (7); CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (18); CS-584 The widgets library (1); CS-647 Conditional content and motion (1); CS-628 Sandcastle as 2.0's gallery (7); CS-579 Editing (5); CS-615 Packaging and package names (1)
 CS-192 Sky, light and atmosphere [Planned], led by owner
@@ -100,11 +100,11 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  60 of 97 done, 16 ready, 13 blocked, 8 proposed
+  60 of 98 done, 17 ready, 13 blocked, 8 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (8)
 CS-437 The public API reviews [Planned], led by owner
-  34 of 62 done, 14 ready, 4 blocked, 10 proposed, 1 dropped
+  35 of 64 done, 15 ready, 4 blocked, 10 proposed, 1 dropped
   waits on: nothing open
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1); CS-18 The work tracker (9); CS-628 Sandcastle as 2.0's gallery (3)
 CS-579 Editing [Planned], led by owner
@@ -120,7 +120,7 @@ CS-596 Trust and evals [Planned], led by owner
   waits on: CS-195 Benchmarks, parity and image regression (1)
   waited on by: CS-18 The work tracker (3)
 CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
-  32 of 48 done, 2 ready, 0 blocked, 14 proposed
+  35 of 51 done, 2 ready, 0 blocked, 14 proposed
   waits on: CS-615 Packaging and package names (1)
   waited on by: CS-18 The work tracker (2)
 CS-615 Packaging and package names [Planned], led by owner

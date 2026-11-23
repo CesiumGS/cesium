@@ -514,6 +514,12 @@ graph LR
     CS_1070["CS-1070 Tileset and terrain structure is trusted on the main thread"]:::proposed
     CS_1071["CS-1071 Small robustness gaps in the decoders"]:::proposed
     CS_1080["CS-1080 What does a feature ID's canonical source keep of a URL's quer"]:::done
+    CS_1084["CS-1084 Does a new version of the data change feature IDs?"]:::done
+    CS_1085["CS-1085 Who holds a feed change for a feature that isn't loaded?"]:::done
+    CS_1086["CS-1086 Does CS-847 merge before or after its restructuring?"]:::done
+    CS_1087["CS-1087 Where does a content's identity come from?"]:::done
+    CS_1089["CS-1089 Do tilesets' own IDs take the declared name too?"]:::done
+    CS_1093["CS-1093 Merge CS-966, credentials and queries kept to their own origin"]:::decision
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -794,6 +800,7 @@ graph LR
     CS_929["CS-929 Merge CS-392, finding runs from the terminal (runs, show, pin)"]:::done
     CS_992["CS-992 Dyno loads an outside module and benchmarks it as it does the b"]:::open
     CS_1008["CS-1008 Dyno's quiet rule gets a wait limit, after which the orchestra"]:::open
+    CS_1095["CS-1095 Merge CS-395, reference images and the sweep view"]:::decision
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -859,6 +866,8 @@ graph LR
     CS_1079["CS-1079 Merge CS-939, the camera rename on pick results"]:::done
     CS_1081["CS-1081 Is StableKey's feature encoding, ['feature', source, key(, row"]:::decision
     CS_1083["CS-1083 Merge CS-940, the StableId hex helpers with a branded StableId"]:::done
+    CS_1088["CS-1088 May hosts save feature IDs before the API review settles Stabl"]:::done
+    CS_1094["CS-1094 Merge CS-977's first part: engine internals leave core's publi"]:::decision
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -933,7 +942,7 @@ graph LR
     CS_938["CS-938 Packed pre-release builds a host application can install, at a "]:::done
     CS_942["CS-942 Merge CS-938, packed pre-release sets for a host application"]:::done
     CS_949["CS-949 The packed-builds guide: scope each override to the 2.0 package"]:::proposed
-    CS_951["CS-951 A pnpm spike: install time and disk across worktrees, strict de"]:::open
+    CS_951["CS-951 A pnpm spike: install time and disk across worktrees, strict de"]:::done
     CS_953["CS-953 Do the harness milestones, the spike and the sample stay alpha."]:::done
     CS_973["CS-973 Which packages publish at alpha.1, and are their names final th"]:::done
     CS_993["CS-993 Are surface projection and the MVT, Esri and USD sources alpha."]:::done
@@ -955,6 +964,9 @@ graph LR
     CS_1075["CS-1075 Stale items and gates inside the alpha.1 set"]:::proposed
     CS_1076["CS-1076 api/surface.txt and Engine.ts are shared by many ready items"]:::proposed
     CS_1077["CS-1077 What alpha.1 must not foreclose for beta.1"]:::proposed
+    CS_1090["CS-1090 The pnpm spike's decision: move 2.0 from npm to pnpm, stay on "]:::done
+    CS_1091["CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup"]:::open
+    CS_1092["CS-1092 Merge CS-951, the pnpm spike's write-up"]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1950,6 +1962,8 @@ graph LR
   CS_613 --> CS_1030
   CS_921 --> CS_1078
   CS_971 --> CS_1082
+  CS_951 --> CS_1091
+  CS_1090 --> CS_1091
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

@@ -34,6 +34,7 @@ CS-190 Vector drawing and the styling language
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
+  CS-1093  Merge CS-966, credentials and queries kept to their own origins (owner)
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -52,6 +53,7 @@ CS-437 The public API reviews
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
   CS-1081  Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs? (owner)
+  CS-1094  Merge CS-977's first part: engine internals leave core's public entry (owner)
 
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
@@ -63,5 +65,8 @@ CS-199 Dyno hardening, packaging and CI
 CS-16 Streaming robustness
   CS-1032  Merge CS-144, the fault-injection harness (owner)
 
-19 open decision(s) for owner
+CS-389 Dyno as the development harness
+  CS-1095  Merge CS-395, reference images and the sweep view (owner)
+
+22 open decision(s) for owner
 ```
