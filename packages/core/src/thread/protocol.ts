@@ -138,8 +138,9 @@ const TABLE: Record<string, EntryTable> = {
       ReferenceSurface RefinedPick RendererOption RequestPurpose ResolveView Rig
       RigOrientation RigPosition Route RouteAccuracy RouteStep ScaleAbout
       ScaleAboutOptions
-      SceneItemOptions SdfGeometryOptions SectionOptions SectionOutcome
-      SectionPlaneInput SectionReport SectionRequest SectionResult
+      SceneItemOptions SdfGeometryOptions SectionClientOptions SectionMessage
+      SectionOptions SectionOutcome SectionPlaneInput SectionReply SectionReport
+      SectionRequest SectionResult
       SegmentDistance SelectionView ShaderControl ShaderOverrides ShaderUnit
       SigmaIn SkyOptions SkyPackManifest SlangCache SlangPostLayout
       SlangPostShader CurvilinearEdge CurvilinearFrameSpec Stage StageInfo StageStats
@@ -211,7 +212,8 @@ const TABLE: Record<string, EntryTable> = {
       GraphStageBuilder ImageryProvider InspectController LiveEdge MeshCaps
       ModelPlacement ModelPool ModelResource OffscreenTarget OrbitController
       PointSource PostStage QueryHost RayBackend RayTarget RenderTarget
-      SceneClock SceneItem SectionRunner SliceScheduler SliceUser
+      SceneClock SceneItem SectionClient SectionRunner SectionWorkerLike
+      SliceScheduler SliceUser
       SpatialQueries StepwiseSelection TerrainRayTarget TextureBinding Tile
       Tileset3D TransformNode VectorLayer View ViewLink World
       astrophotoCurveStage blend createPostStage createSpatialQueries
@@ -869,9 +871,22 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         setSurface shownIn surfaceRank unplace views
       `,
     },
+    SectionClient: {
+      query: `
+        run
+      `,
+      command: `
+        dispose forget
+      `,
+    },
     SectionRunner: {
       query: `
         run
+      `,
+    },
+    SectionWorkerLike: {
+      callback: `
+        addEventListener postMessage terminate
       `,
     },
     SliceScheduler: {
