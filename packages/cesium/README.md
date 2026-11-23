@@ -5,11 +5,11 @@ Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the r
 **Setup, once per machine** (nothing here is committed):
 
 ```sh
-npm install                                 # at the repo root
+pnpm install                                # at the repo root (pnpm 11.12.0 or later, through corepack)
 npm run setup      # checks the pinned 1.x, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
 ```
 
-`npm install` (or `npm ci`) installs the pinned CesiumJS 1.x (`cesium-1x`), which
+`pnpm install` installs the pinned CesiumJS 1.x (`cesium-1x`), which
 the parity harness and Dyno's default 1.x engine load; there is no 1.x build
 step. `setup` checks that pin, and fetches the catalog's default
 CesiumJS releases from npm into `~/.cesium-bench/cesium` (or
@@ -772,7 +772,7 @@ Open Licence (France), CC-BY-SA-4.0, CC0-1.0 and the Data licence Germany,
 among others. `GridCatalog.credit` reads each from the CSV.
 
 ```sh
-npm ci                                      # at the repo root: installs the pinned 1.x (cesium-1x) the parity harness uses
+pnpm install --frozen-lockfile              # at the repo root: installs the pinned 1.x (cesium-1x) the parity harness uses
 npm run dev        # dev server at http://127.0.0.1:5190
 npm run test       # unit + 1.x parity (L0) tests
 npm run typecheck
@@ -780,7 +780,7 @@ npm run bench      # the Lab's harnesses (dyno lab); writes bench/results/*.json
 npm run build      # every package's dist/ and the browser build, then the packed checks
 ```
 
-A fresh clone builds and tests with one command: `npm ci && npm run build && npm test`.
+A fresh clone builds and tests with one command: `pnpm install --frozen-lockfile && pnpm run build && pnpm test`.
 
 **dyno**, Dyno's command line (`npx @cesium/dyno`: the private workspace package `tools/dyno`, which
 runs `bench/dyno.mjs`; the scoped name means a missing link fails instead of
