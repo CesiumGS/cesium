@@ -16,7 +16,11 @@
  * are one space: a row named `k` and a draw whose `DrawOptions.id` is `k`
  * are one feature.
  */
-import type { FeatureNamespace, StableId } from "../scene/identity.ts";
+import {
+  type FeatureNamespace,
+  type StableId,
+  storedId,
+} from "../scene/identity.ts";
 import type {
   ChangeOp,
   FeatureData,
@@ -421,8 +425,8 @@ export class ContentRows {
         checkNames(batch, this.writable);
         const ids = this.store(name, map, batch);
         // The source's own row of a key the feed inserted: at or past it.
-        for (const id of ids) {
-          this.unfeed(id);
+        for (const word of ids) {
+          this.unfeed(storedId(word));
         }
       },
       remove: (key) => {
@@ -451,7 +455,7 @@ export class ContentRows {
     const ids = this.idsOf(batch);
     map.set(batch.key, { batch, ids });
     for (let i = 0; i < ids.length; i++) {
-      const id = ids[i]!;
+      const id = storedId(ids[i]!);
       let rows = this.byId.get(id);
       if (!rows) {
         rows = [];
@@ -459,7 +463,7 @@ export class ContentRows {
       }
       rows.push({ sink: name, key: batch.key, index: i });
     }
-    this.changed([...gone, ...ids]);
+    this.changed([...gone, ...Array.from(ids, storedId)]);
     return ids;
   }
 
@@ -483,7 +487,8 @@ export class ContentRows {
     ids: BigUint64Array,
     gone: StableId[],
   ): void {
-    for (const id of ids) {
+    for (const word of ids) {
+      const id = storedId(word);
       const rows = this.byId.get(id);
       if (!rows) {
         continue;

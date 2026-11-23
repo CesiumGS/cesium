@@ -27,7 +27,10 @@ import {
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   FeatureNamespace,
+  parseStableId,
   stableIdOf,
+  stableIdToHex,
+  type StableId,
   type StableKey,
 } from "../packages/core/src/scene/identity.ts";
 import { createBox } from "../packages/core/src/scene/meshes.ts";
@@ -63,6 +66,9 @@ import { fakeEngine } from "./fakeGpu.ts";
 const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
 const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
 const LAYERED = new URL("./fixtures/sources/layeredKind.ts", import.meta.url);
+
+/** A plain bigint as a `StableId`, as test/identity.test.ts does. */
+const asId = (n: bigint) => n as StableId;
 
 const sourceOf = (content: SourceContent) =>
   content.contentSource as unknown as SampleSource;
@@ -805,7 +811,7 @@ describe("CS-831's types: write capabilities and change sets", () => {
   });
 
   it("serializes as JSON with a format name and version 0.2.0, each feature by its key with its ID beside it in decimal, and reads it back", () => {
-    const id = (1n << 63n) + 5n;
+    const id = asId((1n << 63n) + 5n);
     const changes: ChangeSet = {
       id: "cs-2",
       source: "city",
@@ -826,7 +832,7 @@ describe("CS-831's types: write capabilities and change sets", () => {
         {
           op: "update",
           key: "road-7",
-          id: 7n,
+          id: asId(7n),
           base: "e1",
           patch: { properties: { lanes: 3, old: null } },
           before: { properties: { lanes: 2 } },
@@ -1385,14 +1391,14 @@ describe("what the sinks, the edit layer and the change sets refuse", () => {
 
   it("the edit layer refuses negative IDs, IDs wider than 64 bits, and an ID nothing loaded can give a key", () => {
     const namespace = FeatureNamespace.of("s");
-    const max = (1n << 64n) - 1n;
+    const max = asId((1n << 64n) - 1n);
     const layer = new EditLayer({
       idOf: ({ key, row }) => namespace.featureId(key, row),
       loaded: (id) => (id === max ? { key: "max" } : undefined),
     });
-    expect(() => layer.hide(-1n)).toThrow(/unsigned 64-bit/);
-    expect(() => layer.hide(1n << 64n)).toThrow(/unsigned 64-bit/);
-    expect(() => layer.hide(5n)).toThrow(/name the feature by its key/);
+    expect(() => layer.hide(asId(-1n))).toThrow(/unsigned 64-bit/);
+    expect(() => layer.hide(asId(1n << 64n))).toThrow(/unsigned 64-bit/);
+    expect(() => layer.hide(asId(5n))).toThrow(/name the feature by its key/);
     expect(() => layer.hide("")).toThrow(/non-empty string/);
     expect(() =>
       layer.hide({ key: "k", id: namespace.featureId("other") }),
@@ -2013,7 +2019,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     engine.sources.tick();
     const westBox = instanceOf(content, west.key);
     const eastBox = instanceOf(content, east.key);
-    const drawOf = (id: bigint) => world.identity.identify(id)!.draw!.index;
+    const drawOf = (id: StableId) => world.identity.identify(id)!.draw!.index;
     const hidden = (index: number) =>
       (world.draws.recordsU32[index * RECORD_WORDS + FLAGS_WORD]! &
         RecordFlags.hidden) !==
@@ -2166,7 +2172,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
       source: "city",
       ops: [
         { op: "insert" as const, key: "ghost", feature: {} },
-        { op: "delete" as const, key: "road-0", id: 1n },
+        { op: "delete" as const, key: "road-0", id: asId(1n) },
       ],
     };
     sourceOf(content).push({ kind: "features", changes: refused });
@@ -2803,7 +2809,7 @@ describe("edits, draws and two opens of one source in one world (CS-847)", () =>
     const b = await placed("b");
     const box = a.content.featureId("a/box");
     expect(b.content.featureId("a/box")).toBe(box);
-    const drawOf = (id: bigint) => world.identity.identify(id)!.draw!.index;
+    const drawOf = (id: StableId) => world.identity.identify(id)!.draw!.index;
     const aDraw = drawOf(boxOf(a.content, a.item.key));
     const bDraw = drawOf(boxOf(b.content, b.item.key));
     world.identity.setLabels(box, "class", ["kiosk"]);
@@ -3248,6 +3254,46 @@ describe("the seam's invariants (CS-1087 A, CS-1085 A, CS-1084 A, CS-1088 A)", (
         expect(other[k]).not.toBe(a[k]);
       }
     }
+  });
+
+  it("every ID a namespace makes round-trips through stableIdToHex and parseStableId", async () => {
+    const r = random(940);
+    const urls = locators(24);
+    const made: StableId[] = [];
+    for (let i = 0; i < 200; i++) {
+      const name =
+        i % 2 ? `datasets:${word(r, 8)}` : urlName(new URL(pick(r, urls)));
+      const namespace = FeatureNamespace.of(name);
+      const key = word(r, 1 + (i % 12));
+      made.push(
+        namespace.featureId(key),
+        namespace.featureId(key, i),
+        namespace.id(word(r, 6)),
+        namespace.instanceId({
+          kind: "draw",
+          item: key,
+          source: name,
+          content: String(i),
+        }),
+        stableIdOf({ kind: "feature", source: name, key }),
+      );
+    }
+    // And what a loaded content's rows and draws hold.
+    const { rt, place } = runtime();
+    rt.registerKind({ id: "layered", module: LAYERED });
+    const content = await rt.open({ url: "https://data.test/city.layers" });
+    place(content);
+    rt.tick();
+    rt.tick();
+    made.push(...content.rows.ids(), content.featureId("a/box"));
+    content.destroy();
+    for (const id of made) {
+      const hex = stableIdToHex(id);
+      expect(hex).toMatch(/^[0-9a-f]{16}$/);
+      expect(parseStableId(hex)).toBe(id);
+      expect(id).not.toBe(0n);
+    }
+    expect(made.length).toBeGreaterThan(1000);
   });
 
   it("feeds hold nothing for unloaded keys (CS-1085 A): ops on keys nothing resident holds leave nothing, and the key loads as its source writes it", async () => {

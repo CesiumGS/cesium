@@ -69,6 +69,15 @@ function brandId(value: bigint): StableId {
 }
 
 /**
+ * @internal Reads back an ID the engine stored as a 64-bit word (a
+ * `BigUint64Array` entry it filled from a `StableId`). It makes no new ID:
+ * it gives a stored one its brand again, through `brandId`.
+ */
+export function storedId(word: bigint): StableId {
+  return brandId(word);
+}
+
+/**
  * Taxonomy name to labels: `{ class: ["car"] }`. Labels in a taxonomy are a
  * set: sorted and without repeats wherever the engine hands them out.
  */
@@ -629,7 +638,7 @@ export class FeatureNamespace {
       .update(ENCODER.encode(text))
       .digest();
     const id = (BigInt(h2) << 32n) | BigInt(h1);
-    return id === 0n ? 1n : id;
+    return brandId(id === 0n ? 1n : id);
   }
 
   /**
@@ -1578,7 +1587,7 @@ export class IdentityTable implements Identity {
     }
     const indexed = entry.featured ? entry.count : 1;
     for (let local = 0; local < indexed; local++) {
-      const id = features[local]!;
+      const id = brandId(features[local]!);
       const slots = id === 0n ? undefined : this.featureSlots.get(id);
       if (!slots) {
         continue;
@@ -1596,7 +1605,7 @@ export class IdentityTable implements Identity {
   /** Local feature `local`'s feature ID, when it has one. */
   private featureOf(entry: DrawIds, local: number): StableId | undefined {
     const id = entry.features?.[local];
-    return id === undefined || id === 0n ? undefined : id;
+    return id === undefined || id === 0n ? undefined : brandId(id);
   }
 
   private insert(
