@@ -343,8 +343,17 @@ class RequestHandle {
    * the given resource.
    *
    * @param {Resource} resource The resource
+   * @param {Function} priorityFunction The priority function that
+   * will be passed to the 'Request' objects that are created
+   * internally.
    */
-  constructor(resource) {
+  constructor(resource, priorityFunction) {
+    /**
+     * The resource that data is requested from
+     *
+     * @type {Resource}
+     * @readonly
+     */
     this._resource = resource;
 
     /**
@@ -386,6 +395,15 @@ class RequestHandle {
      * @readonly
      */
     this._requestListeners = new Set();
+
+    /**
+     * The priority function that will be passed to the 'Request' objects
+     * that are created internally.
+     *
+     * @type {Function}
+     * @readonly
+     */
+    this._priorityFunction = priorityFunction;
   }
 
   /**
@@ -532,20 +550,14 @@ class RequestHandle {
   /**
    * Create and return the request.
    *
-   * This is similar to what was done in Multiple3DTileContent, except
-   * for the "priority function", which may not be applicable here...
-   *
    * @returns {Request} The request
    */
   _createRequest() {
-    const priorityFunction = () => {
-      return 0;
-    };
     const request = new Request({
       throttle: true,
       throttleByServer: true,
       type: RequestType.TILES3D,
-      priorityFunction: priorityFunction,
+      priorityFunction: this._priorityFunction,
     });
     return request;
   }
@@ -991,7 +1003,10 @@ class ContentHandle {
     const resource = baseResource.getDerivedResource({
       url: uri,
     });
-    const requestHandle = new RequestHandle(resource);
+    const priorityFunction = () => {
+      return this._tile._priority;
+    };
+    const requestHandle = new RequestHandle(resource, priorityFunction);
     this._requestHandle = requestHandle;
 
     // Attach any request listeners that have already been added
