@@ -3644,12 +3644,16 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     rt.registerKind({ id: "echo-b", module: ECHO_B });
     interface Spec {
       kind: "echo" | "echo-b";
+      /** The URL's path. */
+      path: string;
       query: Record<string, string>;
       options: Record<string, string>;
       /** The declared credential's value (`token`), in the URL too when `inUrl`. */
       credential?: string;
       inUrl?: boolean;
       name?: string;
+      /** `ResolvedAsset.version`: it enters identity only through a name (CS-1084 A). */
+      version?: string;
     }
     const specs = new Map<string, Spec>();
     rt.addResolver({
@@ -3657,7 +3661,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       accepts: (ref) => "resolver" in ref && ref.resolver === "t4",
       resolve: (ref) => {
         const spec = specs.get("id" in ref ? ref.id : "")!;
-        const url = new URL("https://svc.test/maps/data");
+        const url = new URL(spec.path, "https://svc.test");
         for (const [name, value] of Object.entries(spec.query)) {
           url.searchParams.set(name, value);
         }
@@ -3677,6 +3681,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
               }
             : {}),
           ...(spec.name !== undefined ? { name: spec.name } : {}),
+          ...(spec.version !== undefined ? { version: spec.version } : {}),
         });
       },
     });
@@ -3700,11 +3705,14 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     const PARAMETERS = ["key", "policy", "st", "layer", "sig", "auth"];
     const base = (): Spec => ({
       kind: pick(r, ["echo", "echo-b"] as const),
+      path: `/maps/${word(r, 4)}/data`,
+      version: word(r, 3),
       query: Object.fromEntries(PARAMETERS.map((p) => [p, word(r, 5)])),
       options: { style: word(r, 5), depth: word(r, 2) },
     });
     const differing = [
       "kind",
+      "path",
       "query",
       "option",
       "credential",
@@ -3712,7 +3720,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       "one name",
     ] as const;
     const failures: string[] = [];
-    for (let i = 0; i < 48; i++) {
+    for (let i = 0; i < 56; i++) {
       const what = differing[i % differing.length]!;
       const a = base();
       const b: Spec = {
@@ -3722,6 +3730,8 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       };
       if (what === "kind") {
         b.kind = a.kind === "echo" ? "echo-b" : "echo";
+      } else if (what === "path") {
+        b.path = `/maps/${word(r, 5)}/data`;
       } else if (what === "query") {
         b.query[pick(r, PARAMETERS)] = word(r, 6);
       } else if (what === "option") {
@@ -3734,11 +3744,14 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
         a.name = `datasets:${word(r, 8)}`;
         b.name = `datasets:${word(r, 8)}`;
       } else {
-        // One name for both, and something else differs.
+        // One name for both, and everything else differs: kind, path,
+        // query, options and version.
         a.name = b.name = `datasets:${word(r, 8)}`;
         b.kind = a.kind === "echo" ? "echo-b" : "echo";
+        b.path = `/maps/${word(r, 5)}/data`;
         b.query.layer = word(r, 6);
         b.options.style = word(r, 6);
+        b.version = word(r, 4);
       }
       const x = await open(a);
       const y = await open(b);
