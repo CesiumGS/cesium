@@ -13,11 +13,29 @@ import { DeveloperError, Intersect, defined } from "@cesium/core";
 const MAXIMUM_AREAS = 31;
 
 /**
+ * What one area wants for a tile.
+ *
+ * @private
+ */
+const AreaDecision = Object.freeze({
+  REFINE: 0,
+  STOP: 1,
+  DEFER: 2,
+});
+
+/**
  * A collection of {@link Cesium3DTilesetAreaSelection} instances for a {@link Cesium3DTileset}.
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class Cesium3DTilesetAreaSelectionCollection {
+  /**
+   * The decisions returned by classify. Exposed for testing.
+   *
+   * @ignore
+   */
+  static AreaDecision = AreaDecision;
+
   constructor() {
     /** @type {Cesium3DTilesetAreaSelection[]} */
     this._areas = [];
@@ -135,6 +153,33 @@ class Cesium3DTilesetAreaSelectionCollection {
       }
     }
     return mask;
+  }
+
+  /**
+   * Classifies a tile for one area by comparing the tile's measure to the
+   * area's range. A tile coarser than the range refines, a tile at or finer
+   * than the fine bound stops, and a tile inside the range is left to the
+   * screen space error. NaN and negative measures are invalid and are left to
+   * the screen space error, in every pass.
+   *
+   * @param {Cesium3DTilesetAreaSelection} area The area to classify against.
+   * @param {number} m The tile's measure for this area.
+   * @param {boolean} isAreaPass Whether this is the area pass, where tiles inside the range refine.
+   * @returns {number} An {@link AreaDecision} value.
+   * @private
+   */
+  classify(area, m, isAreaPass) {
+    if (Number.isNaN(m) || m < 0.0) {
+      return AreaDecision.DEFER;
+    }
+    if (m > area.maximumMeasure) {
+      return AreaDecision.REFINE;
+    }
+    if (m <= area.effectiveMinimumMeasure) {
+      return AreaDecision.STOP;
+    }
+
+    return isAreaPass ? AreaDecision.REFINE : AreaDecision.DEFER;
   }
 
   /**

@@ -267,4 +267,91 @@ describe("Scene/Cesium3DTilesetAreaSelectionCollection", () => {
       expect(cullingVolume.computeVisibility).not.toHaveBeenCalled();
     });
   });
+
+  describe("classify", () => {
+    const AreaDecision = Cesium3DTilesetAreaSelectionCollection.AreaDecision;
+
+    function createRangeArea() {
+      return Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        minimumGeometricError: 2.0,
+        maximumGeometricError: 16.0,
+      });
+    }
+
+    function createFixedArea() {
+      return Cesium3DTilesetAreaSelection.fromGeometricError({
+        area: rectangle,
+        geometricError: 2.0,
+      });
+    }
+
+    it("refines a tile coarser than the range", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, 32.0, false)).toBe(AreaDecision.REFINE);
+    });
+
+    it("defers a tile inside the range", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, 8.0, false)).toBe(AreaDecision.DEFER);
+    });
+
+    it("stops a tile at the fine bound", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, 2.0, false)).toBe(AreaDecision.STOP);
+    });
+
+    it("stops a tile finer than the range", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, 1.0, false)).toBe(AreaDecision.STOP);
+    });
+
+    it("refines or stops at a fixed level of detail", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createFixedArea());
+
+      expect(collection.classify(area, 4.0, false)).toBe(AreaDecision.REFINE);
+      expect(collection.classify(area, 2.0, false)).toBe(AreaDecision.STOP);
+    });
+
+    it("defers an invalid measure", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, NaN, false)).toBe(AreaDecision.DEFER);
+      expect(collection.classify(area, -1.0, false)).toBe(AreaDecision.DEFER);
+    });
+
+    it("refines a tile inside the range in the area pass", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, 8.0, true)).toBe(AreaDecision.REFINE);
+    });
+
+    it("defers an invalid measure in the area pass", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      expect(collection.classify(area, NaN, true)).toBe(AreaDecision.DEFER);
+      expect(collection.classify(area, -1.0, true)).toBe(AreaDecision.DEFER);
+    });
+
+    it("stops at the relaxed fine bound", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const area = collection.add(createRangeArea());
+
+      collection._relaxation = 4.0;
+
+      expect(collection.classify(area, 8.0, false)).toBe(AreaDecision.STOP);
+    });
+  });
 });
