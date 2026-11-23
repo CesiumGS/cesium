@@ -34,7 +34,6 @@ CS-190 Vector drawing and the styling language
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
-  CS-1093  Merge CS-966, credentials and queries kept to their own origins (owner)
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -68,5 +67,5 @@ CS-16 Streaming robustness
 CS-389 Dyno as the development harness
   CS-1095  Merge CS-395, reference images and the sweep view (owner)
 
-22 open decision(s) for owner
+21 open decision(s) for owner
 ```

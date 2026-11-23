@@ -114,6 +114,7 @@ graph LR
     CS_1057["CS-1057 The precision seam's test guards four field names; everything "]:::proposed
     CS_1058["CS-1058 Fitted draws lose their 'exact' center on Apple GPUs too"]:::proposed
     CS_1078["CS-1078 A compiled route's center term wraps when F(c) minus the eye p"]:::proposed
+    CS_1096["CS-1096 How does CS-921's center term handle values past 2³⁰ units?"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -489,7 +490,7 @@ graph LR
     CS_963["CS-963 Each engine takes its own fetch and credential provider, defaul"]:::open
     CS_964["CS-964 A small coordinate contract in core, implemented by crs-proj or"]:::open
     CS_965["CS-965 Content sources see the scene clock, with its epoch and time sc"]:::open
-    CS_966["CS-966 resolveUri stops copying the base URL's query to other origins,"]:::open
+    CS_966["CS-966 resolveUri stops copying the base URL's query to other origins,"]:::done
     CS_968["CS-968 Render features at alpha.1: public with a seams-only context, t"]:::done
     CS_969["CS-969 Content workers bound what a file states: allocation, recursion"]:::open
     CS_970["CS-970 Feature IDs and feature counts from content are checked, so one"]:::open
@@ -519,7 +520,9 @@ graph LR
     CS_1086["CS-1086 Does CS-847 merge before or after its restructuring?"]:::done
     CS_1087["CS-1087 Where does a content's identity come from?"]:::done
     CS_1089["CS-1089 Do tilesets' own IDs take the declared name too?"]:::done
-    CS_1093["CS-1093 Merge CS-966, credentials and queries kept to their own origin"]:::decision
+    CS_1093["CS-1093 Merge CS-966, credentials and queries kept to their own origin"]:::done
+    CS_1097["CS-1097 Does CS-913's USD reader get one structural round, a narrower "]:::done
+    CS_1098["CS-1098 CS-966's remaining minors: off-list hook query tokens through "]:::proposed
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -801,6 +804,7 @@ graph LR
     CS_992["CS-992 Dyno loads an outside module and benchmarks it as it does the b"]:::open
     CS_1008["CS-1008 Dyno's quiet rule gets a wait limit, after which the orchestra"]:::open
     CS_1095["CS-1095 Merge CS-395, reference images and the sweep view"]:::decision
+    CS_1099["CS-1099 Example captures without the host's warning banner"]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1964,6 +1968,8 @@ graph LR
   CS_971 --> CS_1082
   CS_951 --> CS_1091
   CS_1090 --> CS_1091
+  CS_966 --> CS_1098
+  CS_394 --> CS_1099
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

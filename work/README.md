@@ -138,7 +138,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 29 of 60 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 30 of 61 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -211,6 +211,7 @@ No milestone
 - [?] [CS-1057](./items/CS-1057-the-precision-seam-s-test-guards-four-field.md) The precision seam's test guards four field names; everything else that needs ordered float math is outside it. Proposed. Needs nothing.
 - [?] [CS-1058](./items/CS-1058-fitted-draws-lose-their-exact-center-on-apple.md) Fitted draws lose their "exact" center on Apple GPUs too. Proposed. Needs nothing.
 - [?] [CS-1078](./items/CS-1078-a-compiled-route-s-center-term-wraps-when-f-c.md) A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
+- [x] [CS-1096](./items/CS-1096-how-does-cs-921-s-center-term-handle-values.md) decision: How does CS-921's center term handle values past 2³⁰ units?. Done.
 
 ### Live MaterialX graph editing
 
@@ -691,7 +692,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 38 of 107 done, 31 ready, 20 blocked, 18 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 41 of 109 done, 29 ready, 20 blocked, 19 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -786,7 +787,7 @@ No milestone
 - [ ] [CS-963](./items/CS-963-each-engine-takes-its-own-fetch-and-credential.md) Each engine takes its own fetch and credential provider, defaulting to the page's (CS-958 A). Needs CS-958.
 - [ ] [CS-964](./items/CS-964-a-small-coordinate-contract-in-core-implemented.md) A small coordinate contract in core, implemented by crs-proj or the host and registered per engine (CS-959 A). Needs CS-959.
 - [ ] [CS-965](./items/CS-965-content-sources-see-the-scene-clock-with-its.md) Content sources see the scene clock, with its epoch and time scale named, and wall time apart (CS-960 A). Needs CS-960.
-- [ ] [CS-966](./items/CS-966-resolveuri-stops-copying-the-base-url-s-query.md) resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins. Needs nothing.
+- [x] [CS-966](./items/CS-966-resolveuri-stops-copying-the-base-url-s-query.md) resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins. Done.
 - [x] [CS-968](./items/CS-968-render-features-at-alpha-1-public-with-a-seams.md) decision: Render features at alpha.1: public with a seams-only context, the 0.x line, or raw device access?. Done.
 - [ ] [CS-969](./items/CS-969-content-workers-bound-what-a-file-states.md) Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker. Needs nothing.
 - [ ] [CS-970](./items/CS-970-feature-ids-and-feature-counts-from-content-are.md) Feature IDs and feature counts from content are checked, so one tile can't name another item's features. Needs nothing.
@@ -816,7 +817,9 @@ No milestone
 - [x] [CS-1086](./items/CS-1086-does-cs-847-merge-before-or-after-its.md) decision: Does CS-847 merge before or after its restructuring?. Done.
 - [x] [CS-1087](./items/CS-1087-where-does-a-content-s-identity-come-from.md) decision: Where does a content's identity come from?. Done.
 - [x] [CS-1089](./items/CS-1089-do-tilesets-own-ids-take-the-declared-name-too.md) decision: Do tilesets' own IDs take the declared name too?. Done.
-- [ ] [CS-1093](./items/CS-1093-merge-cs-966-credentials-and-queries-kept-to.md) decision: Merge CS-966, credentials and queries kept to their own origins. Needs nothing. Decided by owner.
+- [x] [CS-1093](./items/CS-1093-merge-cs-966-credentials-and-queries-kept-to.md) decision: Merge CS-966, credentials and queries kept to their own origins. Done.
+- [x] [CS-1097](./items/CS-1097-does-cs-913-s-usd-reader-get-one-structural.md) decision: Does CS-913's USD reader get one structural round, a narrower scope, or another site-by-site round?. Done.
+- [?] [CS-1098](./items/CS-1098-cs-966-s-remaining-minors-off-list-hook-query.md) CS-966's remaining minors: off-list hook query tokens through a proxy, a proxy's fixed secret header, two tests, and a behavior note. Proposed. Needs CS-966.
 
 ### Sky, light and atmosphere
 
@@ -1098,7 +1101,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 60 of 98 done, 17 ready, 13 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 60 of 99 done, 17 ready, 13 blocked, 9 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1224,6 +1227,7 @@ No milestone
 - [ ] [CS-992](./items/CS-992-dyno-loads-an-outside-module-and-benchmarks-it.md) Dyno loads an outside module and benchmarks it as it does the built-in sources. Needs nothing.
 - [ ] [CS-1008](./items/CS-1008-dyno-s-quiet-rule-gets-a-wait-limit-after-which.md) Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C). Needs CS-1004 (Benchmarks, parity and image regression).
 - [ ] [CS-1095](./items/CS-1095-merge-cs-395-reference-images-and-the-sweep-view.md) decision: Merge CS-395, reference images and the sweep view. Needs nothing. Decided by owner.
+- [?] [CS-1099](./items/CS-1099-example-captures-without-the-host-s-warning.md) Example captures without the host's warning banner. Proposed. Needs CS-394.
 
 ### The public API reviews
 

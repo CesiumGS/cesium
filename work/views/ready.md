@@ -157,12 +157,10 @@ CS-191 Content sources and formats
   CS-963  Each engine takes its own fetch and credential provider, defaulting to the page's (CS-958 A)
   CS-964  A small coordinate contract in core, implemented by crs-proj or the host and registered per engine (CS-959 A)
   CS-965  Content sources see the scene clock, with its epoch and time scale named, and wall time apart (CS-960 A)
-  CS-966  resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins
   CS-969  Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker
   CS-970  Feature IDs and feature counts from content are checked, so one tile can't name another item's features
   CS-972  A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
   CS-1014  The engine's format limits are named public constants a host can read and raise (CS-1012 A)
-  CS-1093  decision: Merge CS-966, credentials and queries kept to their own origins
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -310,5 +308,5 @@ CS-609 A clean 2.0 branch and a modern build
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
   CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
 
-241 ready
+239 ready
 ```

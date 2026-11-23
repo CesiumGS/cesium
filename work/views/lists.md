@@ -81,7 +81,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 29 of 60 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 30 of 61 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -154,6 +154,7 @@ No milestone
 - [?] CS-1057 The precision seam's test guards four field names; everything else that needs ordered float math is outside it. Proposed. Needs nothing.
 - [?] CS-1058 Fitted draws lose their "exact" center on Apple GPUs too. Proposed. Needs nothing.
 - [?] CS-1078 A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
+- [x] CS-1096 decision: How does CS-921's center term handle values past 2³⁰ units?. Done.
 
 ### Live MaterialX graph editing
 
@@ -634,7 +635,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 38 of 107 done, 31 ready, 20 blocked, 18 proposed.
+CS-191, Planned, led by owner: 41 of 109 done, 29 ready, 20 blocked, 19 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -729,7 +730,7 @@ No milestone
 - [ ] CS-963 Each engine takes its own fetch and credential provider, defaulting to the page's (CS-958 A). Needs CS-958.
 - [ ] CS-964 A small coordinate contract in core, implemented by crs-proj or the host and registered per engine (CS-959 A). Needs CS-959.
 - [ ] CS-965 Content sources see the scene clock, with its epoch and time scale named, and wall time apart (CS-960 A). Needs CS-960.
-- [ ] CS-966 resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins. Needs nothing.
+- [x] CS-966 resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins. Done.
 - [x] CS-968 decision: Render features at alpha.1: public with a seams-only context, the 0.x line, or raw device access?. Done.
 - [ ] CS-969 Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker. Needs nothing.
 - [ ] CS-970 Feature IDs and feature counts from content are checked, so one tile can't name another item's features. Needs nothing.
@@ -759,7 +760,9 @@ No milestone
 - [x] CS-1086 decision: Does CS-847 merge before or after its restructuring?. Done.
 - [x] CS-1087 decision: Where does a content's identity come from?. Done.
 - [x] CS-1089 decision: Do tilesets' own IDs take the declared name too?. Done.
-- [ ] CS-1093 decision: Merge CS-966, credentials and queries kept to their own origins. Needs nothing. Decided by owner.
+- [x] CS-1093 decision: Merge CS-966, credentials and queries kept to their own origins. Done.
+- [x] CS-1097 decision: Does CS-913's USD reader get one structural round, a narrower scope, or another site-by-site round?. Done.
+- [?] CS-1098 CS-966's remaining minors: off-list hook query tokens through a proxy, a proxy's fixed secret header, two tests, and a behavior note. Proposed. Needs CS-966.
 
 ### Sky, light and atmosphere
 
@@ -1041,7 +1044,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 60 of 98 done, 17 ready, 13 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 60 of 99 done, 17 ready, 13 blocked, 9 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -1167,6 +1170,7 @@ No milestone
 - [ ] CS-992 Dyno loads an outside module and benchmarks it as it does the built-in sources. Needs nothing.
 - [ ] CS-1008 Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C). Needs CS-1004 (Benchmarks, parity and image regression).
 - [ ] CS-1095 decision: Merge CS-395, reference images and the sweep view. Needs nothing. Decided by owner.
+- [?] CS-1099 Example captures without the host's warning banner. Proposed. Needs CS-394.
 
 ### The public API reviews
 
