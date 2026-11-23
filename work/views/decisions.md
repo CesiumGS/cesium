@@ -57,5 +57,11 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617, CS-932
 
-17 open decision(s) for owner
+CS-199 Dyno hardening, packaging and CI
+  CS-982  Where does the merge bar live: one gate script, or policy.json's lists? (owner)
+
+CS-16 Streaming robustness
+  CS-1032  Merge CS-144, the fault-injection harness (owner)
+
+19 open decision(s) for owner
 ```

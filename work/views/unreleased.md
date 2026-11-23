@@ -113,6 +113,7 @@ CS-609 A clean 2.0 branch and a modern build
   CS-610  The 2.0 repository's design: build system, CI/CD and release pipeline
   CS-611  The 1.x code is replaced in the branch
   CS-612  The new build system
+  CS-613  CI/CD on the new build, with the release pipeline
   CS-911  The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite
   CS-931  The handbook builds again on main: its data step builds dist first, and workerPool.ts type-checks
   CS-938  Packed pre-release builds a host application can install, at a named commit
@@ -131,5 +132,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-96 merged item(s) not in a release
+97 merged item(s) not in a release
 ```

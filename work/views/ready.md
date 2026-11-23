@@ -13,6 +13,7 @@ CS-8 Engine profiles
   CS-365  Limit-forced accuracy changes carried into query results
   CS-368  `Engine.queries` takes the application's backends
   CS-507  Silent fallbacks become support notices
+  CS-971  Every Slang loop is bounded by a constant, and a test enforces it
 
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
@@ -32,6 +33,7 @@ CS-10 Cesium IR
   CS-921  A compiled route's center term subtracts its highs as integers on both emitters
   CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
   CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
+  CS-989  Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -68,6 +70,7 @@ CS-16 Streaming robustness
   CS-178  external: `Timing-Allow-Origin` on the iTwin mesh-export CDN
   CS-179  external: Real users' bandwidth and latency distribution
   CS-441  Upsampling follow-ups: a local imagery stop, child refetches inside the terrain request window, imagery slices in the byte budget
+  CS-1032  decision: Merge CS-144, the fault-injection harness
 
 CS-17 The transform graph
   CS-159  Per-view routes without twins
@@ -149,6 +152,16 @@ CS-191 Content sources and formats
   CS-902  CS-559's scope, from the chosen reader and CS-833's study
   CS-913  The subset reader's composition faults on broken assets, tested against OpenUSD
   CS-914  OpenUSD in WebAssembly as a test oracle for the USD source
+  CS-961  Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
+  CS-962  Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)
+  CS-963  Each engine takes its own fetch and credential provider, defaulting to the page's (CS-958 A)
+  CS-964  A small coordinate contract in core, implemented by crs-proj or the host and registered per engine (CS-959 A)
+  CS-965  Content sources see the scene clock, with its epoch and time scale named, and wall time apart (CS-960 A)
+  CS-966  resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins
+  CS-969  Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker
+  CS-970  Feature IDs and feature counts from content are checked, so one tile can't name another item's features
+  CS-972  A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
+  CS-1014  The engine's format limits are named public constants a host can read and raise (CS-1012 A)
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -188,9 +201,16 @@ CS-195 Benchmarks, parity and image regression
   CS-581  The irWgsl browser suite joins the browser-suite gate for changes under src/ir
   CS-582  The tracks parity suite's billboards draw on the first run after a cold server start
   CS-762  The instances parity suite runs to the end: releasing a model no longer throws "World: no slab 0"
+  CS-1007  Tile becomes a table a worker can read, not an exported object tree (CS-1002)
+  CS-1009  external: A dedicated machine for Dyno's measurements
+  CS-1010  The performance targets restated as budgets per tick on named devices, with a like-for-like study against 1.x (CS-1005 B)
+  CS-1028  Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A)
 
 CS-196 Infrastructure and geoscience capabilities
   CS-339  Volumes: voxel grids, ray-marched or as isosurfaces
+  CS-1020  The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A)
+  CS-1021  Instant hides its storage behind methods and states its resolution (CS-1019 A)
+  CS-1022  A missing accuracy reads as unstated, and a time-dependent operation with no epoch reports undefined accuracy (CS-1016, CS-1017)
 
 CS-198 GPU-driven rendering and capacities
   CS-350  The Slang gate and probes on Windows (D3D12)
@@ -212,6 +232,9 @@ CS-199 Dyno hardening, packaging and CI
   CS-544  The handbook's reel runs in the served handbook as well as the static file
   CS-583  The casterLoop slow-orbit test holds under full-suite load
   CS-851  npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport
+  CS-982  decision: Where does the merge bar live: one gate script, or policy.json's lists?
+  CS-983  Every Lab parity suite gives a verdict: no regression against the last accepted run, plus the design's thresholds (CS-979 C)
+  CS-984  Baseline and golden changes carry a logged reason, and every merge decision lists them (CS-980 A)
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -228,6 +251,8 @@ CS-389 Dyno as the development harness
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
   CS-856  Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items
+  CS-992  Dyno loads an outside module and benchmarks it as it does the built-in sources
+  CS-1008  Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C)
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -242,6 +267,11 @@ CS-437 The public API reviews
   CS-940  stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
   CS-943  Route, RouteStep and Recordable are exported, so the library build's declaration check passes
   CS-950  decision: Merge CS-940, stableIdToHex and parseStableId
+  CS-977  Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
+  CS-978  dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A)
+  CS-985  A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
+  CS-990  GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
+  CS-1001  The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -252,9 +282,6 @@ CS-584 The widgets library
 CS-596 Trust and evals
   CS-597  The evals design: what evidence the 1.x team needs, and how each piece is checked
   CS-605  external: Extension users validate 2.0 with their own data
-
-CS-609 A clean 2.0 branch and a modern build
-  CS-613  CI/CD on the new build, with the release pipeline
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
@@ -279,5 +306,9 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-210 ready
+CS-609 A clean 2.0 branch and a modern build
+  CS-951  A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm
+  CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
+
+241 ready
 ```

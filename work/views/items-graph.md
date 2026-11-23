@@ -26,6 +26,8 @@ graph LR
     CS_539["CS-539 How CS-20 reaches main while the merge queue cannot verify it"]:::done
     CS_755["CS-755 Merge CS-22, paths in one place with the seam test"]:::done
     CS_779["CS-779 Merge CS-23, support reports on Engine and View (view.support, "]:::done
+    CS_971["CS-971 Every Slang loop is bounded by a constant, and a test enforces "]:::open
+    CS_1029["CS-1029 User custom shaders (CustomShader WGSL and Slang, and CustomSh"]:::proposed
   end
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
@@ -105,6 +107,9 @@ graph LR
     CS_941["CS-941 A compiled route's residual statements go through Cesium IR's e"]:::open
     CS_954["CS-954 Does alpha.1 wait for a measurement of the df64 route-center pa"]:::done
     CS_955["CS-955 The df64 route-center pass is measured on an Apple GPU, with a "]:::open
+    CS_986["CS-986 What does CS-921 state when done: a bound, or the measured samp"]:::done
+    CS_987["CS-987 Do accuracy statements get a drawing term for the GPU's arithme"]:::done
+    CS_989["CS-989 Accuracy statements gain a drawing term for the GPU's arithmeti"]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -226,6 +231,7 @@ graph LR
     CS_384["CS-384 Re-rooting Google's Photorealistic 3D Tiles after its session w"]:::proposed
     CS_441["CS-441 Upsampling follow-ups: a local imagery stop, child refetches in"]:::open
     CS_508["CS-508 Retries for the one-off worker loads"]:::open
+    CS_1032["CS-1032 Merge CS-144, the fault-injection harness"]:::decision
   end
   subgraph CS_17["transform graph"]
     CS_159["CS-159 Per-view routes without twins"]:::open
@@ -469,6 +475,28 @@ graph LR
     CS_945["CS-945 A per-feature visibility bit, so the edit layer can hide one fe"]:::proposed
     CS_946["CS-946 One content can have several items, and World.items lists conte"]:::proposed
     CS_952["CS-952 What addresses a feature in a change set?"]:::done
+    CS_956["CS-956 Merge CS-847, the content-source seam's core"]:::done
+    CS_957["CS-957 Is the scene item part of a stable ID?"]:::done
+    CS_958["CS-958 Is the fetch and credential provider per page or per engine?"]:::done
+    CS_959["CS-959 Where does the coordinate contract the source seam uses live?"]:::done
+    CS_960["CS-960 Which clock do content sources see?"]:::done
+    CS_961["CS-961 Stable IDs come in two parts: a feature ID per content and an i"]:::open
+    CS_962["CS-962 Change sets name a feature by the source's own key, with the en"]:::open
+    CS_963["CS-963 Each engine takes its own fetch and credential provider, defaul"]:::open
+    CS_964["CS-964 A small coordinate contract in core, implemented by crs-proj or"]:::open
+    CS_965["CS-965 Content sources see the scene clock, with its epoch and time sc"]:::open
+    CS_966["CS-966 resolveUri stops copying the base URL's query to other origins,"]:::open
+    CS_968["CS-968 Render features at alpha.1: public with a seams-only context, t"]:::done
+    CS_969["CS-969 Content workers bound what a file states: allocation, recursion"]:::open
+    CS_970["CS-970 Feature IDs and feature counts from content are checked, so one"]:::open
+    CS_972["CS-972 A render feature's context reaches the GPU only through the sea"]:::open
+    CS_991["CS-991 A module in another package registers its own content-source ki"]:::open
+    CS_1011["CS-1011 What's the default scope of a source's request headers?"]:::done
+    CS_1012["CS-1012 Do the format limits become public constants?"]:::done
+    CS_1014["CS-1014 The engine's format limits are named public constants a host c"]:::open
+    CS_1031["CS-1031 What does a feature ID derive from?"]:::done
+    CS_1033["CS-1033 How are cross-origin redirects handled when a source attaches "]:::done
+    CS_1034["CS-1034 Does a host's request hook decide what is sent after it rewrit"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -525,7 +553,7 @@ graph LR
     CS_319["CS-319 Silhouette weighting for design models, and pixel coverage as t"]:::open
     CS_320["CS-320 Paging: a thrash-rate metric, working-set eviction, a prefetch "]:::open
     CS_321["CS-321 How should an engine-wide memory budget be sized without a VRAM"]:::decision
-    CS_322["CS-322 One engine-wide GPU and cache budget, with GPU texture transcod"]:::proposed
+    CS_322["CS-322 One engine-wide GPU and cache budget, with GPU texture transcod"]:::open
   end
   subgraph CS_195["Benchmarks, parity and image regression"]
     CS_323["CS-323 Benchmark machines: dedicated GPU runners, and CI builds per co"]:::external
@@ -554,6 +582,16 @@ graph LR
     CS_581["CS-581 The irWgsl browser suite joins the browser-suite gate for chang"]:::open
     CS_582["CS-582 The tracks parity suite's billboards draw on the first run afte"]:::open
     CS_762["CS-762 The instances parity suite runs to the end: releasing a model n"]:::open
+    CS_967["CS-967 When are the performance targets judged: rc.1, or before beta.1"]:::done
+    CS_1002["CS-1002 Does beta.1's freeze wait for the worker façade and the Tile c"]:::done
+    CS_1003["CS-1003 Is one engine-wide memory budget part of 2.0?"]:::done
+    CS_1004["CS-1004 Where does measurement run?"]:::done
+    CS_1005["CS-1005 Are the performance targets restated as budgets per tick?"]:::done
+    CS_1007["CS-1007 Tile becomes a table a worker can read, not an exported object"]:::open
+    CS_1009["CS-1009 A dedicated machine for Dyno's measurements"]:::external
+    CS_1010["CS-1010 The performance targets restated as budgets per tick on named "]:::open
+    CS_1026["CS-1026 Does the package get per-feature entry points with byte budget"]:::done
+    CS_1028["CS-1028 Per-feature entry points with byte budgets: three budgeted pag"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
@@ -563,6 +601,13 @@ graph LR
     CS_341["CS-341 WebXR, including aligning a model with its site"]:::open
     CS_342["CS-342 The infrastructure and geoscience gallery examples"]:::proposed
     CS_343["CS-343 Gallery: a vehicle's lidar over the design"]:::proposed
+    CS_1016["CS-1016 What does a missing accuracy on a host's map mean?"]:::done
+    CS_1017["CS-1017 What accuracy does a time-dependent operation report with no e"]:::done
+    CS_1018["CS-1018 Which realization is the ITRF frame?"]:::done
+    CS_1019["CS-1019 Is Instant made opaque now and split into two parts later?"]:::done
+    CS_1020["CS-1020 The ITRF frame becomes its named realization, confirmed from t"]:::open
+    CS_1021["CS-1021 Instant hides its storage behind methods and states its resolu"]:::open
+    CS_1022["CS-1022 A missing accuracy reads as unstated, and a time-dependent ope"]:::open
   end
   subgraph CS_197["Ray queries and path tracing"]
     CS_344["CS-344 The ray-query design: when acceleration structures are built, w"]:::proposed
@@ -613,6 +658,12 @@ graph LR
     CS_928["CS-928 importBoundary's globe-only Viewer bundle test fails in full ru"]:::proposed
     CS_947["CS-947 Merge CS-919, dyno lab --commit serves the commit's own package"]:::done
     CS_948["CS-948 test:data's dish-tracks fails in full runs under load and passe"]:::proposed
+    CS_979["CS-979 What decides a parity suite's pass?"]:::done
+    CS_980["CS-980 Who may approve an image baseline or regenerate a golden?"]:::done
+    CS_982["CS-982 Where does the merge bar live: one gate script, or policy.json'"]:::decision
+    CS_983["CS-983 Every Lab parity suite gives a verdict: no regression against t"]:::open
+    CS_984["CS-984 Baseline and golden changes carry a logged reason, and every me"]:::open
+    CS_999["CS-999 Do Lab runs count as evidence when the machine isn't quiet?"]:::done
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -710,6 +761,8 @@ graph LR
     CS_856["CS-856 Dyno measures what each merge touched: targeted A/B runs after "]:::open
     CS_884["CS-884 Merge CS-404, studies: the model, the files and the commands"]:::done
     CS_929["CS-929 Merge CS-392, finding runs from the terminal (runs, show, pin)"]:::done
+    CS_992["CS-992 Dyno loads an outside module and benchmarks it as it does the b"]:::open
+    CS_1008["CS-1008 Dyno's quiet rule gets a wait limit, after which the orchestra"]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -751,6 +804,20 @@ graph LR
     CS_943["CS-943 Route, RouteStep and Recordable are exported, so the library bu"]:::open
     CS_944["CS-944 CS-939: CorePick already has a camera field; how is CorePick na"]:::done
     CS_950["CS-950 Merge CS-940, stableIdToHex and parseStableId"]:::decision
+    CS_974["CS-974 What does alpha.1 say about core's names that the package map m"]:::done
+    CS_975["CS-975 Is the stability-tier sort its own pass before the name review?"]:::done
+    CS_976["CS-976 One word for end of life: dispose or destroy?"]:::done
+    CS_977["CS-977 Adapters and engine internals leave core's public entry for the"]:::open
+    CS_978["CS-978 dispose() everywhere, with Symbol.dispose on every disposable ("]:::open
+    CS_981["CS-981 Does the surface file record signatures before beta.1?"]:::done
+    CS_985["CS-985 A declarations report beside api/surface.txt records signatures"]:::open
+    CS_988["CS-988 Do GpuDevice and World stay on core's main entry?"]:::done
+    CS_990["CS-990 GpuDevice and the GPU-typed names move to a main-thread-only en"]:::open
+    CS_997["CS-997 Is StableId a branded type?"]:::done
+    CS_998["CS-998 When does 2.0 keep a 1.x name?"]:::done
+    CS_1000["CS-1000 How is @cesium/core/internal, the packages' shared utilities, "]:::done
+    CS_1001["CS-1001 The packages' shared utilities move from @cesium/core/internal"]:::open
+    CS_1015["CS-1015 Merge CS-943, export Route, RouteStep and Recordable"]:::done
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -802,7 +869,7 @@ graph LR
     CS_610["CS-610 The 2.0 repository's design: build system, CI/CD and release pi"]:::done
     CS_611["CS-611 The 1.x code is replaced in the branch"]:::done
     CS_612["CS-612 The new build system"]:::done
-    CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
+    CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::done
     CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::done
     CS_887["CS-887 CS-610 D1: does 1.x leave (CS-611) before the package move (CS-"]:::done
     CS_888["CS-888 CS-610 D2: which release tool does 2.0 use?"]:::done
@@ -827,6 +894,18 @@ graph LR
     CS_949["CS-949 The packed-builds guide: scope each override to the 2.0 package"]:::proposed
     CS_951["CS-951 A pnpm spike: install time and disk across worktrees, strict de"]:::open
     CS_953["CS-953 Do the harness milestones, the spike and the sample stay alpha."]:::done
+    CS_973["CS-973 Which packages publish at alpha.1, and are their names final th"]:::done
+    CS_993["CS-993 Are surface projection and the MVT, Esri and USD sources alpha."]:::done
+    CS_994["CS-994 Does the publishing rehearsal publish a real 2.0.0-alpha.0?"]:::done
+    CS_995["CS-995 Where the seam chain and the loading-retry chain touch the same"]:::done
+    CS_996["CS-996 May the package split proceed while Open Cascade stays example-"]:::done
+    CS_1006["CS-1006 Merge CS-613, CI and the release pipeline"]:::done
+    CS_1013["CS-1013 May the owner approve their own releases on the npm environmen"]:::done
+    CS_1023["CS-1023 Are the handbook's project states generated from the tracker?"]:::done
+    CS_1024["CS-1024 How does the handbook describe the graphics API?"]:::done
+    CS_1025["CS-1025 Where do the handbook's performance figures come from?"]:::done
+    CS_1027["CS-1027 The handbook catches up with 2026-11-22: generated project sta"]:::open
+    CS_1030["CS-1030 CS-613's remaining fail-closed cases: a re-run attempt, a disp"]:::proposed
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -955,9 +1034,9 @@ graph LR
   CS_534["CS-534 Infrastructure and geoscience data shows in 2.0"]:::open
   CS_504["CS-504 Tiles are chosen by benefit per byte across views"]:::open
   CS_830["CS-830 2.0's examples show its seams in use"]:::open
+  CS_484["CS-484 The performance targets are met or the gaps explained"]:::open
   CS_416["CS-416 WebGL 2 reaches parity with WebGPU"]:::open
   CS_472["CS-472 Transition costs are measured and the options decided"]:::open
-  CS_484["CS-484 The performance targets are met or the gaps explained"]:::open
   CS_503["CS-503 Antialiased translucency's cost is known"]:::open
   CS_511["CS-511 Scene benchmarks run faster than real time"]:::open
   CS_491["CS-491 Glare and the sky are checked on Intel integrated GPUs"]:::open
@@ -1157,12 +1236,19 @@ graph LR
   CS_137 --> CS_142
   CS_136 --> CS_143
   CS_144 --> CS_145
+  CS_847 --> CS_145
   CS_145 --> CS_146
+  CS_847 --> CS_146
   CS_146 --> CS_147
+  CS_554 --> CS_147
   CS_147 --> CS_148
   CS_147 --> CS_149
   CS_148 --> CS_149
+  CS_847 --> CS_149
+  CS_555 --> CS_149
+  CS_810 --> CS_149
   CS_147 --> CS_150
+  CS_847 --> CS_150
   CS_147 --> CS_151
   CS_149 --> CS_152
   CS_150 --> CS_152
@@ -1398,6 +1484,19 @@ graph LR
   CS_940 --> CS_530
   CS_943 --> CS_530
   CS_955 --> CS_530
+  CS_961 --> CS_530
+  CS_962 --> CS_530
+  CS_966 --> CS_530
+  CS_969 --> CS_530
+  CS_970 --> CS_530
+  CS_971 --> CS_530
+  CS_972 --> CS_530
+  CS_977 --> CS_530
+  CS_978 --> CS_530
+  CS_1001 --> CS_530
+  CS_1020 --> CS_530
+  CS_1021 --> CS_530
+  CS_1027 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1450,6 +1549,25 @@ graph LR
   CS_534 --> CS_531
   CS_504 --> CS_531
   CS_830 --> CS_531
+  CS_963 --> CS_531
+  CS_964 --> CS_531
+  CS_965 --> CS_531
+  CS_484 --> CS_531
+  CS_985 --> CS_531
+  CS_989 --> CS_531
+  CS_990 --> CS_531
+  CS_103 --> CS_531
+  CS_104 --> CS_531
+  CS_105 --> CS_531
+  CS_106 --> CS_531
+  CS_107 --> CS_531
+  CS_108 --> CS_531
+  CS_322 --> CS_531
+  CS_1007 --> CS_531
+  CS_1010 --> CS_531
+  CS_1014 --> CS_531
+  CS_1022 --> CS_531
+  CS_1028 --> CS_531
   CS_528 --> CS_532
   CS_531 --> CS_532
   CS_416 --> CS_532
@@ -1461,7 +1579,6 @@ graph LR
   CS_471 --> CS_532
   CS_472 --> CS_532
   CS_474 --> CS_532
-  CS_484 --> CS_532
   CS_503 --> CS_532
   CS_504 --> CS_532
   CS_511 --> CS_532
@@ -1755,6 +1872,33 @@ graph LR
   CS_847 --> CS_945
   CS_847 --> CS_946
   CS_613 --> CS_951
+  CS_957 --> CS_961
+  CS_952 --> CS_962
+  CS_958 --> CS_963
+  CS_959 --> CS_964
+  CS_960 --> CS_965
+  CS_968 --> CS_972
+  CS_974 --> CS_977
+  CS_976 --> CS_978
+  CS_979 --> CS_983
+  CS_980 --> CS_984
+  CS_981 --> CS_985
+  CS_987 --> CS_989
+  CS_988 --> CS_990
+  CS_847 --> CS_991
+  CS_1002 --> CS_1007
+  CS_1004 --> CS_1008
+  CS_1005 --> CS_1010
+  CS_1012 --> CS_1014
+  CS_1018 --> CS_1020
+  CS_1019 --> CS_1021
+  CS_1016 --> CS_1022
+  CS_1017 --> CS_1022
+  CS_1023 --> CS_1027
+  CS_1024 --> CS_1027
+  CS_1025 --> CS_1027
+  CS_1026 --> CS_1028
+  CS_613 --> CS_1030
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

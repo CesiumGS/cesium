@@ -223,17 +223,24 @@ CS-15 Refinement and convergence
 CS-16 Streaming robustness
   CS-145  The fetch layer (three timers, structured failures, `isCancel`)
       ← CS-144 The fault-injection harness
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-146  Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses)
       ← CS-145 The fetch layer (three timers, structured failures, `isCancel`)
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-147  Retries for 3D Tiles content (episodes owned by the tile)
       ← CS-146 Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses)
+        CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
   CS-148  Missing content and recovery (the parent stays, cool-downs, `retryFailed()`)
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
   CS-149  The globe (terrain upsampled on 404, imagery recovery)
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
         CS-148 Missing content and recovery (the parent stays, cool-downs, `retryFailed()`)
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+        CS-555 The globe's terrain and imagery load through the content-source seam
+        CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
   CS-150  ion tokens
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-151  Online, hidden and offline
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
   CS-152  The inspector's Network section and the recorder
@@ -402,6 +409,8 @@ CS-191 Content sources and formats
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-906  Variant selections and payload policy as open options, and their change as invalidation
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-991  A module in another package registers its own content-source kind by package name, documented, on the experimental tier
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -425,6 +434,10 @@ CS-193 B-reps and geometry queries
       ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
   CS-907  UsdPhysics read into CS-672's physics seam
       ← CS-672 Physics representations across the geometry kinds: the design
+
+CS-194 Budgeted selection and memory
+  CS-322  One engine-wide GPU and cache budget, with GPU texture transcoding
+      ← CS-321 How should an engine-wide memory budget be sized without a VRAM query?
 
 CS-195 Benchmarks, parity and image regression
   CS-324  Benchmark suite v2: nightly and per-merge runs, a results store and a dashboard
@@ -517,6 +530,19 @@ CS-18 The work tracker
         CS-940 stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)
         CS-943 Route, RouteStep and Recordable are exported, so the library build's declaration check passes
         CS-955 The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
+        CS-961 Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
+        CS-962 Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)
+        CS-966 resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins
+        CS-969 Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker
+        CS-970 Feature IDs and feature counts from content are checked, so one tile can't name another item's features
+        CS-971 Every Slang loop is bounded by a constant, and a test enforces it
+        CS-972 A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
+        CS-977 Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
+        CS-978 dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A)
+        CS-1001 The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal
+        CS-1020 The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A)
+        CS-1021 Instant hides its storage behind methods and states its resolution (CS-1019 A)
+        CS-1027 The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -569,6 +595,25 @@ CS-18 The work tracker
         CS-534 Infrastructure and geoscience data shows in 2.0
         CS-504 Tiles are chosen by benefit per byte across views
         CS-830 2.0's examples show its seams in use
+        CS-963 Each engine takes its own fetch and credential provider, defaulting to the page's (CS-958 A)
+        CS-964 A small coordinate contract in core, implemented by crs-proj or the host and registered per engine (CS-959 A)
+        CS-965 Content sources see the scene clock, with its epoch and time scale named, and wall time apart (CS-960 A)
+        CS-484 The performance targets are met or the gaps explained
+        CS-985 A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
+        CS-989 Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
+        CS-990 GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
+        CS-103 Reads reshaped, on the main thread
+        CS-104 Writes reshaped, on the main thread
+        CS-105 Functions reshaped, on the main thread
+        CS-106 Functions as Cesium IR programs; closures refused
+        CS-107 Internals out of the main entry
+        CS-108 The façade and the direct transport
+        CS-322 One engine-wide GPU and cache budget, with GPU texture transcoding
+        CS-1007 Tile becomes a table a worker can read, not an exported object tree (CS-1002)
+        CS-1010 The performance targets restated as budgets per tick on named devices, with a like-for-like study against 1.x (CS-1005 B)
+        CS-1014 The engine's format limits are named public constants a host can read and raise (CS-1012 A)
+        CS-1022 A missing accuracy reads as unstated, and a time-dependent operation with no epoch reports undefined accuracy (CS-1016, CS-1017)
+        CS-1028 Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A)
   CS-532  Release 2.0.0-rc.1
       ← CS-531 Release 2.0.0-beta.1
         CS-416 WebGL 2 reaches parity with WebGPU
@@ -580,7 +625,6 @@ CS-18 The work tracker
         CS-471 Nothing pops when level of detail changes
         CS-472 Transition costs are measured and the options decided
         CS-474 Steep warps draw without artifacts
-        CS-484 The performance targets are met or the gaps explained
         CS-503 Antialiased translucency's cost is known
         CS-504 Tiles are chosen by benefit per byte across views
         CS-511 Scene benchmarks run faster than real time
@@ -725,9 +769,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-CS-609 A clean 2.0 branch and a modern build
-  CS-951  A pnpm spike: install time and disk across worktrees, strict dependencies, and publishing, against npm
-      ← CS-613 CI/CD on the new build, with the release pipeline
-
-229 blocked
+230 blocked
 ```
