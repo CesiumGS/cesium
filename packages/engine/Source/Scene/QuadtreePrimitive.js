@@ -41,6 +41,10 @@ import TileSelectionResult from "./TileSelectionResult.js";
  *        Note that tiles will never be unloaded if they were used for rendering the last
  *        frame, so the actual number of resident tiles may be higher.  The value of
  *        this property will not affect visual quality.
+ * @param {number} [options.tileLoadTimeSlice=5] The maximum amount of time, in milliseconds,
+ *        spent loading tiles from the tile load queue each frame. A larger value loads tiles
+ *        faster at the cost of longer frames, while a smaller value keeps frames short but
+ *        takes more frames to reach full detail.
  */
 function QuadtreePrimitive(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -87,7 +91,6 @@ function QuadtreePrimitive(options) {
   this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
   this._tileReplacementQueue = new TileReplacementQueue();
   this._levelZeroTiles = undefined;
-  this._loadQueueTimeSlice = 5.0;
   this._tilesInvalidated = false;
 
   this._addHeightCallbacks = [];
@@ -134,6 +137,16 @@ function QuadtreePrimitive(options) {
    * @default 20
    */
   this.loadingDescendantLimit = 20;
+
+  /**
+   * Gets or sets the maximum amount of time, in milliseconds, spent loading tiles
+   * from the tile load queue each frame. A larger value loads tiles faster at the
+   * cost of longer frames, while a smaller value keeps frames short but takes more
+   * frames to reach full detail.
+   * @type {number}
+   * @default 5
+   */
+  this.tileLoadTimeSlice = options.tileLoadTimeSlice ?? 5.0;
 
   /**
    * Gets or sets a value indicating whether the ancestors of rendered tiles should be preloaded.
@@ -1328,7 +1341,7 @@ function processTileLoadQueue(primitive, frameState) {
   // we're allowed to keep.
   primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
-  const endTime = getTimestamp() + primitive._loadQueueTimeSlice;
+  const endTime = getTimestamp() + primitive.tileLoadTimeSlice;
   const tileProvider = primitive._tileProvider;
 
   let didSomeLoading = processSinglePriorityLoadQueue(
