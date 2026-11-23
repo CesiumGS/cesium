@@ -291,6 +291,28 @@ describe(
       }).contextToRender();
     });
 
+    it("has czm_octDecode(vec2) decode (0, 0) as (0, 0, -1)", function () {
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(vec2(0.0, 0.0)) - vec3(0.0, 0.0, -1.0)), vec3(0.01)))); " +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_octDecode(float) decode 0.0 as (0, 0, -1)", function () {
+      const fs =
+        "void main() { " +
+        "  out_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(0.0) - vec3(0.0, 0.0, -1.0)), vec3(0.01)))); " +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
     it("has czm_octDecode(float)", function () {
       const fs =
         "void main() { " +
