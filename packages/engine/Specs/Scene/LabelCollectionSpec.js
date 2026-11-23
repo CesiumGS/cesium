@@ -2474,6 +2474,34 @@ describe("Scene/LabelCollection", function () {
           expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
         });
 
+        it("draws glyphs and background at the position once the height reference is removed", async function () {
+          spyOn(scene.camera, "update");
+          spyOn(scene, "getHeight").and.returnValue(500.0);
+          const position = Cartesian3.fromDegrees(-72.0, 40.0, 1000.0);
+          const l = labelsWithHeight.add({
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            text: "t",
+            position: position,
+            showBackground: true,
+          });
+
+          await pollToPromise(() => {
+            scene.renderForSpecs();
+            return labelsWithHeight.ready;
+          });
+
+          l.heightReference = HeightReference.NONE;
+          scene.renderForSpecs();
+          expect(l._glyphs[0].billboard._getActualPosition()).toEqualEpsilon(
+            position,
+            CesiumMath.EPSILON6,
+          );
+          expect(l._backgroundBillboard._getActualPosition()).toEqualEpsilon(
+            position,
+            CesiumMath.EPSILON6,
+          );
+        });
+
         it("clears the billboard height reference callback when the label is removed", async function () {
           const l = labelsWithHeight.add({
             heightReference: HeightReference.CLAMP_TO_GROUND,
