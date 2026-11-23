@@ -35,7 +35,12 @@
  * are canceled and its pushes dropped; a draw sink's releases still pass,
  * so a source's own `destroy` can free what it made.
  */
-import { stableIdOf, type ItemIdentity } from "../scene/identity.ts";
+import {
+  sourceDrawIdentity,
+  stableIdOf,
+  type ItemIdentity,
+  type StableKey,
+} from "../scene/identity.ts";
 import type { DrawHandle, DrawOptions } from "../scene/world/types.ts";
 import type { DrawSink } from "../streaming/DrawSink.ts";
 import {
@@ -63,6 +68,7 @@ import type {
   PlainValue,
   PointBatch,
   ResolvedAsset,
+  SourceIdentity,
 } from "./types.ts";
 
 /**
@@ -73,6 +79,12 @@ import type {
 export interface ContentWorld extends DrawSink {
   setVisible(handle: DrawHandle, visible: boolean): void;
   setViewMask(handle: DrawHandle, mask: number): void;
+  /** Its identity table (`World.identity`): what maps a pick's instance ID to its feature ID. */
+  readonly identity?: {
+    identify(
+      id: FeatureId,
+    ): { readonly key: StableKey; readonly feature?: FeatureId } | undefined;
+  };
 }
 
 /**
@@ -96,6 +108,13 @@ export interface ContentItemOptions {
 }
 
 const ALL_VIEWS = 0xffffffff;
+
+/**
+ * @internal The most overrides a content's feed holds for features no row
+ * or draw has (an update or a delete of a key not loaded, or never to be):
+ * past it, the oldest go, reported (`SourceContent.holdPending`).
+ */
+export const MAX_PENDING_OVERRIDES = 1024;
 
 /** The shortest interval a source may declare for checking its server (CS-863). */
 const MIN_POLL_SECONDS = 1;
@@ -157,13 +176,14 @@ export class SourceContent {
    * an instance ID of an item's draw too (a pick's), as its feature ID.
    * @experimental
    */
-  readonly edits = new EditLayer((id) => this.instances.get(id) ?? id);
+  readonly edits = new EditLayer((id) => this.editFeatureOf(id));
   /** @internal Others' changes from the source's feed (`features` pushes), under `edits`. */
   readonly feed = new EditLayer();
   /**
    * Its canonical source (`assetSource`): what its feature IDs are made
-   * from, with the source's keys, and nothing else (CS-1031 A). No
-   * credentials, query tokens or keys.
+   * from, with the source's keys, and nothing else (CS-1031 A). Its URL's
+   * path, the query parameters, version and options that select its
+   * content (`SourceIdentity`), and never a credential.
    */
   readonly source: string;
   private source_: ContentSource | undefined;
@@ -188,16 +208,77 @@ export class SourceContent {
     readonly id: string,
     readonly asset: ResolvedAsset,
     readonly kind: string,
+    /** Its kind's declaration of what selects its content (`SourceKind.identity`). */
+    identity?: SourceIdentity,
   ) {
-    this.source = assetSource(asset);
+    this.source = assetSource(asset, identity);
     this.rows = new ContentRows(this.source);
     this.drawSink = this.makeDrawSink();
     const reapply = (ids: readonly FeatureId[]) => {
       this.refreshDraws(ids);
       this.forgetKeys(ids);
     };
-    this.edits.onChange(reapply);
+    this.edits.onChange((ids) => {
+      this.countStrays(ids);
+      reapply(ids);
+    });
     this.feed.onChange(reapply);
+  }
+
+  /**
+   * The feature ID an edit given `id` is kept by: an instance ID of one of
+   * its items' draws without features, or one the world's identity table
+   * maps to a feature (a named feature of a draw with features), gives its
+   * feature's; any other ID is taken as a feature ID.
+   */
+  private editFeatureOf(id: FeatureId): FeatureId {
+    const instance = this.instances.get(id);
+    if (instance !== undefined) {
+      return instance;
+    }
+    // Its own rows' and draws' IDs, the common case, skip the lookup.
+    return this.hasBase(id)
+      ? id
+      : (this.world_?.identity?.identify(id)?.feature ?? id);
+  }
+
+  /**
+   * Whether feature `id` is this content's now: a row or a draw of its
+   * source, a feed override or a key it knows, or a feature of this source
+   * the world draws.
+   */
+  private knows(id: FeatureId): boolean {
+    if (this.hasBase(id) || this.feed.get(id) !== undefined) {
+      return true;
+    }
+    if (this.keys.has(id)) {
+      return true;
+    }
+    const key = this.world_?.identity?.identify(id)?.key;
+    return key?.kind === "feature" && key.source === this.source;
+  }
+
+  /** Edits set since the last `takeStrayEdits` on IDs it didn't know (`knows`). */
+  private strays = 0;
+
+  private countStrays(ids: readonly FeatureId[]): void {
+    for (const id of ids) {
+      if (this.edits.get(id) !== undefined && !this.knows(id)) {
+        this.strays++;
+      }
+    }
+  }
+
+  /**
+   * @internal How many edits named an ID it holds nothing of, since last
+   * asked: the engine reports them, by count, once a tick. They are held,
+   * since a feature ID can name a feature not loaded yet; an instance ID of
+   * a removed item, or another content's ID, never loads.
+   */
+  takeStrayEdits(): number {
+    const n = this.strays;
+    this.strays = 0;
+    return n;
   }
 
   /** The open source. @internal */
@@ -354,9 +435,13 @@ export class SourceContent {
     }
   }
 
-  /** Keys of IDs no override holds any more go. */
+  /** Keys of IDs no override holds any more go, and so do their pending entries. */
   private forgetKeys(ids: readonly FeatureId[]): void {
     for (const id of ids) {
+      const o = this.feed.get(id);
+      if (o === undefined || o.kind === "insert") {
+        this.pending.delete(id);
+      }
       if (
         this.keys.has(id) &&
         this.edits.get(id) === undefined &&
@@ -365,6 +450,48 @@ export class SourceContent {
         this.keys.delete(id);
       }
     }
+  }
+
+  /**
+   * The feed's hides and replacements of features no row or draw had when
+   * set, oldest first: what `holdPending` bounds.
+   */
+  private readonly pending = new Map<FeatureId, true>();
+
+  /**
+   * @internal The feed applied `ops` (resolved): its hides and
+   * replacements of features no row or draw has are held as pending, at
+   * most `MAX_PENDING_OVERRIDES`. Past that, those whose feature has
+   * loaded since stop being pending, then the oldest go (`feed.clear`).
+   * Returns how many went.
+   */
+  holdPending(ops: readonly ChangeOp[]): number {
+    for (const op of ops) {
+      const id = op.id!;
+      const o = this.feed.get(id);
+      if (op.op !== "insert" && o && o.kind !== "insert" && !this.hasBase(id)) {
+        this.pending.delete(id); // the newest again
+        this.pending.set(id, true);
+      }
+    }
+    if (this.pending.size <= MAX_PENDING_OVERRIDES) {
+      return 0;
+    }
+    for (const id of this.pending.keys()) {
+      if (this.hasBase(id)) {
+        this.pending.delete(id);
+      }
+    }
+    let dropped = 0;
+    for (const id of [...this.pending.keys()]) {
+      if (this.pending.size <= MAX_PENDING_OVERRIDES) {
+        break;
+      }
+      this.pending.delete(id);
+      this.feed.clear(id);
+      dropped++;
+    }
+    return dropped;
   }
 
   /**
@@ -401,10 +528,19 @@ export class SourceContent {
     for (const layer of [this.edits, this.feed]) {
       const o = layer.get(id);
       if (o) {
-        return o.kind === "hide" ? undefined : o.feature;
+        // A replacement shows where its feature does: none while no row or
+        // draw has it, as `features` lists it.
+        return o.kind === "hide" || (o.kind === "replace" && !this.hasBase(id))
+          ? undefined
+          : o.feature;
       }
     }
     return this.baseFeature(id);
+  }
+
+  /** @internal Whether a row or a draw its source wrote has feature `id` now. */
+  hasBase(id: FeatureId): boolean {
+    return this.rows.rowsOf(id).length > 0 || this.drawsById.has(id);
   }
 
   /**
@@ -612,15 +748,16 @@ export class SourceContent {
     const handle = world.addDraw({
       ...options,
       viewMask: item.viewMask,
-      identity: {
+      // Its features' feature IDs, beside the instance IDs (CS-957 A): only
+      // an identity made here may carry them.
+      identity: sourceDrawIdentity({
         source: this.source,
         content: options.id!,
         set: options.features ? 0 : -1,
         scope: "tile",
         item: item.identity,
-        // Its features' feature IDs, beside the instance IDs (CS-957 A).
         feature: { key: options.id! },
-      },
+      }),
     });
     draw.placed.set(item, handle);
     if (draw.id !== undefined) {

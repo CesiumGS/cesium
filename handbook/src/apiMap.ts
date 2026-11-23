@@ -1353,6 +1353,7 @@ export const API_ROWS: readonly ApiRow[] = [
     supporting: [
       "AssetRef",
       "ResolvedAsset",
+      "SourceIdentity",
       "KindRef",
       "ModuleRef",
       "SourceKinds",

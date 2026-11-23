@@ -403,6 +403,7 @@ entry	name	kind	tier
 .	SourceExtent	interface	experimental
 .	SourceGrant	interface	experimental
 .	SourceHost	interface	experimental
+.	SourceIdentity	interface	experimental
 .	SourceJobSpec	interface	experimental
 .	SourceJobs	interface	experimental
 .	SourceKind	interface	experimental
@@ -1382,6 +1383,7 @@ ui	zoneOf	function	-
 @cesium/core	SourceExtent	interface	experimental
 @cesium/core	SourceGrant	interface	experimental
 @cesium/core	SourceHost	interface	experimental
+@cesium/core	SourceIdentity	interface	experimental
 @cesium/core	SourceJobSpec	interface	experimental
 @cesium/core	SourceJobs	interface	experimental
 @cesium/core	SourceKind	interface	experimental

@@ -842,15 +842,19 @@ function authorityStart(text: string, scheme: string): number {
 
 /**
  * An asset's canonical reference, for its IDs and every message that names
- * a key: no credentials, query or fragment (session tokens never enter an
- * ID). It reads the reference as the URL parser does: leading and trailing
- * spaces and controls, and every tab and newline, go first.
+ * a key. Kept out: user information (`user:password@`), the query and the
+ * fragment, so a session token in any of those never enters an ID. Kept: the
+ * scheme, host, port and path, whatever they hold: a token a server puts in
+ * the path stays, since nothing in a path says it is one. It reads the
+ * reference as the URL parser does: leading and trailing spaces and
+ * controls, and every tab and newline, go first.
  *
  * - A reference with an authority (`scheme://`, `//`, or a special scheme
  *   such as `https:` with any slashes) keeps its scheme, if any, and the
  *   host, port and path the URL parser finds. Cesium ion's
  *   assets keep their `v` (the asset's version), so a new version of the
- *   data gets new IDs.
+ *   data gets new IDs; its value is written back percent-encoded, so a `v`
+ *   whose decoded value holds `&` or `=` can't add a parameter.
  * - When the parser can't read it, or finds no host, nothing before the
  *   reference's last `@` survives: a password with a raw `?`, `#` or `/`
  *   goes whole, with its user name. Then the query and fragment go.
@@ -894,7 +898,7 @@ export function canonicalSource(reference: string): string {
     ? url.searchParams.get("v")
     : null;
   const base = `${scheme ? url.protocol : ""}//${url.host}${url.pathname}`;
-  return version !== null ? `${base}?v=${version}` : base;
+  return version !== null ? `${base}?v=${encodeURIComponent(version)}` : base;
 }
 
 // ---------------------------------------------------------------------------
@@ -1062,6 +1066,38 @@ export interface DrawIdentity {
    * feature's is from its name. CS-961 gives the others theirs.
    */
   readonly feature?: { readonly key: string };
+}
+
+/** Identities `SourceContent` made for its draws: the only ones whose `feature` is taken. */
+const SOURCE_DRAW_IDENTITIES = new WeakSet<DrawIdentity>();
+
+/**
+ * @internal Marks `identity` as a content source's draw's, made by
+ * `SourceContent` for one of its items: the identity table takes its
+ * `feature` (CS-957 A). Returns it.
+ */
+export function sourceDrawIdentity(identity: DrawIdentity): DrawIdentity {
+  SOURCE_DRAW_IDENTITIES.add(identity);
+  return identity;
+}
+
+/**
+ * @internal Refuses a `DrawIdentity.feature` that `SourceContent` didn't
+ * set: a host's own draw can't take a content's feature ID, and so its
+ * labels and what `identify` says of it.
+ */
+export function checkDrawIdentity(
+  identity: DrawIdentity | undefined,
+  where: string,
+): void {
+  if (
+    identity?.feature !== undefined &&
+    !SOURCE_DRAW_IDENTITIES.has(identity)
+  ) {
+    throw new TypeError(
+      `${where}: DrawIdentity.feature is set only for a content source's draws (Engine.open, World.add), never by a host.`,
+    );
+  }
 }
 
 /** One `EXT_mesh_features` feature-ID set of a primitive, as read (`GltfMesh.featureSets`). */

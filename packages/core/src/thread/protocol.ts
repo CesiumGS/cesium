@@ -127,7 +127,7 @@ const TABLE: Record<string, EntryTable> = {
       KindRef ModuleRef OpenOptions Override PlainData PlainValue PointBatch
       PropertyColumn RasterImage ResolvedAsset RowIdentity SampleBatch
       SourceCapabilities SourceChange SourceClock SourceExtent SourceGrant
-      SourceJobSpec SourceTick SourceView Want WantClass WriteCapabilities
+      SourceIdentity SourceJobSpec SourceTick SourceView Want WantClass WriteCapabilities
       LoadProgress LodTransitions MaterialOptions MeasureIn MeasureInOptions
       MeshCapHit MeshCapRegion MeshCapReport
       MeshCapSurface MeshCapSurfaceHit MeshCapTile MeshCapsOptions
@@ -566,7 +566,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         acceleration
       `,
       "cannot-cross": `
-        drawMaterial drawOverheadBytes materialWithFlags occluders
+        drawMaterial drawOverheadBytes identity materialWithFlags occluders
         setDrawGeometricError setDrawHeightNormal setDrawMaterial setGround
         setTerrainClip tileCurvilinearMap
       `,
@@ -592,7 +592,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     },
     SourceContent: {
       snapshot: `
-        asset capabilities destroyed id items kind source world
+        capabilities destroyed id items kind source world
       `,
       command: `
         destroy
@@ -607,9 +607,10 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         edits
       `,
       "cannot-cross": `
-        addItem attach baseFeature contentSource drawCount drawSink feed holds
-        noteInvalidated noteKeys onDestroy placedDraws refreshDraws
-        restoreInvalidated rows shown showsBase takeInvalidated viewMask
+        addItem asset attach baseFeature contentSource drawCount drawSink feed
+        hasBase holdPending holds noteInvalidated noteKeys onDestroy
+        placedDraws refreshDraws restoreInvalidated rows shown showsBase
+        takeInvalidated takeStrayEdits viewMask
       `,
     },
     SourceHost: {
@@ -624,7 +625,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     },
     SourceKind: {
       snapshot: `
-        decoders id renderFeatures
+        decoders id identity renderFeatures
       `,
       callback: `
         accepts open

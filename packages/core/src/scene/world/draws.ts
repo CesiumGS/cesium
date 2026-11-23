@@ -23,6 +23,7 @@ import {
   INSTANCE_STRIDE_WORD,
 } from "../../render/layout.ts";
 import { CapacityError } from "../CapacityError.ts";
+import { checkDrawIdentity } from "../identity.ts";
 import type { CustomShader } from "../CustomShader.ts";
 import type { RouteVariant } from "../routeVariant.ts";
 import type { World } from "../World.ts";
@@ -324,6 +325,7 @@ function batchFor(
 
 export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
   // Checked before anything is allocated.
+  checkDrawIdentity(options.identity, "addDraw");
   if (options.parent && options.transform) {
     throw new Error(
       "addDraw: a parent is for the transform a draw owns (origin and model), not with a shared transform.",

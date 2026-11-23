@@ -194,12 +194,42 @@ export interface ResolvedAsset {
   /** Renewable, refreshed on a 401 (CS-809's `Credential`). */
   readonly credentials?: Credential;
   readonly credits: CreditList;
-  /** For invalidation, and for edits' optimistic concurrency. */
+  /**
+   * For invalidation, and for edits' optimistic concurrency. Part of its
+   * canonical source (`assetSource`): a new version, new feature IDs.
+   */
   readonly version?: string;
   /** Kind-specific, such as Bing's imagery style. */
   readonly options?: PlainData;
   /** What the response said it is, when the resolver read one. */
   readonly mediaType?: string;
+  /**
+   * What selects its content beyond the URL's path, as its resolver knows
+   * it: merged with its kind's (`SourceKind.identity`).
+   */
+  readonly identity?: SourceIdentity;
+}
+
+/**
+ * What identifies an asset's content beyond its URL's scheme, host and path,
+ * declared by its resolver (`ResolvedAsset.identity`) or its kind
+ * (`SourceKind.identity`), the two merged. Its canonical source
+ * (`assetSource`), and so its feature IDs, keep what it names, so two opens
+ * of `features?layer=roads` and `features?layer=buildings` get different
+ * feature IDs once `layer` is declared. A credential never enters: neither
+ * `access_token`, nor a parameter of the asset's `credentials`, nor one
+ * named in `credentials` here, nor one the engine knows as a credential or
+ * a signature (`token`, `key`, `signature`, `X-Amz-…`), even when listed in
+ * `params`.
+ * @experimental
+ */
+export interface SourceIdentity {
+  /** Query parameters that select content (`layer`), kept with their values. */
+  readonly params?: readonly string[];
+  /** Keys of `ResolvedAsset.options` that select content (Bing's `style`), kept with their values. */
+  readonly options?: readonly string[];
+  /** Query parameters and option keys that are credentials: never kept. */
+  readonly credentials?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -223,6 +253,8 @@ export interface SourceKind {
   readonly decoders?: readonly DecoderRef[];
   /** The renderer half, when it draws something the renderer doesn't know (CS-841). */
   readonly renderFeatures?: readonly ModuleRef[];
+  /** What selects its content beyond a URL's path, for its feature IDs (`SourceIdentity`). */
+  readonly identity?: SourceIdentity;
 }
 
 /**

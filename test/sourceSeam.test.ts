@@ -6,7 +6,10 @@
 // memory: no network, no timer.
 import { Worker as NodeWorker } from "node:worker_threads";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FetchProvider } from "../packages/core/src/io/fetchProvider.ts";
+import {
+  Credential,
+  FetchProvider,
+} from "../packages/core/src/io/fetchProvider.ts";
 import { CPU_PER_WORKER, Jobs } from "../packages/core/src/io/Jobs.ts";
 import { WorkerPool } from "../packages/core/src/io/WorkerPool.ts";
 import {
@@ -22,14 +25,18 @@ import {
   RecordFlags,
 } from "../packages/core/src/render/layout.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
-import { stableIdOf } from "../packages/core/src/scene/identity.ts";
+import {
+  canonicalSource,
+  stableIdOf,
+} from "../packages/core/src/scene/identity.ts";
 import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
 import { BudgetArbiter } from "../packages/core/src/source/budget.ts";
-import type {
-  ContentWorld,
-  SourceContent,
+import {
+  MAX_PENDING_OVERRIDES,
+  type ContentWorld,
+  type SourceContent,
 } from "../packages/core/src/source/content.ts";
 import {
   CHANGE_SET_FORMAT,
@@ -46,13 +53,18 @@ import {
   MAX_QUEUED_CHANGES,
   SourceRuntime,
 } from "../packages/core/src/source/runtime.ts";
-import { ContentRows } from "../packages/core/src/source/sinks.ts";
+import {
+  ContentRows,
+  assetSource,
+  undeclaredParams,
+} from "../packages/core/src/source/sinks.ts";
 import type { SourceClock } from "../packages/core/src/source/types.ts";
 import { SUM, SampleSource } from "./fixtures/sources/sampleKind.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
 const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
+const LAYERED = new URL("./fixtures/sources/layeredKind.ts", import.meta.url);
 
 const sourceOf = (content: SourceContent) =>
   content.contentSource as unknown as SampleSource;
@@ -2318,18 +2330,410 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
       expect(other.featureId(key)).not.toBe(city.featureId(key));
     }
     // An ion asset's version is part of its source: a new version, new IDs.
+    // Opened, so the IDs go through canonicalSource and assetSource.
+    engine.sources.registerKind({ id: "layered", module: LAYERED });
+    const ion = "https://assets.ion.cesium.com/96188/tileset.json";
+    const v1 = await engine.open(
+      { url: `${ion}?v=1&access_token=x`, kind: "layered" },
+      { id: "v1" },
+    );
+    const v2 = await engine.open(
+      { url: `${ion}?v=2`, kind: "layered" },
+      { id: "v2" },
+    );
+    expect(v1.source).toBe(canonicalSource(`${ion}?v=1&access_token=x`));
+    expect(v1.source).toBe(`${ion}?v=1`);
+    expect(v2.source).toBe(
+      assetSource({ url: new URL(`${ion}?v=2`), credits: [] }),
+    );
+    expect(v2.featureId("road-0")).not.toBe(v1.featureId("road-0"));
+    expect(v1.featureId("road-0")).toBe(
+      stableIdOf({ kind: "feature", source: `${ion}?v=1`, key: "road-0" }),
+    );
+  });
+});
+
+describe("what identifies content: declared parameters, versions and options, never a credential (CS-847)", () => {
+  let engine: Engine;
+  let world: World;
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+    engine.sources.registerKind({ id: "layered", module: LAYERED });
+  });
+  afterEach(() => engine.destroy());
+
+  async function placed(ref: Parameters<Engine["open"]>[0], id: string) {
+    const content = await engine.open(ref, { id });
+    world.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    return content;
+  }
+
+  it("gives two opens differing only in ?layer= their own feature IDs once the kind declares layer", async () => {
+    const roads = await placed(
+      { url: "https://api.test/features.layers?layer=roads" },
+      "roads",
+    );
+    const buildings = await placed(
+      { url: "https://api.test/features.layers?layer=buildings" },
+      "buildings",
+    );
+    expect(roads.source).toBe("https://api.test/features.layers?layer=roads");
+    expect(buildings.featureId("road-0")).not.toBe(roads.featureId("road-0"));
+    expect([...buildings.rows.features.get("a")!.ids]).not.toEqual([
+      ...roads.rows.features.get("a")!.ids,
+    ]);
+    // Their labels and change sets don't cross.
+    world.identity.setLabels(roads.featureId("a/box"), "class", ["road"]);
     expect(
-      stableIdOf({
-        kind: "feature",
-        source: "https://assets.ion.cesium.com/1/tileset.json?v=1",
-        key: "k",
+      world.identity.identify(buildings.featureId("a/box"))!.labels.class,
+    ).toBeUndefined();
+    expect(() =>
+      buildings.resolve(
+        roads.resolve({
+          id: "cs-1",
+          source: roads.source,
+          ops: [{ op: "delete", key: "road-0" }],
+        }),
+      ),
+    ).toThrow(/neither this content's canonical source nor its ID/);
+  });
+
+  it("gives them one set of feature IDs under today's default, the owner's open question (A, B or C) for a URL with nothing declared", async () => {
+    const roads = await placed(
+      { url: "https://api.test/features.sample?layer=roads" },
+      "roads",
+    );
+    const buildings = await placed(
+      { url: "https://api.test/features.sample?layer=buildings" },
+      "buildings",
+    );
+    // Default B: the whole query goes unless a resolver or kind declares it.
+    expect(buildings.source).toBe(roads.source);
+    expect(buildings.featureId("road-0")).toBe(roads.featureId("road-0"));
+  });
+
+  it("makes the default in one function: the canonical source of each URL with nothing declared", () => {
+    const ion = "https://assets.ion.cesium.com/96188/tileset.json";
+    const table: [string, string][] = [
+      ["https://api.test/f.json", "https://api.test/f.json"],
+      ["https://api.test/f.json?layer=roads", "https://api.test/f.json"],
+      ["https://api.test/f.json?b=2&a=1&token=t", "https://api.test/f.json"],
+      ["https://u:p@api.test/f.json?k=1#x", "https://api.test/f.json"],
+      [`${ion}?v=3&access_token=t`, `${ion}?v=3`],
+      // A `v` that decodes to `&access_token=` stays one encoded value.
+      [`${ion}?v=1%26access_token%3Dabc`, `${ion}?v=1%26access_token%3Dabc`],
+    ];
+    for (const [url, source] of table) {
+      expect(undeclaredParams(new URL(url))).toEqual([]);
+      expect(assetSource({ url: new URL(url), credits: [] })).toBe(source);
+    }
+    expect(
+      assetSource({
+        url: new URL(`${ion}?v=1%26access_token%3Dabc`),
+        credits: [],
       }),
-    ).not.toBe(
+    ).not.toContain("access_token=abc");
+    // Declared, sorted and encoded; ion's own `v` never twice.
+    expect(
+      assetSource(
+        { url: new URL("https://api.test/f.json?b=2&a=x%20y"), credits: [] },
+        { params: ["b", "a"] },
+      ),
+    ).toBe("https://api.test/f.json?a=x+y&b=2");
+    expect(
+      assetSource(
+        { url: new URL(`${ion}?v=3&layer=x`), credits: [], version: "3" },
+        { params: ["layer", "v"] },
+      ),
+    ).toBe(`${ion}?v=3&layer=x`);
+    expect(() =>
+      assetSource(
+        { url: new URL("https://api.test/f.json"), credits: [] },
+        { params: [""] },
+      ),
+    ).toThrow(/SourceIdentity\.params/);
+  });
+
+  it("gives an asset's version 1 and 2 their own feature IDs, and folds in the options that select content", async () => {
+    engine.sources.addResolver({
+      id: "versioned",
+      accepts: (ref) => "resolver" in ref && ref.resolver === "versioned",
+      resolve: (ref) =>
+        Promise.resolve({
+          url: new URL("https://data.test/city.sample"),
+          credits: [],
+          version: "id" in ref ? ref.id : "",
+          options: { style: "Aerial", key: "bing-secret" },
+          identity: { options: ["style", "key"] },
+        }),
+    });
+    const v1 = await placed({ resolver: "versioned", id: "1" }, "v1");
+    const v2 = await placed({ resolver: "versioned", id: "2" }, "v2");
+    expect(v1.source).toBe(
+      "https://data.test/city.sample#version=1&option.style=%22Aerial%22",
+    );
+    expect(v1.source).not.toContain("bing-secret");
+    expect(v2.featureId("road-0")).not.toBe(v1.featureId("road-0"));
+    expect(v2.featureId("a/box")).not.toBe(v1.featureId("a/box"));
+  });
+
+  it("never lets an access_token, a credential's own parameter or a declared credential change a feature ID", async () => {
+    const a = await placed(
+      { url: "https://api.test/features.layers?layer=roads&access_token=a" },
+      "a",
+    );
+    const b = await placed(
+      { url: "https://api.test/features.layers?access_token=b&layer=roads" },
+      "b",
+    );
+    expect(a.source).toBe("https://api.test/features.layers?layer=roads");
+    expect(b.source).toBe(a.source);
+    expect(b.featureId("road-0")).toBe(a.featureId("road-0"));
+    // A resolver's declared credential and its credential's own parameter.
+    const asset = (session: string, signed: string) => ({
+      url: new URL(
+        `https://api.test/f.json?layer=roads&session=${session}&signed=${signed}&X-Amz-Signature=${signed}`,
+      ),
+      credits: [],
+      credentials: new Credential({ query: { Signed: signed } }),
+      identity: {
+        params: ["layer", "session", "signed", "X-Amz-Signature"],
+        credentials: ["SESSION"],
+      },
+    });
+    expect(assetSource(asset("s1", "k1"))).toBe(
+      "https://api.test/f.json?layer=roads",
+    );
+    expect(assetSource(asset("s2", "k2"))).toBe(assetSource(asset("s1", "k1")));
+  });
+});
+
+describe("the feed's memory is bounded (CS-847)", () => {
+  let engine: Engine;
+  let world: World;
+  let reports: string[];
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+    reports = [];
+    engine.errors.on((e) => reports.push(e.message));
+  });
+  afterEach(() => engine.destroy());
+
+  async function city() {
+    const content = await engine.open(
+      { url: "https://data.test/city.sample" },
+      { id: "city" },
+    );
+    world.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    const feed = (id: string, ops: ChangeSet["ops"]) => {
+      sourceOf(content).push({
+        kind: "features",
+        changes: { id, source: content.source, ops },
+      });
+      engine.scene.workers.jobs.apply(Infinity);
+    };
+    // What the content holds for keys and overrides (private, read here).
+    const held = () => ({
+      overrides: content.feed.size,
+      keys: content["keys"].size,
+      pending: content["pending"].size,
+    });
+    return { content, feed, held };
+  }
+
+  it("holds nothing after 10,000 inserts and deletes of car-N (keys its source never writes)", async () => {
+    const { content, feed, held } = await city();
+    // Its points are car-0 to car-2: these keys are the feed's alone.
+    expect(content.hasBase(content.featureId("car-100"))).toBe(false);
+    const start = held();
+    for (let n = 0; n < 10_000; n++) {
+      feed(`in-${n}`, [{ op: "insert", key: `car-${n + 100}`, feature: {} }]);
+      feed(`up-${n}`, [
+        { op: "update", key: `car-${n + 100}`, patch: { properties: { n } } },
+      ]);
+      feed(`out-${n}`, [{ op: "delete", key: `car-${n + 100}` }]);
+    }
+    expect(held()).toEqual(start);
+    expect(content.keyOf(content.featureId("car-10099"))).toBeUndefined();
+    expect(reports.filter((m) => m.includes("features change"))).toEqual([]);
+  });
+
+  it("stops overrides for keys that never load at the cap, the oldest first, and reports the count once per change set", async () => {
+    const { content, feed, held } = await city();
+    const ghosts = (from: number, n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        op: "delete" as const,
+        key: `ghost-${from + i}`,
+      }));
+    feed("cs-1", ghosts(0, MAX_PENDING_OVERRIDES));
+    expect(held().overrides).toBe(MAX_PENDING_OVERRIDES);
+    reports.length = 0;
+    feed("cs-2", ghosts(MAX_PENDING_OVERRIDES, 5));
+    expect(held()).toEqual({
+      overrides: MAX_PENDING_OVERRIDES,
+      keys: MAX_PENDING_OVERRIDES,
+      pending: MAX_PENDING_OVERRIDES,
+    });
+    expect(content.feed.get(content.featureId("ghost-4"))).toBeUndefined();
+    expect(content.feed.get(content.featureId("ghost-5"))?.kind).toBe("hide");
+    const dropped = reports.filter((m) => m.includes("went, the oldest first"));
+    expect(dropped).toEqual([
+      `the "sample" source's features change: 5 overrides of features no row or draw has went, the oldest first: a content's feed holds at most ${MAX_PENDING_OVERRIDES} (MAX_PENDING_OVERRIDES).`,
+    ]);
+    expect(dropped[0]).not.toContain("ghost");
+    // A hide of a feature that is loaded isn't pending, and never goes.
+    feed("cs-3", [{ op: "delete", key: "road-0" }, ...ghosts(2000, 3)]);
+    expect(content.feed.get(content.featureId("road-0"))?.kind).toBe("hide");
+    expect(held().pending).toBe(MAX_PENDING_OVERRIDES);
+  });
+
+  it("forgets a removed row's key, and keeps it while another batch names it", async () => {
+    const { content } = await city();
+    const road = content.featureId("road-0");
+    expect(content.keyOf(road)).toBe("road-0");
+    sourceOf(content).host.sinks.features.remove("a");
+    expect(content.keyOf(road)).toBeUndefined();
+    expect(content.rows.nameOf(road)).toBeUndefined();
+  });
+
+  it("shows a feed's update of a key not loaded nowhere: feature and features agree", async () => {
+    const { content, feed } = await city();
+    feed("cs-1", [
+      { op: "update", key: "later", patch: { properties: { lanes: 3 } } },
+    ]);
+    const later = content.featureId("later");
+    expect(content.feed.get(later)?.kind).toBe("replace");
+    expect(content.feature(later)).toBeUndefined();
+    expect([...content.features()].map((f) => f.id)).not.toContain(later);
+    // A loaded feature's replacement shows in both.
+    feed("cs-2", [
+      { op: "update", key: "road-1", patch: { properties: { lanes: 9 } } },
+    ]);
+    const road = content.featureId("road-1");
+    expect(content.feature(road)?.properties?.lanes).toBe(9);
+    expect(
+      [...content.features()].find((f) => f.id === road)?.feature.properties
+        ?.lanes,
+    ).toBe(9);
+  });
+});
+
+describe("edits, draws and two opens of one source in one world (CS-847)", () => {
+  let engine: Engine;
+  let world: World;
+  let reports: string[];
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+    reports = [];
+    engine.errors.on((e) => reports.push(e.message));
+  });
+  afterEach(() => engine.destroy());
+
+  const CITY = "https://data.test/city.sample";
+  const boxOf = (content: SourceContent, item: string) =>
+    stableIdOf({
+      kind: "draw",
+      item,
+      source: content.source,
+      content: "a/box",
+    });
+  const hidden = (index: number) =>
+    (world.draws.recordsU32[index * RECORD_WORDS + FLAGS_WORD]! &
+      RecordFlags.hidden) !==
+    0;
+
+  async function placed(id: string) {
+    const content = await engine.open({ url: CITY }, { id });
+    const item = world.add(content);
+    engine.sources.tick();
+    engine.sources.tick();
+    return { content, item };
+  }
+
+  it("reports an edit naming an instance ID of a removed item, or another source's feature ID, by count", async () => {
+    const { content } = await placed("city");
+    const east = world.add(content);
+    engine.sources.tick();
+    const eastBox = boxOf(content, east.key);
+    east.remove();
+    reports.length = 0;
+    content.edits.hide(eastBox);
+    content.edits.hide(
       stableIdOf({
         kind: "feature",
-        source: "https://assets.ion.cesium.com/1/tileset.json?v=2",
+        source: "https://elsewhere.test/x",
         key: "k",
       }),
     );
+    // Its own features are known: no report.
+    content.edits.hide(content.featureId("road-0"));
+    content.edits.hide(content.featureId("a/box"));
+    engine.sources.tick();
+    expect(reports.filter((m) => m.includes("content's edits"))).toEqual([
+      "the \"sample\" content's edits: 2 edits name IDs no row, draw or feature of it has now; held as overrides until a feature with those IDs loads, which an instance ID of a removed item, or another content's ID, never does.",
+    ]);
+    engine.sources.tick();
+    expect(reports.filter((m) => m.includes("content's edits"))).toHaveLength(
+      1,
+    );
+  });
+
+  it("refuses a host's own draw that sets DrawIdentity.feature", async () => {
+    const { content } = await placed("city");
+    expect(() =>
+      world.addDraw({
+        mesh: world.addMesh(createBox()),
+        origin: Float64Array.of(0, 0, 0),
+        identity: {
+          source: content.source,
+          content: "a/box",
+          set: -1,
+          scope: "tile",
+          feature: { key: "a/box" },
+        },
+      }),
+    ).toThrow(/DrawIdentity\.feature is set only for a content source's draws/);
+    // So identify(featureId) still names the content's own draw.
+    const found = world.identity.identify(content.featureId("a/box"))!;
+    expect(found.key).toMatchObject({ kind: "feature", key: "a/box" });
+  });
+
+  it("serves two opens of one source in one world: identify, each content's own edits, and labels, after one is destroyed", async () => {
+    const a = await placed("a");
+    const b = await placed("b");
+    const box = a.content.featureId("a/box");
+    expect(b.content.featureId("a/box")).toBe(box);
+    const drawOf = (id: bigint) => world.identity.identify(id)!.draw!.index;
+    const aDraw = drawOf(boxOf(a.content, a.item.key));
+    const bDraw = drawOf(boxOf(b.content, b.item.key));
+    world.identity.setLabels(box, "class", ["kiosk"]);
+    // Each content's edits are its own.
+    a.content.edits.hide(box);
+    expect([hidden(aDraw), hidden(bDraw)]).toEqual([true, false]);
+    expect(b.content.edits.get(box)).toBeUndefined();
+    a.content.destroy();
+    // identify by the feature ID answers from the open that still draws it.
+    const found = world.identity.identify(box)!;
+    expect(found.draw!.index).toBe(bDraw);
+    expect(found.labels.class).toEqual(["kiosk"]);
+    expect(
+      world.identity.identify(boxOf(b.content, b.item.key))!.labels.class,
+    ).toEqual(["kiosk"]);
+    expect(hidden(bDraw)).toBe(false);
+    b.content.edits.hide(box);
+    expect(hidden(bDraw)).toBe(true);
   });
 });

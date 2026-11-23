@@ -31,7 +31,7 @@
 import type { FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
-import { SourceContent } from "./content.ts";
+import { MAX_PENDING_OVERRIDES, SourceContent } from "./content.ts";
 import {
   checkChangeSet,
   type ChangeSet,
@@ -241,9 +241,10 @@ export class SourceRuntime {
       types.add(decoder.type);
     }
     const content = new SourceContent(
-      this.contentId(options.id, assetSource(asset)),
+      this.contentId(options.id, assetSource(asset, kind.identity)),
       asset,
       kind.id,
+      kind.identity,
     );
     const client = this.budget.client();
     const opened: Opened = {
@@ -291,6 +292,12 @@ export class SourceRuntime {
     }
     for (const opened of this.opened) {
       const { content } = opened;
+      const strays = content.takeStrayEdits();
+      if (strays > 0) {
+        this.reportMessage(
+          `the "${content.kind}" content's edits: ${strays} ${strays === 1 ? "edit names an ID" : "edits name IDs"} no row, draw or feature of it has now; held as ${strays === 1 ? "an override" : "overrides"} until a feature with ${strays === 1 ? "that ID" : "those IDs"} loads, which an instance ID of a removed item, or another content's ID, never does.`,
+        );
+      }
       if (!content.shown) {
         continue;
       }
@@ -725,7 +732,9 @@ export class SourceRuntime {
    * its keys', is dropped whole and reported), then applied under this
    * client's edits. An update or a delete naming a key no row, draw or
    * override of the content has is applied, as an override that holds until
-   * one loads, and reported, never dropped silently.
+   * one loads, and reported, never dropped silently; past
+   * `MAX_PENDING_OVERRIDES` of those, the oldest go, reported with their
+   * count. A delete of the feed's own insert clears it.
    */
   private applyFeatures(opened: Opened, changes: ChangeSet): void {
     checkChangeSet(changes);
@@ -736,18 +745,38 @@ export class SourceRuntime {
     );
     for (const op of resolved) {
       const id = op.id!;
+      // The feed's own insert, with no row or draw of the source under it:
+      // an update keeps it an insert, and a delete clears it, so a feed
+      // that inserts and deletes holds nothing for what it deleted.
+      const inserted =
+        content.feed.get(id)?.kind === "insert" && !content.hasBase(id);
       if (op.op === "insert") {
         content.feed.insert(id, op.feature);
       } else if (op.op === "delete") {
-        content.feed.hide(id);
+        if (inserted) {
+          content.feed.clear(id);
+        } else {
+          content.feed.hide(id);
+        }
       } else {
-        content.feed.replace(id, patched(feedBase(content, id), op.patch));
+        const feature = patched(feedBase(content, id), op.patch);
+        if (inserted) {
+          content.feed.insert(id, feature);
+        } else {
+          content.feed.replace(id, feature);
+        }
       }
     }
     content.noteKeys(resolved);
+    const dropped = content.holdPending(resolved);
     if (unknown.length > 0) {
       this.reportMessage(
         `the "${content.kind}" source's features change: ${unknown.length === 1 ? "op" : "ops"} ${unknown.join(", ")} ${unknown.length === 1 ? "names a key" : "name keys"} no row, draw or edit of its content has; applied as overrides that hold until the features load.`,
+      );
+    }
+    if (dropped > 0) {
+      this.reportMessage(
+        `the "${content.kind}" source's features change: ${dropped} ${dropped === 1 ? "override" : "overrides"} of features no row or draw has went, the oldest first: a content's feed holds at most ${MAX_PENDING_OVERRIDES} (MAX_PENDING_OVERRIDES).`,
       );
     }
   }

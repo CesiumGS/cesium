@@ -31,6 +31,7 @@ import type {
   ResolvedAsset,
   RowSink,
   SampleBatch,
+  SourceIdentity,
 } from "./types.ts";
 
 /** Which sink a row is in. */
@@ -54,16 +55,170 @@ export interface RowAt {
 }
 
 /**
+ * The query parameters a URL keeps in its canonical source when neither
+ * its resolver nor its kind declares any (`SourceIdentity.params`): none.
+ * This is the one place the default is made, and it is the owner's call
+ * (the report's question): keep the whole query but credentials and
+ * signatures (A), none (B, today's), or the whole query but credentials (C).
+ * Credentials go whatever it returns.
+ * @internal
+ */
+export function undeclaredParams(url: URL): readonly string[] {
+  void url;
+  return [];
+}
+
+/**
+ * Query parameters and option keys the engine knows as credentials or
+ * signatures, never kept, compared without case: OAuth's `access_token`,
+ * plain tokens and keys, and the signed-URL schemes of S3, Google Cloud
+ * Storage and Azure.
+ */
+const CREDENTIAL_NAMES = new Set([
+  "access_token",
+  "token",
+  "key",
+  "apikey",
+  "api_key",
+  "api-key",
+  "signature",
+  "sig",
+  "se",
+  "sp",
+  "sv",
+  "policy",
+  "key-pair-id",
+]);
+const CREDENTIAL_PREFIXES = /^(?:x-amz-|x-goog-)/i;
+
+/** Whether `name` is a credential: known, the asset's credential's own, or declared one. */
+function isCredential(
+  name: string,
+  asset: ResolvedAsset,
+  declared: ReadonlySet<string>,
+): boolean {
+  const lower = name.toLowerCase();
+  return (
+    CREDENTIAL_NAMES.has(lower) ||
+    CREDENTIAL_PREFIXES.test(lower) ||
+    declared.has(lower) ||
+    Object.keys(asset.credentials?.query ?? {}).some(
+      (k) => k.toLowerCase() === lower,
+    )
+  );
+}
+
+/** A declaration's list: non-empty strings, or a `TypeError` naming the field. */
+function namesOf(
+  list: readonly string[] | undefined,
+  field: string,
+): readonly string[] {
+  if (list === undefined) {
+    return [];
+  }
+  if (
+    !Array.isArray(list) ||
+    list.some((n) => typeof n !== "string" || n.length === 0)
+  ) {
+    throw new TypeError(
+      `SourceIdentity.${field}: a list of non-empty strings.`,
+    );
+  }
+  return list;
+}
+
+/** A plain value's text, its object keys sorted, so equal options give one text. */
+function stableText(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableText).join(",")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableText(v)}`).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+const byName = (a: readonly [string, string], b: readonly [string, string]) =>
+  a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0;
+
+/**
  * A resolved asset's canonical source: what its content's feature IDs, and
  * every message that names it, are made from (CS-1031 A). The one place the
- * seam makes it: `canonicalSource` of the URL its resolver gave, so it has
- * no credentials, query (a token or a key never enters it) or fragment,
- * except a Cesium ion asset's version (`v`); a data URI becomes its bytes'
- * hash. Two assets whose URLs differ only in their query or a token are one
- * source, with one set of feature IDs.
+ * seam makes it, in three parts:
+ *
+ * - `canonicalSource` of the URL its resolver gave: its scheme, host, port
+ *   and path (a token in the path stays: nothing says it is one), with no
+ *   user information, query or fragment, except a Cesium ion asset's
+ *   version (`v`, percent-encoded); a data URI becomes its bytes' hash.
+ * - The query parameters that select its content (`SourceIdentity.params`,
+ *   its resolver's and its kind's, else `undeclaredParams`), with their
+ *   values, sorted and percent-encoded, after `?` (or `&` after ion's `v`).
+ * - After `#`, which a canonical URL never holds: its `version` (when it
+ *   isn't ion's `v` already) and the options that select its content
+ *   (`SourceIdentity.options`), each `option.<key>` with its value as JSON.
+ *
+ * A credential never enters it (`SourceIdentity`). Two assets whose URLs
+ * differ only in what it drops are one source, with one set of feature IDs.
+ * @internal
  */
-export function assetSource(asset: ResolvedAsset): string {
-  return canonicalSource(asset.url.href);
+export function assetSource(
+  asset: ResolvedAsset,
+  kind?: SourceIdentity,
+): string {
+  const declared = [asset.identity, kind];
+  const credentials = new Set(
+    declared.flatMap((d) =>
+      namesOf(d?.credentials, "credentials").map((n) => n.toLowerCase()),
+    ),
+  );
+  const params = new Set([
+    ...declared.flatMap((d) => namesOf(d?.params, "params")),
+    ...undeclaredParams(asset.url),
+  ]);
+  const options = new Set(
+    declared.flatMap((d) => namesOf(d?.options, "options")),
+  );
+  const base = canonicalSource(asset.url.href);
+  // ion's `v`, when canonicalSource kept it: never twice.
+  const ionVersion = /\?v=([^&]*)$/.exec(base)?.[1];
+  const query: [string, string][] = [];
+  for (const [name, value] of asset.url.searchParams) {
+    if (
+      params.has(name) &&
+      !(ionVersion !== undefined && name === "v") &&
+      !isCredential(name, asset, credentials)
+    ) {
+      query.push([name, value]);
+    }
+  }
+  query.sort(byName);
+  let source = base;
+  if (query.length > 0) {
+    source += `${ionVersion !== undefined ? "&" : "?"}${new URLSearchParams(query)}`;
+  }
+  const tail: [string, string][] = [];
+  if (
+    asset.version !== undefined &&
+    !(
+      ionVersion !== undefined &&
+      decodeURIComponent(ionVersion) === asset.version
+    )
+  ) {
+    tail.push(["version", String(asset.version)]);
+  }
+  for (const key of [...options].sort()) {
+    const value = asset.options?.[key];
+    if (value !== undefined && !isCredential(key, asset, credentials)) {
+      tail.push([`option.${key}`, stableText(value)]);
+    }
+  }
+  if (tail.length > 0) {
+    source += `#${new URLSearchParams(tail)}`;
+  }
+  return source;
 }
 
 /**
@@ -280,7 +435,7 @@ export class ContentRows {
   /** Every named row's name, by its ID: the source's key for a feature ID. */
   private readonly idNames = new Map<StableId, string>();
 
-  /** The source's key for feature `id`, when a row it wrote named it. */
+  /** The source's key for feature `id`, while a row it wrote and names so is held. */
   nameOf(id: StableId): string | undefined {
     return this.idNames.get(id);
   }
@@ -375,6 +530,12 @@ export class ContentRows {
       if (left.length === 0) {
         this.byId.delete(id);
         gone.push(id);
+        // Its name goes with its last row: `nameOf` answers only for rows held.
+        const named = this.idNames.get(id);
+        if (named !== undefined) {
+          this.idNames.delete(id);
+          this.nameIds.delete(named);
+        }
       } else {
         this.byId.set(id, left);
       }
