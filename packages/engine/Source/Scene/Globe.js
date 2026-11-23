@@ -131,6 +131,17 @@ function Globe(ellipsoid) {
   this.loadingDescendantLimit = 20;
 
   /**
+   * Gets or sets the maximum amount of time, in milliseconds, spent loading
+   * terrain and imagery tiles each frame. A larger value loads tiles faster at the
+   * cost of longer frames, while a smaller value keeps frames short but takes more
+   * frames to reach full detail.
+   *
+   * @type {number}
+   * @default 5
+   */
+  this.tileLoadTimeSlice = 5;
+
+  /**
    * Gets or sets a value indicating whether the ancestors of rendered tiles should be preloaded.
    * Setting this to true optimizes the zoom-out experience and provides more detail in
    * newly-exposed areas when panning. The down side is that it requires loading more tiles.
@@ -1039,6 +1050,7 @@ Globe.prototype.beginFrame = function (frameState) {
     surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
     surface.tileCacheSize = this.tileCacheSize;
     surface.loadingDescendantLimit = this.loadingDescendantLimit;
+    surface.tileLoadTimeSlice = this.tileLoadTimeSlice;
     surface.preloadAncestors = this.preloadAncestors;
     surface.preloadSiblings = this.preloadSiblings;
 
