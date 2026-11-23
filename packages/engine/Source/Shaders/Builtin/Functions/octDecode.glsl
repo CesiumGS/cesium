@@ -10,10 +10,6 @@
   */
   vec3 czm_octDecode(vec2 encoded, float range)
   {
-      if (encoded.x == 0.0 && encoded.y == 0.0) {
-          return vec3(0.0, 0.0, 0.0);
-      }
-
      encoded = encoded / range * 2.0 - 1.0;
      vec3 v = vec3(encoded.x, encoded.y, 1.0 - abs(encoded.x) - abs(encoded.y));
      if (v.z < 0.0)
