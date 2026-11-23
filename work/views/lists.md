@@ -81,7 +81,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 30 of 61 done, 14 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 30 of 62 done, 15 ready, 10 blocked, 7 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -155,6 +155,7 @@ No milestone
 - [?] CS-1058 Fitted draws lose their "exact" center on Apple GPUs too. Proposed. Needs nothing.
 - [?] CS-1078 A compiled route's center term wraps when F(c) minus the eye passes 2³¹ units with both values under it. Proposed. Needs CS-921.
 - [x] CS-1096 decision: How does CS-921's center term handle values past 2³⁰ units?. Done.
+- [ ] CS-1104 decision: Merge CS-921, the center term as integers with a derived bound. Needs nothing. Decided by owner.
 
 ### Live MaterialX graph editing
 
@@ -635,7 +636,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 41 of 109 done, 29 ready, 20 blocked, 19 proposed.
+CS-191, Planned, led by owner: 45 of 113 done, 29 ready, 20 blocked, 19 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -763,6 +764,10 @@ No milestone
 - [x] CS-1093 decision: Merge CS-966, credentials and queries kept to their own origins. Done.
 - [x] CS-1097 decision: Does CS-913's USD reader get one structural round, a narrower scope, or another site-by-site round?. Done.
 - [?] CS-1098 CS-966's remaining minors: off-list hook query tokens through a proxy, a proxy's fixed secret header, two tests, and a behavior note. Proposed. Needs CS-966.
+- [x] CS-1100 decision: What does content with no declared name digest? (revisits CS-1080). Done.
+- [x] CS-1101 decision: What may a declared content name look like, and what leaves the engine?. Done.
+- [x] CS-1102 decision: How does a peer's insert of a new feature appear?. Done.
+- [x] CS-1103 decision: Does CS-847's tightening land before it merges?. Done.
 
 ### Sky, light and atmosphere
 
@@ -1174,7 +1179,7 @@ No milestone
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 35 of 64 done, 15 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 36 of 64 done, 1 in progress, 13 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1232,7 +1237,7 @@ No milestone
 - [x] CS-974 decision: What does alpha.1 say about core's names that the package map moves elsewhere?. Done.
 - [x] CS-975 decision: Is the stability-tier sort its own pass before the name review?. Done.
 - [x] CS-976 decision: One word for end of life: dispose or destroy?. Done.
-- [ ] CS-977 Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C). Needs CS-974.
+- [~] CS-977 Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C). Needs CS-974. Claimed by orch-11-CS-977.
 - [ ] CS-978 dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A). Needs CS-976.
 - [x] CS-981 decision: Does the surface file record signatures before beta.1?. Done.
 - [ ] CS-985 A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A). Needs CS-981.
@@ -1254,7 +1259,7 @@ No milestone
 - [ ] CS-1081 decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?. Needs nothing. Decided by owner.
 - [x] CS-1083 decision: Merge CS-940, the StableId hex helpers with a branded StableId. Done.
 - [x] CS-1088 decision: May hosts save feature IDs before the API review settles StableKey's encoding?. Done.
-- [ ] CS-1094 decision: Merge CS-977's first part: engine internals leave core's public entry. Needs nothing. Decided by owner.
+- [x] CS-1094 decision: Merge CS-977's first part: engine internals leave core's public entry. Done.
 
 ### Editing
 
@@ -1328,7 +1333,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 35 of 51 done, 2 ready, 0 blocked, 14 proposed.
+CS-609, Planned, led by owner: 35 of 52 done, 3 ready, 0 blocked, 14 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1386,6 +1391,7 @@ No milestone
 - [x] CS-1090 decision: The pnpm spike's decision: move 2.0 from npm to pnpm, stay on npm, or take a middle option?. Done.
 - [ ] CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A). Needs CS-951 and CS-1090.
 - [x] CS-1092 decision: Merge CS-951, the pnpm spike's write-up. Done.
+- [ ] CS-1105 decision: Merge CS-1091, 2.0 installs with pnpm. Needs nothing. Decided by owner.
 
 ### Packaging and package names
 

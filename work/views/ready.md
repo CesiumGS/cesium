@@ -34,6 +34,7 @@ CS-10 Cesium IR
   CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
   CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
   CS-989  Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
+  CS-1104  decision: Merge CS-921, the center term as integers with a derived bound
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -263,13 +264,11 @@ CS-437 The public API reviews
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-977  Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
   CS-978  dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A)
   CS-985  A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
   CS-990  GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
   CS-1001  The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal
   CS-1081  decision: Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs?
-  CS-1094  decision: Merge CS-977's first part: engine internals leave core's public entry
 
 CS-579 Editing
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
@@ -307,6 +306,7 @@ CS-18 The work tracker
 CS-609 A clean 2.0 branch and a modern build
   CS-1027  The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
   CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
+  CS-1105  decision: Merge CS-1091, 2.0 installs with pnpm
 
 239 ready
 ```

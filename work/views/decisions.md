@@ -52,7 +52,6 @@ CS-437 The public API reviews
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
   CS-1081  Is StableKey's feature encoding, ["feature", source, key(, row)], the persisted format for saved feature IDs? (owner)
-  CS-1094  Merge CS-977's first part: engine internals leave core's public entry (owner)
 
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
@@ -67,5 +66,11 @@ CS-16 Streaming robustness
 CS-389 Dyno as the development harness
   CS-1095  Merge CS-395, reference images and the sweep view (owner)
 
-21 open decision(s) for owner
+CS-10 Cesium IR
+  CS-1104  Merge CS-921, the center term as integers with a derived bound (owner)
+
+CS-609 A clean 2.0 branch and a modern build
+  CS-1105  Merge CS-1091, 2.0 installs with pnpm (owner)
+
+22 open decision(s) for owner
 ```

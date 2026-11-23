@@ -115,6 +115,7 @@ graph LR
     CS_1058["CS-1058 Fitted draws lose their 'exact' center on Apple GPUs too"]:::proposed
     CS_1078["CS-1078 A compiled route's center term wraps when F(c) minus the eye p"]:::proposed
     CS_1096["CS-1096 How does CS-921's center term handle values past 2³⁰ units?"]:::done
+    CS_1104["CS-1104 Merge CS-921, the center term as integers with a derived bound"]:::decision
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -523,6 +524,10 @@ graph LR
     CS_1093["CS-1093 Merge CS-966, credentials and queries kept to their own origin"]:::done
     CS_1097["CS-1097 Does CS-913's USD reader get one structural round, a narrower "]:::done
     CS_1098["CS-1098 CS-966's remaining minors: off-list hook query tokens through "]:::proposed
+    CS_1100["CS-1100 What does content with no declared name digest? (revisits CS-1"]:::done
+    CS_1101["CS-1101 What may a declared content name look like, and what leaves th"]:::done
+    CS_1102["CS-1102 How does a peer's insert of a new feature appear?"]:::done
+    CS_1103["CS-1103 Does CS-847's tightening land before it merges?"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -871,7 +876,7 @@ graph LR
     CS_1081["CS-1081 Is StableKey's feature encoding, ['feature', source, key(, row"]:::decision
     CS_1083["CS-1083 Merge CS-940, the StableId hex helpers with a branded StableId"]:::done
     CS_1088["CS-1088 May hosts save feature IDs before the API review settles Stabl"]:::done
-    CS_1094["CS-1094 Merge CS-977's first part: engine internals leave core's publi"]:::decision
+    CS_1094["CS-1094 Merge CS-977's first part: engine internals leave core's publi"]:::done
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -971,6 +976,7 @@ graph LR
     CS_1090["CS-1090 The pnpm spike's decision: move 2.0 from npm to pnpm, stay on "]:::done
     CS_1091["CS-1091 2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup"]:::open
     CS_1092["CS-1092 Merge CS-951, the pnpm spike's write-up"]:::done
+    CS_1105["CS-1105 Merge CS-1091, 2.0 installs with pnpm"]:::decision
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
