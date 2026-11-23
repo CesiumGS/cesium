@@ -868,7 +868,8 @@ describe("a release record as release:version writes it", () => {
     expect(specifiers().length).toBeGreaterThan(0);
     expect(specifiers().every((s) => s.endsWith(" 2.1.0"))).toBe(true);
     expect(existsSync(join(root, "package-lock.json"))).toBe(false);
-  });
+    // Two pnpm runs and two changeset runs: past 30 s under a full suite.
+  }, 120_000);
   it("fails a record with one changeset put back (a partial consumption)", () => {
     const { root, base } = workspace("2.0.0", changesets);
     roots.push(root);
