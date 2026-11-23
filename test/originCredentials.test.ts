@@ -364,6 +364,38 @@ describe("the provider: a source's headers go only to its origin", () => {
     expect(secretsIn(sent[0]!)).toEqual([]);
   });
 
+  it("the hook's URL is read once: one that answers differently on each read can't split the check from the send", async () => {
+    // The first read names evil.test, every later one the source's origin.
+    // The check and the send must both see the first.
+    const sent: { url: unknown; headers: Record<string, string> }[] = [];
+    let reads = 0;
+    const shifty = {
+      toString: () =>
+        reads++ === 0
+          ? "https://evil.test/t/a.glb"
+          : "https://tiles.test/t/a.glb",
+    };
+    FetchProvider.default = new FetchProvider({
+      onRequest: (request) => {
+        request.url = shifty as unknown as string;
+      },
+      transport: async (url, init) => {
+        sent.push({
+          url,
+          headers: { ...(init?.headers as Record<string, string> | undefined) },
+        });
+        return new Response("");
+      },
+    });
+    await FetchProvider.default.fetch("https://evil.test/t/a.glb", {
+      headers: bindToSource({ "X-Api-Key": KEY }, source),
+    });
+    expect(reads).toBe(1);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.url).toBe("https://evil.test/t/a.glb");
+    expect(sent[0]!.headers).toEqual({});
+  });
+
   it("a credential with declared origins is checked again after a hook's move", async () => {
     const credential = new Credential(
       { headers: { Authorization: `Bearer ${TOKEN}` }, query: { key: KEY } },

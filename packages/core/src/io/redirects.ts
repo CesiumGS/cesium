@@ -11,7 +11,8 @@
  *   Each hop resolves `Location` against the hop's URL, and the method and
  *   body follow fetch's rules: a 303, and a 301 or 302 after a POST, become
  *   a GET with no body; a 307 or 308 keeps both. At most `MAX_REDIRECTS`
- *   hops (as fetch), no loop, and no hop from https to http.
+ *   hops (as fetch), no loop, no hop from https to http, and no hop to a
+ *   scheme other than http or https (as fetch).
  * - **In a browser** a manual redirect is an opaque-redirect response, which
  *   hides where it goes, so the hop can't be checked: it is refused. It is
  *   told by the response (`type === "opaqueredirect"`), not by sniffing the
@@ -78,6 +79,15 @@ export async function followRedirects(
     const to = from ? absolute(location, from) : undefined;
     if (!to) {
       throw refused(hopUrl, "redirected to a URL that doesn't parse");
+    }
+    const scheme = new URL(to).protocol;
+    if (scheme !== "http:" && scheme !== "https:") {
+      // As fetch: only http and https are followed. The error names the
+      // scheme alone, since the rest of such a URL may carry anything.
+      throw refused(
+        hopUrl,
+        `redirected to a ${scheme} URL; only http and https are followed`,
+      );
     }
     if (from!.startsWith("https:") && to.startsWith("http:")) {
       throw refused(hopUrl, "redirected from https to http");

@@ -397,6 +397,9 @@ export interface FetchProviderOptions {
    * decides what is sent (CS-1034 A): a hook that moves a request to a
    * third party's server sends the source's headers there, so a host whose
    * mirror mustn't get them gives a `Credential` that lists its origins.
+   * Headers the hook adds follow redirects as fetch's do: to whatever
+   * origin a redirect names, unchecked. A secret belongs in an origin rule
+   * or a `Credential` instead, so that each hop is checked.
    */
   onRequest?: (request: OutgoingRequest) => void | Promise<void>;
   onResponse?: (response: IncomingResponse) => void | Promise<void>;
@@ -491,7 +494,9 @@ export class FetchProvider {
       setHeader(outgoing.headers, "Accept", init.accept);
     }
     await this.options.onRequest?.(outgoing);
-    const target = outgoing.url;
+    // Read once: a hook may leave an object that answers differently on
+    // each read, and every check below must see the URL that is sent.
+    const target = String(outgoing.url);
     const targetRule = this.ruleFor(originOf(target));
     if (targetRule !== rule) {
       // The hook moved the request to an origin with another rule. What it
@@ -512,6 +517,10 @@ export class FetchProvider {
     let sentCredential = false;
     let sentSource = false;
     let proxyRule: OriginRule | undefined;
+    // The proxy's own headers, when they carry a token (a `ForwardingProxy`
+    // header with a key in its target): they mustn't follow a redirect off
+    // the proxy's origin either.
+    let proxyOwn: Readonly<Record<string, string>> | undefined;
     if (init.headers && carries(input, target, credential, source)) {
       sentSource = true;
       for (const [name, value] of Object.entries(init.headers)) {
@@ -538,9 +547,13 @@ export class FetchProvider {
       const bareUrl = proxy.getURL(bare);
       proxyRule = this.ruleFor(originOf(bareUrl));
       if (proxyRule?.allowCredentials === true) {
+        const forwarded = proxy.headers?.(url);
+        if (forwarded && withoutTokens(url, credential) !== url) {
+          proxyOwn = forwarded;
+        }
         for (const [name, value] of Object.entries({
           ...proxyRule.headers,
-          ...proxy.headers?.(url),
+          ...forwarded,
         })) {
           setHeader(headers, name, value);
         }
@@ -576,10 +589,10 @@ export class FetchProvider {
       this.options.transport ??
       ((u: string, i?: RequestInit) => globalThis.fetch(u, i));
     let response: Response;
-    const own = ownHeaderNames(sentSource ? init.headers : undefined, [
-      rule,
-      targetRule,
-      proxyRule,
+    const own = ownHeaderNames([
+      sentSource ? init.headers : undefined,
+      proxyOwn,
+      ...[rule, targetRule, proxyRule].map((r) => r?.headers),
     ]);
     if (!Object.keys(headers).some((name) => carriesSecret(name, own))) {
       // Nothing fetch wouldn't strip on a cross-origin hop: fetch follows.
@@ -772,13 +785,15 @@ function addMissing(
  */
 const FOLLOW_SAFE = new Set(["authorization", "accept", "prefer"]);
 
-/** The names of a source's and the origin rules' headers, in lower case. */
+/**
+ * The names of a request's own headers, in lower case: a source's, the
+ * origin rules', and a proxy's that carry a token.
+ */
 function ownHeaderNames(
-  source: Readonly<Record<string, string>> | undefined,
-  rules: readonly (OriginRule | undefined)[],
+  records: readonly (Readonly<Record<string, string>> | undefined)[],
 ): Set<string> {
   const names = new Set<string>();
-  for (const record of [source, ...rules.map((rule) => rule?.headers)]) {
+  for (const record of records) {
     for (const name of Object.keys(record ?? {})) {
       names.add(name.toLowerCase());
     }

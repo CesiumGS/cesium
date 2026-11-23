@@ -18,6 +18,7 @@ import {
   FetchProvider,
   type FetchProviderOptions,
   type FetchTransport,
+  ForwardingProxy,
 } from "../packages/core/src/io/fetchProvider.ts";
 import { ionDefaults, resolveIonAsset } from "../packages/core/src/io/ion.ts";
 import { resolveITwinIModel } from "../packages/core/src/io/itwin.ts";
@@ -239,6 +240,110 @@ describe("Node: the provider follows redirects by hand when a source header is a
     expect(sent[0]!.init?.signal).toBe(controller.signal);
   });
 
+  it("an abort signal goes with every hop of a three-hop chain", async () => {
+    const controller = new AbortController();
+    const sent = serve({
+      "https://tiles.test/a": redirect(302, "/b"),
+      "https://tiles.test/b": redirect(307, "https://cdn.test/c"),
+      "https://cdn.test/c": redirect(302, "/d"),
+      "https://cdn.test/d": ok,
+    });
+    const response = await engineFetch("https://tiles.test/a", {
+      headers: apiKey(),
+      signal: controller.signal,
+    });
+    expect(response.status).toBe(200);
+    expect(sent).toHaveLength(4);
+    for (const s of sent) {
+      expect(s.init?.signal).toBe(controller.signal);
+    }
+  });
+
+  it("refuses a downgrade from https to http on a later hop", async () => {
+    const sent = serve({
+      "https://tiles.test/a": redirect(302, "https://tiles.test/b"),
+      "https://tiles.test/b": redirect(302, "http://tiles.test/c"),
+    });
+    await expect(
+      engineFetch("https://tiles.test/a", { headers: apiKey() }),
+    ).rejects.toThrow(/from https to http/);
+    expect(sent.map((s) => s.url)).toEqual([
+      "https://tiles.test/a",
+      "https://tiles.test/b",
+    ]);
+  });
+
+  it("refuses a redirect to a scheme other than http or https", async () => {
+    for (const location of [
+      `data:text/plain,${TOKEN}`,
+      `javascript:alert("${TOKEN}")`,
+    ]) {
+      const sent = serve({
+        [`https://tiles.test/t/a.glb?key=${KEY}`]: redirect(302, location),
+      });
+      const error = await engineFetch(`https://tiles.test/t/a.glb?key=${KEY}`, {
+        headers: apiKey(),
+      }).catch((e: unknown) => e as Error);
+      expect(error).toBeInstanceOf(Error);
+      const message = (error as Error).message;
+      expect(message).toMatch(/only http and https are followed/);
+      expect(message).toContain(location.slice(0, location.indexOf(":") + 1));
+      expect(message).toContain("https://tiles.test/t/a.glb");
+      expect(message).not.toContain(KEY);
+      expect(message).not.toContain(TOKEN);
+      expect(sent).toHaveLength(1);
+    }
+  });
+
+  // Each hop is compared by origin (`URL.origin`), never by string.
+  it.each([
+    [
+      "a protocol-relative hop to another host",
+      "//evil.test/x",
+      "https://evil.test/x",
+      false,
+    ],
+    [
+      "a hop to another port",
+      "https://tiles.test:8443/x",
+      "https://tiles.test:8443/x",
+      false,
+    ],
+    [
+      "a hop to an IP literal",
+      "https://127.0.0.1/x",
+      "https://127.0.0.1/x",
+      false,
+    ],
+    ["a hop to an IPv6 literal", "https://[::1]/x", "https://[::1]/x", false],
+    [
+      "a hop to the same host in upper case",
+      "https://TILES.TEST/t/b.glb",
+      "https://tiles.test/t/b.glb",
+      true,
+    ],
+    [
+      "a hop to the default port written out",
+      "https://tiles.test:443/t/b.glb",
+      "https://tiles.test/t/b.glb",
+      true,
+    ],
+  ])("%s", async (_, location, next, keeps) => {
+    const sent = serve({
+      "https://tiles.test/t/a.glb": redirect(302, location),
+      [next]: ok,
+    });
+    const response = await engineFetch("https://tiles.test/t/a.glb", {
+      headers: apiKey(),
+    });
+    expect(response.status).toBe(200);
+    expect(sent.map((s) => s.url)).toEqual([
+      "https://tiles.test/t/a.glb",
+      next,
+    ]);
+    expect(headersOf(sent[1]!)["X-Api-Key"]).toBe(keeps ? KEY : undefined);
+  });
+
   it("a redirect without a Location is the response", async () => {
     serve({
       "https://tiles.test/a": () => new Response(null, { status: 302 }),
@@ -268,6 +373,57 @@ describe("Node: the provider follows redirects by hand when a source header is a
     expect((error as Error).message).toMatch(/from https to http/);
     expect((error as Error).message).not.toContain(KEY);
     expect((error as Error).message).not.toContain(TOKEN);
+  });
+});
+
+describe("a forwarding proxy whose header carries a credential's key", () => {
+  const GATEWAY = "https://gw.test/fwd";
+  const proxied = (routes: Record<string, (s: Sent) => Response>) =>
+    serve(routes, {
+      proxy: new ForwardingProxy(GATEWAY),
+      origins: [{ origin: "https://gw.test", allowCredentials: true }],
+    });
+
+  it.each([
+    ["a query key alone", { query: { key: TOKEN } }],
+    [
+      "a query key with Authorization",
+      { headers: { Authorization: `Bearer ${KEY}` }, query: { key: TOKEN } },
+    ],
+  ])(
+    "%s: the gateway's redirect to a CDN gets no X-Target-URL",
+    async (_, value) => {
+      const credential = new Credential(value);
+      const sent = proxied({ [GATEWAY]: redirect(302, "https://cdn.test/x") });
+      await engineFetch("https://tiles.test/t/a.glb", {
+        headers: bindToSource(credential.headers, SOURCE),
+      });
+      expect(sent.map((s) => s.url)).toEqual([GATEWAY, "https://cdn.test/x"]);
+      // The first hop goes to the gateway with the key in its header, and
+      // follows by hand, so the header stays on the gateway's origin.
+      expect(sent[0]!.init?.redirect).toBe("manual");
+      expect(headersOf(sent[0]!)["X-Target-URL"]).toBe(
+        `https://tiles.test/t/a.glb?key=${TOKEN}`,
+      );
+      expect(headersOf(sent[1]!)).toEqual({});
+      expect(JSON.stringify(sent[1])).not.toContain(TOKEN);
+      expect(JSON.stringify(sent[1])).not.toContain(KEY);
+    },
+  );
+
+  it("a proxied request with no token in its target keeps fetch's follow", async () => {
+    const credential = new Credential({
+      headers: { Authorization: `Bearer ${KEY}` },
+    });
+    const sent = proxied({ [GATEWAY]: ok });
+    await engineFetch("https://tiles.test/t/a.glb", {
+      headers: bindToSource(credential.headers, SOURCE),
+    });
+    expect(sent).toHaveLength(1);
+    expect(headersOf(sent[0]!)["X-Target-URL"]).toBe(
+      "https://tiles.test/t/a.glb",
+    );
+    expect(sent[0]!.init?.redirect ?? "follow").toBe("follow");
   });
 });
 
