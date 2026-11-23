@@ -1,6 +1,15 @@
 // @ts-check
 
+import { DeveloperError, defined } from "@cesium/core";
 /** @import Cesium3DTilesetAreaSelection from "./Cesium3DTilesetAreaSelection.js"; */
+
+/**
+ * The maximum number of areas, because each area takes one bit of a 32-bit
+ * signed integer mask.
+ *
+ * @private
+ */
+const MAXIMUM_AREAS = 31;
 
 /**
  * A collection of {@link Cesium3DTilesetAreaSelection} instances for a {@link Cesium3DTileset}.
@@ -51,8 +60,23 @@ class Cesium3DTilesetAreaSelectionCollection {
    *
    * @param {Cesium3DTilesetAreaSelection} area The area to add.
    * @returns {Cesium3DTilesetAreaSelection} The added area.
+   * @exception {DeveloperError} area is required.
+   * @exception {DeveloperError} area is already in a collection.
+   * @exception {DeveloperError} A collection can hold at most 31 areas.
    */
   add(area) {
+    if (!defined(area)) {
+      throw new DeveloperError("area is required.");
+    }
+    if (defined(area._collection)) {
+      throw new DeveloperError("area is already in a collection.");
+    }
+    if (this._areas.length >= MAXIMUM_AREAS) {
+      throw new DeveloperError(
+        `A collection can hold at most ${MAXIMUM_AREAS} areas.`,
+      );
+    }
+
     area._collection = this;
     this._areas.push(area);
     this._markDirty();

@@ -76,6 +76,51 @@ describe("Scene/Cesium3DTilesetAreaSelectionCollection", () => {
     expect(second._collection).toBeUndefined();
   });
 
+  it("throws when adding without an area", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    expect(() => collection.add(undefined)).toThrowDeveloperError();
+  });
+
+  it("throws when adding an area twice", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    const area = collection.add(createArea());
+
+    expect(() => collection.add(area)).toThrowDeveloperError();
+    expect(collection.length).toBe(1);
+  });
+
+  it("throws when adding an area from another collection", () => {
+    const first = new Cesium3DTilesetAreaSelectionCollection();
+    const second = new Cesium3DTilesetAreaSelectionCollection();
+    const area = first.add(createArea());
+
+    expect(() => second.add(area)).toThrowDeveloperError();
+    expect(second.length).toBe(0);
+    expect(area._collection).toBe(first);
+  });
+
+  it("adds an area to another collection after removal", () => {
+    const first = new Cesium3DTilesetAreaSelectionCollection();
+    const second = new Cesium3DTilesetAreaSelectionCollection();
+    const area = first.add(createArea());
+    first.remove(area);
+
+    second.add(area);
+
+    expect(second.contains(area)).toBe(true);
+    expect(area._collection).toBe(second);
+  });
+
+  it("throws when adding more than 31 areas", () => {
+    const collection = new Cesium3DTilesetAreaSelectionCollection();
+    for (let i = 0; i < 31; ++i) {
+      collection.add(createArea());
+    }
+
+    expect(() => collection.add(createArea())).toThrowDeveloperError();
+    expect(collection.length).toBe(31);
+  });
+
   it("uses its relaxation for the effective minimum", () => {
     const collection = new Cesium3DTilesetAreaSelectionCollection();
     const area = Cesium3DTilesetAreaSelection.fromGeometricError({
