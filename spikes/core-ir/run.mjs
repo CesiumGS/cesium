@@ -1,7 +1,7 @@
 // Runs the Node measurements: bundles bench.ts (and today's sources) with
 // esbuild, then runs it with naga-wasm, the 1.x styling oracle and, when
 // installed, onnxruntime-web. Writes out/node.json.
-//   cd spikes/core-ir && npm install && node run.mjs
+//   cd spikes/core-ir && pnpm install --ignore-workspace && node run.mjs
 
 // esbuild comes from the repository root; spike tools only.
 // eslint-disable-next-line n/no-extraneous-import
@@ -33,8 +33,7 @@ const naga = await import("naga-wasm").catch(() => undefined);
 
 let ort;
 try {
-  // onnxruntime-web is in the repository root's tree, not a dependency of this package.
-  // eslint-disable-next-line n/no-extraneous-import
+  // A dependency of this folder's own package.json (CS-1091), not the root's.
   const ortWeb = await import("onnxruntime-web");
   ortWeb.env.wasm.numThreads = 1;
   ort = async (bytes, feeds) => {

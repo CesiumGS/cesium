@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Spike-only dependencies for the core IR spike (docs/design/core-ir.md). Not part of @cesium/next.",
   "dependencies": {
-    "naga-wasm": "^30.2.0"
+    "naga-wasm": "^30.2.0",
+    "onnxruntime-web": "1.31.0-dev.20260914-8d85527a0"
   }
 }

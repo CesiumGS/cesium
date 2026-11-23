@@ -150,12 +150,18 @@ importers:
       naga-wasm:
         specifier: 30.2.0
         version: 30.2.0
+      playwright:
+        specifier: 1.64.1
+        version: 1.64.1
       prettier:
         specifier: 3.9.10
         version: 3.9.10
       publint:
         specifier: 0.3.25
         version: 0.3.25
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@26.6.6)
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
