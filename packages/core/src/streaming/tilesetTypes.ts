@@ -70,7 +70,10 @@ export interface TilesetOptions extends BudgetedOptions {
   /**
    * Headers for the tileset's requests (e.g. ion authorization): only to
    * the root tileset's origin, unless they are a `Credential`'s that lists
-   * its `origins`. Content on another server gets none of them.
+   * its `origins`. Content on another server gets none of them. The
+   * boundary is the origin, not the path: on a host that serves many
+   * tenants under one origin (path-style buckets), content at any path
+   * there gets them, with the root URL's query.
    */
   headers?: Record<string, string>;
   /** Content cache budget in bytes (1.x cacheBytes default: 512 MiB). */

@@ -16,8 +16,14 @@ let lastBaseParams: Array<[string, string]> = [];
  * URL (`//host/x`, or with backslashes, which http(s) URLs read as slashes)
  * is judged by where it resolves. A `data:` or `blob:` URL is not a request
  * to a server, and a query would change what it names: it comes back as it
- * is. An origin the standard leaves opaque (a `file:` base) shares the query
- * only with relative URLs and other URLs on the same scheme and host.
+ * is. An origin the standard leaves opaque (a `file:` base, or a scheme
+ * with no origin) matches nothing but itself, by identity: the query goes
+ * only to the base's own resource (the same URL, but for its query and
+ * fragment), never to another opaque URL, a relative one included.
+ *
+ * The boundary is the origin, not the path: every path on the base's
+ * origin gets the query, so on a host that serves many tenants under one
+ * origin (path-style buckets), another tenant's path gets it too.
  *
  * Called for every tile while a tileset JSON is read, with the same base
  * for the whole file: the base is parsed once, and missing parameters are
@@ -47,13 +53,24 @@ export function resolveUri(uri: string, base: string): string {
   return resolved.href;
 }
 
-/** Whether `url` is on `base`'s origin: the same scheme, host and port. */
+/**
+ * Whether `url` is on `base`'s origin: the same scheme, host and port. An
+ * opaque origin (`"null"`) matches only the base's own resource.
+ */
 function sameOrigin(url: URL, base: URL): boolean {
-  return (
-    url.protocol !== "data:" &&
-    url.protocol !== "blob:" &&
-    url.protocol === base.protocol &&
-    url.hostname === base.hostname &&
-    url.port === base.port
-  );
+  if (url.protocol === "data:" || url.protocol === "blob:") {
+    return false;
+  }
+  if (base.origin === "null" || url.origin === "null") {
+    return resourceOf(url) === resourceOf(base);
+  }
+  return url.origin === base.origin;
+}
+
+/** `url` without its query and fragment. */
+function resourceOf(url: URL): string {
+  const bare = new URL(url.href);
+  bare.search = "";
+  bare.hash = "";
+  return bare.href;
 }

@@ -10,6 +10,8 @@
  *    rule's proxy.
  * 2. **The request hook** (`onRequest`): the host's own signing or logging.
  *    It sees the URL, the kind and the rule's headers, and may change them.
+ *    When it moves the request to an origin with another rule, the first
+ *    rule's headers stay behind and the new rule's apply.
  *    It never sees a source's headers or a `Credential`'s values: those are
  *    added after it, so a hook gets nothing the host didn't give it there.
  * 3. **The source's headers**: a tileset's, terrain's or imagery's
@@ -23,7 +25,10 @@
  *    origins instead, and to no other, its source's included. Headers
  *    passed to a request directly, with no source bound, have that request
  *    as their source. This is the one place it is checked: every request,
- *    on the page or for a worker, comes through here.
+ *    on the page or for a worker, comes through here. The boundary is the
+ *    origin, not the path: a host that serves many tenants under one origin
+ *    (path-style buckets) gets them for any path on it. An opaque origin
+ *    (a `file:` source) matches only the source itself.
  * 4. **The proxy**: the rule's, else the provider's (`DefaultProxy`, 1.x's
  *    prefix form; `ForwardingProxy`, a host's endpoint; or any
  *    `RequestProxy`). The engine's own files (kind `"engine"`) skip the
@@ -107,6 +112,13 @@ export interface CredentialOptions {
    * source's own origin only, as for plain headers (the origin of the
    * tileset, terrain or model URL it was given with; for a request made
    * with it directly, that request's).
+   *
+   * Each is read as the URL standard writes an origin, so case, a
+   * trailing slash and a default port (`https://Assets.example.com:443/`)
+   * don't matter. The constructor refuses one that isn't a URL with an
+   * origin, or that names a path, a query or a fragment: the boundary is
+   * the origin, not the path. A host that serves many tenants under one
+   * origin (path-style buckets) gets the credential for any path on it.
    */
   origins?: readonly string[];
 }
@@ -135,7 +147,9 @@ export class Credential {
     value: CredentialValue,
     private readonly options: CredentialOptions = {},
   ) {
-    this.origins = options.origins ? new Set(options.origins) : undefined;
+    this.origins = options.origins
+      ? new Set(options.origins.map(normalizeOrigin))
+      : undefined;
     if (this.origins) {
       listsOrigins.add(this);
     }
@@ -207,6 +221,34 @@ export class Credential {
     replace(this.headers, value.headers);
     replace(this.query, value.query);
   }
+}
+
+/**
+ * `origin` as `URL.origin` writes it. Throws, naming it, for one that
+ * doesn't parse, has no origin (`file:`, `data:`) or names more than an
+ * origin (a path, a query, a fragment or a user).
+ */
+function normalizeOrigin(origin: string): string {
+  let url: URL | undefined;
+  try {
+    url = new URL(origin);
+  } catch {
+    url = undefined;
+  }
+  if (
+    !url ||
+    url.origin === "null" ||
+    url.pathname !== "/" ||
+    url.search !== "" ||
+    url.hash !== "" ||
+    url.username !== "" ||
+    url.password !== ""
+  ) {
+    throw new Error(
+      `Credential origins: "${origin}" is not an origin (scheme, host and optional port, such as "https://assets.example.com")`,
+    );
+  }
+  return url.origin;
 }
 
 function replace(
@@ -413,6 +455,11 @@ export class FetchProvider {
     const target = outgoing.url;
     const origin = originOf(target);
     const targetRule = this.ruleFor(origin);
+    if (targetRule !== rule) {
+      // The hook moved the request to an origin with another rule: the old
+      // rule's headers stay behind and the new rule's apply.
+      rehome(outgoing.headers, rule, targetRule, init.accept);
+    }
     const proxy =
       targetRule?.proxy !== undefined
         ? targetRule.proxy
@@ -424,7 +471,7 @@ export class FetchProvider {
     let headers: Record<string, string> = { ...outgoing.headers };
     let url = target;
     let sentCredential = false;
-    if (init.headers && carries(origin, credential, source)) {
+    if (init.headers && carries(target, origin, credential, source)) {
       for (const [name, value] of Object.entries(init.headers)) {
         setHeader(headers, name, value);
       }
@@ -512,6 +559,11 @@ interface BoundSource {
   readonly headers: Readonly<Record<string, string>>;
   /** The source URL's origin; undefined for an opaque one. */
   readonly origin: string | undefined;
+  /**
+   * For an opaque origin, the source's own resource (its URL without query
+   * or fragment), which alone matches it; undefined otherwise.
+   */
+  readonly resource: string | undefined;
 }
 
 const sources = new WeakMap<object, BoundSource>();
@@ -524,7 +576,14 @@ const sources = new WeakMap<object, BoundSource>();
  * (CS-966). The result reads `headers` live, so a credential's rotation
  * shows, and passes for them everywhere a record of headers goes; binding
  * bound headers again keeps their first source (a tile's content keeps
- * its tileset's).
+ * its tileset's). A source with an opaque origin (a `file:` URL) matches
+ * only itself, never another opaque URL.
+ *
+ * Never copy a bound view: a spread (`{ ...headers }`), `Object.assign`,
+ * `new Headers(view)` or `Object.fromEntries` makes a plain record, which
+ * the provider then takes as unbound, its own request's headers, so they
+ * go wherever that request goes. Pass the view itself.
+ * `test/boundHeaderCopies.test.ts` fails on a copy in `packages/core/src`.
  */
 export function bindToSource<
   T extends Readonly<Record<string, string>> | undefined,
@@ -533,16 +592,23 @@ export function bindToSource<
     return headers;
   }
   const view = new Proxy(headers, {});
-  sources.set(view, { headers, origin: originOf(String(url)) });
+  const origin = originOf(String(url));
+  sources.set(view, {
+    headers,
+    origin,
+    resource: origin === undefined ? resourceOf(String(url)) : undefined,
+  });
   return view;
 }
 
 /**
- * Whether a request to `origin` carries the source's headers: those of a
- * credential that lists its origins, when it lists `origin`; any others
- * only on the source's own origin.
+ * Whether a request to `target` (on `origin`) carries the source's
+ * headers: those of a credential that lists its origins, when it lists
+ * `origin`; any others only on the source's own origin. An opaque origin
+ * matches nothing but the source's own resource.
  */
 function carries(
+  target: string,
   origin: string | undefined,
   credential: Credential | undefined,
   source: BoundSource | undefined,
@@ -550,7 +616,58 @@ function carries(
   if (credential && listsOrigins.has(credential)) {
     return credential.appliesTo(origin);
   }
-  return source === undefined || origin === source.origin;
+  if (source === undefined) {
+    return true;
+  }
+  if (source.origin === undefined || origin === undefined) {
+    return (
+      source.resource !== undefined && resourceOf(target) === source.resource
+    );
+  }
+  return origin === source.origin;
+}
+
+/** `url` without its query and fragment, if it parses. */
+function resourceOf(url: string): string | undefined {
+  try {
+    const parsed = new URL(url, globalThis.location?.href);
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.href;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Moves `headers` from `from`'s rule to `to`'s, after the request hook
+ * moved the request: drops each of `from`'s headers the hook left as it
+ * was, then adds `to`'s where the hook set none of its own. `Accept`, when
+ * the request set it, stays.
+ */
+function rehome(
+  headers: Record<string, string>,
+  from: OriginRule | undefined,
+  to: OriginRule | undefined,
+  accept: string | undefined,
+): void {
+  for (const [name, value] of Object.entries(from?.headers ?? {})) {
+    const lower = name.toLowerCase();
+    if (accept !== undefined && lower === "accept") {
+      continue;
+    }
+    for (const key of Object.keys(headers)) {
+      if (key.toLowerCase() === lower && headers[key] === value) {
+        delete headers[key];
+      }
+    }
+  }
+  for (const [name, value] of Object.entries(to?.headers ?? {})) {
+    const lower = name.toLowerCase();
+    if (!Object.keys(headers).some((key) => key.toLowerCase() === lower)) {
+      headers[name] = value;
+    }
+  }
 }
 
 /** Makes an engine request through `FetchProvider.default`. */

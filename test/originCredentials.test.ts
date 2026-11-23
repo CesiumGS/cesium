@@ -196,6 +196,122 @@ describe("the provider: a source's headers go only to its origin", () => {
     expect(secretsIn(sent[0]!)).toEqual([]);
     expect(sent[1]!.headers.Authorization).toBe(`Bearer ${TOKEN}`);
   });
+
+  it("an opaque source matches only itself, never another opaque URL", async () => {
+    const sent = serve();
+    const file = bindToSource(
+      { Authorization: `Bearer ${TOKEN}` },
+      "file:///data/t/tileset.json",
+    );
+    for (const url of [
+      "file:///data/t/a.glb",
+      "file:///other/tileset.json",
+      "not a url",
+      "file:///data/t/tileset.json?v=2",
+    ]) {
+      await FetchProvider.default.fetch(url, { headers: file });
+    }
+    expect(secretsIn(sent[0]!)).toEqual([]);
+    expect(secretsIn(sent[1]!)).toEqual([]);
+    expect(secretsIn(sent[2]!)).toEqual([]);
+    expect(sent[3]!.headers.Authorization).toBe(`Bearer ${TOKEN}`);
+    // A source that doesn't parse matches nothing, another unparsable URL
+    // and itself included.
+    const broken = bindToSource({ Authorization: `Bearer ${TOKEN}` }, "::");
+    await FetchProvider.default.fetch("::", { headers: broken });
+    await FetchProvider.default.fetch("not a url", { headers: broken });
+    expect(secretsIn(sent[4]!)).toEqual([]);
+    expect(secretsIn(sent[5]!)).toEqual([]);
+  });
+
+  it("a credential's origins are read as URL.origin writes them", async () => {
+    const sent = serve();
+    const credential = new Credential(
+      { headers: { Authorization: `Bearer ${TOKEN}` } },
+      {
+        origins: [
+          "https://CDN.test",
+          "https://second.test/",
+          "https://third.test:443",
+          "http://local.test:8080/",
+        ],
+      },
+    );
+    const headers = bindToSource(credential.headers, source);
+    for (const url of [
+      "https://cdn.test/a.glb",
+      "https://second.test/a.glb",
+      "https://third.test/a.glb",
+      "http://local.test:8080/a.glb",
+      "http://local.test/a.glb",
+      "http://cdn.test/a.glb",
+    ]) {
+      await FetchProvider.default.fetch(url, { headers });
+    }
+    for (const s of sent.slice(0, 4)) {
+      expect(s.headers.Authorization).toBe(`Bearer ${TOKEN}`);
+    }
+    expect(secretsIn(sent[4]!)).toEqual([]);
+    expect(secretsIn(sent[5]!)).toEqual([]);
+  });
+
+  it("a credential refuses an origin it can't read, naming it and no token", () => {
+    for (const origin of [
+      "cdn.test",
+      "https://cdn.test/tenant-a",
+      "https://cdn.test/?x=1",
+      "https://user:pass@cdn.test",
+      "file:///data",
+      "",
+    ]) {
+      let message = "";
+      try {
+        void new Credential(
+          {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+            query: { key: KEY },
+          },
+          { origins: [origin] },
+        );
+      } catch (error) {
+        message = (error as Error).message;
+      }
+      expect(message).toContain(`"${origin}"`);
+      expect(message).not.toContain(TOKEN);
+      expect(message).not.toContain(KEY);
+    }
+  });
+
+  it("a hook that moves a request takes the new origin's rule headers, not the old one's", async () => {
+    const sent: Sent[] = [];
+    FetchProvider.default = new FetchProvider({
+      origins: [
+        { origin: "https://a.test", headers: { "X-Tenant": "a", "X-A": "1" } },
+        { origin: "https://b.test", headers: { "X-Tenant": "b", "X-B": "1" } },
+      ],
+      onRequest: (request) => {
+        request.headers["X-Trace"] = "t";
+        request.url = request.url.replace("https://a.test", "https://b.test");
+      },
+      transport: async (url, init) => {
+        sent.push({
+          url,
+          headers: { ...(init?.headers as Record<string, string> | undefined) },
+        });
+        return new Response("");
+      },
+    });
+    await FetchProvider.default.fetch("https://a.test/x.json", {
+      accept: "application/json",
+    });
+    expect(sent[0]!.url).toBe("https://b.test/x.json");
+    expect(sent[0]!.headers).toEqual({
+      Accept: "application/json",
+      "X-Trace": "t",
+      "X-Tenant": "b",
+      "X-B": "1",
+    });
+  });
 });
 
 /** One triangle, one draw, the default material (as test/models.test.ts). */

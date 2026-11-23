@@ -91,16 +91,23 @@ describe("resolveUri: the base's query", () => {
     expect(resolveUri(blob, BASE)).toBe(blob);
   });
 
-  it("a base with no query adds nothing, and a base with an opaque origin shares its query with no one", () => {
+  it("a base with no query adds nothing, and a base with an opaque origin shares its query only with itself", () => {
+    const file = "file:///data/t/tileset.json?v=1";
     expect(
       resolveUri("https://other.test/a.bin", "https://tiles.test/t.json"),
     ).toBe("https://other.test/a.bin");
-    expect(resolveUri("a.bin", "file:///data/t/tileset.json?v=1")).toBe(
-      "file:///data/t/a.bin?v=1",
+    // Opaque matches nothing but itself: not a relative URL beside it, not
+    // another file, not a server.
+    expect(resolveUri("a.bin", file)).toBe("file:///data/t/a.bin");
+    expect(resolveUri("file:///other/a.bin", file)).toBe("file:///other/a.bin");
+    expect(resolveUri("https://tiles.test/a.bin", file)).toBe(
+      "https://tiles.test/a.bin",
     );
-    expect(
-      resolveUri("https://tiles.test/a.bin", "file:///data/t/tileset.json?v=1"),
-    ).toBe("https://tiles.test/a.bin");
+    expect(resolveUri("file:///data/t/tileset.json", file)).toBe(file);
+    // A scheme with no origin is opaque too.
+    expect(resolveUri("b.bin", "tiles://host/t/a.json?key=K")).toBe(
+      "tiles://host/t/b.bin",
+    );
   });
 
   it("alternating bases (the parse cache) never carries one base's query to another", () => {
