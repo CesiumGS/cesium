@@ -264,6 +264,7 @@ CS-437 The public API reviews
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
+  CS-977  Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
   CS-978  dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A)
   CS-985  A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
   CS-990  GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
@@ -308,5 +309,5 @@ CS-609 A clean 2.0 branch and a modern build
   CS-1091  2.0 installs with pnpm: pnpm-lock.yaml, pnpm in worktree setup and CI, npm kept for packing and staging (CS-1090 A)
   CS-1105  decision: Merge CS-1091, 2.0 installs with pnpm
 
-239 ready
+240 ready
 ```

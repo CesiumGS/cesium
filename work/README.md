@@ -1236,7 +1236,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 36 of 64 done, 1 in progress, 13 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 36 of 64 done, 14 ready, 4 blocked, 10 proposed, 1 dropped. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1294,7 +1294,7 @@ No milestone
 - [x] [CS-974](./items/CS-974-what-does-alpha-1-say-about-core-s-names-that.md) decision: What does alpha.1 say about core's names that the package map moves elsewhere?. Done.
 - [x] [CS-975](./items/CS-975-is-the-stability-tier-sort-its-own-pass-before.md) decision: Is the stability-tier sort its own pass before the name review?. Done.
 - [x] [CS-976](./items/CS-976-one-word-for-end-of-life-dispose-or-destroy.md) decision: One word for end of life: dispose or destroy?. Done.
-- [~] [CS-977](./items/CS-977-adapters-and-engine-internals-leave-core-s.md) Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C). Needs CS-974. Claimed by orch-11-CS-977.
+- [ ] [CS-977](./items/CS-977-adapters-and-engine-internals-leave-core-s.md) Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C). Needs CS-974.
 - [ ] [CS-978](./items/CS-978-dispose-everywhere-with-symbol-dispose-on-every.md) dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A). Needs CS-976.
 - [x] [CS-981](./items/CS-981-does-the-surface-file-record-signatures-before.md) decision: Does the surface file record signatures before beta.1?. Done.
 - [ ] [CS-985](./items/CS-985-a-declarations-report-beside-api-surface-txt.md) A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A). Needs CS-981.
