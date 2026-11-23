@@ -249,7 +249,7 @@ interface Conflict {
 
 A `live` source calls `host.changed(change)` with CS-552's push kinds:
 
-- **`features`** carries a change set someone else committed. The base tier updates under the drafts.
+- **`features`** carries a change set someone else committed. The base tier updates under the drafts: the engine patches the rows that are resident in place, removes deleted ones, and keeps an insert of a feature it holds no row of as a row of the feed's own, under the shared budget. It holds nothing for a feature that isn't loaded (CS-1085 A). So a source serves content at or past the last change it pushed: a feature that loads later, or a tile requested before a push and arriving after it, comes with the committed change. The source knows its own requests and versions; the engine doesn't.
 - **`invalidate`** carries content keys or a region and a version: derived content (tiles, MVT) was rebuilt, so the engine drops and selects again.
 
 **Rebasing drafts.** When a feed changes a feature with a draft on it, the session rebases the draft: the three-way merge above, at once rather than at commit. What doesn't merge is marked conflicted before the person commits, which is the better time to learn it.

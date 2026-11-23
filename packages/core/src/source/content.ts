@@ -111,13 +111,6 @@ export interface ContentItemOptions {
 
 const ALL_VIEWS = 0xffffffff;
 
-/**
- * @internal The most overrides a content's feed holds for features no row
- * or draw has (an update or a delete of a key not loaded, or never to be):
- * past it, the oldest go, reported (`SourceContent.holdPending`).
- */
-export const MAX_PENDING_OVERRIDES = 1024;
-
 /** The shortest interval a source may declare for checking its server (CS-863). */
 const MIN_POLL_SECONDS = 1;
 
@@ -185,8 +178,6 @@ export class SourceContent {
    * @experimental
    */
   readonly edits = new EditLayer(this.addressing);
-  /** @internal Others' changes from the source's feed (`features` pushes), under `edits`. */
-  readonly feed = new EditLayer(this.addressing);
   /**
    * Its name (CS-1087 A): `OpenOptions.name`, else its resolver's
    * (`ResolvedAsset.name`), else its URL's digest (`urlName`). Its feature
@@ -223,9 +214,7 @@ export class SourceContent {
     this.namespace = FeatureNamespace.of(name);
     this.rows = new ContentRows(this.namespace);
     this.drawSink = this.makeDrawSink();
-    const reapply = (ids: readonly FeatureId[]) => this.refreshDraws(ids);
-    this.edits.onChange(reapply);
-    this.feed.onChange(reapply);
+    this.edits.onChange((ids) => this.refreshDraws(ids));
   }
 
   /**
@@ -333,8 +322,8 @@ export class SourceContent {
 
   /**
    * The source's own key for feature `id`, from what holds it: an edit
-   * record (which holds its key, loaded or not), a row the source names so,
-   * or a draw. No other table maps an ID back to a key, so for an ID none
+   * record (which holds its key, loaded or not), a resident row the source
+   * names so (or the feed inserted), or a draw. No other table maps an ID back to a key, so for an ID none
    * of those hold it is undefined.
    * @experimental
    */
@@ -345,7 +334,6 @@ export class SourceContent {
     const draw = this.drawsById.get(id)?.values().next().value;
     return (
       this.edits.keyOf(id) ??
-      this.feed.keyOf(id) ??
       this.rows.nameOf(id) ??
       (draw === undefined ? undefined : this.draws.get(draw)?.options.id)
     );
@@ -418,61 +406,6 @@ export class SourceContent {
   }
 
   /**
-   * @internal Whether a row or a draw its source wrote, or an override,
-   * has feature `id` now: an op naming one it hasn't is reported.
-   */
-  holds(id: FeatureId): boolean {
-    return (
-      this.rows.rowsOf(id).length > 0 ||
-      this.drawsById.has(id) ||
-      this.edits.get(id) !== undefined ||
-      this.feed.get(id) !== undefined
-    );
-  }
-
-  /**
-   * The feed's hides and replacements of features no row or draw had when
-   * set, oldest first: what `holdPending` bounds.
-   */
-  private readonly pending = new Map<FeatureId, true>();
-
-  /**
-   * @internal The feed applied `ops` (resolved): its hides and
-   * replacements of features no row or draw has are held as pending, at
-   * most `MAX_PENDING_OVERRIDES`. Past that, those whose feature has
-   * loaded since stop being pending, then the oldest go (`feed.clear`).
-   * Returns how many went.
-   */
-  holdPending(ops: readonly ChangeOp[]): number {
-    for (const op of ops) {
-      const id = op.id!;
-      const o = this.feed.get(id);
-      if (op.op !== "insert" && o && o.kind !== "insert" && !this.hasBase(id)) {
-        this.pending.delete(id); // the newest again
-        this.pending.set(id, true);
-      }
-    }
-    if (this.pending.size <= MAX_PENDING_OVERRIDES) {
-      return 0;
-    }
-    for (const id of this.pending.keys()) {
-      if (this.hasBase(id)) {
-        this.pending.delete(id);
-      }
-    }
-    let dropped = 0;
-    for (const id of [...this.pending.keys()]) {
-      if (this.pending.size <= MAX_PENDING_OVERRIDES) {
-        break;
-      }
-      this.pending.delete(id);
-      this.feed.clear(id);
-      dropped++;
-    }
-    return dropped;
-  }
-
-  /**
    * The credits of what it holds now: its source's own, then each piece
    * of content's that came with it, without repeats.
    */
@@ -492,27 +425,30 @@ export class SourceContent {
 
   /**
    * Feature `id` as it shows now, edits applied: an inserted or replaced
-   * feature's data, the source's row (its properties and geometry), `{}`
-   * for a draw with no row data, or undefined when hidden or not loaded.
+   * feature's data, the resident row (the source's, with its feed's changes
+   * applied: its properties and geometry), `{}` for a draw with no row
+   * data, or undefined when hidden or not loaded.
    * @experimental
    */
   feature(id: FeatureId): FeatureData | undefined {
-    for (const layer of [this.edits, this.feed]) {
-      const o = layer.get(id);
-      if (o) {
-        // A replacement shows where its feature does: none while no row or
-        // draw has it, as `features` lists it.
-        return o.kind === "hide" || (o.kind === "replace" && !this.hasBase(id))
-          ? undefined
-          : o.feature;
-      }
+    const o = this.edits.get(id);
+    if (o) {
+      // A replacement shows where its feature does: none while nothing
+      // resident has it, as `features` lists it.
+      return o.kind === "hide" || (o.kind === "replace" && !this.hasBase(id))
+        ? undefined
+        : o.feature;
     }
     return this.baseFeature(id);
   }
 
-  /** @internal Whether a row or a draw its source wrote has feature `id` now. */
+  /** @internal Whether a resident row (its source's, or its feed's) or a draw has feature `id` now. */
   hasBase(id: FeatureId): boolean {
-    return this.rows.rowsOf(id).length > 0 || this.drawsById.has(id);
+    return (
+      this.rows.rowsOf(id).length > 0 ||
+      this.rows.feed.has(id) ||
+      this.drawsById.has(id)
+    );
   }
 
   /**
@@ -541,11 +477,9 @@ export class SourceContent {
     for (const id of this.drawsById.keys()) {
       yield* visit.call(this, id);
     }
-    for (const layer of [this.feed, this.edits]) {
-      for (const [id, o] of layer.entries()) {
-        if (o.kind === "insert") {
-          yield* visit.call(this, id);
-        }
+    for (const [id, o] of this.edits.entries()) {
+      if (o.kind === "insert") {
+        yield* visit.call(this, id);
       }
     }
   }
@@ -568,7 +502,7 @@ export class SourceContent {
 
   /** @internal Its source's draw `id` shows: not hidden by an edit. */
   showsBase(id: FeatureId): boolean {
-    return this.edits.showsBase(id) && this.feed.showsBase(id);
+    return this.edits.showsBase(id);
   }
 
   /** @internal Places it in `world` (`World.add`). */
@@ -665,14 +599,17 @@ export class SourceContent {
     }
   }
 
-  /** @internal The source's own feature `id`, from its rows or draws, under every edit. */
+  /** @internal Feature `id` as resident (its source's rows with its feed's changes, or its draws), under every edit. */
   baseFeature(id: FeatureId): FeatureData | undefined {
     const at = this.rows.rowsOf(id)[0];
     if (at) {
       const held = this.rows.batchAt(at)!;
       return rowFeature(held, at.index, at.sink);
     }
-    return this.drawsById.has(id) ? {} : undefined;
+    return (
+      this.rows.feed.get(id)?.feature ??
+      (this.drawsById.has(id) ? {} : undefined)
+    );
   }
 
   /**

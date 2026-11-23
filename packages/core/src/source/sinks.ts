@@ -18,12 +18,20 @@
  */
 import type { FeatureNamespace, StableId } from "../scene/identity.ts";
 import type {
+  ChangeOp,
+  FeatureData,
+  FeaturePatch,
+  GeometryData,
+} from "./editing.ts";
+import type {
   ContentKey,
   CreditList,
   CustomRows,
   FeatureBatch,
   PointBatch,
   RasterImage,
+  PlainValue,
+  PropertyColumn,
   RowIdentity,
   RowSink,
   SampleBatch,
@@ -40,6 +48,18 @@ export interface HeldRows<B> {
   readonly batch: B;
   /** One stable ID per row. */
   readonly ids: BigUint64Array;
+}
+
+/**
+ * A feature the feed inserted that the source holds no row of (CS-1085 A):
+ * a row of the feed's own batch, with its key, counted by the budget
+ * (`ContentRows.onHold`) until the feed deletes it or the source writes a
+ * row of its own for the key.
+ */
+export interface FeedRow {
+  readonly key: string;
+  readonly feature: FeatureData;
+  readonly bytes: number;
 }
 
 /** Where one row is. */
@@ -61,6 +81,10 @@ export class ContentRows {
   readonly custom = new Map<string, Map<ContentKey, HeldRows<CustomRows>>>();
   /** Every row of every batch, by its ID (a named feature may be in several tiles). */
   private readonly byId = new Map<StableId, RowAt[]>();
+  /** The feed's own batch: inserts of keys the source holds no row of, by ID. */
+  readonly feed = new Map<StableId, FeedRow>();
+  /** Called with each change in the bytes the feed's batch holds: the budget counts them. */
+  onHold: ((delta: number) => void) | undefined;
   /** Bumped by every change: what reads rows checks it. */
   revision = 0;
   /** Called after each change, with the IDs it touched. */
@@ -114,6 +138,107 @@ export class ContentRows {
   /** Its content was destroyed: every put throws from now on, and removes do nothing. */
   close(): void {
     this.closed = true;
+    this.dropFeed();
+  }
+
+  /** Drops the feed's batch (an invalidation of everything, or a close). */
+  dropFeed(): void {
+    const ids = [...this.feed.keys()];
+    for (const id of ids) {
+      this.unfeed(id);
+    }
+    if (ids.length > 0 && !this.closed) {
+      this.changed(ids);
+    }
+  }
+
+  private unfeed(id: StableId): void {
+    const row = this.feed.get(id);
+    if (row) {
+      this.feed.delete(id);
+      this.onHold?.(-row.bytes);
+    }
+  }
+
+  /**
+   * Applies others' committed changes from its source's feed (`ops`,
+   * resolved) to what is resident (CS-1085 A): an update patches the rows
+   * of its key in place, as samples do; a delete removes them; an insert of
+   * a key with no row becomes a row of the feed's own batch. An op for a key
+   * nothing resident holds is not held: the source's next load of it brings
+   * the committed state, since a source serves content at or past what it
+   * pushed. Returns the content keys of batches a patch doesn't fit (a new
+   * property, another type, another shape of geometry): the engine drops
+   * them, and the source loads them again.
+   */
+  applyFeed(ops: readonly ChangeOp[]): ContentKey[] {
+    const stale = new Set<ContentKey>();
+    const touched: StableId[] = [];
+    for (const op of ops) {
+      const id = op.id!;
+      const rows = this.rowsOf(id);
+      const own = this.feed.get(id);
+      if (op.op === "delete") {
+        this.unfeed(id);
+        this.removeRows(rows);
+      } else if (own) {
+        this.unfeed(id);
+        this.putFeed(
+          id,
+          op.key,
+          op.op === "insert" ? op.feature : patched(own.feature, op.patch),
+        );
+      } else if (rows.length > 0) {
+        const patch: FeaturePatch = op.op === "insert" ? op.feature : op.patch;
+        for (const at of rows) {
+          if (!writeRow(this.batchAt(at)!.batch, at.index, patch)) {
+            stale.add(at.key);
+          }
+        }
+      } else if (op.op === "insert") {
+        this.putFeed(id, op.key, op.feature);
+      } else {
+        continue; // not resident: nothing is held
+      }
+      touched.push(id);
+    }
+    if (touched.length > 0) {
+      this.changed(touched);
+    }
+    return [...stale];
+  }
+
+  private putFeed(id: StableId, key: string, feature: FeatureData): void {
+    const bytes = 64 + 2 * (JSON.stringify(feature)?.length ?? 0);
+    this.feed.set(id, { key, feature, bytes });
+    this.onHold?.(bytes);
+  }
+
+  /** Removes rows `at` from their batches, each batch put again without them. */
+  private removeRows(rows: readonly RowAt[]): void {
+    const byBatch = new Map<string, { at: RowAt; drop: Set<number> }>();
+    for (const at of rows) {
+      const batchKey = `${at.sink}\u0000${at.key}`;
+      const entry = byBatch.get(batchKey) ?? { at, drop: new Set() };
+      entry.drop.add(at.index);
+      byBatch.set(batchKey, entry);
+    }
+    for (const { at, drop } of byBatch.values()) {
+      const map = this.mapOf(at.sink);
+      const held = map.get(at.key)!;
+      this.store(at.sink, map, withoutRows(held.batch, drop));
+    }
+  }
+
+  private mapOf(
+    sink: RowSinkName,
+  ): Map<ContentKey, HeldRows<FeatureBatch | PointBatch | CustomRows>> {
+    for (const [name, map] of this.rowMaps()) {
+      if (name === sink) {
+        return map;
+      }
+    }
+    throw new Error(`no ${sink} sink`);
   }
 
   private checkOpen(where: string): void {
@@ -140,9 +265,14 @@ export class ContentRows {
     return this.custom.get(at.sink.slice("custom:".length))?.get(at.key);
   }
 
-  /** Every ID held, in no particular order. */
-  ids(): IterableIterator<StableId> {
-    return this.byId.keys();
+  /** Every ID held, the source's rows' and the feed's, in no particular order. */
+  *ids(): IterableIterator<StableId> {
+    yield* this.byId.keys();
+    for (const id of this.feed.keys()) {
+      if (!this.byId.has(id)) {
+        yield id;
+      }
+    }
   }
 
   /** Each batch's credits, then the images', without repeats (by html). */
@@ -253,7 +383,8 @@ export class ContentRows {
   addressOf(id: StableId): { key: string; row?: number } | undefined {
     const at = this.byId.get(id)?.[0];
     if (!at) {
-      return undefined;
+      const fed = this.feed.get(id);
+      return fed && { key: fed.key };
     }
     const name = (this.batchAt(at)!.batch as RowIdentity).names?.[at.index];
     return name !== undefined ? { key: name } : { key: at.key, row: at.index };
@@ -288,23 +419,11 @@ export class ContentRows {
         this.checkOpen(`the ${name} sink's put`);
         check(batch);
         checkNames(batch, this.writable);
-        const gone: StableId[] = [];
-        const was = map.get(batch.key);
-        if (was) {
-          this.unindex(name, batch.key, was.ids, gone);
+        const ids = this.store(name, map, batch);
+        // The source's own row of a key the feed inserted: at or past it.
+        for (const id of ids) {
+          this.unfeed(id);
         }
-        const ids = this.idsOf(batch);
-        map.set(batch.key, { batch, ids });
-        for (let i = 0; i < ids.length; i++) {
-          const id = ids[i]!;
-          let rows = this.byId.get(id);
-          if (!rows) {
-            rows = [];
-            this.byId.set(id, rows);
-          }
-          rows.push({ sink: name, key: batch.key, index: i });
-        }
-        this.changed([...gone, ...ids]);
       },
       remove: (key) => {
         const held = this.closed ? undefined : map.get(key);
@@ -316,6 +435,32 @@ export class ContentRows {
         }
       },
     };
+  }
+
+  /** Holds `batch` in `map`, in place of what its key held, and indexes its rows. */
+  private store<B extends FeatureBatch | PointBatch | CustomRows>(
+    name: RowSinkName,
+    map: Map<ContentKey, HeldRows<B>>,
+    batch: B,
+  ): BigUint64Array {
+    const gone: StableId[] = [];
+    const was = map.get(batch.key);
+    if (was) {
+      this.unindex(name, batch.key, was.ids, gone);
+    }
+    const ids = this.idsOf(batch);
+    map.set(batch.key, { batch, ids });
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i]!;
+      let rows = this.byId.get(id);
+      if (!rows) {
+        rows = [];
+        this.byId.set(id, rows);
+      }
+      rows.push({ sink: name, key: batch.key, index: i });
+    }
+    this.changed([...gone, ...ids]);
+    return ids;
   }
 
   private idsOf(batch: FeatureBatch | PointBatch | CustomRows): BigUint64Array {
@@ -357,6 +502,199 @@ export class ContentRows {
     this.revision++;
     this.onChange?.(ids);
   }
+}
+
+// ---------------------------------------------------------------------------
+// The feed's changes, in place
+
+/** `base` with `patch`'s properties set or removed (null) and its geometry, if any. */
+export function patched(base: FeatureData, patch: FeaturePatch): FeatureData {
+  const properties: Record<string, PlainValue> = { ...base.properties };
+  for (const [name, value] of Object.entries(patch.properties ?? {})) {
+    if (value === null) {
+      delete properties[name];
+    } else {
+      properties[name] = value;
+    }
+  }
+  const geometry = patch.geometry ?? base.geometry;
+  return {
+    ...(Object.keys(properties).length > 0 ? { properties } : {}),
+    ...(geometry ? { geometry } : {}),
+  };
+}
+
+/**
+ * Writes `patch` into row `index` of `batch` in place, when every part of it
+ * fits what the batch holds: a property into its column of a type that
+ * holds the value as given (a number a typed column stores exactly; a string
+ * or null into a string column, null being absent there), a label's text,
+ * and a geometry of the row's type, CRS and vertex and ring counts. Writes
+ * nothing and returns false otherwise.
+ */
+function writeRow(
+  batch: FeatureBatch | PointBatch | CustomRows,
+  index: number,
+  patch: FeaturePatch,
+): boolean {
+  const columns: Readonly<Record<string, PropertyColumn>> =
+    ("columns" in batch ? batch.columns : batch.properties) ?? {};
+  const text = "text" in batch ? batch.text : undefined;
+  const writes: (() => void)[] = [];
+  for (const [name, value] of Object.entries(patch.properties ?? {})) {
+    const column = columns[name];
+    if (name === "text" && text && !column) {
+      if (typeof value !== "string") {
+        return false;
+      }
+      writes.push(() => ((text as string[])[index] = value));
+    } else if (Array.isArray(column)) {
+      if (value !== null && typeof value !== "string") {
+        return false;
+      }
+      writes.push(() => ((column as (string | null)[])[index] = value));
+    } else if (column) {
+      const typed = column as Exclude<PropertyColumn, readonly unknown[]>;
+      const Same = typed.constructor as new (values: number[]) => typeof typed;
+      if (typeof value !== "number" || new Same([value])[0] !== value) {
+        return false;
+      }
+      writes.push(() => (typed[index] = value));
+    } else {
+      return false;
+    }
+  }
+  if (patch.geometry) {
+    const at = vertexRange(batch, index, patch.geometry);
+    if (!at) {
+      return false;
+    }
+    writes.push(() =>
+      (batch as FeatureBatch | PointBatch).positions.set(
+        at.values,
+        at.first * 3,
+      ),
+    );
+  }
+  for (const write of writes) {
+    write();
+  }
+  return true;
+}
+
+/** Where `geometry`'s vertices go in row `index`, when it has the row's type, CRS and shape. */
+function vertexRange(
+  batch: FeatureBatch | PointBatch | CustomRows,
+  index: number,
+  geometry: GeometryData,
+): { first: number; values: Float64Array } | undefined {
+  if (!("positions" in batch) || geometry.crs !== batch.crs) {
+    return undefined;
+  }
+  const kind = "geometry" in batch ? batch.geometry : "point";
+  const offsets = "offsets" in batch ? batch.offsets : undefined;
+  const type = {
+    point: "Point",
+    label: "Point",
+    line: "LineString",
+    polygon: "Polygon",
+  }[kind];
+  if (geometry.type !== type) {
+    return undefined;
+  }
+  const rings = (
+    kind === "polygon"
+      ? geometry.coordinates
+      : kind === "line"
+        ? [geometry.coordinates]
+        : [[geometry.coordinates]]
+  ) as number[][][];
+  const first = offsets ? offsets[index]! : index;
+  const end = offsets ? offsets[index + 1]! : index + 1;
+  const holes = (batch as FeatureBatch).holes?.[index] ?? [];
+  const starts = kind === "polygon" ? [first, ...holes, end] : [first, end];
+  if (rings.length !== starts.length - 1) {
+    return undefined;
+  }
+  const values: number[] = [];
+  for (let r = 0; r < rings.length; r++) {
+    const ring = rings[r]!;
+    if (ring.length !== starts[r + 1]! - starts[r]!) {
+      return undefined;
+    }
+    for (const vertex of ring) {
+      if (vertex.length !== 3) {
+        return undefined;
+      }
+      values.push(...vertex);
+    }
+  }
+  return { first, values: Float64Array.from(values) };
+}
+
+/** `batch` without the rows in `drop`: its columns, names, text, vertices, offsets and holes. */
+function withoutRows<B extends FeatureBatch | PointBatch | CustomRows>(
+  batch: B,
+  drop: ReadonlySet<number>,
+): B {
+  const keep: number[] = [];
+  for (let i = 0; i < batch.count; i++) {
+    if (!drop.has(i)) {
+      keep.push(i);
+    }
+  }
+  const pick = (
+    columns: Readonly<Record<string, PropertyColumn>> | undefined,
+  ): Record<string, PropertyColumn> | undefined => {
+    if (!columns) {
+      return undefined;
+    }
+    const out: Record<string, PropertyColumn> = {};
+    for (const [name, column] of Object.entries(columns)) {
+      out[name] = Array.isArray(column)
+        ? keep.map((i) => (column as readonly (string | null)[])[i]!)
+        : new (column.constructor as new (values: number[]) => PropertyColumn)(
+            keep.map((i) => (column as ArrayLike<number>)[i]!),
+          );
+    }
+    return out;
+  };
+  const out: Record<string, unknown> = { ...batch, count: keep.length };
+  if (batch.names) {
+    out.names = keep.map((i) => batch.names![i]);
+  }
+  if ("columns" in batch) {
+    out.columns = pick(batch.columns);
+    return out as unknown as B;
+  }
+  if (batch.properties) {
+    out.properties = pick(batch.properties);
+  }
+  if ("text" in batch && batch.text) {
+    out.text = keep.map((i) => batch.text![i]!);
+  }
+  const p = batch.positions;
+  const offsets = "offsets" in batch ? batch.offsets : undefined;
+  const positions: number[] = [];
+  const newOffsets = [0];
+  const holes: Uint32Array[] = [];
+  for (const i of keep) {
+    const first = offsets ? offsets[i]! : i;
+    const end = offsets ? offsets[i + 1]! : i + 1;
+    const shift = newOffsets.at(-1)! - first;
+    positions.push(...p.subarray(first * 3, end * 3));
+    newOffsets.push(newOffsets.at(-1)! + end - first);
+    const ownHoles = (batch as FeatureBatch).holes?.[i];
+    holes.push(Uint32Array.from(ownHoles ?? [], (h) => h + shift));
+  }
+  out.positions = Float64Array.from(positions);
+  if (offsets) {
+    out.offsets = Uint32Array.from(newOffsets);
+  }
+  if ((batch as FeatureBatch).holes) {
+    out.holes = holes;
+  }
+  return out as unknown as B;
 }
 
 // ---------------------------------------------------------------------------

@@ -34,10 +34,9 @@ import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
 import { BudgetArbiter } from "../packages/core/src/source/budget.ts";
-import {
-  MAX_PENDING_OVERRIDES,
-  type ContentWorld,
-  type SourceContent,
+import type {
+  ContentWorld,
+  SourceContent,
 } from "../packages/core/src/source/content.ts";
 import {
   CHANGE_SET_FORMAT,
@@ -745,7 +744,11 @@ describe("the edit layer (CS-865)", () => {
       ],
     };
     sourceOf(content).push({ kind: "features", changes });
-    expect(content.feature(road0)?.properties).toEqual({ lanes: 6 });
+    // Patched in place: a column holds a removed string as null.
+    expect(content.feature(road0)?.properties).toEqual({
+      lanes: 6,
+      name: null,
+    });
     expect(content.feature(road1)).toBeUndefined();
     content.edits.replace(road0, { properties: { lanes: 1 } });
     expect(content.feature(road0)?.properties).toEqual({ lanes: 1 }); // mine over theirs
@@ -1616,7 +1619,7 @@ describe("the bounds keep others' edits and say what they drop", () => {
     jobs.apply(Infinity);
     // The change set applied, and everything reloads.
     expect(content.feature(road0)).toBeUndefined();
-    expect(content.feed.get(road0)?.kind).toBe("hide");
+    expect(content.rows.feed.size).toBe(0);
     expect(content.rows.points.has("a")).toBe(false);
     // Change sets alone past the bound: the rest are dropped, said once.
     reports.length = 0;
@@ -2068,7 +2071,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     expect([hidden(westDraw), hidden(eastDraw)]).toEqual([false, false]);
   });
 
-  it("hides, replaces and deletes a draw without features by a key-only change set, and knows its key", async () => {
+  it("hides a draw without features by a key-only change set, leaves it to its source under the feed, and knows its key", async () => {
     const { content, westBox, eastBox, drawOf, hidden } = await twoItems();
     const box = content.featureId("a/box");
     const draws = [drawOf(westBox), drawOf(eastBox)];
@@ -2083,19 +2086,14 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
       });
       engine.scene.workers.jobs.apply(Infinity);
     };
-    // A feed's delete by the draw's key hides it in both items.
+    // A draw is its source's to change: the feed changes rows, and leaves
+    // a draw without features as its source drew it.
     feed("cs-1", [{ op: "delete", key: "a/box" }]);
-    expect(content.feed.get(box)?.kind).toBe("hide");
-    expect(shown()).toEqual([false, false]);
-    expect(content.feature(box)).toBeUndefined();
-    // Its update replaces it: the source's draw stays hidden under the replacement.
     feed("cs-2", [
       { op: "update", key: "a/box", patch: { properties: { open: true } } },
     ]);
-    expect(content.feature(box)).toEqual({ properties: { open: true } });
-    expect(shown()).toEqual([false, false]);
-    content.feed.clear(box);
     expect(shown()).toEqual([true, true]);
+    expect(content.feature(box)).toEqual({});
     // A client's key-only change set resolves to the same ID, for its edits.
     const mine = content.resolve({
       id: "cs-mine",
@@ -2126,7 +2124,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     ).toThrow(/op 0: its id isn't its key's feature ID/);
   });
 
-  it("reports a feed's op naming a key its content hasn't, and applies it as an override", async () => {
+  it("holds nothing for a feed's op on a key nothing resident has, and says nothing of it (CS-1085 A)", async () => {
     const reports: string[] = [];
     engine.errors.on((e) => reports.push(e.message));
     const { content } = await twoItems();
@@ -2138,20 +2136,19 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
         ops: [
           { op: "delete", key: "road-0" },
           { op: "delete", key: "n3/p0" },
+          { op: "update", key: "later", patch: { properties: { lanes: 3 } } },
           { op: "insert", key: "new-1", feature: {} },
         ],
       },
     });
     engine.scene.workers.jobs.apply(Infinity);
-    expect(reports.filter((m) => m.includes("features change"))).toEqual([
-      'the "sample" source\'s features change: op 1 names a key no row, draw or edit of its content has; applied as overrides that hold until the features load.',
-    ]);
-    expect(content.feed.get(content.featureId("n3/p0"))?.kind).toBe("hide");
-    expect(content.keyOf(content.featureId("n3/p0"))).toBe("n3/p0");
+    expect(reports.filter((m) => m.includes("features change"))).toEqual([]);
+    expect(content.rows.rowsOf(content.featureId("road-0"))).toHaveLength(0);
+    expect(content.keyOf(content.featureId("n3/p0"))).toBeUndefined();
+    expect(content.feature(content.featureId("later"))).toBeUndefined();
+    // An insert is a row of the feed's own batch, with its key.
+    expect([...content.rows.feed.keys()]).toEqual([content.featureId("new-1")]);
     expect(content.keyOf(content.featureId("new-1"))).toBe("new-1");
-    // A key is kept only while an override holds it.
-    content.feed.clear(content.featureId("new-1"));
-    expect(content.keyOf(content.featureId("new-1"))).toBeUndefined();
   });
 
   it("refuses a change set for other content, and records no key from a refused one", async () => {
@@ -2173,7 +2170,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
     };
     sourceOf(content).push({ kind: "features", changes: refused });
     engine.scene.workers.jobs.apply(Infinity);
-    expect(content.feed.size).toBe(0);
+    expect(content.rows.feed.size).toBe(0);
     expect(content.keyOf(content.featureId("ghost"))).toBeUndefined();
   });
 
@@ -2292,7 +2289,8 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
       source: mine.source,
       ops: [{ op: "delete", key: "road-0" }],
     });
-    expect(mine.feed.get(mine.featureId("road-0"))?.kind).toBe("hide");
+    expect(mine.feature(mine.featureId("road-0"))).toBeUndefined();
+    expect(mine.rows.rowsOf(mine.featureId("road-0"))).toHaveLength(0);
     // A peer's, with the IDs its own open filled: they are this open's too.
     const theirs = peer.resolve({
       id: "cs-2",
@@ -2522,7 +2520,7 @@ describe("named content: a declared name, else a plain URL's digest (CS-1087 A, 
   });
 });
 
-describe("the feed's memory is bounded (CS-847)", () => {
+describe("the feed as base: resident rows, the feed's own batch, the budget (CS-1085 A)", () => {
   let engine: Engine;
   let world: World;
   let reports: string[];
@@ -2551,57 +2549,89 @@ describe("the feed's memory is bounded (CS-847)", () => {
       });
       engine.scene.workers.jobs.apply(Infinity);
     };
-    // What the content holds for keys and overrides (private, read here).
-    const held = () => ({
-      overrides: content.feed.size,
-      pending: content["pending"].size,
-    });
-    return { content, feed, held };
+    return { content, feed };
   }
 
-  it("holds nothing after 10,000 inserts and deletes of car-N (keys its source never writes)", async () => {
-    const { content, feed, held } = await city();
-    // Its points are car-0 to car-2: these keys are the feed's alone.
-    expect(content.hasBase(content.featureId("car-100"))).toBe(false);
-    const start = held();
-    for (let n = 0; n < 10_000; n++) {
-      feed(`in-${n}`, [{ op: "insert", key: `car-${n + 100}`, feature: {} }]);
-      feed(`up-${n}`, [
-        { op: "update", key: `car-${n + 100}`, patch: { properties: { n } } },
-      ]);
-      feed(`out-${n}`, [{ op: "delete", key: `car-${n + 100}` }]);
-    }
-    expect(held()).toEqual(start);
-    expect(content.keyOf(content.featureId("car-10099"))).toBeUndefined();
+  it("patches resident rows in place, removes deleted ones, and invalidates a batch a patch doesn't fit", async () => {
+    const { content, feed } = await city();
+    const road0 = content.featureId("road-0");
+    const road1 = content.featureId("road-1");
+    const batch = content.rows.features.get("a")!.batch;
+    feed("cs-1", [
+      { op: "update", key: "road-0", patch: { properties: { lanes: 6 } } },
+      {
+        op: "update",
+        key: "car-1",
+        patch: {
+          geometry: { crs: "EPSG:4978", type: "Point", coordinates: [7, 8, 9] },
+        },
+      },
+    ]);
+    // In place: the batch the source wrote, its column changed.
+    expect(content.rows.features.get("a")!.batch).toBe(batch);
+    expect(content.feature(road0)?.properties).toEqual({
+      lanes: 6,
+      name: "Main",
+    });
+    expect(
+      content.feature(content.featureId("car-1"))?.geometry?.coordinates,
+    ).toEqual([7, 8, 9]);
+    feed("cs-2", [{ op: "delete", key: "road-0" }]);
+    expect(content.feature(road0)).toBeUndefined();
+    expect(content.rows.features.get("a")!.batch.count).toBe(1);
+    expect(content.feature(road1)?.properties).toEqual({
+      lanes: 4,
+      name: "Side",
+    });
+    // A property its batch has no column for: the batch reloads.
+    feed("cs-3", [
+      {
+        op: "update",
+        key: "road-1",
+        patch: { properties: { surface: "dirt" } },
+      },
+    ]);
+    expect(content.rows.features.has("a")).toBe(false);
+    engine.sources.tick(); // its source sees the invalidation and wants "a"
+    engine.sources.tick(); // and writes it again
+    expect(content.rows.features.has("a")).toBe(true);
     expect(reports.filter((m) => m.includes("features change"))).toEqual([]);
   });
 
-  it("stops overrides for keys that never load at the cap, the oldest first, and reports the count once per change set", async () => {
-    const { content, feed, held } = await city();
-    const ghosts = (from: number, n: number) =>
-      Array.from({ length: n }, (_, i) => ({
-        op: "delete" as const,
-        key: `ghost-${from + i}`,
-      }));
-    feed("cs-1", ghosts(0, MAX_PENDING_OVERRIDES));
-    expect(held().overrides).toBe(MAX_PENDING_OVERRIDES);
-    reports.length = 0;
-    feed("cs-2", ghosts(MAX_PENDING_OVERRIDES, 5));
-    expect(held()).toEqual({
-      overrides: MAX_PENDING_OVERRIDES,
-      pending: MAX_PENDING_OVERRIDES,
-    });
-    expect(content.feed.get(content.featureId("ghost-4"))).toBeUndefined();
-    expect(content.feed.get(content.featureId("ghost-5"))?.kind).toBe("hide");
-    const dropped = reports.filter((m) => m.includes("went, the oldest first"));
-    expect(dropped).toEqual([
-      `the "sample" source's features change: 5 overrides of features no row or draw has went, the oldest first: a content's feed holds at most ${MAX_PENDING_OVERRIDES} (MAX_PENDING_OVERRIDES).`,
+  it("counts the feed's own rows by the budget, until its delete or the source's own row", async () => {
+    const { content, feed } = await city();
+    const budget = engine.sources.budget;
+    const before = budget.resident;
+    feed("cs-1", [
+      { op: "insert", key: "kiosk", feature: { properties: { open: true } } },
     ]);
-    expect(dropped[0]).not.toContain("ghost");
-    // A hide of a feature that is loaded isn't pending, and never goes.
-    feed("cs-3", [{ op: "delete", key: "road-0" }, ...ghosts(2000, 3)]);
-    expect(content.feed.get(content.featureId("road-0"))?.kind).toBe("hide");
-    expect(held().pending).toBe(MAX_PENDING_OVERRIDES);
+    const kiosk = content.featureId("kiosk");
+    expect(content.feature(kiosk)).toEqual({ properties: { open: true } });
+    expect(budget.resident).toBeGreaterThan(before);
+    feed("cs-2", [
+      { op: "update", key: "kiosk", patch: { properties: { open: false } } },
+    ]);
+    expect(content.feature(kiosk)).toEqual({ properties: { open: false } });
+    feed("cs-3", [{ op: "delete", key: "kiosk" }]);
+    expect(content.rows.feed.size).toBe(0);
+    expect(budget.resident).toBe(before);
+    // The source's own row of an inserted key takes its place.
+    feed("cs-4", [{ op: "insert", key: "late", feature: {} }]);
+    sourceOf(content).host.sinks.points.put({
+      key: "b",
+      crs: "EPSG:4979",
+      count: 1,
+      positions: Float64Array.of(0, 0, 0),
+      names: ["late"],
+    });
+    expect(content.rows.feed.size).toBe(0);
+    expect(budget.resident).toBe(before);
+    expect(content.feature(content.featureId("late"))?.geometry).toBeDefined();
+    // Closed, it frees what the feed held.
+    feed("cs-5", [{ op: "insert", key: "gone", feature: {} }]);
+    expect(budget.resident).toBeGreaterThan(before);
+    content.destroy();
+    expect(budget.resident).toBe(0);
   });
 
   it("answers keyOf from a row while one is held, from another batch that names it, and from an edit record once none is", async () => {
@@ -2630,27 +2660,6 @@ describe("the feed's memory is bounded (CS-847)", () => {
     expect(content.edits.get(road)?.kind).toBe("hide");
     content.edits.clear("road-0");
     expect(content.keyOf(road)).toBeUndefined();
-  });
-
-  it("shows a feed's update of a key not loaded nowhere: feature and features agree", async () => {
-    const { content, feed } = await city();
-    feed("cs-1", [
-      { op: "update", key: "later", patch: { properties: { lanes: 3 } } },
-    ]);
-    const later = content.featureId("later");
-    expect(content.feed.get(later)?.kind).toBe("replace");
-    expect(content.feature(later)).toBeUndefined();
-    expect([...content.features()].map((f) => f.id)).not.toContain(later);
-    // A loaded feature's replacement shows in both.
-    feed("cs-2", [
-      { op: "update", key: "road-1", patch: { properties: { lanes: 9 } } },
-    ]);
-    const road = content.featureId("road-1");
-    expect(content.feature(road)?.properties?.lanes).toBe(9);
-    expect(
-      [...content.features()].find((f) => f.id === road)?.feature.properties
-        ?.lanes,
-    ).toBe(9);
   });
 });
 

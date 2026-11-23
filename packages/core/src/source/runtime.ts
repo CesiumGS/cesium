@@ -31,13 +31,8 @@
 import type { Credential, FetchProvider } from "../io/fetchProvider.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
-import { MAX_PENDING_OVERRIDES, SourceContent } from "./content.ts";
-import {
-  checkChangeSet,
-  type ChangeSet,
-  type FeatureData,
-  type FeaturePatch,
-} from "./editing.ts";
+import { SourceContent } from "./content.ts";
+import { checkChangeSet, type ChangeSet } from "./editing.ts";
 import {
   SourceKinds,
   UrlResolver,
@@ -52,8 +47,6 @@ import type {
   BudgetClient,
   ContentSinks,
   ContentSource,
-  FeatureId,
-  PlainValue,
   SampleBatch,
   SourceChange,
   SourceClock,
@@ -258,6 +251,8 @@ export class SourceRuntime {
       name,
     );
     const client = this.budget.client();
+    // The feed's own rows are counted by the budget as all content is.
+    content.rows.onHold = (delta) => this.budget.hold(delta);
     const opened: Opened = {
       content,
       client,
@@ -725,6 +720,9 @@ export class SourceRuntime {
     const keys =
       change.keys ?? (change.region === undefined ? [...rows.keys()] : []);
     rows.drop(keys);
+    if (invalidatesAll(change)) {
+      rows.dropFeed(); // its source loads committed state again
+    }
     for (const key of keys) {
       opened.client.release(key);
     }
@@ -732,58 +730,21 @@ export class SourceRuntime {
   }
 
   /**
-   * Others' change set from the source's feed: checked and resolved by its
-   * keys (a malformed one, one for other content, or one whose IDs aren't
-   * its keys', is dropped whole and reported), then applied under this
-   * client's edits. An update or a delete naming a key no row, draw or
-   * override of the content has is applied, as an override that holds until
-   * one loads, and reported, never dropped silently; past
-   * `MAX_PENDING_OVERRIDES` of those, the oldest go, reported with their
-   * count. A delete of the feed's own insert clears it.
+   * Others' committed change set from the source's feed (CS-1085 A):
+   * checked and resolved by its keys (a malformed one, or one whose IDs
+   * aren't its keys', is dropped whole and reported), then applied to what
+   * is resident, under this client's edits (`ContentRows.applyFeed`). An op
+   * for a key nothing resident holds is not held: the source's next load
+   * brings committed state. Batches a patch doesn't fit are invalidated, so
+   * the source loads them again.
    */
   private applyFeatures(opened: Opened, changes: ChangeSet): void {
     checkChangeSet(changes);
     const { content } = opened;
     // Its own source's feed: no `source` check, since it can only be its own.
-    const resolved = content.resolveOps(changes.ops);
-    const unknown = resolved.flatMap((op, index) =>
-      op.op !== "insert" && !content.holds(op.id!) ? [index] : [],
-    );
-    for (const op of resolved) {
-      const id = op.id!;
-      const ref = { key: op.key, id };
-      // The feed's own insert, with no row or draw of the source under it:
-      // an update keeps it an insert, and a delete clears it, so a feed
-      // that inserts and deletes holds nothing for what it deleted.
-      const inserted =
-        content.feed.get(id)?.kind === "insert" && !content.hasBase(id);
-      if (op.op === "insert") {
-        content.feed.insert(ref, op.feature);
-      } else if (op.op === "delete") {
-        if (inserted) {
-          content.feed.clear(ref);
-        } else {
-          content.feed.hide(ref);
-        }
-      } else {
-        const feature = patched(feedBase(content, id), op.patch);
-        if (inserted) {
-          content.feed.insert(ref, feature);
-        } else {
-          content.feed.replace(ref, feature);
-        }
-      }
-    }
-    const dropped = content.holdPending(resolved);
-    if (unknown.length > 0) {
-      this.reportMessage(
-        `the "${content.kind}" source's features change: ${unknown.length === 1 ? "op" : "ops"} ${unknown.join(", ")} ${unknown.length === 1 ? "names a key" : "name keys"} no row, draw or edit of its content has; applied as overrides that hold until the features load.`,
-      );
-    }
-    if (dropped > 0) {
-      this.reportMessage(
-        `the "${content.kind}" source's features change: ${dropped} ${dropped === 1 ? "override" : "overrides"} of features no row or draw has went, the oldest first: a content's feed holds at most ${MAX_PENDING_OVERRIDES} (MAX_PENDING_OVERRIDES).`,
-      );
+    const stale = content.rows.applyFeed(content.resolveOps(changes.ops));
+    if (stale.length > 0) {
+      this.invalidate(opened, { kind: "invalidate", keys: stale });
     }
   }
 
@@ -883,27 +844,4 @@ function invalidatesAll(change: SourceChange): boolean {
     change.keys === undefined &&
     change.region === undefined
   );
-}
-
-/** What a feed's update patches: the feature as the feed has it, else as the source does. */
-function feedBase(content: SourceContent, id: FeatureId): FeatureData {
-  const o = content.feed.get(id);
-  return (o && o.kind !== "hide" ? o.feature : content.baseFeature(id)) ?? {};
-}
-
-/** `base` with `patch`'s properties set or removed (null) and its geometry, if any. */
-function patched(base: FeatureData, patch: FeaturePatch): FeatureData {
-  const properties: Record<string, PlainValue> = { ...base.properties };
-  for (const [name, value] of Object.entries(patch.properties ?? {})) {
-    if (value === null) {
-      delete properties[name];
-    } else {
-      properties[name] = value;
-    }
-  }
-  const geometry = patch.geometry ?? base.geometry;
-  return {
-    ...(Object.keys(properties).length > 0 ? { properties } : {}),
-    ...(geometry ? { geometry } : {}),
-  };
 }
