@@ -2,10 +2,11 @@
 id: CS-977
 title: Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-437
 needs: [CS-974]
+claimed_by: orch-11-CS-977
 ---
 
 > **Committed by the owner (2026-11-22), through CS-974 C: alpha.1 waits for this.** Source: the Fable API review (`fable-review-api.md`, finding F3).
