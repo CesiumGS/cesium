@@ -23,4 +23,4 @@ Mapbox Vector Tiles (MVT) load as a source through the seam. Related: CS-261 (wi
 
 ## Note (2026-11-23)
 
-`docs/design/styling-runtime.md` (section 13) answers the MapLibre question in principle: a Mapbox-style spec is a front end that lowers to Cesium IR, outside 2.0's core. A label that straddles a tile edge appears once through the runtime's label placement, keyed by the feature's key (section 7, CS-1137).
+`docs/design/styling-runtime.md` (section 13). The owner decided the MapLibre question (CS-1169 A): MapLibre expressions now, as a front end lowering to Cesium IR (CS-1170), and whole style documents later (CS-1171). A label that straddles a tile edge appears once through the runtime's label placement, keyed by the feature's key (section 7, CS-1137).

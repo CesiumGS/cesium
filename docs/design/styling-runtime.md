@@ -6,29 +6,33 @@
 
 **What it read.** Main at `a82d9c4afd`, 2026-11-23. Paths are in the repository, with packages under `packages/<name>/src/`. A claim about existing code or documents is marked _checked_ (read on that commit, with the file) or _unverified_. Everything about the runtime itself is design, not code.
 
-**Marks on each part.** _Decided_: the owner answered, and the item says which. _Open_: a question the note raises and nobody has answered. _For later_: decided in direction, to be settled when something else lands. The sketches of types are to fix ideas. They are not an API.
+**Marks on each part.** _Decided_: the owner answered, and the item says which. _Open_: a question the note raises and nobody has answered. _For later_: decided in direction, to be settled when something else lands. _Proposed_: filed or to be filed as a proposal (CS-686), and the owner hasn't committed it. _Not begun_: nothing of it exists yet. The sketches of types are to fix ideas. They are not an API.
 
 ## 1. The decisions at a glance
 
-| Part                                            | Status    | Where it is settled                       |
-| ----------------------------------------------- | --------- | ----------------------------------------- |
-| The workspace, the IR crate, the boundary       | Decided   | CS-1129, CS-1130, CS-1131                 |
-| Rust and WebAssembly in production builds       | Decided   | CS-1133                                   |
-| GPU-first evaluation                            | Decided   | CS-1134                                   |
-| CPU forms of generators, for WebGL 2            | Decided   | CS-1135                                   |
-| A pure, total, metered IR and a plan format     | Decided   | CS-1136                                   |
-| Label placement split between CPU and GPU       | Decided   | CS-1137                                   |
-| Overflow of a generator's GPU buffer            | Decided   | CS-1138                                   |
-| Units as IR types                               | Decided   | CS-1139                                   |
-| An experimental language of our own, and 1.x's  | Decided   | CS-1140                                   |
-| CSS Color 4 in, linear-light sRGB out           | Decided   | CS-1141                                   |
-| An explicit missing value                       | Decided   | CS-1142                                   |
-| Custom shaders compose after the style stage    | Decided   | CS-1132                                   |
-| Per-feature state and feature identity          | Decided   | CS-1108 and the identity decisions below  |
-| A proposal to the 3D Tiles group                | For later | CS-1143: after the plan settles           |
-| The plan format's shape, the IR's new ops       | Open      | Section 12                                |
-| The experimental language's syntax              | Open      | Section 12                                |
-| The Rust workspace itself                       | Not begun | Section 2                                 |
+| Part                                           | Status    | Where it is settled                      |
+| ---------------------------------------------- | --------- | ---------------------------------------- |
+| The workspace, the IR crate, the boundary      | Decided   | CS-1129, CS-1130, CS-1131                |
+| Rust and WebAssembly in production builds      | Decided   | CS-1133 (naga: open, section 12)         |
+| GPU-first evaluation                           | Decided   | CS-1134                                  |
+| CPU forms of generators, for WebGL 2           | Decided   | CS-1135                                  |
+| A pure, total, metered IR and a plan format    | Decided   | CS-1136                                  |
+| Label placement split between CPU and GPU      | Decided   | CS-1137                                  |
+| Overflow of a generator's GPU buffer           | Decided   | CS-1138                                  |
+| Units as IR types                              | Decided   | CS-1139                                  |
+| An experimental language of our own, and 1.x's | Decided   | CS-1140                                  |
+| A MapLibre expressions front end               | Decided   | CS-1169 A, CS-1170                       |
+| MapLibre style documents as a front end        | For later | CS-1169 A, CS-1171 (proposed)            |
+| CSS Color 4 in, linear-light sRGB out          | Decided   | CS-1141                                  |
+| An explicit missing value                      | Decided   | CS-1142                                  |
+| Custom shaders compose after the style stage   | Decided   | CS-1132                                  |
+| Per-feature state and feature identity         | Decided   | CS-1108 and the identity decisions below |
+| A proposal to the 3D Tiles group               | For later | CS-1143: after the plan settles          |
+| The plan format's shape, the IR's new ops      | Open      | Section 12                               |
+| The experimental language's syntax             | Open      | Section 12                               |
+| The Rust workspace itself                      | Not begun | Section 2                                |
+| The four shapes 2.0 reserves before beta.1     | Not begun | Section 11: proposals to file            |
+| Contours as the first test case                | Proposed  | Section 10.2; CS-337, rescoped           |
 
 ## 2. What this is, and the decisions behind it
 
@@ -53,6 +57,7 @@ The runtime owns the parts that are costly to write twice and must agree across 
 - **CS-1141:** Styles write any CSS Color 4 space. The IR converts at compile time. `StyleOutputs.color` is linear-light sRGB with straight alpha.
 - **CS-1142:** A missing property reads as an explicit missing value: an option type with defaults that make it total. The 1.x front end maps `undefined` onto it. `NaN` stays a number.
 - **CS-1143:** A styling proposal goes to the 3D Tiles group after the plan settles. The answer doesn't say who takes it.
+- **CS-1169:** MapLibre expressions now, whole style documents later. An experimental MapLibre expressions front end lowers to the IR alongside MVT (CS-557), as CS-1170. Whole style documents follow as their own item (CS-1171) once label placement and the styling runtime's outputs settle.
 
 The owner also settled how the runtime sees a feature. These are the decisions this note leans on:
 
@@ -69,7 +74,7 @@ The owner also settled how the runtime sees a feature. These are the decisions t
 
 **What follows:** every feature the runtime sees carries a declared content name and a key. Every output primitive carries that key. State columns, picks, labels and generated geometry all join on it.
 
-**Rust and WebAssembly in production (CS-1133).** The owner's decision of 2026-11-13 says "Rust and naga never reach a production build" (_checked_, `docs/design/core-ir.md`, "Owner's decisions (2026-11-13)", 4). CS-1133 amends the Rust half of it: WebAssembly is required to run 2.0, so the runtime's package may be required in every deployment. CS-1133 sets no size or start-time budget, and says nothing about naga. This note keeps decision 4's naga text as it stands.
+**Rust and WebAssembly in production (CS-1133).** The owner's decision of 2026-11-13 says "Rust and naga never reach a production build" (_checked_, `docs/design/core-ir.md`, "Owner's decisions (2026-11-13)", 4). CS-1133 amends decision 4 fully: WebAssembly is required to run 2.0, and Rust and WebAssembly are used wherever they help. So the runtime's package may be required in every deployment. CS-1133 sets no size or start-time budget. The answer doesn't name naga, and whether the amendment covers naga in production builds is open (section 12).
 
 ## 3. The pipeline
 
@@ -78,8 +83,7 @@ The owner also settled how the runtime sees a feature. These are the decisions t
  -----------------                       --------------------------------------           ---------------------------------
  our own experimental language -+
  3D Tiles 1.x styling ----------+--> front ends --> Cesium IR (JSON) --> plan and compile
- others (front ends, outside    |                                              |
- 2.0's core)                  --+                                              |
+ MapLibre expressions ----------+                                              |
                                                                                +--> CPU jobs ------------> the viewer's job system
  viewer inputs (declared) ---------------------------------------------------> |     (per-feature results -> per-feature state columns)
    camera, terrain, time, view scale, state columns                            |     (generators, labels   -> output primitives)
@@ -117,10 +121,11 @@ interface StyleProgram {
 **What the owner decided about the IR (CS-1136, CS-1139, CS-1141, CS-1142).**
 
 - **It stays pure, total and metered.** A program has no side effects and no input it can't answer, and a viewer can count its cost against a budget. What exactly the meter counts is open (section 12).
-- **It gains strings, an item rate and bounded loops.** An item is a thing a generator produced, such as a dash along a line or a glyph. Loops are bounded by constants, as the GPU-safety rule asks (section 6).
-- **Units are types** (CS-1139). A length is in screen pixels, paper millimeters at a reference scale, or ground meters (_checked_, `docs/design/styling-language.md`, section 1). An expression that mixes them is refused by name, in any front end and any evaluator. Time has seconds, with its time scale named.
+- **It gains strings, an item rate and bounded loops.** An item is a thing a generator produced, such as a dash along a line or a glyph.
+- **Units are types** (CS-1139). A length is in screen pixels, paper millimeters at a reference scale, or ground meters (_checked_, `docs/design/styling-language.md`, section 1). An expression that mixes them is refused by name, in any front end and any evaluator.
 - **A missing value is explicit** (CS-1142): an option type, with defaults that make an expression total. The 1.x front end maps `undefined` onto it. `NaN` stays a number, with the exact semantics the IR already has (_checked_, `core-ir.md`, research notes).
 - **Colors** (CS-1141): a style may write any CSS Color 4 space, and the IR converts at compile time. Everything downstream sees linear-light sRGB with straight alpha. This extends the existing rule that CSS notation is sRGB and converted to linear where it enters the style (_checked_, `docs/design/color-in-the-styling-language.md`, "Decided").
+- **This note's own proposals, not decisions:** a loop's bound is a constant, as the GPU-safety rule asks (section 6), with the syntax open (section 12); and time is a type with the unit seconds and its time scale named.
 - **The kernels, buffers and generator calls are not IR.** They belong to the plan format (4.2). The IR holds the pure functions the plan's stages reference.
 
 **Where it stands today.**
@@ -169,15 +174,15 @@ interface ViewerInput {
 }
 ```
 
-| Input                         | Cadence                 | Notes                                                                                        |
-| ----------------------------- | ----------------------- | -------------------------------------------------------------------------------------------- |
-| The camera                    | per camera move         | Position, orientation, projection. Position in a named reference frame, in meters.           |
-| View scale                    | per camera move         | Meters per pixel at a point, and the map scale for paper units.                              |
-| Terrain heights and gradients | per load of the terrain | Sampled by a job (CPU) or read from a texture (GPU). Heights in meters above a named datum.  |
-| Time                          | per tick                | The view's clock, in seconds, with its time scale named.                                     |
-| Per-feature state columns     | per write               | Keyed by stable ID (CS-1108). Typed columns, read at the feature rate.                       |
-| Feature properties            | per load                | The content's own columns, bound through its schema.                                         |
-| A scalar field (section 10)   | per load, or per tick   | Needed on the CPU for generated contours.                                                    |
+| Input                         | Cadence                 | Notes                                                                                       |
+| ----------------------------- | ----------------------- | ------------------------------------------------------------------------------------------- |
+| The camera                    | per camera move         | Position, orientation, projection. Position in a named reference frame, in meters.          |
+| View scale                    | per camera move         | Meters per pixel at a point, and the map scale for paper units.                             |
+| Terrain heights and gradients | per load of the terrain | Sampled by a job (CPU) or read from a texture (GPU). Heights in meters above a named datum. |
+| Time                          | per tick                | The view's clock, in seconds, with its time scale named.                                    |
+| Per-feature state columns     | per write               | Keyed by stable ID (CS-1108). Typed columns, read at the feature rate.                      |
+| Feature properties            | per load                | The content's own columns, bound through its schema.                                        |
+| A scalar field (section 10)   | per load, or per tick   | Needed on the CPU for generated contours.                                                   |
 
 Two axes are in play: the IR's rate (where a value varies) and the input's cadence (when it changes). They are separate, and the note keeps both names. A tick is one pass of the engine loop.
 
@@ -312,7 +317,8 @@ interface StyleOutputs {
 
 - **An experimental language of our own,** lowering to the IR. It is experimental: its form can change, as the IR's 0.x versions can. Its syntax is open (section 12). Specifying it apart from 3D Tiles follows `docs/design/styling-language.md` (_checked_).
 - **A front end for the 1.x styling language,** lowering to the IR. It maps `undefined` onto the explicit missing value (CS-1142).
-- **Other front ends** are not part of 2.0's core. A Mapbox-style spec is one such front end (section 13, CS-557).
+- **A MapLibre expressions front end** (CS-1169 A, CS-1170), lowering to the IR, experimental, alongside MVT (CS-557). Whole style documents follow later as their own item (CS-1171), once label placement (CS-1137) and the runtime's outputs settle.
+- **Other front ends:** none is decided.
 - **The 3D Tiles group** gets a proposal after the plan settles (CS-1143). The answer doesn't say who takes it, and it sets no date. What "settled" means is open.
 
 ### 10.2 Contours
@@ -326,7 +332,7 @@ Scalar fields are the first test because they need all three rates and both form
   - by the runtime, as generated polylines with the feature's key and the level as an attribute. These can be labeled and picked, and they have a CPU form for WebGL 2.
 - **The generated form needs the field as a viewer input** on the side where the generator runs: sampled heights for a CPU job, or a texture for a GPU kernel.
 - **What the test proves:** one expression with two lowerings that agree; an input with a cadence (terrain per load, a simulated field per tick); output primitives through the draw-arguments seam; labels along generated lines; and picks that return the level.
-- **Agreement has a stated bound.** The two lowerings sample the field differently, so they agree to within the field's sample spacing, not exactly. The note gives that bound in meters per data set, and says "can't tell" where the field's own accuracy is unknown.
+- **Agreement has a stated bound.** The two lowerings sample the field differently, so they agree to within the field's sample spacing, not exactly. The test states that bound in meters per data set, and says "can't tell" where the field's own accuracy is unknown.
 - **This replaces CS-337 as written** (section 13).
 
 ## 11. What 2.0 must reserve before beta.1
@@ -342,7 +348,7 @@ Also to settle before the freeze: custom shaders composing rather than replacing
 
 ## 12. Open
 
-**Settled by the owner since the first draft** (so no longer questions): where the code lives (CS-1129), the spec's home (CS-1130), Rust in production (CS-1133), who evaluates per feature (CS-1134), WebGL 2 (CS-1135), how the IR grows (CS-1136), labels (CS-1137), overflow (CS-1138), units (CS-1139), the language (CS-1140), the color model (CS-1141), `undefined` and `NaN` (CS-1142).
+**Settled by the owner since the questions were raised** (so no longer questions): where the code lives (CS-1129), the spec's home (CS-1130), Rust in production (CS-1133), who evaluates per feature (CS-1134), WebGL 2 (CS-1135), how the IR grows (CS-1136), labels (CS-1137), overflow (CS-1138), units (CS-1139), the languages (CS-1140), MapLibre expressions (CS-1169), the color model (CS-1141), `undefined` and `NaN` (CS-1142).
 
 **Open:**
 
@@ -359,6 +365,7 @@ Also to settle before the freeze: custom shaders composing rather than replacing
 11. **The workspace.** It isn't started. Its crates, its layout and the decoder's state are for the work that starts it.
 12. **The output primitives' set and layouts,** and whether five is the right number.
 13. **How CPU and GPU forms of one generator agree,** and the bound per generator, as section 10 does for contours.
+14. **Does CS-1133's amendment of decision 4 cover naga in production builds?** The answer doesn't name it. For the owner.
 
 ## 13. Which decisions and items this affects
 
@@ -366,7 +373,7 @@ CS-265 (the language's form, where its spec lives, and when it goes to the 3D Ti
 
 - **CS-337.** _Today:_ Proposed work: scalar fields on any geometry, with ramps, legends and picks. Needed CS-265. _Change:_ Rescoped to the contour test case of section 10.2, with its done-when in its item file. It stays proposed, since the owner decides a proposal (CS-686's practice).
 - **CS-258.** _Today:_ Planned work: the vector drawing design, one path for lines, polygons, labels and CAD styles. _Change:_ The output primitives of section 4.4 are the design's input contract. Label collision moves to the runtime (section 7), and label drawing stays. A note in its item file points here.
-- **CS-557.** _Today:_ Planned work: MVT through the content-source seam. It asks whether to accept MapLibre style JSON. _Change:_ Answered in principle: a Mapbox-style spec is a front end that lowers to Cesium IR, outside 2.0's core. A label that straddles a tile edge is the runtime's label placement, keyed by the feature's key. A note points here.
+- **CS-557.** _Today:_ Planned work: MVT through the content-source seam. It asks whether to accept MapLibre style JSON. _Change:_ The owner decided it (CS-1169 A): expressions now, as a front end lowering to Cesium IR (CS-1170), and whole style documents later (CS-1171). A label that straddles a tile edge is the runtime's label placement, keyed by the feature's key. A note points here.
 - **CS-558.** _Today:_ Planned work: Esri services through the seam. _Change:_ Feature services' fields bind as feature-rate inputs through the schema, and elevation services become a provider of the terrain-height input. Scope is unchanged. A note points here.
 - **CS-559.** _Today:_ Planned work: USD through the seam. _Change:_ Its features carry declared content names and keys like any other, so per-feature channels apply. Materials stay with the material system. Scope is unchanged. A note points here.
 
@@ -377,4 +384,4 @@ CS-265 (the language's form, where its spec lives, and when it goes to the 3D Ti
 - The viewer-input interface.
 - A generated batch in the draw-arguments seam.
 - Moving `FORMAT.md` and the vectors to the IR crate and pinning them, once the crate exists.
-- Amending `docs/design/core-ir.md`, decision 4, in place for CS-1133. This note doesn't edit it.
+- Amending `docs/design/core-ir.md`, decision 4, in place for CS-1133, once the naga question (section 12) is answered. This note doesn't edit it.

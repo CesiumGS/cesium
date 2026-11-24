@@ -25,4 +25,4 @@ In the design's order: map and tile services, feature services, I3S scene layers
 
 ## Note (2026-11-23)
 
-`docs/design/styling-runtime.md` (section 13): a feature service's fields bind as feature-rate inputs through its schema, and an elevation service becomes a provider of the terrain-height input. Service-defined symbology, if wanted, is a front end. The scope here is unchanged.
+`docs/design/styling-runtime.md` (section 13): a feature service's fields bind as feature-rate inputs through its schema, and an elevation service becomes a provider of the terrain-height input. The scope here is unchanged.
