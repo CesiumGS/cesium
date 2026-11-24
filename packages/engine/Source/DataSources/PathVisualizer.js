@@ -1153,7 +1153,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       polyline.positions = [];
     }
 
-    // Prevent non-positive split steps from creating non-terminating loops.
+    // Prevent negative split steps from creating infinite loops.
     // Positive fractional resolutions are valid; only values <= 0 fall back to the default.
     const splitResolution = resolution > 0 ? resolution : defaultResolution;
 
