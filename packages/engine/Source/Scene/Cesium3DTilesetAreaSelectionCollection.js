@@ -183,6 +183,42 @@ class Cesium3DTilesetAreaSelectionCollection {
   }
 
   /**
+   * Combines the decisions of the areas in a mask into one decision for a
+   * tile. Each area classifies the tile with its own measure. The finer
+   * decision wins: any REFINE refines, all STOP stops, and anything else is
+   * left to the screen space error. When the mask holds no area of the
+   * collection, nothing stops the tile, so it is left to the screen space
+   * error too.
+   *
+   * @param {number} mask The mask of the areas to combine.
+   * @param {Cesium3DTile} measuredTile The tile to measure: the tile itself, or its parent.
+   * @param {boolean} isAreaPass Whether this is the area pass.
+   * @returns {number} An {@link AreaDecision} value.
+   * @private
+   */
+  combine(mask, measuredTile, isAreaPass) {
+    let classified = false;
+    let allStop = true;
+    for (let i = 0; i < this._areas.length; ++i) {
+      const bit = 1 << i;
+      if ((mask & bit) === 0) {
+        continue;
+      }
+      classified = true;
+      const area = this._areas[i];
+      const m = area._measure(measuredTile, measuredTile._areaSelectionDepth);
+      const decision = this.classify(area, m, isAreaPass);
+      if (decision === AreaDecision.REFINE) {
+        return AreaDecision.REFINE;
+      }
+      if (decision !== AreaDecision.STOP) {
+        allStop = false;
+      }
+    }
+    return classified && allStop ? AreaDecision.STOP : AreaDecision.DEFER;
+  }
+
+  /**
    * Increments the version and recomputes the mask of shown areas. Called
    * whenever an area is added, removed, or changes.
    *

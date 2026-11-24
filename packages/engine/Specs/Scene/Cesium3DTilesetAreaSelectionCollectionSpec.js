@@ -354,4 +354,133 @@ describe("Scene/Cesium3DTilesetAreaSelectionCollection", () => {
       expect(collection.classify(area, 8.0, false)).toBe(AreaDecision.STOP);
     });
   });
+
+  describe("combine", () => {
+    const AreaDecision = Cesium3DTilesetAreaSelectionCollection.AreaDecision;
+
+    function createArea(minimumMeasure, maximumMeasure, measure) {
+      return new Cesium3DTilesetAreaSelection({
+        area: rectangle,
+        measure: measure ?? ((tile) => tile.geometricError),
+        minimumMeasure: minimumMeasure,
+        maximumMeasure: maximumMeasure,
+      });
+    }
+
+    function createMeasureSpy() {
+      return jasmine
+        .createSpy("measure")
+        .and.callFake((tile) => tile.geometricError);
+    }
+
+    function createTile(geometricError, depth) {
+      return {
+        geometricError: geometricError,
+        _areaSelectionDepth: depth ?? 0,
+      };
+    }
+
+    it("defers when the mask is 0", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(createArea(2.0, 2.0));
+
+      expect(collection.combine(0, createTile(2.0), false)).toBe(
+        AreaDecision.DEFER,
+      );
+    });
+
+    it("defers when the mask holds no area of the collection", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(createArea(2.0, 2.0));
+      collection.add(createArea(2.0, 2.0));
+      collection.add(createArea(2.0, 2.0));
+
+      expect(collection.combine(0b1000, createTile(2.0), false)).toBe(
+        AreaDecision.DEFER,
+      );
+    });
+
+    it("stops when every area stops", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(createArea(2.0, 2.0));
+      collection.add(createArea(32.0, 32.0));
+
+      expect(collection.combine(0b11, createTile(2.0), false)).toBe(
+        AreaDecision.STOP,
+      );
+    });
+
+    it("refines when any area refines", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(createArea(2.0, 2.0));
+      collection.add(createArea(32.0, 32.0));
+
+      expect(collection.combine(0b11, createTile(32.0), false)).toBe(
+        AreaDecision.REFINE,
+      );
+    });
+
+    it("does not measure the remaining areas after a refine", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const secondMeasure = createMeasureSpy();
+      collection.add(createArea(2.0, 2.0));
+      collection.add(createArea(32.0, 32.0, secondMeasure));
+
+      expect(collection.combine(0b11, createTile(32.0), false)).toBe(
+        AreaDecision.REFINE,
+      );
+      expect(secondMeasure).not.toHaveBeenCalled();
+    });
+
+    it("defers when an area defers and no area refines", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(createArea(2.0, 16.0));
+      collection.add(createArea(32.0, 32.0));
+
+      expect(collection.combine(0b11, createTile(8.0), false)).toBe(
+        AreaDecision.DEFER,
+      );
+    });
+
+    it("only measures the areas in the mask", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const firstMeasure = createMeasureSpy();
+      const secondMeasure = createMeasureSpy();
+      collection.add(createArea(2.0, 2.0, firstMeasure));
+      collection.add(createArea(2.0, 2.0, secondMeasure));
+
+      collection.combine(0b10, createTile(2.0), false);
+
+      expect(firstMeasure).not.toHaveBeenCalled();
+      expect(secondMeasure).toHaveBeenCalled();
+    });
+
+    it("passes the measured tile and its depth to the measure", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const measure = createMeasureSpy();
+      collection.add(createArea(2.0, 2.0, measure));
+      const tile = createTile(4.0, 3);
+
+      collection.combine(0b1, tile, false);
+
+      expect(measure).toHaveBeenCalledWith(tile, 3);
+    });
+
+    it("classifies each area in its own units", () => {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      const depthMeasure = (tile, depth) => Math.pow(2.0, -depth);
+      collection.add(createArea(2.0, 2.0));
+      collection.add(createArea(0.25, 0.25, depthMeasure));
+
+      // The geometric error area stops at 1, but at depth 1 the depth
+      // measure is 0.5, which is coarser than 0.25.
+      expect(collection.combine(0b11, createTile(1.0, 1), false)).toBe(
+        AreaDecision.REFINE,
+      );
+      // At depth 2 the depth measure is 0.25, so both areas stop.
+      expect(collection.combine(0b11, createTile(1.0, 2), false)).toBe(
+        AreaDecision.STOP,
+      );
+    });
+  });
 });
