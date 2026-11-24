@@ -38,6 +38,11 @@ interface SampleOptions {
   keys?: string[];
   /** The origin its wants name. Default its URL's. */
   origin?: string;
+  /**
+   * On a grant, settle the key without writing anything: a test that drives
+   * the budget itself (T1). Default true.
+   */
+  writes?: boolean;
   /** Every want's class. Default "now". */
   class?: "now" | "refine" | "prefetch";
   /** Bytes per key. Default 1000. */
@@ -178,6 +183,10 @@ export class SampleSource implements ContentSource {
     for (const key of tick.grant.keys) {
       if (key === VERSION) {
         this.poll(tick.clock.wallSeconds);
+        continue;
+      }
+      if (this.options.writes === false) {
+        this.host.budget.settle(key);
         continue;
       }
       this.write(key);

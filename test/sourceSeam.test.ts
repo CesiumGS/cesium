@@ -5,6 +5,8 @@
 // change sets. The sample source (test/fixtures/sources/sampleKind.ts) is in
 // memory: no network, no timer.
 import { types as nodeTypes } from "node:util";
+import v8 from "node:v8";
+import vm from "node:vm";
 import { Worker as NodeWorker } from "node:worker_threads";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -3434,15 +3436,45 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     return out;
   }
 
-  it("T1, return to baseline: after any sequence over fresh keys, undoing what the host and the source own leaves what was reachable before, and no canary", async () => {
+  it("T1, return to baseline: after any sequence over fresh keys, the budget included, undoing what the host and the source own leaves the seam's reachable tables as they were, and no canary anywhere in the heap", async () => {
+    // What it covers: the reflective walk counts the entries of every Map,
+    // Set and array reachable from the content, the runtime and the
+    // identity table, by path, and reads their strings; it can't see `#`
+    // fields, closures or module state. So after a full collection a heap
+    // snapshot is searched for every canary: anything the engine keeps
+    // anywhere. The sequence runs in its own function, so no frame of the
+    // test's holds a canary, and the test keeps only their suffixes.
     const engine = await fakeEngine();
     try {
+      const { prefix, suffixes } = await t1Sequence(engine);
+      const t0 = performance.now();
+      const held = await heldInHeap(prefix);
+      const ms = performance.now() - t0;
+      expect.soft(held, "canaries the heap holds").toEqual([]);
+      expect(suffixes.size).toBeGreaterThan(300);
+      expect(ms, "the heap search's time").toBeLessThan(30_000);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  /**
+   * T1's sequence, over `engine`: returns the canaries' prefix and suffixes
+   * only, after checking the walk returned to its baseline.
+   */
+  async function t1Sequence(
+    engine: Engine,
+  ): Promise<{ prefix: string; suffixes: Set<string> }> {
+    {
       const world = engine.createWorld();
       engine.sources.registerKind({ id: "sample", module: SAMPLE });
       const jobs = engine.scene.workers.jobs;
       jobs.phased = true; // pushes wait for the apply phase, so a queue can overflow
       const content = await engine.open(
-        { url: "https://data.test/base.sample", options: { keys: [] } },
+        {
+          url: "https://data.test/base.sample",
+          options: { keys: [], writes: false },
+        },
         { id: "base" },
       );
       world.add(content);
@@ -3474,12 +3506,21 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
 
       const r = random(1101);
       let fresh = 0;
-      const canary = () => `CANARY${word(r, 10)}${fresh++}`;
+      // Assembled here, so no source text holds it whole.
+      const prefix = ["Qk", "9v", "Zx"].join("");
+      const suffixes = new Set<string>();
+      const canary = () => {
+        const suffix = `${word(r, 10)}${fresh++}`;
+        suffixes.add(suffix);
+        return `${prefix}${suffix}`;
+      };
       const key = () => (r() < 0.2 ? canary() : `f${fresh++}`);
       const batches: string[] = [];
       const resident: string[] = [];
       const draws: DrawHandle[] = [];
       const labeled = new Set<string>();
+      const wanted = new Set<string>();
+      const { budget } = source.host;
       const push = (ops: ChangeSet["ops"], step: number) =>
         source.push({
           kind: "features",
@@ -3555,6 +3596,24 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
               ? { kind: "invalidate", keys: [pick(r, batches)] }
               : { kind: "invalidate" },
           );
+        } else if (r() < 0.5) {
+          // The budget: wants by fresh keys, granted and settled by the
+          // source, and some released.
+          // A release doesn't withdraw a want not yet granted, so the undo
+          // below releases every key ever wanted.
+          if (r() < 0.3 && wanted.size > 0) {
+            budget.release(pick(r, [...wanted]));
+          } else {
+            const k = key();
+            budget.want({
+              key: k,
+              class: pick(r, ["now", "refine", "prefetch"] as const),
+              benefit: r(),
+              cost: { bytes: 1 + Math.floor(r() * 1000) },
+              origin: pick(r, ["https://data.test", "https://other.test"]),
+            });
+            wanted.add(k);
+          }
         } else {
           // Reads: a cache of keys would show up in the walk.
           const k =
@@ -3586,17 +3645,51 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       for (const k of labeled) {
         content.setLabels(k, "kind", undefined);
       }
+      for (const k of wanted) {
+        budget.release(k);
+      }
       settle();
       const after = reach(roots, stop);
       expect.soft(grown(before.sizes, after.sizes)).toEqual([]);
       expect
-        .soft([...after.strings].filter((s) => s.includes("CANARY")))
+        .soft([...after.strings].filter((s) => s.includes(prefix)))
         .toEqual([]);
       expect(fresh).toBeGreaterThan(2000);
-    } finally {
-      engine.destroy();
+      // The test's own references go: what it and its fixture recorded.
+      batches.length = 0;
+      resident.length = 0;
+      draws.length = 0;
+      labeled.clear();
+      wanted.clear();
+      source.ticks.length = 0;
+      return { prefix, suffixes };
     }
-  });
+  }
+
+  /**
+   * Strings in a heap snapshot, taken after a full collection, that hold
+   * `prefix` and a canary's suffix: what anything in the process keeps,
+   * private fields, closures and module state included.
+   */
+  async function heldInHeap(prefix: string): Promise<string[]> {
+    v8.setFlagsFromString("--expose-gc");
+    const gc = vm.runInNewContext("gc") as () => void;
+    for (let i = 0; i < 3; i++) {
+      gc();
+    }
+    const pattern = new RegExp(`${prefix}[A-Za-z0-9]+`, "g");
+    const found = new Set<string>();
+    const decoder = new TextDecoder();
+    let tail = "";
+    for await (const chunk of v8.getHeapSnapshot()) {
+      const text = tail + decoder.decode(chunk as Uint8Array, { stream: true });
+      for (const match of text.matchAll(pattern)) {
+        found.add(match[0].slice(0, 40));
+      }
+      tail = text.slice(-64);
+    }
+    return [...found];
+  }
 
   it("T2, convergence against a model: after any commits pushed as change sets, with or without invalidations, overflowing or malformed, and pushes of every kind with a field from the hostile pool, every resident tile shows the model", async () => {
     const { rt, jobs, place } = runtime({ phased: true });
