@@ -2855,6 +2855,50 @@ describe("named content: a declared name, else a session name (CS-1087 A, CS-110
     ).toThrow(/isn't this content's name/);
   });
 
+  it("draws a session name's 16 bytes from crypto.getRandomValues when the runtime is given no random source, and puts nothing else in it (CS-1168 A)", async () => {
+    /** A runtime with no `random` option: the default's. */
+    const unseeded = () => {
+      const jobs = new Jobs({ size: 1, post: () => {} });
+      jobs.phased = false;
+      const rt = new SourceRuntime({
+        pool: {
+          jobs,
+          submit: (spec) => jobs.submit(spec),
+          loadDecoder: () => {},
+        },
+        fetch: () => FetchProvider.default,
+        clock: () => sourceClock(0),
+        report: () => {},
+      });
+      rt.registerKind({ id: "sample", module: SAMPLE });
+      return rt;
+    };
+    const stub = vi
+      .spyOn(globalThis.crypto, "getRandomValues")
+      .mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
+        const bytes = array as unknown as Uint8Array;
+        for (let i = 0; i < bytes.length; i++) {
+          bytes[i] = (i * 17 + 3) & 255;
+        }
+        return array;
+      });
+    try {
+      const content = await unseeded().open({
+        url: "https://data.test/city.sample",
+      });
+      // The hex of exactly the stubbed bytes, written out.
+      expect(content.source).toBe("session:031425364758697a8b9cadbecfe0f102");
+      expect(stub).toHaveBeenCalledTimes(1);
+    } finally {
+      stub.mockRestore();
+    }
+    // Unstubbed, two runtimes built without a random source name one URL apart.
+    const a = await unseeded().open({ url: "https://data.test/city.sample" });
+    const b = await unseeded().open({ url: "https://data.test/city.sample" });
+    expect(a.source).toMatch(/^session:[0-9a-f]{32}$/);
+    expect(b.source).not.toBe(a.source);
+  });
+
   it("gives data URIs and blob URLs session names too, reading nothing of them", async () => {
     engine.sources.registerKind({ id: "layered", module: LAYERED });
     for (const url of [
