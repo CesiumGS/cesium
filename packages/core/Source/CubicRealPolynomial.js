@@ -1,3 +1,5 @@
+// @ts-check
+
 import DeveloperError from "./DeveloperError.js";
 import QuadraticRealPolynomial from "./QuadraticRealPolynomial.js";
 
@@ -46,6 +48,14 @@ CubicRealPolynomial.computeDiscriminant = function (a, b, c, d) {
   return discriminant;
 };
 
+/**
+ * @param {number} a
+ * @param {number} b
+ * @param {number} c
+ * @param {number} d
+ * @returns {number[]}
+ * @private
+ */
 function computeRealRoots(a, b, c, d) {
   const A = a;
   const B = b / 3.0;
@@ -199,7 +209,7 @@ CubicRealPolynomial.computeRealRoots = function (a, b, c, d) {
       roots = QuadraticRealPolynomial.computeRealRoots(a, 0, c);
 
       // Return the roots in ascending order.
-      if (roots.Length === 0) {
+      if (roots.length === 0) {
         return [0.0];
       }
       return [roots[0], 0.0, roots[1]];

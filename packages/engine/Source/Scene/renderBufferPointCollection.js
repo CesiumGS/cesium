@@ -7,6 +7,7 @@ import {
   ComponentDatatype,
   EncodedCartesian3,
   PrimitiveType,
+  WebGLConstants,
   defined,
 } from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
@@ -27,7 +28,35 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
+/** @import { BufferPrimitiveChangeTracker } from "./BufferPrimitiveCollection.js"; */
 /** @import {TypedArray} from "@cesium/core"; */
+
+/**
+ * Style applied to the points of a collection, in place of per-point materials.
+ * Global values are passed as uniforms; when any property is a callback, every
+ * property is evaluated per point and stored as vertex attributes.
+ *
+ * @typedef {object} BufferPointStyle
+ * @property {number|function(BufferPoint): number} radius Radius of the fill, in pixels.
+ * @property {Color|function(BufferPoint): Color} color
+ * @property {Color|function(BufferPoint): Color} outlineColor
+ * @property {number|function(BufferPoint): number} outlineWidth Width of the outline, in pixels.
+ * @property {BlendOption} blendOption
+ * @property {boolean} _hasStyleCallbacks
+ * @property {number} _styleVersion
+ * @property {function(BufferPoint, BufferPointStyleResult): BufferPointStyleResult} _evaluatePoint
+ * @ignore
+ */
+
+/**
+ * @typedef {object} BufferPointStyleResult
+ * @property {boolean} show
+ * @property {number} radius
+ * @property {Color} color
+ * @property {Color} outlineColor
+ * @property {number} outlineWidth
+ * @ignore
+ */
 
 const { DirtyFlags } = BufferPrimitiveCollection;
 
@@ -68,7 +97,12 @@ const BufferPointAttributeLocations = {
  * @property {Record<string, TypedArray>} [attributeArrays]
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
+ * @property {Record<string, function(): *>} [uniformMap]
+ * @property {boolean} [useStyleUniforms]
+ * @property {number} [styleVersion]
  * @property {DrawCommand} [command]
+ * @property {BufferPointCollection} [collection]
+ * @property {BufferPrimitiveChangeTracker} [changeTracker]
  * @property {Function} destroy
  * @ignore
  */
@@ -76,6 +110,13 @@ const BufferPointAttributeLocations = {
 // Scratch variables.
 const point = new BufferPoint();
 const material = new BufferPointMaterial();
+const pointStyle = {
+  show: true,
+  radius: 0,
+  color: Color.WHITE,
+  outlineColor: Color.WHITE,
+  outlineWidth: 0,
+};
 const pickColor = new Color();
 const cartesian = new Cartesian3();
 const encodedCartesian = new EncodedCartesian3();
@@ -84,16 +125,47 @@ const encodedCartesian = new EncodedCartesian3();
  * @param {BufferPointCollection} collection
  * @param {FrameState} frameState
  * @param {BufferPointRenderContext} [renderContext]
+ * @param {BufferPointStyle} [style] Must be the same object on every call with a given render context.
  * @returns {BufferPointRenderContext}
  * @ignore
  */
-function renderBufferPointCollection(collection, frameState, renderContext) {
+function renderBufferPointCollection(
+  collection,
+  frameState,
+  renderContext,
+  style,
+) {
   const context = frameState.context;
-  renderContext = renderContext || { destroy: destroyRenderContext };
+  renderContext = renderContext || {
+    destroy: destroyRenderContext,
+    collection,
+    changeTracker: collection._addChangeTracker(),
+  };
+  const tracker = renderContext.changeTracker;
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
   const attributeLocations = useFloat64
     ? BufferPointAttributeLocationsFloat64
     : BufferPointAttributeLocations;
+  const useStyleUniforms = defined(style) && !style._hasStyleCallbacks;
+  const useStyleAttributes = defined(style) && style._hasStyleCallbacks;
+  if (useStyleAttributes && tracker.flags & DirtyFlags.GEOMETRY) {
+    tracker.flags |= DirtyFlags.PROPERTIES;
+  }
+
+  // Re-evaluates every point for this render context only; other consumers of
+  // the collection keep their own change trackers.
+  const styleModeChanged =
+    defined(renderContext.useStyleUniforms) &&
+    renderContext.useStyleUniforms !== useStyleUniforms;
+  const styleChanged =
+    useStyleAttributes && renderContext.styleVersion !== style._styleVersion;
+  if (styleModeChanged || styleChanged) {
+    tracker.offset = 0;
+    tracker.count = collection.primitiveCount;
+    tracker.flags |= DirtyFlags.PROPERTIES;
+    tracker.full = true;
+  }
+  renderContext.styleVersion = style?._styleVersion;
 
   if (!defined(renderContext.attributeArrays)) {
     const featureCountMax = collection.primitiveCountMax;
@@ -111,26 +183,22 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.PROPERTIES
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {
     const { attributeArrays } = renderContext;
 
     const pickColorArray = attributeArrays.pickColor;
     const showSizeColorAlphaArray = attributeArrays.showSizeColorAlpha;
     const outlineWidthColorAlphaArray = attributeArrays.outlineWidthColorAlpha;
 
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, point);
 
-      if (!point._dirty) {
+      if (!full && !point._dirty) {
         continue;
       }
 
-      point.getMaterial(material);
       Color.fromRgba(point._pickId, pickColor);
 
       pickColorArray[i * 4] = Color.floatToByte(pickColor.red);
@@ -138,39 +206,56 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       pickColorArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
       pickColorArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
 
-      showSizeColorAlphaArray[i * 4] = point.show ? 1 : 0;
-      showSizeColorAlphaArray[i * 4 + 1] = material.size;
-      showSizeColorAlphaArray[i * 4 + 2] = AttributeCompression.encodeRGB8(
-        material.color,
-      );
-      showSizeColorAlphaArray[i * 4 + 3] = material.color.alpha;
+      // Global style values are uniforms, so only visibility is stored per point.
+      if (useStyleUniforms) {
+        showSizeColorAlphaArray[i * 4] = point.show ? 1 : 0;
+        continue;
+      }
 
-      outlineWidthColorAlphaArray[i * 3] = material.outlineWidth;
-      outlineWidthColorAlphaArray[i * 3 + 1] = AttributeCompression.encodeRGB8(
-        // When outlineWidth=0, overwrite outlineColor to prevent subpixel bleeding.
-        material.outlineWidth > 0 ? material.outlineColor : material.color,
-      );
-      outlineWidthColorAlphaArray[i * 3 + 2] =
-        // When outlineWidth=0, overwrite outlineAlpha to prevent subpixel bleeding.
-        material.outlineWidth > 0
-          ? material.outlineColor.alpha
-          : material.color.alpha;
+      let show, size, color, outlineColor, outlineWidth;
+      if (useStyleAttributes) {
+        style._evaluatePoint(point, pointStyle);
+        show = pointStyle.show;
+        size = 2.0 * pointStyle.radius;
+        color = pointStyle.color;
+        outlineColor = pointStyle.outlineColor;
+        outlineWidth = pointStyle.outlineWidth;
+      } else {
+        point.getMaterial(material);
+        show = point.show;
+        size = material.size;
+        color = material.color;
+        outlineColor = material.outlineColor;
+        outlineWidth = material.outlineWidth;
+      }
+
+      // When outlineWidth=0, use the fill color to prevent subpixel bleeding.
+      if (outlineWidth <= 0) {
+        outlineColor = color;
+      }
+
+      showSizeColorAlphaArray[i * 4] = show ? 1 : 0;
+      showSizeColorAlphaArray[i * 4 + 1] = size;
+      showSizeColorAlphaArray[i * 4 + 2] =
+        AttributeCompression.encodeRGB8(color);
+      showSizeColorAlphaArray[i * 4 + 3] = color.alpha;
+
+      outlineWidthColorAlphaArray[i * 3] = outlineWidth;
+      outlineWidthColorAlphaArray[i * 3 + 1] =
+        AttributeCompression.encodeRGB8(outlineColor);
+      outlineWidthColorAlphaArray[i * 3 + 2] = outlineColor.alpha;
     }
   }
 
   // Fast path for position-only updates.
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.GEOMETRY &&
-    useFloat64
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.GEOMETRY && useFloat64) {
     const { attributeArrays } = renderContext;
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, point);
 
-      if (!point._dirty) {
+      if (!full && !point._dirty) {
         continue;
       }
 
@@ -262,10 +347,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         },
       ],
     });
-  } else if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.PROPERTIES
-  ) {
+  } else if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {
     // Update all vertex attributes.
     for (const key in attributeLocations) {
       if (Object.hasOwn(attributeLocations, key)) {
@@ -273,15 +355,12 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         renderContext.vertexArray.copyAttributeFromRange(
           attributeLocations[attribute],
           renderContext.attributeArrays[attribute],
-          collection._dirtyOffset,
-          collection._dirtyCount,
+          tracker.offset,
+          tracker.count,
         );
       }
     }
-  } else if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.GEOMETRY
-  ) {
+  } else if (tracker.count > 0 && tracker.flags & DirtyFlags.GEOMETRY) {
     // Fast path for geometry-only updates.
 
     /** @type {BufferPointAttribute[]} */
@@ -293,16 +372,17 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       renderContext.vertexArray.copyAttributeFromRange(
         attributeLocations[attribute],
         renderContext.attributeArrays[attribute],
-        collection._dirtyOffset,
-        collection._dirtyCount,
+        tracker.offset,
+        tracker.count,
       );
     }
   }
 
+  const blendOption = defined(style)
+    ? style.blendOption
+    : collection._blendOption;
   const pass =
-    collection._blendOption === BlendOption.OPAQUE
-      ? Pass.OPAQUE
-      : Pass.TRANSLUCENT;
+    blendOption === BlendOption.OPAQUE ? Pass.OPAQUE : Pass.TRANSLUCENT;
 
   if (defined(renderContext.command) && renderContext.command.pass !== pass) {
     RenderState.removeFromCache(renderContext.renderState);
@@ -316,16 +396,45 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
         pass === Pass.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
-      depthTest: { enabled: true },
+      depthTest: {
+        enabled: true,
+        // Vector primitives sharing a collection draw at equal depths; later ones draw on top.
+        func: defined(style) ? WebGLConstants.LEQUAL : WebGLConstants.LESS,
+      },
     });
   }
 
+  if (
+    defined(renderContext.shaderProgram) &&
+    renderContext.useStyleUniforms !== useStyleUniforms
+  ) {
+    renderContext.shaderProgram.destroy();
+    renderContext.shaderProgram = undefined;
+    renderContext.uniformMap = undefined;
+    renderContext.command = undefined;
+  }
+
   if (!defined(renderContext.shaderProgram)) {
+    const vertexDefines = [];
+    if (useFloat64) {
+      vertexDefines.push("USE_FLOAT64");
+    }
+    if (useStyleUniforms) {
+      vertexDefines.push("USE_STYLE");
+      renderContext.uniformMap = {
+        u_color: () => style.color,
+        u_outlineColor: () => style.outlineColor,
+        u_pixelSize: () => 2.0 * /** @type {number} */ (style.radius),
+        u_outlineWidth: () => style.outlineWidth,
+      };
+    }
+    renderContext.useStyleUniforms = useStyleUniforms;
+
     renderContext.shaderProgram = ShaderProgram.fromCache({
       context,
       vertexShaderSource: new ShaderSource({
         sources: [BufferPointMaterialVS],
-        defines: useFloat64 ? ["USE_FLOAT64"] : [],
+        defines: vertexDefines,
       }),
       fragmentShaderSource: new ShaderSource({
         sources: [BufferPointMaterialFS],
@@ -339,6 +448,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
       vertexArray: renderContext.vertexArray,
       renderState: renderContext.renderState,
       shaderProgram: renderContext.shaderProgram,
+      uniformMap: renderContext.uniformMap,
       primitiveType: PrimitiveType.POINTS,
       pass,
       pickId: collection._allowPicking ? "v_pickColor" : undefined,
@@ -362,7 +472,7 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
-  collection._makeClean();
+  collection._makeClean(tracker);
 
   return renderContext;
 }
@@ -374,6 +484,8 @@ function renderBufferPointCollection(collection, frameState, renderContext) {
  */
 function destroyRenderContext() {
   const context = /** @type {BufferPointRenderContext} */ (this);
+
+  context.collection._removeChangeTracker(context.changeTracker);
 
   if (defined(context.vertexArray)) {
     context.vertexArray.destroy();
