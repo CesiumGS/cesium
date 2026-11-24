@@ -456,11 +456,6 @@ class RequestHandle {
       return;
     }
 
-    // XXX_CONDITIONAL: The Multiple3DTileContent class rambled about it being
-    // important to CLONE the resource, because of some resource leak, and
-    // to create a new request, to "avoid getting stuck in the cancelled state".
-    // Nobody knows what this was about. Let's wait for the issue to come in.
-
     // Create the request and assign it to the resource.
     const request = this._createRequest();
     this._request = request;
@@ -919,11 +914,17 @@ class ContentHandle {
    */
   getContentOptional() {
     if (this.failed) {
-      //console.log(`ContentHandle: Failed for ${this._contentHeader.uri}`);
+      if (CONDITIONAL_CONTENT_LOGGING) {
+        console.log(`ContentHandle: Failed for ${this._contentHeader.uri}`);
+      }
       return undefined;
     }
     if (defined(this._content)) {
-      //console.log(`ContentHandle: Content exists for ${this._contentHeader.uri}`);
+      if (CONDITIONAL_CONTENT_LOGGING) {
+        console.log(
+          `ContentHandle: Content exists for ${this._contentHeader.uri}`,
+        );
+      }
       return this._content;
     }
     return undefined;
@@ -1232,7 +1233,7 @@ const CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES = true;
  * - trianglesLength
  *
  * getters instead, meaning that it aggregates the values for the
- * contents that are "rendered" ("active");
+ * contents that are "rendered"
  *
  * @private
  */
@@ -1245,13 +1246,33 @@ const CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES = false;
  * It implements the Cesium3DTileContent interface, as far as reasonably
  * possible, with some caveats.
  *
+ * The class maintains all contents that are found in the conditional
+ * content JSON, using ContentHandle objects. These are created once,
+ * and never change, in the _contentHandles that map the URI to the
+ * ContentHandle object.
+ *
+ * Beyond that, the class maintains (or offers as getters for) different
+ * subsets of the contents or their URIs
+ *
+ * - _activeContentUris: The URIs of contents that are currently "active",
+ *   meaning that the condition for diplaying them is met. This does
+ *   only reflect the desired state, and does not mean that these
+ *   contents are actually loaded and renderable
+ * - _activeLoadedContents: The subset of contents that are "active"
+ *   and that have already been loaded into memory.
+ * - _renderedContentUris: These are the URIs of contents that are
+ *   currently active AND that have been loaded and preprocessed
+ *   so that they became "ready", meaning that these are the contents
+ *   for which draw commands are scheduled
+ *
  * Each time the "update" function of this content is called, the
  * 'tileset.conditionalContentUriCondition' of the tileset that this
  * content belongs to determines which inner contents will become
- * "active", meaning that these contents are supposed to be
- * rendered, and available for picking. This class will manage
- * the process of loading and unloading the required subsets of
- * all possible contents.
+ * "active". If all active contents are loaded and "ready", then they
+ * become the "rendered" contents. (Otherwise, their "update" functions
+ * will still be called, until they become "ready").
+ *
+ * Styling and picking are executed on the "rendered" contents.
  *
  * @extends Cesium3DTileContent
  * @private
@@ -1390,12 +1411,25 @@ class Conditional3DTileContent {
     /**
      * The last style that was applied to this content.
      *
-     * It will be applied to all "active" contents in the 'update'
+     * It will be applied to all "rendered" contents in the 'update'
      * function.
      *
      * @type {Cesium3DTileStyle|undefined}
      */
     this._lastStyle = undefined;
+
+    /**
+     * The URIs content URIs that are currently being drawn.
+     *
+     * The '_activeContenUris' getter returns the URIs of contents
+     * that are currently active and should be rendered. Only when
+     * all active contents are "ready", they become the "rendered"
+     * contents.
+     *
+     * @type {string[]}
+     * @private
+     */
+    this._renderedContentUris = [];
   }
 
   /**
@@ -1567,6 +1601,85 @@ class Conditional3DTileContent {
   }
 
   /**
+   * Returns the contents that are currently rendered.
+   *
+   * These are the contents that are "active", if all of them
+   * are "loaded" and "ready".
+   *
+   * @type {Cesium3DTileContent[]}
+   * @private
+   */
+  get _renderedContents() {
+    const renderedContents = [];
+    for (const uri of this._renderedContentUris) {
+      const contentHandle = this._contentHandles.get(uri);
+      if (!defined(contentHandle)) {
+        continue;
+      }
+      const content = contentHandle.getContentOptional();
+      if (defined(content)) {
+        renderedContents.push(content);
+      }
+    }
+    return renderedContents;
+  }
+
+  /**
+   * Update the _renderedContentUris.
+   *
+   * This will determine all "active" URIs. If the contents for these URIs
+   * are all loaded and "ready", then they become the "rendered" URIs.
+   *
+   * Otherwise, the current _renderedContentUris will remain unmodified.
+   *
+   * This is called at the start of each update pass.
+   *
+   * @private
+   */
+  _updateRenderedContentUris() {
+    const activeContentUris = this._activeContentUris;
+
+    // A compile-time flag to disable waiting for the contents
+    // to be "ready". When this is "false", then the active
+    // contents will be the "rendered" ones (regardless of
+    // whether they are ready)
+    const waitForAllReady = true;
+    if (!waitForAllReady) {
+      this._renderedContentUris = activeContentUris;
+      return;
+    }
+
+    let allReady = true;
+    for (const uri of activeContentUris) {
+      const contentHandle = this._contentHandles.get(uri);
+      if (!defined(contentHandle)) {
+        continue;
+      }
+      const content = contentHandle.tryGetContent();
+      if (!defined(content) || !content.ready) {
+        allReady = false;
+      }
+    }
+    if (allReady) {
+      this._renderedContentUris = activeContentUris;
+    }
+  }
+
+  /**
+   * Returns ALL content URIs that have been found in the conditional
+   * content JSON.
+   *
+   * This is only exposed for tests! Clients (even CesiumJS itself)
+   * should not call this!
+   *
+   * @type {string[]}
+   */
+  get _allContentUris() {
+    const allContentUris = [...this._contentHandles.keys()];
+    return allContentUris;
+  }
+
+  /**
    * Returns ALL contents that are currently loaded.
    *
    * It will iterate over all contents that have been defined in
@@ -1587,20 +1700,6 @@ class Conditional3DTileContent {
       }
     }
     return allLoadedContents;
-  }
-
-  /**
-   * Returns ALL content URIs that have been found in the conditional
-   * content JSON.
-   *
-   * This is only exposed for tests! Clients (even CesiumJS itself)
-   * should not call this!
-   *
-   * @type {string[]}
-   */
-  get _allContentUris() {
-    const allContentUris = [...this._contentHandles.keys()];
-    return allContentUris;
   }
 
   /**
@@ -1712,7 +1811,7 @@ class Conditional3DTileContent {
 
   /**
    * Fetches the value of the specified property of all contents
-   * that are currently rendered (i.e. "active" and loaded).
+   * that are currently rendered
    *
    * This will call "getAggregated(content, property)" for each
    * active and loaded content, and return the sum of the results.
@@ -1723,9 +1822,9 @@ class Conditional3DTileContent {
    * @returns The result
    */
   getAggregatedRendered(property) {
-    const allLoadedContents = this._activeLoadedContents;
+    const contents = this._renderedContents;
     let result = 0;
-    for (const content of allLoadedContents) {
+    for (const content of contents) {
       result += Conditional3DTileContent.getAggregated(content, property);
     }
     return result;
@@ -1745,9 +1844,9 @@ class Conditional3DTileContent {
    * @returns The result
    */
   getAggregatedLoaded(property) {
-    const allLoadedContents = this._allLoadedContents;
+    const contents = this._allLoadedContents;
     let result = 0;
-    for (const content of allLoadedContents) {
+    for (const content of contents) {
       result += Conditional3DTileContent.getAggregated(content, property);
     }
     return result;
@@ -1795,15 +1894,28 @@ class Conditional3DTileContent {
   /**
    * Part of the {@link Cesium3DTileContent} interface.
    *
-   * For this class, this always returns "true". The inner contents
-   * may be ready or not, but their lifecycle is supposed to be
-   * managed by this class, when the "update" function is called.
+   * This returns 'true' if all contents that are currently
+   * active (and supposed to be displayed) are actually loaded
+   * and ready.
    *
    * @type {boolean}
    * @readonly
    */
   get ready() {
-    return true;
+    let ready = true;
+    for (const uri of this._activeContentUris) {
+      const contentHandle = this._contentHandles.get(uri);
+      if (!defined(contentHandle) || contentHandle.failed) {
+        continue;
+      }
+      // This will trigger the request for the content if it
+      // is not already lending
+      const content = contentHandle.tryGetContent();
+      if (!defined(content) || !content.ready) {
+        ready = false;
+      }
+    }
+    return ready;
   }
 
   /**
@@ -1954,9 +2066,18 @@ class Conditional3DTileContent {
     // destroying the content and its associated resources.
     this._unloadOldContent();
 
-    // Apply the current style and call update for all contents
+    // Apply the style to all contents that are currently rendered
+    this._updateRenderedContentUris();
+    for (const renderedContentUri of this._renderedContentUris) {
+      const renderedContentHandle =
+        this._contentHandles.get(renderedContentUri);
+      if (defined(renderedContentHandle)) {
+        renderedContentHandle.applyStyle(this._lastStyle);
+      }
+    }
+
+    // Call update for all contents
     for (const contentHandle of this._contentHandles.values()) {
-      contentHandle.applyStyle(this._lastStyle);
       contentHandle.updateContent(tileset, frameState);
     }
 
@@ -1967,18 +2088,18 @@ class Conditional3DTileContent {
     }
 
     // Show only the active contents.
-    const activeContents = this._activeLoadedContents;
-    for (const activeContent of activeContents) {
-      activeContent.show = true;
+    const renderedContents = this._renderedContents;
+    for (const content of renderedContents) {
+      content.show = true;
     }
 
     // Assign debug settings to all active contents
     const activeContentsDebug = this._activeLoadedContents;
-    for (const activeContent of activeContentsDebug) {
+    for (const content of activeContentsDebug) {
       // The applyDebugSettings call will override any style color
       // that was previously set. I'm not gonna sort this out.
       if (this._lastDebugSettingsEnabled) {
-        activeContent.applyDebugSettings(
+        content.applyDebugSettings(
           this._lastDebugSettingsEnabled,
           this._lastDebugSettingsColor,
         );
@@ -2009,21 +2130,23 @@ class Conditional3DTileContent {
       }
     }
 
-    // Mark the "active" contents as "recently used", to prevent
-    // them from being evicted from the loadedContentHandles cache
-    const activeContentUris = this._activeContentUris;
-    for (const activeContentUri of activeContentUris) {
+    // Mark the "active" and "rendered" contents as "recently used", to
+    // prevent them from being evicted from the loadedContentHandles cache
+    const retainedContentUris = new Set([
+      ...this._activeContentUris,
+      ...this._renderedContentUris,
+    ]);
+    for (const activeContentUri of retainedContentUris) {
       if (loadedContentHandles.has(activeContentUri)) {
         loadedContentHandles.get(activeContentUri);
       }
     }
 
-    // Ensure that at least the number of active contents
+    // Ensure that at least the required number of contents
     // is retained
-    const numActiveContents = activeContentUris.length;
     this._loadedContentHandlesMaximumSize = Math.max(
       this._loadedContentHandlesMaximumSize,
-      numActiveContents,
+      retainedContentUris.size,
     );
 
     // Trim the LRU cache to the target size, calling the
@@ -2036,7 +2159,7 @@ class Conditional3DTileContent {
    * Part of the {@link Cesium3DTileContent} interface.
    *
    * Find an intersection between a ray and the tile content surface of
-   * a content  that is currently "active".
+   * a content that is currently "rendered".
    *
    * The ray must be given in world coordinates.
    *
@@ -2048,7 +2171,7 @@ class Conditional3DTileContent {
   pick(ray, frameState, result) {
     let intersection;
     let minDistance = Number.POSITIVE_INFINITY;
-    const contents = this._activeLoadedContents;
+    const contents = this._renderedContents;
     const length = contents.length;
 
     for (let i = 0; i < length; ++i) {
