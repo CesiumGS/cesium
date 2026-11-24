@@ -1,4 +1,9 @@
-import { BoundingSphere, Cartesian3, Rectangle } from "@cesium/core";
+import {
+  BoundingSphere,
+  Cartesian3,
+  Math as CesiumMath,
+  Rectangle,
+} from "@cesium/core";
 import {
   Cesium3DTilesetAreaSelection,
   Cesium3DTilesetAreaSelectionCollection,
@@ -480,6 +485,158 @@ describe("Scene/Cesium3DTilesetAreaSelectionCollection", () => {
       // At depth 2 the depth measure is 0.25, so both areas stop.
       expect(collection.combine(0b11, createTile(1.0, 2), false)).toBe(
         AreaDecision.STOP,
+      );
+    });
+  });
+
+  describe("applyRange", () => {
+    const threshold = 16.0;
+    const refinedError = threshold + CesiumMath.EPSILON5 * threshold;
+
+    // The area refines above 16, defers between 2 and 16, and stops at 2.
+    function createCollection(measure) {
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      collection.add(
+        new Cesium3DTilesetAreaSelection({
+          area: rectangle,
+          measure: measure ?? ((tile) => tile.geometricError),
+          minimumMeasure: 2.0,
+          maximumMeasure: 16.0,
+        }),
+      );
+      return collection;
+    }
+
+    function createTile(geometricError, parent) {
+      return {
+        geometricError: geometricError,
+        parent: parent,
+        _areaSelectionDepth: 0,
+        _areaSelectionMask: 0b1,
+      };
+    }
+
+    it("raises the error above the threshold when the areas refine", () => {
+      const collection = createCollection();
+      const tile = createTile(32.0);
+
+      const error = collection.applyRange(tile, false, false, 3.0, threshold);
+
+      expect(error).toBe(refinedError);
+      expect(error).toBeGreaterThan(threshold);
+    });
+
+    it("keeps a larger camera error when the areas refine", () => {
+      const collection = createCollection();
+      const tile = createTile(32.0);
+
+      expect(collection.applyRange(tile, false, false, 40.0, threshold)).toBe(
+        40.0,
+      );
+    });
+
+    it("caps the error at the threshold when the areas stop", () => {
+      const collection = createCollection();
+      const tile = createTile(2.0);
+
+      expect(collection.applyRange(tile, false, false, 40.0, threshold)).toBe(
+        threshold,
+      );
+    });
+
+    it("keeps a smaller camera error when the areas stop", () => {
+      const collection = createCollection();
+      const tile = createTile(2.0);
+
+      expect(collection.applyRange(tile, false, false, 3.0, threshold)).toBe(
+        3.0,
+      );
+    });
+
+    it("leaves the error unchanged when the areas defer", () => {
+      const collection = createCollection();
+      const tile = createTile(8.0);
+
+      expect(collection.applyRange(tile, false, false, 3.0, threshold)).toBe(
+        3.0,
+      );
+      expect(collection.applyRange(tile, false, false, 40.0, threshold)).toBe(
+        40.0,
+      );
+    });
+
+    it("refines a deferring tile in the area pass", () => {
+      const collection = createCollection();
+      const tile = createTile(8.0);
+
+      expect(
+        collection.applyRange(tile, false, false, 3.0, threshold, true),
+      ).toBe(refinedError);
+    });
+
+    it("leaves the error unchanged when no area covers the tile", () => {
+      const measure = jasmine.createSpy("measure");
+      const collection = createCollection(measure);
+      const tile = createTile(2.0);
+      tile._areaSelectionMask = 0;
+
+      expect(collection.applyRange(tile, false, false, 40.0, threshold)).toBe(
+        40.0,
+      );
+      expect(measure).not.toHaveBeenCalled();
+    });
+
+    it("leaves the error unchanged in the progressive resolution call when the areas refine", () => {
+      const collection = createCollection();
+      const tile = createTile(32.0);
+
+      expect(collection.applyRange(tile, false, true, 3.0, threshold)).toBe(
+        3.0,
+      );
+    });
+
+    it("caps the error in the progressive resolution call when the areas stop", () => {
+      const collection = createCollection();
+      const tile = createTile(2.0);
+
+      expect(collection.applyRange(tile, false, true, 40.0, threshold)).toBe(
+        threshold,
+      );
+    });
+
+    it("measures the parent when using the parent's geometric error", () => {
+      const measure = jasmine
+        .createSpy("measure")
+        .and.callFake((tile) => tile.geometricError);
+      const collection = createCollection(measure);
+      const parent = createTile(32.0);
+      parent._areaSelectionDepth = 2;
+      const tile = createTile(2.0, parent);
+      tile._areaSelectionDepth = 3;
+
+      // The tile alone would stop, but its parent refines.
+      expect(collection.applyRange(tile, true, false, 3.0, threshold)).toBe(
+        refinedError,
+      );
+      expect(measure).toHaveBeenCalledWith(parent, 2);
+      expect(measure).not.toHaveBeenCalledWith(tile, 3);
+    });
+
+    it("refines a tile without a parent when using the parent's geometric error", () => {
+      const collection = createCollection();
+      const tile = createTile(2.0);
+
+      expect(collection.applyRange(tile, true, false, 3.0, threshold)).toBe(
+        refinedError,
+      );
+    });
+
+    it("uses an absolute epsilon for a small threshold", () => {
+      const collection = createCollection();
+      const tile = createTile(32.0);
+
+      expect(collection.applyRange(tile, false, false, 0.1, 0.5)).toBe(
+        0.5 + CesiumMath.EPSILON5,
       );
     });
   });

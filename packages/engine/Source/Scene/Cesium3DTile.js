@@ -523,6 +523,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._finalResolution = true;
   this._depth = 0;
   this._areaSelectionDepth = 0;
+  this._areaSelectionMask = 0;
   this._stackLength = 0;
   this._selectionDepth = 0;
 

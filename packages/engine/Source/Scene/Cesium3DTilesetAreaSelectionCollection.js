@@ -1,6 +1,11 @@
 // @ts-check
 
-import { DeveloperError, Intersect, defined } from "@cesium/core";
+import {
+  DeveloperError,
+  Intersect,
+  Math as CesiumMath,
+  defined,
+} from "@cesium/core";
 /** @import Cesium3DTilesetAreaSelection from "./Cesium3DTilesetAreaSelection.js"; */
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 
@@ -216,6 +221,67 @@ class Cesium3DTilesetAreaSelectionCollection {
       }
     }
     return classified && allStop ? AreaDecision.STOP : AreaDecision.DEFER;
+  }
+
+  /**
+   * Bounds a tile's screen space error so that the traversal follows the
+   * areas that cover the tile. When the areas refine, the error is raised
+   * just above the threshold; when they stop, it is capped at the threshold;
+   * otherwise it is left unchanged. A raised or capped error keeps the
+   * camera's value when the camera already agrees, so the load order is kept.
+   * <p>
+   * The progressive resolution call is only used for load priority, so a
+   * refine leaves its error unchanged. A tile measured by its parent's
+   * geometric error but without a parent refines.
+   * </p>
+   *
+   * @param {Cesium3DTile} tile The tile.
+   * @param {boolean} useParentGeometricError Whether the error was computed with the parent's geometric error. If so, the areas measure the parent.
+   * @param {boolean} isProgressiveResolutionCall Whether the error was computed for the progressive resolution height.
+   * @param {number} cameraError The screen space error computed from the camera.
+   * @param {number} threshold The maximum screen space error. The traversal refines a tile whose error is greater than this.
+   * @param {boolean} isAreaPass Whether this is the area pass.
+   * @returns {number} The bounded screen space error.
+   * @private
+   */
+  applyRange(
+    tile,
+    useParentGeometricError,
+    isProgressiveResolutionCall,
+    cameraError,
+    threshold,
+    isAreaPass,
+  ) {
+    if (tile._areaSelectionMask === 0) {
+      return cameraError;
+    }
+
+    const measuredTile = useParentGeometricError ? tile.parent : tile;
+
+    let decision;
+    if (!defined(measuredTile)) {
+      decision = AreaDecision.REFINE;
+    } else {
+      decision = this.combine(
+        tile._areaSelectionMask,
+        measuredTile,
+        isAreaPass,
+      );
+    }
+
+    if (decision === AreaDecision.STOP) {
+      return Math.min(cameraError, threshold);
+    }
+
+    if (decision === AreaDecision.REFINE) {
+      if (isProgressiveResolutionCall) {
+        return cameraError;
+      }
+      const epsilon = CesiumMath.EPSILON5 * Math.max(threshold, 1.0);
+      return Math.max(cameraError, threshold + epsilon);
+    }
+
+    return cameraError;
   }
 
   /**
