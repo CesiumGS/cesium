@@ -82,6 +82,10 @@ import { fakeEngine } from "./fakeGpu.ts";
 const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
 const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
 const LAYERED = new URL("./fixtures/sources/layeredKind.ts", import.meta.url);
+const LAYERED_B = new URL(
+  "./fixtures/sources/layeredKindB.ts",
+  import.meta.url,
+);
 const MODEL = new URL("./fixtures/sources/modelKind.ts", import.meta.url);
 
 /** A plain bigint as a `StableId`, as test/identity.test.ts does. */
@@ -2969,6 +2973,24 @@ describe("named content: a declared name, else a session name (CS-1087 A, CS-110
       expect(content.source).toBe(good);
       content.destroy();
     }
+    // Every ASCII character, 0 to 127, inside a name, against the class
+    // written out from CS-1150 A's sentence.
+    const CLASS =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._~:+-";
+    const swept: number[] = [];
+    for (let code = 0; code < 128; code++) {
+      const c = String.fromCharCode(code);
+      let taken = true;
+      try {
+        ContentName.declared(`a${c}b`);
+      } catch {
+        taken = false;
+      }
+      if (taken !== CLASS.includes(c)) {
+        swept.push(code);
+      }
+    }
+    expect(swept).toEqual([]);
   });
 
   it("gives one declared name one set of feature IDs whatever its URL, and a version new IDs only when the name holds it (CS-1084 A)", async () => {
@@ -4026,6 +4048,14 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           return false;
         } catch (error) {
           outlets.push(["thrown", (error as Error).message]);
+          // And its cause, an Error's message or the value itself.
+          const cause = (error as Error).cause;
+          if (cause !== undefined) {
+            outlets.push([
+              "thrown",
+              cause instanceof Error ? cause.message : String(cause),
+            ]);
+          }
           return true;
         }
       };
@@ -4323,12 +4353,14 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           ),
         );
         rt.registerKind({ id: "layered", module: LAYERED });
+        rt.registerKind({ id: "layered-b", module: LAYERED_B });
         rt.addResolver({
           id: "ni",
           accepts: (ref) => "resolver" in ref && ref.resolver === "ni",
           resolve: (ref) =>
             Promise.resolve({
-              kind: "layered",
+              // Two kinds: the bare asset is the second's.
+              kind: "id" in ref && ref.id === "bare" ? "layered-b" : "layered",
               url: new URL(locator.resolved),
               credits: [],
               options: locator.options,
@@ -4354,7 +4386,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
         };
         const contents = [
           await rt.open(plain),
-          await rt.open(plain),
+          await rt.open({ ...plain, kind: "layered-b" }),
           await rt.open({ resolver: "ni", id: "bare" }),
           await rt.open({ resolver: "ni", id: "declared" }),
           await rt.open({ resolver: "ni", id: "declared" }, { id: "mine" }),
@@ -4437,6 +4469,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     const runtimeWith = (seed: number) => {
       const made = runtime({ seed });
       made.rt.registerKind({ id: "layered", module: LAYERED });
+      made.rt.registerKind({ id: "layered-b", module: LAYERED_B });
       made.rt.addResolver({
         id: "t4",
         accepts: (ref) => "resolver" in ref && ref.resolver === "t4",
@@ -4565,8 +4598,9 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       url: url("https://h.test/city.layers?layer=roads"),
       options: { style: "a" },
     };
-    for (let i = 0; i < 6; i++) {
-      const a = await open(same);
+    // Six times as each of two kinds.
+    for (let i = 0; i < 12; i++) {
+      const a = await open(i % 2 ? { ...same, kind: "layered-b" } : same);
       sources.push(a.source);
       features.push(a.feature);
     }
@@ -4574,7 +4608,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     expect.soft(new Set(sources).size, "names").toBe(sources.length);
     expect.soft(new Set(features).size, "feature IDs").toBe(features.length);
     // Part 2: declared names, as literal pairs. Each pair is opened with
-    // everything else different (URL, options, version, credential); they
+    // everything else different (kind, URL, options, version, credential); they
     // share feature IDs exactly when the two names are one string.
     const NAME_PAIRS: [string, string][] = [
       ["datasets:roads", "datasets:roads"],
@@ -4603,6 +4637,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       );
       const b = await open(
         {
+          kind: "layered-b",
           url: url(`https://u:p@b${i}.test/r.layers?k=2#f`),
           options: { style: "b" },
           version: "2",
@@ -4637,11 +4672,27 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
   it("T5, hostile keys: keys like __proto__ at every inlet change neither Object.prototype nor Array.prototype, and each reads back as written", async () => {
     // The hostile pool's keys (test/fixtures/sources/hostile.ts).
     const HOSTILE = HOSTILE_KEYS;
+    const BUILT_INS = [
+      Object.prototype,
+      Array.prototype,
+      Object,
+      Function.prototype,
+    ];
     const prototypes = () =>
-      [Object.prototype, Array.prototype, Object, Function.prototype].map((o) =>
-        Reflect.ownKeys(o).map(String).sort(),
+      BUILT_INS.map((o) => Reflect.ownKeys(o).map(String).sort());
+    /** Each built-in's own properties, by key, as descriptors: so a value overwritten shows too. */
+    const descriptors = () =>
+      BUILT_INS.map(
+        (o) =>
+          new Map(
+            Reflect.ownKeys(o).map((k) => [
+              k,
+              Object.getOwnPropertyDescriptor(o, k)!,
+            ]),
+          ),
       );
     const before = prototypes();
+    const beforeValues = descriptors();
     const record = <T>(value: (name: string) => T) =>
       Object.fromEntries(HOSTILE.map((name) => [name, value(name)]));
     const engine = await fakeEngine();
@@ -4857,17 +4908,31 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       // What a hostile key added to a prototype, taken back off before the
       // next test runs, then reported.
       const after = prototypes();
-      [Object.prototype, Array.prototype, Object, Function.prototype].forEach(
-        (o, i) => {
-          for (const key of after[i]!) {
-            if (!before[i]!.includes(key)) {
-              delete (o as Record<string, unknown>)[key];
-            }
+      BUILT_INS.forEach((o, i) => {
+        for (const key of after[i]!) {
+          if (!before[i]!.includes(key)) {
+            delete (o as Record<string, unknown>)[key];
           }
-        },
-      );
+        }
+      });
+      // A value, getter or setter overwritten: named, then put back.
+      const overwritten: string[] = [];
+      BUILT_INS.forEach((o, i) => {
+        for (const [key, was] of beforeValues[i]!) {
+          const now = Object.getOwnPropertyDescriptor(o, key);
+          if (
+            now?.value !== was.value ||
+            now?.get !== was.get ||
+            now?.set !== was.set
+          ) {
+            overwritten.push(`${i}.${String(key)}`);
+            Object.defineProperty(o, key, was);
+          }
+        }
+      });
       engine.destroy();
       expect(after).toEqual(before);
+      expect(overwritten).toEqual([]);
     }
   });
 
