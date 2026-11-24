@@ -14,8 +14,6 @@ import findAccessorMinMax from "./findAccessorMinMax.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
 import numberOfComponentsForType from "./numberOfComponentsForType.js";
-import moveTechniqueRenderStates from "./moveTechniqueRenderStates.js";
-import moveTechniquesToExtension from "./moveTechniquesToExtension.js";
 import removeUnusedElements from "./removeUnusedElements.js";
 import updateAccessorComponentTypes from "./updateAccessorComponentTypes.js";
 import removeExtension from "./removeExtension.js";
@@ -32,16 +30,11 @@ const updateFunctions = {
  * only has to handle the latest version.
  *
  * @param {object} gltf A javascript object containing a glTF asset.
- * @param {object} [options] Options for updating the glTF.
- * @param {string[]} [options.baseColorTextureNames] Names of uniforms that indicate base color textures.
- * @param {string[]} [options.baseColorFactorNames] Names of uniforms that indicate base color factors.
  * @returns {object} The updated glTF asset.
  *
  * @internal
  */
-function updateVersion(gltf, options) {
-  options = options ?? {};
-
+function updateVersion(gltf) {
   // glTF 0.8 stores its version on the root, possibly as a number
   let version = String(gltf.version ?? gltf.asset?.version ?? "1.0");
   if (version.startsWith("0.8")) {
@@ -57,15 +50,13 @@ function updateVersion(gltf, options) {
   }
 
   while (defined(updateFunction)) {
-    updateFunction(gltf, options);
+    updateFunction(gltf);
     version = gltf.asset.version;
     updateFunction = updateFunctions[version];
   }
 
-  if (!options.keepLegacyExtensions) {
-    convertTechniquesToPbr(gltf, options);
-    convertMaterialsCommonToPbr(gltf);
-  }
+  convertTechniquesWebglToPbr(gltf);
+  convertMaterialsCommonToPbr(gltf);
 
   return gltf;
 }
@@ -931,6 +922,10 @@ function validatePresentAccessorMinMax(gltf) {
 function glTF10to20(gltf) {
   gltf.asset = gltf.asset ?? {};
   gltf.asset.version = "2.0";
+  // Techniques are converted to PBR materials, which don't use shaders
+  delete gltf.programs;
+  delete gltf.shaders;
+  delete gltf.glExtensionsUsed;
   // material.instanceTechnique properties should be directly on the material. instanceTechnique is a gltf 0.8 property but is seen in some 1.0 models.
   updateInstanceTechniques(gltf);
   // animation.samplers now refers directly to accessors and animation.parameters should be removed
@@ -968,10 +963,8 @@ function glTF10to20(gltf) {
   updateAccessorComponentTypes(gltf);
   // Clamp camera parameters
   clampCameraParameters(gltf);
-  // Move legacy technique render states to material properties and add KHR_blend extension blending functions
-  moveTechniqueRenderStates(gltf);
-  // Add material techniques to KHR_techniques_webgl extension, removing shaders, programs, and techniques
-  moveTechniquesToExtension(gltf);
+  // Techniques are replaced by PBR materials
+  convertTechniquesToPbr(gltf);
   // Remove empty arrays
   removeEmptyArrays(gltf);
 }
@@ -1025,24 +1018,66 @@ function srgbToLinear(srgb) {
   return linear;
 }
 
-function convertTechniquesToPbr(gltf, options) {
-  options = options ?? {};
-  const baseColorTextureNames =
-    options.baseColorTextureNames ?? defaultBaseColorTextureNames;
-  const baseColorFactorNames =
-    options.baseColorFactorNames ?? defaultBaseColorFactorNames;
-
+function assignBaseColorFromUniforms(material, values) {
   // Future work: convert other values like emissive, specular, etc. Only handling diffuse right now.
+  ForEach.objectLegacy(values, function (value, name) {
+    if (defaultBaseColorTextureNames.indexOf(name) !== -1 && isTexture(value)) {
+      initializePbrMaterial(material);
+      material.pbrMetallicRoughness.baseColorTexture = value;
+    } else if (
+      defaultBaseColorFactorNames.indexOf(name) !== -1 &&
+      isVec4(value)
+    ) {
+      initializePbrMaterial(material);
+      material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(value);
+    }
+  });
+}
+
+function convertTechniquesToPbr(gltf) {
   ForEach.material(gltf, function (material) {
-    ForEach.materialValue(material, function (value, name) {
-      if (baseColorTextureNames.indexOf(name) !== -1 && isTexture(value)) {
-        initializePbrMaterial(material);
-        material.pbrMetallicRoughness.baseColorTexture = value;
-      } else if (baseColorFactorNames.indexOf(name) !== -1 && isVec4(value)) {
-        initializePbrMaterial(material);
-        material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(value);
+    if (!defined(material.technique)) {
+      return;
+    }
+
+    // glTF 1.0 material values are keyed by technique parameter name
+    const technique = gltf.techniques[material.technique];
+    const values = material.values ?? {};
+    const uniformValues = {};
+    ForEach.objectLegacy(
+      technique.uniforms,
+      function (parameterName, uniformName) {
+        if (Object.prototype.hasOwnProperty.call(values, parameterName)) {
+          uniformValues[uniformName] = values[parameterName];
+        }
+      },
+    );
+    assignBaseColorFromUniforms(material, uniformValues);
+
+    const states = technique.states;
+    if (defined(states)) {
+      const enabled = states.enable ?? [];
+      if (enabled.indexOf(WebGLConstants.BLEND) !== -1) {
+        material.alphaMode = "BLEND";
       }
-    });
+      if (enabled.indexOf(WebGLConstants.CULL_FACE) === -1) {
+        material.doubleSided = true;
+      }
+    }
+
+    delete material.technique;
+    delete material.values;
+  });
+
+  delete gltf.techniques;
+}
+
+function convertTechniquesWebglToPbr(gltf) {
+  ForEach.material(gltf, function (material) {
+    const techniquesWebgl = material.extensions?.KHR_techniques_webgl;
+    if (defined(techniquesWebgl)) {
+      assignBaseColorFromUniforms(material, techniquesWebgl.values);
+    }
   });
 
   removeExtension(gltf, "KHR_techniques_webgl");
