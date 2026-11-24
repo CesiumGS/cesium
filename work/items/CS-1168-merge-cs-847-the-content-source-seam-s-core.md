@@ -2,10 +2,14 @@
 id: CS-1168
 title: Merge CS-847, the content-source seam's core, after one more round?
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-191
 decider: owner
+answer: "A. A. Fix all five, then merge: One round fixes both engine holes and closes the three oracle gaps, each shown with a mutation that now fails, plus the cheap Minors. A scoped check confirms each fix, then the orchestrator merges with `merge-item.sh` once the gates pass on the replay. No further full review."
+answered_at: 2026-11-24T02:42:30.976Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
