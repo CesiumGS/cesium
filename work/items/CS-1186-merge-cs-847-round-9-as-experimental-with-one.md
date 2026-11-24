@@ -2,10 +2,14 @@
 id: CS-1186
 title: Merge CS-847 round 9 as experimental, with one boundary for all inlets next
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-191
 decider: owner
+answer: "A. A. Merge as experimental: CS-847 merges as a batch of one once its gates pass; round 10 isn't sent; the next item, one boundary for every inlet tested by I1 to I3, follows the trust-model decision."
+answered_at: 2026-11-24T06:24:30.049Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
