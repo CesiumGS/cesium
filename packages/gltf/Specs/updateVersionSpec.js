@@ -77,10 +77,8 @@ async function loadGltf(url) {
 describe("updateVersion", function () {
   it("defaults to 1.0 if gltf has no version", function () {
     const gltf = {};
-    updateVersion(gltf, {
-      targetVersion: "1.0",
-    });
-    expect(gltf.asset.version).toEqual("1.0");
+    updateVersion(gltf);
+    expect(gltf.asset.version).toEqual("2.0");
   });
 
   it("updates empty glTF with version from 0.8 to 2.0", function () {
@@ -112,7 +110,17 @@ describe("updateVersion", function () {
     expect(gltf.asset.version).toEqual("2.0");
   });
 
-  it("updates glTF from 0.8 to 1.0", function () {
+  it("does not update a glTF with an unknown version", function () {
+    const gltf = {
+      asset: {
+        version: "3.0",
+      },
+    };
+    updateVersion(gltf);
+    expect(gltf.asset.version).toEqual("3.0");
+  });
+
+  it("updates glTF from 0.8 to 2.0", function () {
     const times = [0.0, 1.0];
     const axisA = new Cartesian3(0.0, 0.0, 1.0);
     const axisB = new Cartesian3(0.0, 1.0, 0.0);
@@ -251,7 +259,7 @@ describe("updateVersion", function () {
           instanceTechnique: {
             technique: "technique",
             values: {
-              ambient: [0.0, 0.0, 0.0, 1.0],
+              diffuse: [0.0, 0.0, 0.0, 0.5],
             },
           },
         },
@@ -260,6 +268,7 @@ describe("updateVersion", function () {
         mesh: {
           primitives: [
             {
+              attributes: {},
               primitive: WebGLConstants.TRIANGLES,
             },
           ],
@@ -277,87 +286,107 @@ describe("updateVersion", function () {
         nodeOther: {
           rotation: [0.0, 0.0, 1.0, 0.0],
         },
+        skeleton: {
+          jointName: "skeleton",
+        },
+      },
+      programs: {
+        program: {
+          fragmentShader: "fs",
+          vertexShader: "vs",
+        },
+      },
+      shaders: {
+        fs: {
+          type: WebGLConstants.FRAGMENT_SHADER,
+          uri: "data:,",
+        },
+        vs: {
+          type: WebGLConstants.VERTEX_SHADER,
+          uri: "data:,",
+        },
+      },
+      skins: {
+        skin: {},
       },
       techniques: {
         technique: {
+          parameters: {
+            position: {
+              semantic: "POSITION",
+            },
+            diffuse: {
+              type: WebGLConstants.FLOAT_VEC4,
+            },
+          },
           pass: "pass",
           passes: {
             pass: {
               instanceProgram: {
                 attributes: {
-                  attribute: "TEST_ATTRIBUTE",
+                  a_position: "position",
                 },
                 program: "program",
                 uniforms: {
-                  uniform: "TEST_UNIFORM",
+                  u_diffuse: "diffuse",
                 },
               },
-              states: ["TEST_STATE"],
+              states: {
+                enable: [WebGLConstants.BLEND],
+              },
             },
           },
         },
       },
     };
 
-    updateVersion(gltf, {
-      targetVersion: "1.0",
-      keepLegacyExtensions: true,
-    });
+    updateVersion(gltf);
 
-    // Asset updates: version set to 1.0, profile split into object
-    expect(gltf.asset.version).toEqual("1.0");
-    expect(gltf.asset.profile).toEqual({
-      api: "WebGL",
-      version: "1.0",
-    });
+    // Asset updates: version set to 2.0, profile removed
+    expect(gltf.asset.version).toEqual("2.0");
+    expect(gltf.asset.profile).toBeUndefined();
 
     // Top-level version removed
     expect(gltf.version).toBeUndefined();
 
     // allExtensions renamed to extensionsUsed
-    // gltf.lights moved to KHR_materials_common extension
-    expect(gltf.extensionsUsed).toEqual(["extension", "KHR_materials_common"]);
+    expect(gltf.extensionsUsed).toEqual(["extension"]);
     expect(gltf.allExtensions).toBeUndefined();
-    expect(gltf.extensions.KHR_materials_common.lights).toEqual({
-      someLight: true,
-    });
 
-    // material.instanceTechnique properties moved onto the material directly
-    const { material } = gltf.materials;
-    expect(material.technique).toEqual("technique");
-    expect(material.values).toEqual({
-      ambient: [0.0, 0.0, 0.0, 1.0],
-    });
+    // gltf.lights removed
+    expect(gltf.lights).toBeUndefined();
+    expect(gltf.extensions).toBeUndefined();
+
+    // material.instanceTechnique and technique pass converted to a PBR material
+    const material = gltf.materials[0];
+    expect(material.instanceTechnique).toBeUndefined();
+    expect(material.technique).toBeUndefined();
+    expect(material.values).toBeUndefined();
+    expect(material.pbrMetallicRoughness.baseColorFactor).toEqual([
+      0.0, 0.0, 0.0, 0.5,
+    ]);
+    expect(material.alphaMode).toBe("BLEND");
+    expect(material.doubleSided).toBe(true);
+    expect(gltf.techniques).toBeUndefined();
 
     // primitive.primitive renamed to primitive.mode
-    const primitive = gltf.meshes.mesh.primitives[0];
+    const primitive = gltf.meshes[0].primitives[0];
     expect(primitive.primitive).toBeUndefined();
     expect(primitive.mode).toEqual(WebGLConstants.TRIANGLES);
 
-    // node.instanceSkin is split into node.skeletons, node.skin, and node.meshes
-    const { node } = gltf.nodes;
-    expect(node.skeletons).toEqual(["skeleton"]);
-    expect(node.skin).toEqual("skin");
-    expect(node.meshes).toEqual(["mesh"]);
+    // node.instanceSkin is split into node.skin, node.mesh, and skin.skeleton
+    const node = getNodeByName(gltf, "node");
+    const skeleton = getNodeByName(gltf, "skeleton");
+    expect(node.instanceSkin).toBeUndefined();
+    expect(node.mesh).toBe(0);
+    expect(node.skin).toBe(0);
+    expect(gltf.skins[0].skeleton).toBe(gltf.nodes.indexOf(skeleton));
 
     // Node rotation converted from axis-angle to quaternion
     expect(node.rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
-    // Technique pass and passes removed
-    const { technique } = gltf.techniques;
-    expect(technique.pass).toBeUndefined();
-    expect(technique.passes).toBeUndefined();
-    expect(technique.attributes).toEqual({
-      attribute: "TEST_ATTRIBUTE",
-    });
-    expect(technique.program).toEqual("program");
-    expect(technique.uniforms).toEqual({
-      uniform: "TEST_UNIFORM",
-    });
-    expect(technique.states).toEqual(["TEST_STATE"]);
-
     // Animation rotations converted from axis-angle to quaternion
-    const { source } = gltf.buffers.buffer.extras._pipeline;
+    const { source } = gltf.buffers[0].extras._pipeline;
     expect(source).toEqual(expectedBuffer);
   });
 
@@ -977,6 +1006,17 @@ describe("updateVersion", function () {
 
     expect(gltf.extensionsRequired).toBeUndefined();
     expect(gltf.extensionsUsed).toBeUndefined();
+    expect(material.extensions).toBeUndefined();
+  });
+
+  it("keeps the version of glTF 2.1 with KHR_techniques_webgl and converts it to PBR materials", async function () {
+    const gltf = await loadGltf(gltf2TechniquesTextured);
+    gltf.asset.version = "2.1";
+    updateVersion(gltf);
+
+    expect(gltf.asset.version).toEqual("2.1");
+    const material = gltf.materials[0];
+    expect(material.pbrMetallicRoughness.baseColorTexture.index).toBe(0);
     expect(material.extensions).toBeUndefined();
   });
 

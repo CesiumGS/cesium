@@ -27,13 +27,12 @@ const updateFunctions = {
 };
 
 /**
- * Update the glTF version to the latest version (2.0), or targetVersion if specified.
+ * Update a glTF 0.8 or 1.x asset to version 2.0. Assets with other versions keep their version.
  * Applies changes made to the glTF spec between revisions so that the core library
  * only has to handle the latest version.
  *
  * @param {object} gltf A javascript object containing a glTF asset.
  * @param {object} [options] Options for updating the glTF.
- * @param {string} [options.targetVersion] The glTF will be upgraded until it hits the specified version.
  * @param {string[]} [options.baseColorTextureNames] Names of uniforms that indicate base color textures.
  * @param {string[]} [options.baseColorFactorNames] Names of uniforms that indicate base color factors.
  * @returns {object} The updated glTF asset.
@@ -42,34 +41,22 @@ const updateFunctions = {
  */
 function updateVersion(gltf, options) {
   options = options ?? {};
-  const targetVersion = options.targetVersion;
-  let version = gltf.version;
 
-  gltf.asset = gltf.asset ?? {
-    version: "1.0",
-  };
-
-  gltf.asset.version = gltf.asset.version ?? "1.0";
-  version = (version ?? gltf.asset.version).toString();
-
-  // Invalid version
-  if (!Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
-    // Try truncating trailing version numbers, could be a number as well if it is 0.8
-    if (defined(version)) {
-      version = version.substring(0, 3);
-    }
-    // Default to 1.0 if it cannot be determined
-    if (!Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
-      version = "1.0";
-    }
+  // glTF 0.8 stores its version on the root, possibly as a number
+  let version = String(gltf.version ?? gltf.asset?.version ?? "1.0");
+  if (version.startsWith("0.8")) {
+    version = "0.8";
+  } else if (version.split(".")[0] === "1") {
+    // Some assets may be labeled 1.1, but glTF 1.0 is the only 1.x specification
+    version = "1.0";
   }
 
-  let updateFunction = updateFunctions[version];
+  let updateFunction;
+  if (Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
+    updateFunction = updateFunctions[version];
+  }
 
   while (defined(updateFunction)) {
-    if (version === targetVersion) {
-      break;
-    }
     updateFunction(gltf, options);
     version = gltf.asset.version;
     updateFunction = updateFunctions[version];
