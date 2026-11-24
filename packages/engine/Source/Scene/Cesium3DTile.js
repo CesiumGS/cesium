@@ -522,8 +522,8 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   this._finalResolution = true;
   this._depth = 0;
-  this._areaSelectionDepth = 0;
-  this._areaSelectionMask = 0;
+  this._areaSelectionDepth = 0; // Depth passed to area selection measures
+  this._areaSelectionMask = 0; // One bit per area selection covering this tile
   this._stackLength = 0;
   this._selectionDepth = 0;
 

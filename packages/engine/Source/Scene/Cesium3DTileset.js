@@ -43,6 +43,7 @@ import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
+import Cesium3DTilesetAreaSelectionCollection from "./Cesium3DTilesetAreaSelectionCollection.js";
 import Cesium3DTilesetCache from "./Cesium3DTilesetCache.js";
 import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
@@ -392,6 +393,15 @@ function Cesium3DTileset(options) {
    * @readonly
    */
   this._imageryLayers = new ImageryLayerCollection(this);
+
+  /**
+   * The area selections of this tileset.
+   *
+   * @private
+   * @type {Cesium3DTilesetAreaSelectionCollection}
+   * @readonly
+   */
+  this._areaSelections = new Cesium3DTilesetAreaSelectionCollection();
 
   /**
    * A counter that will be increased for each modification of the
@@ -1254,6 +1264,32 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   imageryLayers: {
     get: function () {
       return this._imageryLayers;
+    },
+  },
+
+  /**
+   * The areas in which the tileset's level of detail is kept within a range,
+   * wherever the camera is. Add a {@link Cesium3DTilesetAreaSelection} to
+   * this collection to fix or limit the detail of the tileset in that area.
+   *
+   * @memberof Cesium3DTileset.prototype
+   * @readonly
+   * @type {Cesium3DTilesetAreaSelectionCollection}
+   *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @example
+   * // Show the tileset at a fixed level of detail inside a rectangle
+   * tileset.areaSelections.add(
+   *   Cesium.Cesium3DTilesetAreaSelection.fromGeometricError({
+   *     area: Cesium.Rectangle.fromDegrees(-75.2, 39.9, -75.1, 40.0),
+   *     geometricError: 2.0,
+   *   }),
+   * );
+   */
+  areaSelections: {
+    get: function () {
+      return this._areaSelections;
     },
   },
 
@@ -4228,6 +4264,8 @@ Cesium3DTileset.prototype.destroy = function () {
 
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
   this._clippingPolygons = undefined;
+
+  this._areaSelections.removeAll();
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {

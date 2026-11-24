@@ -16,6 +16,7 @@ import {
   PerspectiveFrustum,
   PrimitiveType,
   Ray,
+  Rectangle,
   RuntimeError,
   defined,
   getAbsoluteUri,
@@ -32,6 +33,8 @@ import {
   Cesium3DTilePassState,
   Cesium3DTileRefine,
   Cesium3DTileset,
+  Cesium3DTilesetAreaSelection,
+  Cesium3DTilesetAreaSelectionCollection,
   Cesium3DTileStyle,
   ClearCommand,
   ClippingPlane,
@@ -335,6 +338,31 @@ describe(
         new Cesium3DTileset({ vectorBlendOption: BlendOption.OPAQUE })
           .vectorBlendOption,
       ).toBe(BlendOption.OPAQUE);
+    });
+
+    it("has an empty areaSelections collection", function () {
+      const tileset = new Cesium3DTileset();
+
+      expect(tileset.areaSelections).toBeInstanceOf(
+        Cesium3DTilesetAreaSelectionCollection,
+      );
+      expect(tileset.areaSelections.length).toBe(0);
+    });
+
+    it("removes the area selections when destroyed", function () {
+      const tileset = new Cesium3DTileset();
+      const area = tileset.areaSelections.add(
+        Cesium3DTilesetAreaSelection.fromGeometricError({
+          area: Rectangle.fromDegrees(-75.2, 39.9, -75.1, 40.0),
+          geometricError: 2.0,
+        }),
+      );
+
+      tileset.destroy();
+
+      expect(area._collection).toBeUndefined();
+      const collection = new Cesium3DTilesetAreaSelectionCollection();
+      expect(() => collection.add(area)).not.toThrowDeveloperError();
     });
 
     it("fromUrl throws with unsupported version", async function () {
