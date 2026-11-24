@@ -16,6 +16,8 @@ import {
   MAX_NAMESPACE_DEPTH,
   MAX_WORK,
   packagePath,
+  STATED_MIB,
+  STATED_MS,
   quoted,
   resolveAsset,
   Stage,
@@ -27,6 +29,8 @@ import {
   hostileCase,
   mutatedCrate,
   readBounded,
+  reviewCases,
+  type BoundedResult,
   type HostileCase,
 } from "./usdHostileFiles.ts";
 
@@ -613,14 +617,22 @@ async function stageOf(sources: Record<string, string>, root: string) {
   return { stage, prim, paths, ms: performance.now() - t0 };
 }
 
-// Hostile files (CS-1097 A). Each is read in a worker thread with a
-// deadline and a heap limit, which it fails by being killed: a test's own
-// timeout can't interrupt a synchronous loop. Times in brackets are this
-// Mac's; the limits leave room for a busy machine. The heap asserted is
-// what reading leaves behind, under a worker limit four times higher, so
-// the assertion can fail before the limit does.
-const WIDE = { deadlineMs: 10_000, heapLimitMb: 1024 } as const;
-const HEAP_MB = 256;
+// Hostile files (CS-1097 A, CS-1153 A). Each is read in a worker thread of
+// its own, against the ceiling budget.ts states: STATED_MS, and STATED_MIB
+// for the V8 heap's peak and for ArrayBuffer memory, each. The worker is
+// killed at half again the time, or past the heap limit, which sits above
+// STATED_MIB so the assertion can fail before the kill. Times in brackets
+// are this Mac's.
+const WIDE = {
+  deadlineMs: STATED_MS * 1.5,
+  heapLimitMb: STATED_MIB + 128,
+} as const;
+/** Asserts one result within the stated ceiling. */
+function within(r: BoundedResult): void {
+  expect(r.ms, r.name).toBeLessThan(STATED_MS);
+  expect(r.peakHeapMb, r.name).toBeLessThan(STATED_MIB);
+  expect(r.arrayBuffersMb, r.name).toBeLessThan(STATED_MIB);
+}
 const stopMessage = `Reading stopped at the subset reader's work limit of ${MAX_WORK} units; the rest of the stage is not read or composed.`;
 const one = (root: string): HostileCase => ({
   name: "h/root.usda",
@@ -639,8 +651,7 @@ describe("hostile inputs stay bounded", () => {
     src += `def Xform "L${levels}" {}\n`;
     expect(src.length).toBeLessThan(6000);
     const [r] = await readBounded([one(src)], WIDE);
-    expect(r!.ms).toBeLessThan(5000);
-    expect(r!.heapMb).toBeLessThan(HEAP_MB);
+    within(r!);
     expect(r!.paths).toContain("/L0/a/a");
     expect(r!.stopped).toBe(true);
     // One error, first, naming the limit and nothing from the file.
@@ -653,8 +664,7 @@ describe("hostile inputs stay bounded", () => {
     const src = `${HEAD}def Xform "R" (\n    prepend references = [${Array.from({ length: n }, (_, i) => `</B${i}>`).join(", ")}]\n)\n{\n}\n${Array.from({ length: n }, (_, i) => `over "B${i}" (\n    variantSets = "v"\n)\n{\n}\n`).join("")}`;
     expect(src.length).toBeGreaterThan(800_000);
     const [r] = await readBounded([one(src)], WIDE);
-    expect(r!.ms).toBeLessThan(5000);
-    expect(r!.heapMb).toBeLessThan(HEAP_MB);
+    within(r!);
     expect(r!.paths).toContain("/R");
   }, 30_000);
 
@@ -664,8 +674,7 @@ describe("hostile inputs stay bounded", () => {
     expect(file(1000).length).toBeLessThan(50_000);
     const rs = await readBounded([one(file(1000)), one(file(5000))], WIDE);
     for (const r of rs) {
-      expect(r.ms).toBeLessThan(5000);
-      expect(r.heapMb).toBeLessThan(HEAP_MB);
+      within(r);
     }
   }, 60_000);
 
@@ -699,27 +708,35 @@ describe("hostile inputs stay bounded", () => {
       ],
       WIDE,
     );
-    expect(r!.ms).toBeLessThan(5000);
+    within(r!);
     expect(r!.counts.variantSelections).toBe(n);
     expect(r!.counts.selected).toHaveLength(MAX_LISTED);
     expect((r!.counts.selected as string[])[0]).toBe("v0=x");
     expect(r!.counts.selectedOmitted).toBe(n - MAX_LISTED);
   }, 30_000);
 
-  it("one prim with 60,000 children [0.3 s]", async () => {
-    const n = 60_000;
-    const kids = Array.from(
-      { length: n },
-      (_, i) => `    def Scope "c${i}" {}\n`,
-    ).join("");
-    const [r] = await readBounded(
-      [one(`${HEAD}def Xform "World"\n{\n${kids}}\n`)],
-      WIDE,
-    );
-    expect(r!.ms).toBeLessThan(5000);
-    expect(r!.prims).toBe(n + 2);
-    expect(r!.paths.slice(0, 3)).toEqual(["/", "/World", "/World/c0"]);
-  }, 30_000);
+  it("one prim with 10,000 children composes whole; 60,000 stop at the budget [0.2 s]", async () => {
+    const prim = (n: number) =>
+      one(
+        `${HEAD}def Xform "World"\n{\n${Array.from(
+          { length: n },
+          (_, i) => `    def Scope "c${i}" {}\n`,
+        ).join("")}}\n`,
+      );
+    const [whole, wide] = await readBounded([prim(10_000), prim(60_000)], WIDE);
+    within(whole!);
+    expect(whole!.stopped).toBe(false);
+    expect(whole!.prims).toBe(10_002);
+    expect(whole!.paths.slice(0, 3)).toEqual(["/", "/World", "/World/c0"]);
+    // Each child is a kept prim: 60,000 of them are past MAX_WORK, which
+    // stops with the children composed so far, in order, and says so.
+    within(wide!);
+    expect(wide!.stopped).toBe(true);
+    expect(wide!.prims).toBeGreaterThan(1000);
+    expect(wide!.paths.slice(0, 3)).toEqual(["/", "/World", "/World/c0"]);
+    expect(wide!.paths[1999]).toBe("/World/c1997");
+    expect(wide!.errors[0]).toBe(stopMessage);
+  }, 60_000);
 
   it("keeps no error text past the cap, and never hides the stop behind it", async () => {
     const n = 5000;
@@ -798,43 +815,44 @@ describe("hostile inputs stay bounded", () => {
     ]);
   });
 
-  // The invariant: every input finishes within a stated time and heap. A
-  // few hundred seeded files, each one shape or a mix of two or three, are
-  // read with the reader's own MAX_WORK. Each must finish in 4 s (the
-  // slowest takes about 1.3 s on this Mac when it's idle), or be killed at
-  // 6 s, and leave under 256 MiB, in a worker whose limit is 1 GiB.
-  it("every generated hostile file finishes within 4 s and 256 MiB", async () => {
+  // The invariant: every input finishes within the stated time and memory.
+  // A few hundred seeded files, each one shape or a mix of two or three,
+  // USDA, crate and package alike, are read with the reader's own MAX_WORK.
+  it("every generated hostile file finishes within the stated ceiling", async () => {
     const cases = Array.from({ length: 300 }, (_, i) => hostileCase(9130 + i));
-    const rs = await readBounded(cases, {
-      deadlineMs: 6000,
-      heapLimitMb: 1024,
-    });
-    const worst = rs.reduce((a, b) => (b.ms > a.ms ? b : a));
-    const heaviest = rs.reduce((a, b) => (b.heapMb > a.heapMb ? b : a));
+    const rs = await readBounded(cases, WIDE);
+    const most = (f: (r: BoundedResult) => number) =>
+      rs.reduce((a, b) => (f(b) > f(a) ? b : a));
+    const [slow, heap, buffers] = [
+      most((r) => r.ms),
+      most((r) => r.peakHeapMb),
+      most((r) => r.arrayBuffersMb),
+    ];
     console.log(
-      `${rs.length} generated files, ${rs.filter((r) => r.stopped).length} stopped by the budget; slowest ${worst.ms.toFixed(0)} ms (${worst.name}); most heap ${heaviest.heapMb.toFixed(0)} MiB (${heaviest.name})`,
+      `${rs.length} generated files, ${rs.filter((r) => r.stopped).length} stopped by the budget; slowest ${slow.ms.toFixed(0)} ms (${slow.name}); peak heap ${heap.peakHeapMb.toFixed(0)} MiB (${heap.name}); ArrayBuffers ${buffers.arrayBuffersMb.toFixed(0)} MiB (${buffers.name})`,
     );
+    rs.forEach(within);
+  }, 900_000);
+
+  it("the invariant review's six inputs finish within the stated ceiling", async () => {
+    const rs = await readBounded(reviewCases(), WIDE);
     for (const r of rs) {
-      expect(r.ms, r.name).toBeLessThan(4000);
-      expect(r.heapMb, r.name).toBeLessThan(HEAP_MB);
+      console.log(
+        `${r.name}: ${r.ms.toFixed(0)} ms, peak heap ${r.peakHeapMb.toFixed(0)} MiB, ArrayBuffers ${r.arrayBuffersMb.toFixed(0)} MiB, spent ${r.spent}`,
+      );
+      within(r);
     }
-  }, 600_000);
+  }, 300_000);
 
   it.skipIf(!existsSync(SAMPLES + PALLET_BASE))(
-    "every mutated crate file finishes within 4 s and 256 MiB (needs the setup store)",
+    "every mutated crate file finishes within the stated ceiling (needs the setup store)",
     async () => {
       const bytes = new Uint8Array(readFileSync(SAMPLES + PALLET_BASE));
       const cases = Array.from({ length: 100 }, (_, i) =>
         mutatedCrate(bytes, 913 + i),
       );
-      const rs = await readBounded(cases, {
-        deadlineMs: 6000,
-        heapLimitMb: 1024,
-      });
-      for (const r of rs) {
-        expect(r.ms, r.name).toBeLessThan(4000);
-        expect(r.heapMb, r.name).toBeLessThan(HEAP_MB);
-      }
+      const rs = await readBounded(cases, WIDE);
+      rs.forEach(within);
     },
     300_000,
   );

@@ -1,6 +1,9 @@
 // USDZ: a zip archive with no compression, whose first file is the root
 // layer. This reads its central directory and hands out each file's bytes
-// without copying. Spike code for CS-833 and CS-843; not part of @cesium/next.
+// without copying, charging the budget for each entry as it goes. Spike code
+// for CS-833, CS-843 and CS-913; not part of @cesium/next.
+
+import { Budget } from "./budget.ts";
 
 export interface UsdzEntry {
   readonly name: string;
@@ -15,7 +18,10 @@ export function isZip(bytes: Uint8Array): boolean {
   );
 }
 
-export function readUsdz(bytes: Uint8Array): UsdzEntry[] {
+export function readUsdz(
+  bytes: Uint8Array,
+  budget = new Budget(),
+): UsdzEntry[] {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   // The end-of-central-directory record sits within the last 64 KiB plus 22 bytes.
   let eocd = -1;
@@ -42,6 +48,10 @@ export function readUsdz(bytes: Uint8Array): UsdzEntry[] {
     const extraLength = view.getUint16(p + 30, true);
     const commentLength = view.getUint16(p + 32, true);
     const local = view.getUint32(p + 42, true);
+    // The entry, its view of the bytes, and its name, charged before the
+    // name is decoded: an object and a typed-array view, two kept objects.
+    budget.keep(2);
+    budget.chars(nameLength);
     const name = decoder.decode(bytes.subarray(p + 46, p + 46 + nameLength));
     p += 46 + nameLength + extraLength + commentLength;
     if (method !== 0) {

@@ -5,7 +5,7 @@
 // what it doesn't understand as `undecoded`, by name, rather than failing.
 // Spike code for CS-833 and CS-843; not part of @cesium/next.
 
-import { Budget, MAX_FIELD_NAME, MAX_PATH } from "./budget.ts";
+import { Budget, MAX_FIELD_NAME, MAX_PATH, TOKEN } from "./budget.ts";
 import type { Layer, ListOp, Spec, SpecType, Value } from "./layer.ts";
 
 type Tok =
@@ -22,48 +22,65 @@ const MAX_VALUE_DEPTH = 64;
 /** The deepest nesting of prims and variants the parser follows: more than the composer descends into. */
 const MAX_PRIM_DEPTH = 1024;
 
-/** The tokens of a USDA text, each charged to the budget: two units, and one per 16 characters. */
+/**
+ * The tokens of a USDA text. Everything is charged to the budget before it
+ * is built: each token as TOKEN, its text by length, and each run of
+ * whitespace or comment skipped. A string's end is found before the string
+ * is made, so an unterminated one costs a scan, not a copy.
+ */
 function tokenize(text: string, budget: Budget): Tok[] {
-  const raw: Tok[] = [];
-  const out = {
-    push(t: Tok): void {
-      // Two units: every token of a layer is held until it's parsed.
-      budget.charge(
-        2 + (typeof t.v === "string" ? Math.floor(t.v.length / 16) : 0),
-      );
-      raw.push(t);
-    },
+  const out: Tok[] = [];
+  const add = (t: Tok): void => {
+    budget.charge(TOKEN);
+    out.push(t);
   };
   let i = 0;
   const n = text.length;
   while (i < n) {
     const ch = text[i]!;
     if (ch === "#") {
-      while (i < n && text[i] !== "\n") {
-        i++;
-      }
+      const nl = text.indexOf("\n", i);
+      const stop = nl < 0 ? n : nl;
+      budget.chars(stop - i);
+      i = stop;
       continue;
     }
     if (ch <= " ") {
-      i++;
+      let j = i + 1;
+      while (j < n && text[j]! <= " ") {
+        j++;
+      }
+      budget.chars(j - i);
+      i = j;
       continue;
     }
     if (ch === '"' || ch === "'") {
       const triple = text.startsWith(ch.repeat(3), i);
       const q = triple ? ch.repeat(3) : ch;
-      i += q.length;
-      let s = "";
-      while (i < n && !text.startsWith(q, i)) {
-        if (text[i] === "\\" && i + 1 < n) {
-          const e = text[i + 1]!;
-          s += e === "n" ? "\n" : e === "t" ? "\t" : e;
-          i += 2;
+      const start = i + q.length;
+      // Find the end first: a backslash escapes the next character.
+      let j = start;
+      let escaped = false;
+      while (j < n && !text.startsWith(q, j)) {
+        if (text[j] === "\\" && j + 1 < n) {
+          escaped = true;
+          j += 2;
         } else {
-          s += text[i++];
+          j++;
         }
       }
-      i += q.length;
-      out.push({ t: "str", v: s });
+      budget.chars(j - start);
+      if (j >= n) {
+        throw new Error("usda: unterminated string");
+      }
+      const raw = text.slice(start, j);
+      const v = escaped
+        ? raw.replace(/\\([\s\S])/g, (_, e: string) =>
+            e === "n" ? "\n" : e === "t" ? "\t" : e,
+          )
+        : raw;
+      i = j + q.length;
+      add({ t: "str", v });
       continue;
     }
     if (ch === "@") {
@@ -73,7 +90,8 @@ function tokenize(text: string, budget: Budget): Tok[] {
       if (end < 0) {
         throw new Error("usda: unterminated asset path");
       }
-      out.push({ t: "asset", v: text.slice(i + q.length, end) });
+      budget.chars(end - i);
+      add({ t: "asset", v: text.slice(i + q.length, end) });
       i = end + q.length;
       continue;
     }
@@ -82,20 +100,22 @@ function tokenize(text: string, budget: Budget): Tok[] {
       if (end < 0) {
         throw new Error("usda: unterminated path");
       }
-      out.push({ t: "path", v: text.slice(i + 1, end) });
+      budget.chars(end - i);
+      add({ t: "path", v: text.slice(i + 1, end) });
       i = end + 1;
       continue;
     }
     if (PUNCT.has(ch)) {
-      out.push({ t: "p", v: ch });
+      add({ t: "p", v: ch });
       i++;
       continue;
     }
+    // Numbers and identifiers are read from bounded slices: 64 and 256 characters.
     const numMatch = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/.exec(
       text.slice(i, i + 64),
     );
     if (numMatch && (ch !== "-" || /[\d.]/.test(text[i + 1] ?? ""))) {
-      out.push({ t: "num", v: Number(numMatch[0]) });
+      add({ t: "num", v: Number(numMatch[0]) });
       i += numMatch[0].length;
       continue;
     }
@@ -106,22 +126,23 @@ function tokenize(text: string, budget: Budget): Tok[] {
       while (id.endsWith("[") || (id.endsWith("]") && !id.endsWith("[]"))) {
         id = id.slice(0, -1);
       }
+      budget.chars(id.length);
       if (id === "inf" || id === "nan") {
-        out.push({ t: "num", v: id === "inf" ? Infinity : NaN });
+        add({ t: "num", v: id === "inf" ? Infinity : NaN });
       } else {
-        out.push({ t: "id", v: id });
+        add({ t: "id", v: id });
       }
       i += id.length;
       continue;
     }
     if (ch === "-" && text.startsWith("-inf", i)) {
-      out.push({ t: "num", v: -Infinity });
+      add({ t: "num", v: -Infinity });
       i += 4;
       continue;
     }
     throw new Error(`usda: unexpected "${ch}" at ${i}`);
   }
-  return raw;
+  return out;
 }
 
 const LIST_OPS = new Set(["prepend", "append", "add", "delete", "reorder"]);
@@ -236,7 +257,8 @@ class Parser {
     this.budget.text(path);
     let s = this.specs.get(path);
     if (!s) {
-      this.budget.keep();
+      // An object and a map: two kept objects.
+      this.budget.keep(2);
       s = { type, fields: new Map() };
       this.specs.set(path, s);
     }
@@ -627,6 +649,8 @@ class Parser {
     }
     const tuple = tupleOf(type);
     const isInt = /^(int|uint|uchar|int64|uint64)\d?$/.test(base);
+    // The typed array's bytes, charged before it's made.
+    this.budget.bytes(flat.length * (isInt ? 4 : 8));
     return {
       kind: "array",
       type: base,
@@ -641,6 +665,8 @@ export function isUsda(bytes: Uint8Array): boolean {
 }
 
 export function readUsda(bytes: Uint8Array, budget = new Budget()): Layer {
+  // The text is charged before it's decoded: up to two bytes a character.
+  budget.chars(bytes.length);
   const text = new TextDecoder().decode(bytes);
   const p = new Parser(tokenize(text, budget), budget);
   p.layer();

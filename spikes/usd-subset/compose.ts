@@ -47,6 +47,10 @@ import { isZip, readUsdz } from "./usdz.ts";
 export {
   Budget,
   KEPT,
+  STATED_MIB,
+  STATED_MS,
+  TOKEN,
+  UNIT_BYTES,
   MAX_FIELD_NAME,
   MAX_LAYER_BYTES,
   MAX_LAYERS,
@@ -239,21 +243,19 @@ export async function loadLayers(
         );
         continue;
       }
-      // A package's files are inside bytes already counted.
-      if (!inPackage) {
-        if (stageBytes + bytes.length > MAX_STAGE_BYTES) {
-          refuse(
-            `over the subset reader's limit of ${MAX_STAGE_BYTES} bytes for a whole stage`,
-          );
-          continue;
-        }
-        stageBytes += bytes.length;
+      // Every layer read counts, a package's entries too: entries can alias
+      // one region of the package, so each read is counted again.
+      if (stageBytes + bytes.length > MAX_STAGE_BYTES) {
+        refuse(
+          `over the subset reader's limit of ${MAX_STAGE_BYTES} bytes for a whole stage`,
+        );
+        continue;
       }
+      stageBytes += bytes.length;
       try {
         let anchor = id;
         if (isZip(bytes)) {
-          const entries = readUsdz(bytes);
-          budget.charge(1 + entries.length);
+          const entries = readUsdz(bytes, budget);
           for (const e of entries) {
             // A name past MAX_PATH names no layer the reader opens.
             if (id.length + e.name.length < MAX_PATH) {
@@ -705,6 +707,7 @@ export class Stage {
         todo.push(next[i]!);
       }
     }
+    this.budget.entries(1 + out.length);
     this.stacks.set(id, out);
     return out;
   }
@@ -755,7 +758,8 @@ export class Stage {
         !("kind" in sel)
       ) {
         for (const [setName, v] of entriesOf(sel as Record<string, Value>)) {
-          this.budget.charge();
+          // A string lookup in a map: about 100 ns, two units.
+          this.budget.charge(2);
           // The strongest site that selects wins: the first one gathered.
           if (
             typeof v === "string" &&
@@ -763,6 +767,7 @@ export class Stage {
             setName.length <= MAX_PATH &&
             !g.selections.has(setName)
           ) {
+            this.budget.entries();
             g.selections.set(setName, v);
           }
         }
@@ -785,6 +790,7 @@ export class Stage {
       );
       return;
     }
+    this.budget.entries();
     g.keys.add(key);
     g.out.push(site);
     const specs = this.gather(site, g);
@@ -869,6 +875,7 @@ export class Stage {
           const key = keyOf(JSON.stringify(a.arc));
           this.budget.text(key);
           if (!info.has(key)) {
+            this.budget.entries();
             info.set(key, a);
           }
         }
@@ -1093,6 +1100,7 @@ export class Stage {
           let found = byName.get(n);
           if (!found) {
             found = [];
+            this.budget.entries();
             byName.set(n, found);
           }
           found.push({ site: s, id, spec });
@@ -1153,10 +1161,11 @@ export class Stage {
       this.budget.keep();
       this.budget.text(s.path);
     }
+    // A schema name past MAX_PATH names no schema, and V8 would hash it by length.
     const apiSchemas = composeList(
       specs.map((s) => s.spec.fields.get("apiSchemas")),
       this.budget,
-    ).filter((x): x is string => typeof x === "string");
+    ).filter((x): x is string => typeof x === "string" && x.length <= MAX_PATH);
     this.budget.keep(apiSchemas.length);
 
     // Children: the union over every site.
@@ -1167,7 +1176,7 @@ export class Stage {
       for (let j = s.stack.length - 1; j >= 0; j--) {
         this.budget.charge();
         for (const n of this.childIndex.get(s.stack[j]!)?.get(s.path) ?? []) {
-          this.budget.charge();
+          this.budget.entries();
           childNames.add(n);
         }
       }
@@ -1328,9 +1337,11 @@ export function composeList(
       result = [...op.explicit];
       continue;
     }
-    const del = new Set((op.deleted ?? []).map(key));
     const pre = op.prepended ?? [];
     const app = [...(op.appended ?? []), ...(op.added ?? [])];
+    // The two sets' entries, charged before they're built.
+    budget.entries((op.deleted?.length ?? 0) + pre.length + app.length);
+    const del = new Set((op.deleted ?? []).map(key));
     const drop = new Set([...pre, ...app].map(key));
     result = [
       ...pre,

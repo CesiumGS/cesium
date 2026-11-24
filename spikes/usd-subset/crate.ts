@@ -9,7 +9,13 @@
 // published specification. Spike code for CS-833 and CS-843; not part of
 // @cesium/next.
 
-import { Budget, MAX_FIELD_NAME, MAX_PATH, WorkLimit } from "./budget.ts";
+import {
+  Budget,
+  MAX_FIELD_NAME,
+  MAX_PATH,
+  TOKEN,
+  WorkLimit,
+} from "./budget.ts";
 import { decodeInts32, decodeInts64 } from "./intCoding.ts";
 import { tfFastDecompress } from "./lz4.ts";
 import type { Layer, ListOp, Spec, SpecType, Value } from "./layer.ts";
@@ -146,14 +152,18 @@ class Cursor {
   /**
    * A count the file declares, checked before anything is allocated for it:
    * each item takes at least `width` bytes of what's left, so a larger count
-   * is a lie. Charges one unit per `per` items: 1 for items that each make
-   * a value, 16 for bulk numbers copied into a typed array.
+   * is a lie.
    */
-  count(n: number, width: number, per = 1): number {
+  fits(n: number, width: number): number {
     if (n * width > this.bytes.length - this.pos) {
       throw new Error(`usdc: ${n} items of ${width} bytes run past the end`);
     }
-    this.budget.charge(1 + Math.floor(n / per));
+    return n;
+  }
+  /** A count of items that each make a value (a slot in an array, about 16 bytes): checked, then charged one unit each. */
+  count(n: number, width: number): number {
+    this.fits(n, width);
+    this.budget.charge(1 + n);
     return n;
   }
   u8(): number {
@@ -190,23 +200,23 @@ class Cursor {
     this.pos += n;
     return out;
   }
+  // Integer coding allocates its output and a working buffer of about 4.25
+  // bytes a value (8.25 for 64 bits): both charged before either exists.
   compressedInts32(n: number): Int32Array {
-    // Division, not a shift: a declared count past 2^32 must not wrap to a small charge.
-    this.budget.charge(1 + Math.floor(n / 16));
+    this.budget.bytes(n * 8.25 + 16);
     const size = this.u64();
     const src = this.take(size);
     return decodeInts32(src, n);
   }
   compressedInts64(n: number): Float64Array {
-    // Division, not a shift: a declared count past 2^32 must not wrap to a small charge.
-    this.budget.charge(1 + Math.floor(n / 16));
+    this.budget.bytes(n * 16.25 + 16);
     const size = this.u64();
     const src = this.take(size);
     return decodeInts64(src, n);
   }
-  /** TfFastCompression, charged one unit per 16 bytes it declares before they're allocated. */
+  /** TfFastCompression, charged for the bytes it declares before they're allocated. */
   decompress(src: Uint8Array, size: number): Uint8Array {
-    this.budget.charge(1 + Math.floor(size / 16));
+    this.budget.bytes(size);
     return tfFastDecompress(src, size);
   }
 }
@@ -256,9 +266,10 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
 
   // Table of contents.
   c.pos = tocOffset;
-  const sectionCount = c.count(c.u64(), 32);
+  const sectionCount = c.fits(c.u64(), 32);
   const sections = new Map<string, { start: number; size: number }>();
   for (let i = 0; i < sectionCount; i++) {
+    budget.keep();
     const nameBytes = c.take(16);
     const end = nameBytes.indexOf(0);
     const name = new TextDecoder().decode(
@@ -288,11 +299,18 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
     if (count > raw.length) {
       throw new Error(`usdc: ${count} tokens in ${raw.length} bytes`);
     }
-    budget.charge(1 + count);
+    // The text, charged before it's decoded; then each token as it's cut,
+    // without split(), which would make every part however few are named.
+    budget.chars(raw.length);
     const text = new TextDecoder().decode(raw);
-    const parts = text.split("\0");
+    let at = 0;
     for (let i = 0; i < count; i++) {
-      tokens.push(parts[i] ?? "");
+      const end = at <= text.length ? text.indexOf("\0", at) : -1;
+      const stop = end < 0 ? text.length : end;
+      budget.charge(TOKEN);
+      budget.chars(Math.max(0, stop - at));
+      tokens.push(at < text.length ? text.slice(at, stop) : "");
+      at = stop + 1;
     }
   }
   const token = (i: number): string => tokens[i] ?? `<token ${i}>`;
@@ -347,7 +365,8 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
       let hasChild: boolean;
       let hasSibling: boolean;
       do {
-        budget.charge();
+        // The entry, and the run it may push: about 32 bytes.
+        budget.charge(2);
         const here = cur++;
         let path: string;
         if (parent === undefined) {
@@ -355,6 +374,8 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
         } else {
           const t = element[here]!;
           const name = token(Math.abs(t));
+          // The path string, charged before it's built.
+          budget.chars(parent.length + name.length + 1);
           if (t < 0) {
             path = `${parent}.${name}`;
           } else if (name.startsWith("{") || parent.endsWith("}")) {
@@ -452,6 +473,7 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
     if (withCustomData) {
       skipDictionary(r);
     }
+    budget.keep();
     return { kind: "arc", asset, primPath };
   };
   const payloadArc = (r: Cursor): Value => {
@@ -461,14 +483,18 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
       r.f64();
       r.f64();
     }
+    budget.keep();
     return { kind: "arc", asset, primPath };
   };
 
   const numeric = (r: Cursor, type: string, count: number): Value => {
     const shape = NUMERIC[type]!;
     const [width, tuple, k] = shape;
-    // Checked against the bytes left before the array is allocated.
-    const n = r.count(count * tuple, width, 16);
+    // Checked against the bytes left, then charged by the typed array's own
+    // bytes (4 a value for half and float, 8 for double and 64-bit), before
+    // it is allocated.
+    const n = r.fits(count * tuple, width);
+    budget.bytes(n * (width === 8 ? 8 : 4));
     const v = r.view;
     if (k === "f" && width !== 8) {
       const out = new Float32Array(n);
@@ -519,11 +545,15 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
     if (k !== "f") {
       const ints =
         width === 8 ? r.compressedInts64(count) : r.compressedInts32(count);
+      if (k === "u" && width === 4) {
+        budget.bytes(count * 4);
+      }
       const data = k === "u" && width === 4 ? Uint32Array.from(ints) : ints;
       return { kind: "array", type, tuple, data };
     }
     const code = String.fromCharCode(r.u8());
     if (code === "i") {
+      budget.bytes(count * 8);
       return {
         kind: "array",
         type,
@@ -536,6 +566,7 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
       const lut = numeric(r, type, lutSize);
       const idx = r.compressedInts32(count);
       const src = (lut as { data: ArrayLike<number> }).data;
+      budget.bytes(count * 8);
       const out = new Float64Array(count);
       for (let i = 0; i < count; i++) {
         out[i] = src[idx[i]!] ?? NaN;
@@ -683,6 +714,7 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
         const out: Record<string, Value> = {};
         const n = r.count(r.u64(), 8);
         for (let i = 0; i < n; i++) {
+          budget.keep();
           const k = string(r.u32());
           const v = string(r.u32());
           // A key past MAX_PATH names no variant set; V8 would hash it by length.
@@ -711,6 +743,10 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
     const specSets = c.compressedInts32(n);
     const specTypes = c.compressedInts32(n);
     for (let i = 0; i < n; i++) {
+      // Each spec is kept with its map, whatever fields it has: charged per
+      // spec, not only per field, or a file of empty specs would cost nothing.
+      // A spec is an object and a map: two kept objects.
+      budget.keep(2);
       const path = paths[specPaths[i]!] ?? `<path ${specPaths[i]}>`;
       const fields = new Map<string, Value>();
       for (
@@ -718,7 +754,7 @@ export function readUsdc(bytes: Uint8Array, budget = new Budget()): Layer {
         f < fieldSets.length && fieldSets[f]! !== -1;
         f++
       ) {
-        budget.charge();
+        budget.keep();
         const fi = fieldSets[f]!;
         const name = token(fieldNames[fi]!);
         if (name.length > MAX_FIELD_NAME) {

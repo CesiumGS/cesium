@@ -42,8 +42,187 @@ const times = (n: number, f: (i: number) => string): string =>
 interface Part {
   readonly prims: string;
   readonly subLayers?: readonly string[];
-  readonly files?: Record<string, string>;
+  readonly files?: Record<string, string | Uint8Array>;
 }
+
+// Binary inputs: a crate (USDC) writer and a zip (USDZ) writer, just enough
+// for hostile files. Each builds its bytes from runs, so a few kilobytes can
+// declare gigabytes, as a hostile file would.
+
+const enc = new TextEncoder();
+
+function concat(parts: readonly Uint8Array[]): Uint8Array {
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) {
+    out.set(p, at);
+    at += p.length;
+  }
+  return out;
+}
+
+function u64(n: number | bigint): Uint8Array {
+  const out = new Uint8Array(8);
+  new DataView(out.buffer).setBigUint64(0, BigInt(n), true);
+  return out;
+}
+
+function u32(n: number): Uint8Array {
+  const out = new Uint8Array(4);
+  new DataView(out.buffer).setUint32(0, n >>> 0, true);
+  return out;
+}
+
+/** LZ4's run-length extension bytes for `n`. */
+function extension(n: number): number[] {
+  const out: number[] = [];
+  let r = n;
+  while (r >= 255) {
+    out.push(255);
+    r -= 255;
+  }
+  out.push(r);
+  return out;
+}
+
+/**
+ * TfFastCompression of `lits` followed by `zeros` zero bytes: one LZ4 block
+ * of literals, then one match at offset 1 that repeats the last zero.
+ */
+function tfFast(lits: Uint8Array, zeros = 0): Uint8Array {
+  const literal =
+    zeros >= 5
+      ? concat([lits, new Uint8Array(1)])
+      : concat([lits, new Uint8Array(zeros)]);
+  const match = zeros >= 5 ? zeros - 1 - 4 : -1;
+  const head = [
+    (Math.min(literal.length, 15) << 4) |
+      (match >= 0 ? Math.min(match, 15) : 0),
+    ...(literal.length >= 15 ? extension(literal.length - 15) : []),
+  ];
+  const tail =
+    match >= 0 ? [1, 0, ...(match >= 15 ? extension(match - 15) : [])] : [];
+  return concat([
+    new Uint8Array([0]),
+    new Uint8Array(head),
+    literal,
+    new Uint8Array(tail),
+  ]);
+}
+
+/** Usd_IntegerCompression of `n` values that each add `step` to the last: every delta is the common one. */
+function steadyInts(n: number, step: number, width: 4 | 8): Uint8Array {
+  const common =
+    width === 4 ? u32(step) : u64(BigInt.asUintN(64, BigInt(step)));
+  const data = tfFast(common, Math.floor((n * 2 + 7) / 8));
+  return concat([u64(data.length), data]);
+}
+
+/** Usd_IntegerCompression of a few explicit 32-bit values: every delta written out. */
+function ints(values: readonly number[]): Uint8Array {
+  const codes = new Uint8Array(Math.floor((values.length * 2 + 7) / 8));
+  const deltas = new Uint8Array(values.length * 4);
+  const view = new DataView(deltas.buffer);
+  let prev = 0;
+  values.forEach((v, i) => {
+    codes[i >> 2]! |= 3 << ((i & 3) * 2);
+    view.setInt32(i * 4, v - prev, true);
+    prev = v;
+  });
+  const data = tfFast(concat([u32(0), codes, deltas]));
+  return concat([u64(data.length), data]);
+}
+
+/** A crate file: its data region, then its sections, then the table of contents. */
+function crateFile(
+  data: Uint8Array,
+  sections: readonly [string, (start: number) => Uint8Array][],
+): Uint8Array {
+  const header = concat([
+    enc.encode("PXR-USDC"),
+    new Uint8Array([0, 8, 0, 0, 0, 0, 0, 0]),
+  ]);
+  let at = header.length + 8 + data.length;
+  const bodies: Uint8Array[] = [];
+  const toc: Uint8Array[] = [u64(sections.length)];
+  for (const [name, make] of sections) {
+    const body = make(at);
+    const label = new Uint8Array(16);
+    label.set(enc.encode(name));
+    toc.push(label, u64(at), u64(body.length));
+    bodies.push(body);
+    at += body.length;
+  }
+  return concat([header, u64(at), data, ...bodies, ...toc]);
+}
+
+/** A crate's specs, each with field set `set`, at paths 1 to n (unnamed, so `<path i>`). */
+function specs(n: number, set: number): [string, () => Uint8Array] {
+  return [
+    "SPECS",
+    () =>
+      concat([
+        u64(n),
+        steadyInts(n, 1, 4),
+        set === 0 ? steadyInts(n, 0, 4) : ints(Array(n).fill(set)),
+        steadyInts(n, 0, 4),
+      ]),
+  ];
+}
+
+/** A zip with no compression: each entry has its own bytes, or aliases another entry's. */
+function zipFile(
+  entries: readonly { name: string; bytes?: Uint8Array; alias?: number }[],
+): Uint8Array {
+  const locals: Uint8Array[] = [];
+  const offsets: number[] = [];
+  const sizes: number[] = [];
+  let at = 0;
+  entries.forEach((e, i) => {
+    if (e.alias !== undefined) {
+      offsets.push(offsets[e.alias]!);
+      sizes.push(sizes[e.alias]!);
+      return;
+    }
+    const name = enc.encode(e.name);
+    const head = new Uint8Array(30);
+    const v = new DataView(head.buffer);
+    v.setUint32(0, 0x04034b50, true);
+    v.setUint32(18, e.bytes!.length, true);
+    v.setUint32(22, e.bytes!.length, true);
+    v.setUint16(26, name.length, true);
+    locals.push(head, name, e.bytes!);
+    offsets.push(at);
+    sizes.push(e.bytes!.length);
+    at += 30 + name.length + e.bytes!.length;
+    void i;
+  });
+  const central: Uint8Array[] = [];
+  let cdSize = 0;
+  entries.forEach((e, i) => {
+    const name = enc.encode(e.name);
+    const head = new Uint8Array(46);
+    const v = new DataView(head.buffer);
+    v.setUint32(0, 0x02014b50, true);
+    v.setUint32(20, sizes[i]!, true);
+    v.setUint32(24, sizes[i]!, true);
+    v.setUint16(28, name.length, true);
+    v.setUint32(42, offsets[i]!, true);
+    central.push(head, name);
+    cdSize += 46 + name.length;
+  });
+  const end = new Uint8Array(22);
+  const v = new DataView(end.buffer);
+  v.setUint32(0, 0x06054b50, true);
+  v.setUint16(8, entries.length, true);
+  v.setUint16(10, entries.length, true);
+  v.setUint32(12, cdSize, true);
+  v.setUint32(16, at, true);
+  return concat([...locals, ...central, end]);
+}
+
+/** A USDA layer's bytes. */
+const usda = (text: string): Uint8Array => enc.encode(text);
 
 const SHAPES: Record<string, (rng: Rng, p: string) => Part> = {
   /** /L_i has `width` children that each reference /L_(i+1): width^levels prims. */
@@ -313,6 +492,158 @@ const SHAPES: Record<string, (rng: Rng, p: string) => Part> = {
       prims: `def Xform "${p}W"\n{\n    custom float[] x = [${"1,".repeat(n)}1]\n}\n`,
     };
   },
+  /** The review's crate input: specs with no fields, each at its own path. */
+  crateEmptySpecs(rng, p) {
+    const n = int(rng, 10_000, 3_000_000);
+    const name = `${p}empty.usdc`;
+    return {
+      prims: "",
+      subLayers: [`./${name}`],
+      files: {
+        [`h/${name}`]: crateFile(new Uint8Array(0), [
+          ["FIELDSETS", () => concat([u64(1), ints([-1])])],
+          specs(n, 0),
+        ]),
+      },
+    };
+  },
+  /** The review's crate input: a token table that decompresses to megabytes of nulls. */
+  crateBigTokens(rng, p) {
+    const count = int(rng, 1, 3);
+    const raw = int(rng, 1 << 20, 64 << 20);
+    const comp = tfFast(new Uint8Array(0), raw);
+    const name = `${p}tokens.usdc`;
+    return {
+      prims: "",
+      subLayers: [`./${name}`],
+      files: {
+        [`h/${name}`]: crateFile(new Uint8Array(0), [
+          [
+            "TOKENS",
+            () => concat([u64(count), u64(raw), u64(comp.length), comp]),
+          ],
+        ]),
+      },
+    };
+  },
+  /** The review's crate input: one compressed int64 array of millions of values, which fields can alias. */
+  crateBigArray(rng, p) {
+    const n = int(rng, 1_000_000, 80_000_000);
+    const k = int(rng, 1, 1000);
+    const data = concat([u64(n), steadyInts(n, 1, 8)]);
+    const names = enc.encode(times(k, (i) => `f${i}\0`));
+    const tokens = tfFast(names);
+    const rep = new Uint8Array(8 * k);
+    const view = new DataView(rep.buffer);
+    for (let i = 0; i < k; i++) {
+      // An array, compressed, of int64 (type 5), at offset 24.
+      view.setUint32(i * 8, 24, true);
+      view.setUint32(i * 8 + 4, 0x80000000 | 0x20000000 | (5 << 16), true);
+    }
+    const reps = tfFast(rep);
+    const range = Array.from({ length: k }, (_, i) => i);
+    const name = `${p}array.usdc`;
+    return {
+      prims: "",
+      subLayers: [`./${name}`],
+      files: {
+        [`h/${name}`]: crateFile(data, [
+          [
+            "TOKENS",
+            () =>
+              concat([u64(k), u64(names.length), u64(tokens.length), tokens]),
+          ],
+          [
+            "FIELDS",
+            () => concat([u64(k), ints(range), u64(reps.length), reps]),
+          ],
+          ["FIELDSETS", () => concat([u64(k + 1), ints([...range, -1])])],
+          specs(1, 0),
+        ]),
+      },
+    };
+  },
+  /** The review's package input: entries that alias one large layer of whitespace. */
+  usdzAliased(rng, p) {
+    const k = int(rng, 2, 50);
+    const size = int(rng, 1 << 20, 16 << 20);
+    const spaces = new Uint8Array(size).fill(32);
+    spaces.set(enc.encode("#usda 1.0\n"));
+    const name = `${p}pkg.usdz`;
+    return {
+      prims: "",
+      subLayers: [`./${name}`],
+      files: {
+        [`h/${name}`]: zipFile([
+          {
+            name: "root.usda",
+            bytes: usda(
+              `#usda 1.0\n(\n    subLayers = [${times(k, (i) => `${i ? ", " : ""}@./e${i}.usda@`)}]\n)\n`,
+            ),
+          },
+          { name: "e.usda", bytes: spaces },
+          ...Array.from({ length: k }, (_, i) => ({
+            name: `e${i}.usda`,
+            alias: 1,
+          })),
+        ]),
+      },
+    };
+  },
+  /** Many packages, each one file named many times, with a directory of thousands of entries. */
+  usdzManyPackages(rng, p) {
+    const entries = int(rng, 1000, 60000);
+    const k = int(rng, 10, 999);
+    const pkg = zipFile([
+      { name: "root.usda", bytes: usda("#usda 1.0\n") },
+      ...Array.from({ length: entries }, (_, i) => ({
+        name: `x${i}`,
+        alias: 0,
+      })),
+    ]);
+    const files: Record<string, Uint8Array> = {};
+    for (let i = 0; i < k; i++) {
+      files[`h/${p}k${i}.usdz`] = pkg;
+    }
+    return {
+      prims: `def Xform "${p}W" (\n    prepend references = [${times(k, (i) => `${i ? ", " : ""}@./${p}k${i}.usdz@`)}]\n)\n{\n}\n`,
+      files,
+    };
+  },
+  /** The review's facts input: label strings past 16,383 characters, which V8 hashes by length. */
+  factsLongLabels(rng, p) {
+    return labels(rng, p, 16_400, int(rng, 1000, 5000));
+  },
+  /** Labels the facts join and hash for every prim that inherits them. */
+  factsLabels(rng, p) {
+    return labels(rng, p, int(rng, 2000, 4000), int(rng, 20_000, 100_000));
+  },
+  /** Many label schemas with long taxonomies on one class: the facts join each label with each taxonomy, for every prim. */
+  factsTaxonomies(rng, p) {
+    // Property names are identifiers, which USDA reads up to 256 characters.
+    const n = int(rng, 1000, 5000);
+    const length = int(rng, 100, 230);
+    const m = int(rng, 50, 1000);
+    const tax = (i: number) =>
+      `${"t".repeat(length - 4)}${String(i).padStart(4, "0")}`;
+    const words = times(64, (i) => `${i ? ", " : ""}"w${i}"`);
+    return {
+      prims: `class "${p}C" (\n    prepend apiSchemas = [${times(n, (i) => `${i ? ", " : ""}"SemanticsLabelsAPI:${tax(i)}"`)}]\n)\n{\n${times(n, (i) => `    token[] semantics:labels:${tax(i)} = [${words}]\n`)}}\n${times(
+        m,
+        (i) => `def Xform "${p}P${i}" (\n    inherits = </${p}C>\n)\n{\n}\n`,
+      )}`,
+    };
+  },
+  /** The review's string input: one that never ends, in a layer of its own. */
+  unterminatedString(rng, p) {
+    const size = int(rng, 1 << 20, 16 << 20);
+    const name = `${p}open.usda`;
+    return {
+      prims: "",
+      subLayers: [`./${name}`],
+      files: { [`h/${name}`]: `#usda 1.0\n(\n    doc = "${"a".repeat(size)}` },
+    };
+  },
   /** Random USDA-ish text: tokens the tokenizer and parser must survive. */
   garbage(rng, p) {
     const words = [
@@ -345,6 +676,19 @@ const SHAPES: Record<string, (rng: Rng, p: string) => Part> = {
   },
 };
 
+/** A class with 64 labels of `length` characters, inherited by `m` prims. */
+function labels(rng: Rng, p: string, length: number, m: number): Part {
+  // One long shared prefix, so strings of one length only differ at the end.
+  const label = (i: number) =>
+    `${"a".repeat(length - 3)}${String(i).padStart(3, "0")}`;
+  return {
+    prims: `class "${p}C" (\n    prepend apiSchemas = ["SemanticsLabelsAPI:t"]\n)\n{\n    token[] semantics:labels:t = [${times(64, (i) => `${i ? ", " : ""}"${label(i)}"`)}]\n}\n${times(
+      m,
+      (i) => `def Xform "${p}P${i}" (\n    inherits = </${p}C>\n)\n{\n}\n`,
+    )}`,
+  };
+}
+
 export const SHAPE_NAMES = Object.keys(SHAPES);
 
 /**
@@ -367,18 +711,16 @@ export function hostileCase(seed: number): HostileCase {
     files: Object.assign(
       { "h/root.usda": root },
       ...parts.map((x) => x.files ?? {}),
-    ) as Record<string, string>,
+    ) as Record<string, string | Uint8Array>,
     root: "h/root.usda",
   };
 }
 
-/** One named shape alone, for the mutation checks. */
-export function shapeCase(name: string, seed: number): HostileCase {
-  const rng = seeded(seed);
-  const part = SHAPES[name]!(rng, "x0");
+/** A stage whose root layer holds one part. */
+function caseOf(name: string, part: Part): HostileCase {
   const subLayers = part.subLayers ?? [];
   return {
-    name: `${name}, seed ${seed}`,
+    name,
     files: {
       "h/root.usda": `#usda 1.0\n(\n    defaultPrim = "x0W"\n${
         subLayers.length
@@ -389,6 +731,68 @@ export function shapeCase(name: string, seed: number): HostileCase {
     },
     root: "h/root.usda",
   };
+}
+
+/** One named shape alone, for the mutation checks. */
+export function shapeCase(name: string, seed: number): HostileCase {
+  return caseOf(`${name}, seed ${seed}`, SHAPES[name]!(seeded(seed), "x0"));
+}
+
+/** A random source that answers `values` in turn, for a shape at exact sizes. */
+function fixed(...values: number[]): Rng {
+  // int(rng, lo, hi) is lo + floor(rng() * (hi - lo + 1)): solve for each value in turn.
+  let i = 0;
+  return () => values[i++] ?? 0;
+}
+
+/**
+ * The six inputs of the invariant review (CS-1153 A), at its sizes. Each
+ * escaped "every input finishes within a stated time and heap" before.
+ */
+export function reviewCases(): HostileCase[] {
+  const exact = (
+    shape: string,
+    ranges: readonly [number, number, number][],
+  ): Part =>
+    SHAPES[shape]!(
+      fixed(...ranges.map(([v, lo, hi]) => (v - lo) / (hi - lo + 1))),
+      "x0",
+    );
+  return [
+    caseOf(
+      "review 1: 25,000,000 crate specs with no fields (68 KB)",
+      exact("crateEmptySpecs", [[25_000_000, 10_000, 3_000_000]]),
+    ),
+    caseOf(
+      "review 2: 64 labels of 16,400 characters, inherited by 1,000 prims (1.1 MB)",
+      labels(seeded(0), "x0", 16_400, 1000),
+    ),
+    caseOf(
+      "review 3: 20 package entries aliasing a 60 MB layer of whitespace",
+      exact("usdzAliased", [
+        [20, 2, 50],
+        [60 << 20, 1 << 20, 16 << 20],
+      ]),
+    ),
+    caseOf(
+      "review 4: a 60 MiB string that never ends",
+      exact("unterminatedString", [[60 << 20, 1 << 20, 16 << 20]]),
+    ),
+    caseOf(
+      "review 5: a crate token table of 64 MiB of nulls",
+      exact("crateBigTokens", [
+        [1, 1, 3],
+        [64 << 20, 1 << 20, 64 << 20],
+      ]),
+    ),
+    caseOf(
+      "review 6: a crate int64 array of 79,000,000 values (71 KB)",
+      exact("crateBigArray", [
+        [79_000_000, 1_000_000, 80_000_000],
+        [1, 1, 1000],
+      ]),
+    ),
+  ];
 }
 
 /**
@@ -432,10 +836,14 @@ export function mutatedCrate(bytes: Uint8Array, seed: number): HostileCase {
 /** What reading one case cost, and what it gave. */
 export interface BoundedResult {
   readonly name: string;
-  /** Loading, composing and building records, in milliseconds. */
+  /** Loading, composing, building records and their facts, in milliseconds. */
   readonly ms: number;
-  /** Heap the result holds after a collection, in MiB: what reading left behind. */
-  readonly heapMb: number;
+  /** How much the V8 heap grew while reading, in MiB, before any collection: its high-water mark. */
+  readonly peakHeapMb: number;
+  /** ArrayBuffer memory allocated while reading and not yet freed, in MiB, before any collection. */
+  readonly arrayBuffersMb: number;
+  /** Heap and ArrayBuffer memory the result still holds after a collection, in MiB. */
+  readonly keptMb: number;
   readonly prims: number;
   /** The first 2,000 prim paths. */
   readonly paths: readonly string[];
@@ -450,7 +858,7 @@ export interface BoundedResult {
 export interface Bounds {
   /** Each case is killed past this, and the run fails naming it. */
   readonly deadlineMs: number;
-  /** The worker's heap limit: a case that needs more is killed. */
+  /** The worker's old-generation heap limit: a case whose peak needs more is killed. */
   readonly heapLimitMb: number;
   /** The work budget each case gets; the reader's own MAX_WORK when left out. */
   readonly budget?: number;
@@ -459,7 +867,8 @@ export interface Bounds {
 }
 
 // The worker: CommonJS, so it can be run from a string; it imports the
-// reader's TypeScript with Node's own type stripping.
+// reader's TypeScript with Node's own type stripping. One worker reads one
+// case, so its heap figures are that case's alone.
 const WORKER = `
 const { parentPort, workerData } = require("node:worker_threads");
 const v8 = require("node:v8");
@@ -467,16 +876,19 @@ const vm = require("node:vm");
 v8.setFlagsFromString("--expose-gc");
 // The flag is process-wide: a later worker already has gc as a global.
 const collect = globalThis.gc ?? vm.runInNewContext("gc");
+const MiB = 2 ** 20;
 (async () => {
   const C = await import(workerData.compose);
   const R = await import(workerData.records);
   const F = await import(workerData.facts);
   const enc = new TextEncoder();
-  parentPort.on("message", async (c) => {
-    collect();
-    const h0 = v8.getHeapStatistics().used_heap_size;
-    const t0 = performance.now();
+  parentPort.once("message", async (c) => {
+    // The input isn't the reader's: it's made before the measures start.
     const files = new Map(Object.entries(c.files).map(([k, v]) => [k, typeof v === "string" ? enc.encode(v) : v]));
+    collect();
+    const h0 = v8.getHeapStatistics();
+    const ab0 = process.memoryUsage().arrayBuffers;
+    const t0 = performance.now();
     const budget = new C.Budget(c.budget ?? C.MAX_WORK);
     let layers;
     if (c.direct) {
@@ -495,8 +907,12 @@ const collect = globalThis.gc ?? vm.runInNewContext("gc");
     const record = R.subsetRecords(stage, prim, [...stage.errors]);
     F.stageFacts(record);
     const ms = performance.now() - t0;
+    const h1 = v8.getHeapStatistics();
+    const ab1 = process.memoryUsage().arrayBuffers;
     collect();
-    const heapMb = (v8.getHeapStatistics().used_heap_size - h0) / 2 ** 20;
+    const kept =
+      v8.getHeapStatistics().used_heap_size - h0.used_heap_size +
+      process.memoryUsage().arrayBuffers - ab0;
     const paths = [];
     const walk = (p) => { if (paths.length < 2000) paths.push(p.path); p.children.forEach(walk); };
     walk(prim);
@@ -504,10 +920,12 @@ const collect = globalThis.gc ?? vm.runInNewContext("gc");
     const count = (p) => { prims++; p.children.forEach(count); };
     count(prim);
     parentPort.postMessage({
-      name: c.name, ms, heapMb, prims, paths,
-      errors: [...stage.errors], stopped: stage.stopped, spent: budget.spent,
+      name: c.name, ms, prims, paths,
+      peakHeapMb: (h1.total_heap_size - h0.total_heap_size) / MiB,
+      arrayBuffersMb: (ab1 - ab0) / MiB,
+      keptMb: kept / MiB,
+      errors: record.errors, stopped: stage.stopped, spent: budget.spent,
       counts: stage.counts, listed: stage.errorListed.size,
-      keep: [stage, prim, record].length,
     });
   });
   parentPort.postMessage({ ready: true });
@@ -515,7 +933,7 @@ const collect = globalThis.gc ?? vm.runInNewContext("gc");
 `;
 
 /**
- * Reads each case in one worker thread, in turn: the reader's loader, its
+ * Reads each case in a worker thread of its own: the reader's loader, its
  * composer, the records and their facts. A case that runs past the deadline
  * or the heap limit is killed, and the run rejects naming it: a test's own
  * timeout can't interrupt a synchronous loop.
@@ -525,6 +943,18 @@ export async function readBounded(
   bounds: Bounds,
 ): Promise<BoundedResult[]> {
   const url = (p: string) => new URL(p, import.meta.url).href;
+  const out: BoundedResult[] = [];
+  for (const c of cases) {
+    out.push(await readOne(c, bounds, url));
+  }
+  return out;
+}
+
+async function readOne(
+  c: HostileCase,
+  bounds: Bounds,
+  url: (p: string) => string,
+): Promise<BoundedResult> {
   const worker = new Worker(WORKER, {
     eval: true,
     workerData: {
@@ -534,7 +964,7 @@ export async function readBounded(
     },
     resourceLimits: { maxOldGenerationSizeMb: bounds.heapLimitMb },
   });
-  const next = (name: string, ms: number): Promise<unknown> =>
+  const next = (what: string, ms: number): Promise<unknown> =>
     new Promise((resolve, reject) => {
       const done = (): void => {
         clearTimeout(timer);
@@ -548,33 +978,29 @@ export async function readBounded(
       };
       const onError = (e: Error): void => {
         done();
-        reject(new Error(`${name}: ${e.message}`));
+        reject(new Error(`${what}: ${e.message}`));
       };
       const onExit = (code: number): void => {
         done();
-        reject(new Error(`${name}: the worker exited (${code})`));
+        reject(new Error(`${what}: the worker exited (${code})`));
       };
       const timer = setTimeout(() => {
         done();
-        reject(new Error(`${name}: ran past ${ms} ms`));
+        reject(new Error(`${what}: ran past ${ms} ms`));
       }, ms);
       worker.on("message", onMessage);
       worker.on("error", onError);
       worker.on("exit", onExit);
     });
   try {
-    await next("starting the worker", 30_000);
-    const out: BoundedResult[] = [];
-    for (const c of cases) {
-      const answer = next(c.name, bounds.deadlineMs);
-      worker.postMessage({
-        ...c,
-        budget: bounds.budget,
-        direct: bounds.direct ?? false,
-      });
-      out.push((await answer) as BoundedResult);
-    }
-    return out;
+    await next(`${c.name}: starting the worker`, 30_000);
+    const answer = next(c.name, bounds.deadlineMs);
+    worker.postMessage({
+      ...c,
+      budget: bounds.budget,
+      direct: bounds.direct ?? false,
+    });
+    return (await answer) as BoundedResult;
   } finally {
     await worker.terminate();
   }

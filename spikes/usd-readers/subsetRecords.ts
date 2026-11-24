@@ -1,7 +1,14 @@
 // The TypeScript subset reader (CS-833's spike) as plain prim records for
 // CS-900's facts. Browser and Node alike. Spike code for CS-900; not part
 // of @cesium/next.
+//
+// Building the records, and what the facts then do with each one, is
+// charged to the stage's budget (CS-1153 A): each record, each value it
+// keeps, and each label string the facts will join and hash. When the
+// budget runs out, the records stop where they are, and the stop message
+// leads the errors.
 
+import { MAX_PATH, WorkLimit } from "../usd-subset/budget.ts";
 import type { Prim, Stage } from "../usd-subset/compose.ts";
 import { isArray, type Value } from "../usd-subset/layer.ts";
 import type { AttrRecord, PrimRecord, StageRecord } from "./facts.ts";
@@ -16,16 +23,27 @@ const SHORT = 64;
  */
 const sums = new WeakMap<ArrayLike<number>, number>();
 
-/** Whether an array holds only strings, once per array, for the same reason. */
-const allStrings = new WeakMap<readonly Value[], boolean>();
+/**
+ * A string array's characters, once per array, for the same reason; -1 when
+ * it isn't kept: not all strings, or one longer than MAX_PATH, which V8
+ * would hash by its length alone when the facts put it in a set.
+ */
+const keptChars = new WeakMap<readonly Value[], number>();
 
-function stringsOnly(value: readonly Value[]): boolean {
-  let only = allStrings.get(value);
-  if (only === undefined) {
-    only = value.every((x) => typeof x === "string");
-    allStrings.set(value, only);
+function charsKept(value: readonly Value[]): number {
+  let chars = keptChars.get(value);
+  if (chars === undefined) {
+    chars = 0;
+    for (const x of value) {
+      if (typeof x !== "string" || x.length > MAX_PATH) {
+        chars = -1;
+        break;
+      }
+      chars += x.length;
+    }
+    keptChars.set(value, chars);
   }
-  return only;
+  return chars;
 }
 
 function sumOf(data: Int32Array | Uint32Array): number {
@@ -40,7 +58,11 @@ function sumOf(data: Int32Array | Uint32Array): number {
   return sum;
 }
 
-function attrRecord(typeName: string, value: Value | undefined): AttrRecord {
+function attrRecord(
+  typeName: string,
+  value: Value | undefined,
+  stage: Stage,
+): AttrRecord {
   const type = typeName || "unknown";
   if (isArray(value)) {
     const n = value.data.length / Math.max(1, value.tuple);
@@ -50,16 +72,22 @@ function attrRecord(typeName: string, value: Value | undefined): AttrRecord {
     return { type, count: n };
   }
   if (Array.isArray(value)) {
-    const strings = stringsOnly(value);
-    return strings && value.length <= SHORT
-      ? { type, count: value.length, value: value as string[] }
-      : { type, count: value.length };
+    const chars = value.length <= SHORT ? charsKept(value) : -1;
+    if (chars < 0) {
+      return { type, count: value.length };
+    }
+    // The facts read every kept string, for every prim that has it.
+    stage.budget.chars(chars);
+    return { type, count: value.length, value: value as string[] };
   }
   if (
     typeof value === "string" ||
     typeof value === "number" ||
     typeof value === "boolean"
   ) {
+    if (typeof value === "string") {
+      stage.budget.text(value);
+    }
     return { type, value };
   }
   return { type };
@@ -78,19 +106,31 @@ export function subsetRecords(
   };
   const num = fields?.get("metersPerUnit");
   const prims: PrimRecord[] = [];
+  const budget = stage.budget;
   const walk = (p: Prim): void => {
     if (p.specifier === "class") {
       return;
     }
     if (p.path !== "/") {
+      // The record, its two maps and its schema list.
+      budget.keep(2);
+      budget.charge(p.apiSchemas.length);
+      for (const s of p.apiSchemas) {
+        // The facts join each label with its taxonomy and hash the result.
+        if (s.startsWith("SemanticsLabelsAPI:")) {
+          budget.chars((s.length + 1) * SHORT);
+        }
+      }
       const attrs: Record<string, AttrRecord> = {};
       const rels: Record<string, string[]> = {};
       for (const [name, prop] of p.props) {
+        budget.keep();
         if (prop.kind === "relationship") {
+          budget.charge(prop.targets.length);
           rels[name] = [...prop.targets];
         } else if (prop.value !== undefined || prop.targets.length > 0) {
           attrs[name] = {
-            ...attrRecord(prop.typeName ?? "", prop.value),
+            ...attrRecord(prop.typeName ?? "", prop.value, stage),
             ...(prop.targets.length > 0 ? { connection: true } : {}),
           };
         }
@@ -107,12 +147,23 @@ export function subsetRecords(
       walk(c);
     }
   };
-  walk(root);
+  try {
+    walk(root);
+  } catch (e) {
+    // Out of budget: the records made so far stand.
+    if (!(e instanceof WorkLimit)) {
+      throw e;
+    }
+  }
   return {
     upAxis: str("upAxis"),
     metersPerUnit: typeof num === "number" ? num : null,
     defaultPrim: str("defaultPrim"),
     prims,
-    errors,
+    // The stop leads, whether the stage or the records ran the budget out.
+    errors:
+      budget.exhausted && !errors.includes(budget.message)
+        ? [budget.message, ...errors]
+        : errors,
   };
 }

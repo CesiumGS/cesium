@@ -4,25 +4,43 @@
 // a limit per shape, every loop that does work for the file charges this one
 // budget, in its inner loop, and reading stops when it runs out.
 //
-// One unit is one step of a loop: a decoded value, 16 numbers of a bulk
-// array or 16 bytes decompressed, a site, a layer of a site's stack, a
-// property spec, a list element, a variant selection indexed, a node of an
-// arc chain, and 16 characters of a string copied or compared. A token costs
-// two, since all of a layer's tokens are held at once, and an object the
-// stage keeps (a prim, a property, a field, a site, a spec) costs KEPT, so
-// that the same budget bounds the heap as well as the time. Spike code for
-// CS-833, CS-843 and CS-913; not part of @cesium/next.
+// One unit stands for 16 bytes the reader may allocate, or about 50 ns of
+// work, and every charge is the larger of the two (CS-1153 A). Allocations
+// are charged by their size before they happen: decoded text, strings,
+// typed arrays by their bytes, and each object the stage keeps (a prim, a
+// property, a field, a site, a spec, a package entry) as KEPT, and each
+// entry added to a map or set as MAP_ENTRY. Loops charge
+// per outer item as well as per inner one. So MAX_WORK bounds the heap and
+// ArrayBuffer memory as well as the time. Spike code for CS-833, CS-843 and
+// CS-913; not part of @cesium/next.
+
+/** The bytes one unit stands for. */
+export const UNIT_BYTES = 16;
+/** An object the stage keeps, with its map entry: about 128 bytes. A map of its own is another. */
+export const KEPT = 8;
+/** An entry added to a map or set, with the table's growth: about 48 bytes. */
+export const MAP_ENTRY = 3;
+/** A token the USDA tokenizer holds until it's parsed, with the number or array slot it becomes: about 64 bytes. */
+export const TOKEN = 4;
 
 /**
- * The work one stage may cost. The six SimReady samples spend 32,012 to
- * 113,762 units each (see `docs/design/usd-readers.md`), so this is about 44
- * times the heaviest of them. On the Mac test machine, the hostile files of
- * `test/usdHostileFiles.ts` that spend it all take under half a second and
- * keep under 130 MiB.
+ * The work one stage may cost: 80 MB of charged allocation. The six SimReady
+ * samples spend 100,804 (copper_brushed) to 529,802 (the pallet, mostly its
+ * meshes' typed arrays) units each, so this is about 9 times the heaviest.
  */
 export const MAX_WORK = 5_000_000;
-/** What an object the stage keeps costs, in units: about 50 bytes a unit. */
-export const KEPT = 4;
+
+/**
+ * The ceiling every input stays under, which `test/usdHostileFiles.ts`
+ * checks on every generated file and named case: the time to load,
+ * compose, build the records and their facts; and the V8 heap's peak and
+ * the ArrayBuffer memory, each. The heap peaks at up to about three times
+ * the bytes charged (V8's map growth and free space), so the memory ceiling
+ * is MAX_WORK × UNIT_BYTES × 3, about 240 MiB, rounded up.
+ */
+export const STATED_MS = 4000;
+export const STATED_MIB = 256;
+
 /** The largest layer file read, checked before parsing. The samples' largest is 1.4 MiB. */
 export const MAX_LAYER_BYTES = 64 * 2 ** 20;
 /** The most bytes read for a whole stage, checked before each layer is parsed. */
@@ -81,9 +99,24 @@ export class Budget {
     }
   }
 
-  /** Spends for a string copied or compared: one unit, and one per 16 characters. */
+  /** Spends for `n` bytes about to be allocated: one unit per UNIT_BYTES, by division (a size past 2^32 mustn't wrap). */
+  bytes(n: number): void {
+    this.charge(1 + Math.ceil(n / UNIT_BYTES));
+  }
+
+  /** Spends for a string of `length` characters about to be built, copied or compared: up to two bytes a character. */
+  chars(length: number): void {
+    this.bytes(2 * length);
+  }
+
+  /** Spends for a string copied or compared. */
   text(s: string): void {
-    this.charge(1 + Math.floor(s.length / 16));
+    this.chars(s.length);
+  }
+
+  /** Spends for `n` entries about to be added to a map or set. */
+  entries(n = 1): void {
+    this.charge(n * MAP_ENTRY);
   }
 
   /** Spends for `n` objects the stage keeps. */
