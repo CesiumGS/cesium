@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-9
-needs: [CS-32, CS-34, CS-35]
+needs: [CS-32, CS-34, CS-35, CS-1258]
 touches: [packages/next/src/render/webgl2/**]
 ---
 
