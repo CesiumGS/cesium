@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-23
 project: CS-188
 outcome: A host sets an orthographic or general projective camera, fits it to bounds, dollies between projections, and moves it with @cesium/navigation's orbit, globe and inspect controllers, with level of detail and picking right in each projection.
-constraints: [CS-218 c?, CS-1117 c?, CS-1124 c?]
+constraints: [CS-218 c?, CS-1117 c?, CS-1124 c?, CS-1176 c?]
 ---
 
 ## Notes

@@ -2,10 +2,14 @@
 id: CS-1173
 title: Does milk-truck-fleet stay in Dyno's uncapped orbit?
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-199
 decider: owner
+answer: "A. A. Skip it in the uncapped orbit: A per-scene skip in the catalog takes milk-truck-fleet out of `uncapped-orbit`, with the reason. Its GPU cost is measured by the GPU-paced orbit. The other scenes keep the uncapped orbit."
+answered_at: 2026-11-24T03:19:25.816Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
