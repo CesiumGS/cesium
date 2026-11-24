@@ -982,7 +982,6 @@ function convertTechniquesWebglToPbr(gltf) {
   });
 
   removeExtension(gltf, "KHR_techniques_webgl");
-  removeExtension(gltf, "KHR_blend");
 }
 
 function assignAsBaseColor(material, baseColor) {
