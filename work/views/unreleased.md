@@ -36,6 +36,9 @@ CS-13 The worker-mode façade
   CS-101  The protocol table: every public member classified, checked against `api/surface.txt`
   CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
+CS-16 Streaming robustness
+  CS-144  The fault-injection harness
+
 CS-18 The work tracker
   CS-169  The tracker: format, scripts, items and the plan's split
   CS-170  A work board in Dyno
@@ -140,5 +143,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-105 merged item(s) not in a release
+106 merged item(s) not in a release
 ```

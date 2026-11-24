@@ -232,7 +232,7 @@ graph LR
     CS_382["CS-382 The sleeping loop's missed wakes, and the Viewer's clock listen"]:::open
   end
   subgraph CS_16["Streaming robustness"]
-    CS_144["CS-144 The fault-injection harness"]:::open
+    CS_144["CS-144 The fault-injection harness"]:::done
     CS_145["CS-145 The fetch layer (three timers, structured failures, 'isCancel')"]:::open
     CS_146["CS-146 Origin health (latency samples, derived timeouts, the retry buc"]:::open
     CS_147["CS-147 Retries for 3D Tiles content (episodes owned by the tile)"]:::open
@@ -254,7 +254,7 @@ graph LR
     CS_384["CS-384 Re-rooting Google's Photorealistic 3D Tiles after its session w"]:::proposed
     CS_441["CS-441 Upsampling follow-ups: a local imagery stop, child refetches in"]:::open
     CS_508["CS-508 Retries for the one-off worker loads"]:::open
-    CS_1032["CS-1032 Merge CS-144, the fault-injection harness"]:::decision
+    CS_1032["CS-1032 Merge CS-144, the fault-injection harness"]:::done
   end
   subgraph CS_17["transform graph"]
     CS_159["CS-159 Per-view routes without twins"]:::open
@@ -560,6 +560,11 @@ graph LR
     CS_1122["CS-1122 Does the camera record carry a general projective transform, w"]:::done
     CS_1123["CS-1123 Where do camera utilities and controllers live?"]:::done
     CS_1147["CS-1147 May a derived content name leave the engine?"]:::done
+    CS_1148["CS-1148 Does the content-name grammar refuse URL pieces?"]:::done
+    CS_1149["CS-1149 What names content that nobody named? (revisits CS-1100)"]:::done
+    CS_1150["CS-1150 Is the content-name grammar a character class with no / and no"]:::done
+    CS_1151["CS-1151 Does CS-847's session-name restructuring land before it merges"]:::done
+    CS_1153["CS-1153 Does CS-913 get one closing round, or is it scoped down?"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -747,6 +752,7 @@ graph LR
     CS_1106["CS-1106 Dyno refuses to start a run whose scenes need an ion token whe"]:::proposed
     CS_1126["CS-1126 How do headless Dyno runs get the ion token?"]:::done
     CS_1127["CS-1127 Dyno's headless runner seeds the ion token into the page at ru"]:::open
+    CS_1152["CS-1152 Dyno's overview compares like with like: GPU and CPU time per "]:::open
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -850,6 +856,7 @@ graph LR
     CS_1099["CS-1099 Example captures without the host's warning banner"]:::proposed
     CS_1107["CS-1107 The sweep view reads at a glance: a UX pass on CS-395's small "]:::proposed
     CS_1145["CS-1145 The handbook becomes Dyno's Docs page, with an export to one s"]:::open
+    CS_1154["CS-1154 Dyno's In progress lists only work that is running: no branch "]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1426,7 +1433,7 @@ graph LR
   CS_258 --> CS_259
   CS_258 --> CS_260
   CS_258 --> CS_261
-  CS_265 --> CS_267
+  CS_1140 --> CS_267
   CS_55 --> CS_267
   CS_50 --> CS_268
   CS_55 --> CS_268
@@ -1468,8 +1475,8 @@ graph LR
   CS_401 --> CS_327
   CS_324 --> CS_334
   CS_275 --> CS_335
-  CS_265 --> CS_337
-  CS_266 --> CS_338
+  CS_1146 --> CS_337
+  CS_1108 --> CS_338
   CS_218 --> CS_340
   CS_275 --> CS_341
   CS_213 --> CS_341

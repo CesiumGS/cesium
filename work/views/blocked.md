@@ -222,8 +222,7 @@ CS-15 Refinement and convergence
 
 CS-16 Streaming robustness
   CS-145  The fetch layer (three timers, structured failures, `isCancel`)
-      ← CS-144 The fault-injection harness
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-146  Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses)
       ← CS-145 The fetch layer (three timers, structured failures, `isCancel`)
         CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
@@ -458,8 +457,6 @@ CS-195 Benchmarks, parity and image regression
       ← CS-322 One engine-wide GPU and cache budget, with GPU texture transcoding
 
 CS-196 Infrastructure and geoscience capabilities
-  CS-338  Per-element overrides at scale, through the styling language
-      ← CS-266 Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?
   CS-340  Printing to scale
       ← CS-218 The orthographic camera, `fitBounds` and the dolly between projections
   CS-341  WebXR, including aligning a model with its site
@@ -774,5 +771,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-232 blocked
+231 blocked
 ```

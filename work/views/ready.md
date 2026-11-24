@@ -64,13 +64,11 @@ CS-15 Refinement and convergence
   CS-382  The sleeping loop's missed wakes, and the Viewer's clock listener
 
 CS-16 Streaming robustness
-  CS-144  The fault-injection harness
   CS-158  external: Cesium ion's answers on status codes and token lifetimes
   CS-177  external: `Timing-Allow-Origin` on the ion tile CDN
   CS-178  external: `Timing-Allow-Origin` on the iTwin mesh-export CDN
   CS-179  external: Real users' bandwidth and latency distribution
   CS-441  Upsampling follow-ups: a local imagery stop, child refetches inside the terrain request window, imagery slices in the byte budget
-  CS-1032  decision: Merge CS-144, the fault-injection harness
 
 CS-17 The transform graph
   CS-159  Per-view routes without twins
@@ -210,6 +208,7 @@ CS-195 Benchmarks, parity and image regression
   CS-1028  Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A)
 
 CS-196 Infrastructure and geoscience capabilities
+  CS-338  Per-element overrides at scale, through the styling language
   CS-339  Volumes: voxel grids, ray-marched or as isosurfaces
   CS-1020  The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A)
   CS-1021  Instant hides its storage behind methods and states its resolution (CS-1019 A)
@@ -239,6 +238,7 @@ CS-199 Dyno hardening, packaging and CI
   CS-983  Every Lab parity suite gives a verdict: no regression against the last accepted run, plus the design's thresholds (CS-979 C)
   CS-984  Baseline and golden changes carry a logged reason, and every merge decision lists them (CS-980 A)
   CS-1127  Dyno's headless runner seeds the ion token into the page at run time, never into a build, a URL or a log
+  CS-1152  Dyno's overview compares like with like: GPU and CPU time per frame for both engines, and frame time labeled for what it is
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -258,6 +258,7 @@ CS-389 Dyno as the development harness
   CS-856  Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items
   CS-992  Dyno loads an outside module and benchmarks it as it does the built-in sources
   CS-1008  Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C)
+  CS-1154  Dyno's In progress lists only work that is running: no branch main has moved past, and a slow hitld read shown as slow
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -315,5 +316,5 @@ CS-609 A clean 2.0 branch and a modern build
 CS-197 Ray queries and path tracing
   CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
 
-244 ready
+245 ready
 ```

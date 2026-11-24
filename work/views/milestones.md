@@ -121,8 +121,8 @@ CS-457 The approved API changes are made [Planned], under CS-437 The public API 
 
 CS-458 Every fetch has a deadline and retries within its origin's budget [Planned], under CS-16 Streaming robustness
   outcome: Every request the engine makes has a deadline set from what its origin has delivered and fails with a kind an app can read; transient failures retry with backoff inside per-origin budgets, and apps can route requests with 1.x's proxies, query parameters, headers and credentials.
-  constraints: 0 of 8 done
-  unmet: c1 A request that gets no headers, stops between body chunks, or runs past its whole-body deadline fails within that deadline, frees its request slot, and fails with a kind (timeout and its phase, network, a status class, decode), while a cancel stays a cancel; this holds for content, terrain, imagery, tileset JSON and the one-off loads, and no failure message carries a URL, a query string or a header value. (open: CS-144, CS-145, CS-383; check not passed)
+  constraints: 1 of 8 done
+  unmet: c1 A request that gets no headers, stops between body chunks, or runs past its whole-body deadline fails within that deadline, frees its request slot, and fails with a kind (timeout and its phase, network, a status class, decode), while a cancel stays a cancel; this holds for content, terrain, imagery, tileset JSON and the one-off loads, and no failure message carries a URL, a query string or a header value. (open: CS-145, CS-383; check not passed)
   unmet: c2 A slow but healthy origin is not timed out (on the recorded full profile and the 20 Mbit/s, 80 ms profile, no request times out); a 429, a 503 or a timeout halves an adaptive request window and leaves a pinned one alone, and a Retry-After of up to 60 s pauses every request to that origin. (open: CS-146; check not passed)
   unmet: c3 A transient failure on 3D Tiles content retries with jittered backoff and loads, and with 200 tiles wanted from a dead origin the attempts stay bounded: retries hold at most a quarter of the window, an empty retry bucket stops them, and a tile's first request is never refused. (open: CS-147, CS-508, CS-88; check not passed)
   unmet: c4 An app can give a tileset, terrain or imagery source a proxy (a prefix or a function), query parameters, headers and trusted-origin credentials, and every request that source makes carries them; cookies go only to trusted origins, and no option value appears in any diagnostic. (open: CS-156; check not passed)
@@ -393,9 +393,9 @@ CS-500 Real-time tracks stay cheap at scale [Planned], under CS-190 Vector drawi
 
 CS-501 The styling language's form and semantics are decided [Planned], under CS-190 Vector drawing and the styling language
   outcome: The owner has decided the styling language's form, where its spec lives, its semantics, and what editing the engine supports.
-  constraints: 1 of 3 done
-  unmet: not linked to a clause yet (open: CS-265, CS-266; check not passed)
-  to shape: done_when; check; link CS-265, CS-266, CS-453 to a clause
+  constraints: 3 of 3 done
+  check due: every constraint is done; the check has not passed
+  to shape: done_when; check; link CS-1140, CS-1108, CS-453 to a clause
 
 CS-502 Slang shaders pass the gate on Windows [Planned], under CS-198 GPU-driven rendering and capacities
   outcome: The Slang kernels gate and the probes pass on Windows with two GPU vendors, which completes the Slang migration.

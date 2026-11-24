@@ -349,11 +349,11 @@ No milestone
 
 ### Streaming robustness
 
-CS-16, Planned, led by owner: 0 of 23 done, 7 ready, 15 blocked, 1 proposed. Plan: [2026-11-13-streaming-robustness.md](docs/superpowers/plans/2026-11-13-streaming-robustness.md).
+CS-16, Planned, led by owner: 2 of 23 done, 5 ready, 15 blocked, 1 proposed. Plan: [2026-11-13-streaming-robustness.md](docs/superpowers/plans/2026-11-13-streaming-robustness.md).
 
 Milestone: Every fetch has a deadline and retries within its origin's budget (CS-458, Planned)
 
-- [ ] CS-144 The fault-injection harness. Needs nothing.
+- [x] CS-144 The fault-injection harness. Done.
 - [ ] CS-145 The fetch layer (three timers, structured failures, `isCancel`). Needs CS-144 and CS-847 (Content sources and formats).
 - [ ] CS-146 Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses). Needs CS-145 and CS-847 (Content sources and formats).
 - [ ] CS-147 Retries for 3D Tiles content (episodes owned by the tile). Needs CS-146 and CS-554 (Content sources and formats).
@@ -384,7 +384,7 @@ No milestone
 - [ ] CS-179 external: Real users' bandwidth and latency distribution. Needs nothing. Waiting on Cesium ion / product.
 - [?] CS-384 Re-rooting Google's Photorealistic 3D Tiles after its session window. Proposed. Needs CS-150.
 - [ ] CS-441 Upsampling follow-ups: a local imagery stop, child refetches inside the terrain request window, imagery slices in the byte budget. Needs nothing.
-- [ ] CS-1032 decision: Merge CS-144, the fault-injection harness. Needs nothing. Decided by owner.
+- [x] CS-1032 decision: Merge CS-144, the fault-injection harness. Done.
 
 ### The transform graph
 
@@ -631,11 +631,6 @@ Milestone: Real-time tracks stay cheap at scale (CS-500, Planned)
 
 - [ ] CS-262 Real-time tracks: cull small shadow casters, and one glTF asset in several worlds. Needs nothing.
 
-Milestone: The styling language's form and semantics are decided (CS-501, Planned)
-
-- [-] CS-265 decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?. Dropped: Superseded by the owner's piecewise answers of 2026-11-23: any language lowers to Cesium IR, whose JSON and conformance vectors live in the Rust workspace's IR crate (CS-1130); an experimental language of our own plus a 1.x front end ship with 2.0 (CS-1140); a proposal goes to the 3D Tiles group after the plan settles (CS-1143). Closed as superseded on the owner's word.
-- [-] CS-266 decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?. Dropped: Superseded by the owner's piecewise answers of 2026-11-23: per-feature state (CS-1108), strings and an item rate in the IR (CS-1136), the color model (CS-1141), missing values (CS-1142), label placement (CS-1137), units (CS-1139); 64-bit IDs are CS-898 and CS-936. The key's width on the GPU moves to CS-1081. Closed as superseded on the owner's word.
-
 Milestone: Content projects onto any surface (CS-657, Planned)
 
 - [ ] CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path. Needs nothing.
@@ -648,12 +643,14 @@ No milestone
 
 - [?] CS-263 Real-time tracks polish: model and symbol crossfade, MIL-STD-2525 symbols, wide-area clamping. Proposed. Needs nothing.
 - [ ] CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1. Needs nothing.
-- [?] CS-267 The styling language on Cesium IR, over points, lines, polygons and B-rep faces. Proposed. Needs CS-265 and CS-55 (Cesium IR).
+- [-] CS-265 decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?. Dropped: Superseded by the owner's piecewise answers of 2026-11-23: any language lowers to Cesium IR, whose JSON and conformance vectors live in the Rust workspace's IR crate (CS-1130); an experimental language of our own plus a 1.x front end ship with 2.0 (CS-1140); a proposal goes to the 3D Tiles group after the plan settles (CS-1143). Closed as superseded on the owner's word.
+- [-] CS-266 decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?. Dropped: Superseded by the owner's piecewise answers of 2026-11-23: per-feature state (CS-1108), strings and an item rate in the IR (CS-1136), the color model (CS-1141), missing values (CS-1142), label placement (CS-1137), units (CS-1139); 64-bit IDs are CS-898 and CS-936. The key's width on the GPU moves to CS-1081. Closed as superseded on the owner's word.
+- [?] CS-267 The styling language on Cesium IR, over points, lines, polygons and B-rep faces. Proposed. Needs CS-1140 (Cesium IR) and CS-55 (Cesium IR).
 - [?] CS-268 Style features through the IR: tiles culled by interval `show`, legends, explicit colour spaces. Proposed. Needs CS-50 (Cesium IR) and CS-55 (Cesium IR).
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 55 of 128 done, 34 ready, 20 blocked, 19 proposed.
+CS-191, Planned, led by owner: 60 of 133 done, 34 ready, 20 blocked, 19 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -800,6 +797,11 @@ No milestone
 - [x] CS-1122 decision: Does the camera record carry a general projective transform, with physical cameras as an optional ray model?. Done.
 - [x] CS-1123 decision: Where do camera utilities and controllers live?. Done.
 - [x] CS-1147 decision: May a derived content name leave the engine?. Done.
+- [x] CS-1148 decision: Does the content-name grammar refuse URL pieces?. Done.
+- [x] CS-1149 decision: What names content that nobody named? (revisits CS-1100). Done.
+- [x] CS-1150 decision: Is the content-name grammar a character class with no / and no @? (revisits CS-1148). Done.
+- [x] CS-1151 decision: Does CS-847's session-name restructuring land before it merges?. Done.
+- [x] CS-1153 decision: Does CS-913 get one closing round, or is it scoped down?. Done.
 
 ### Sky, light and atmosphere
 
@@ -964,12 +966,12 @@ No milestone
 
 ### Infrastructure and geoscience capabilities
 
-CS-196, Planned, led by owner: 4 of 16 done, 4 ready, 3 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
+CS-196, Planned, led by owner: 4 of 16 done, 5 ready, 2 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
 
 Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Planned)
 
-- [?] CS-337 Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-265 (Vector drawing and the styling language).
-- [ ] CS-338 Per-element overrides at scale, through the styling language. Needs CS-266 (Vector drawing and the styling language).
+- [?] CS-337 Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-1146 (Cesium IR).
+- [ ] CS-338 Per-element overrides at scale, through the styling language. Needs CS-1108 (Content sources and formats).
 - [ ] CS-340 Printing to scale. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 - [?] CS-342 The infrastructure and geoscience gallery examples. Proposed. Needs nothing.
 - [?] CS-343 Gallery: a vehicle's lidar over the design. Proposed. Needs CS-276 (Content sources and formats).
@@ -1032,7 +1034,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 11 of 42 done, 18 ready, 0 blocked, 13 proposed.
+CS-199, Planned, led by owner: 11 of 43 done, 19 ready, 0 blocked, 13 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -1084,10 +1086,11 @@ No milestone
 - [?] CS-1106 Dyno refuses to start a run whose scenes need an ion token when it has none, instead of recording invalid runs. Proposed. Needs nothing.
 - [x] CS-1126 decision: How do headless Dyno runs get the ion token?. Done.
 - [ ] CS-1127 Dyno's headless runner seeds the ion token into the page at run time, never into a build, a URL or a log. Needs CS-1126.
+- [ ] CS-1152 Dyno's overview compares like with like: GPU and CPU time per frame for both engines, and frame time labeled for what it is. Needs nothing.
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 62 of 101 done, 17 ready, 12 blocked, 10 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 62 of 102 done, 18 ready, 12 blocked, 10 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -1216,6 +1219,7 @@ No milestone
 - [?] CS-1099 Example captures without the host's warning banner. Proposed. Needs CS-394.
 - [?] CS-1107 The sweep view reads at a glance: a UX pass on CS-395's small multiples, image grid and noise wording. Proposed. Needs CS-395.
 - [ ] CS-1145 The handbook becomes Dyno's Docs page, with an export to one self-contained page on demand. Needs CS-1027 (A clean 2.0 branch and a modern build) and CS-1144 (A clean 2.0 branch and a modern build).
+- [ ] CS-1154 Dyno's In progress lists only work that is running: no branch main has moved past, and a slow hitld read shown as slow. Needs nothing.
 
 ### The public API reviews
 

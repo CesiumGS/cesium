@@ -54,8 +54,5 @@ CS-615 Packaging and package names
 CS-199 Dyno hardening, packaging and CI
   CS-982  Where does the merge bar live: one gate script, or policy.json's lists? (owner)
 
-CS-16 Streaming robustness
-  CS-1032  Merge CS-144, the fault-injection harness (owner)
-
-17 open decision(s) for owner
+16 open decision(s) for owner
 ```
