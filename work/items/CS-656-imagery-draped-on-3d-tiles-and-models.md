@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-17
 project: CS-190
 needs: [CS-654]
+tier_override: 1
 ---
 
 ## Done when

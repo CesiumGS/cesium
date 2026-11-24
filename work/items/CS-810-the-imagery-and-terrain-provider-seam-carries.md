@@ -7,6 +7,7 @@ created: 2026-11-21
 project: CS-191
 needs: [CS-809]
 touches: [packages/next/src/globe/ImageryProvider.ts, packages/next/src/globe/TerrainSource.ts, packages/next/src/globe/**, packages/next/src/io/worker.ts, packages/next/src/index.ts, packages/next/test, packages/next/api/surface.txt]
+tier_override: 1
 ---
 
 `ImageryProvider` (`src/globe/ImageryProvider.ts:9-19`) is a thin seam. It offers:
