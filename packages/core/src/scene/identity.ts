@@ -1125,9 +1125,13 @@ export function normalizeLabels(labels: readonly string[]): string[] {
   return [...new Set(labels.filter((l) => typeof l === "string" && l))].sort();
 }
 
-/** @internal Checks labels the host gives (`SceneItemOptions.labels`): a copy, each set normalized. */
+/**
+ * @internal Checks labels the host gives (`SceneItemOptions.labels`): a copy, each set normalized.
+ * Built from entries, so a taxonomy named like `__proto__` or `toString`
+ * is its own key, never a prototype's.
+ */
 export function checkLabels(labels: Labels, where: string): Labels {
-  const out: Record<string, readonly string[]> = {};
+  const out = new Map<string, readonly string[]>();
   for (const [taxonomy, set] of Object.entries(labels)) {
     checkTaxonomy(taxonomy, where);
     if (!Array.isArray(set) || set.some((l) => typeof l !== "string")) {
@@ -1137,10 +1141,10 @@ export function checkLabels(labels: Labels, where: string): Labels {
     }
     const normalized = normalizeLabels(set);
     if (normalized.length > 0) {
-      out[taxonomy] = Object.freeze(normalized);
+      out.set(taxonomy, Object.freeze(normalized));
     }
   }
-  return Object.freeze(out);
+  return Object.freeze(Object.fromEntries(out));
 }
 
 /** A feature's labels from a property value: a string or enum name, or an array of them. */
@@ -1155,24 +1159,26 @@ function labelsOfValue(value: FeatureValue | undefined): string[] | undefined {
 
 /**
  * @internal Labels per taxonomy, the nearest level first: each taxonomy
- * takes its labels from the first level that sets it, never merged.
+ * takes its labels from the first level that sets it, never merged. Kept
+ * in a map and built from entries, so a taxonomy named like `toString` or
+ * `__proto__` is its own key, never a prototype's.
  */
 export function resolveLabels(
   levels: ReadonlyArray<Labels | undefined>,
   only?: readonly string[],
 ): Labels {
-  const out: Record<string, readonly string[]> = {};
+  const out = new Map<string, readonly string[]>();
   for (const level of levels) {
     if (!level) {
       continue;
     }
     for (const [taxonomy, set] of Object.entries(level)) {
-      if (out[taxonomy] === undefined && (!only || only.includes(taxonomy))) {
-        out[taxonomy] = set;
+      if (!out.has(taxonomy) && (!only || only.includes(taxonomy))) {
+        out.set(taxonomy, set);
       }
     }
   }
-  return out;
+  return Object.fromEntries(out);
 }
 
 /** Interned label sets of one taxonomy. */
@@ -1620,12 +1626,19 @@ export class IdentityTable implements Identity {
     }
     const table = this.world.scene.featureTables[entry.index];
     const nameProperty = namingProperty(item, table);
+    // A property's name is outside text: its column only when the table's own.
+    const nameColumn =
+      nameProperty !== undefined &&
+      table &&
+      Object.hasOwn(table.columns, nameProperty)
+        ? table.columns[nameProperty]
+        : undefined;
     if (nameProperty !== undefined && table) {
       entry.names = [];
     }
     for (let local = 0; local < entry.count; local++) {
       if (entry.names && table && nameProperty !== undefined) {
-        const value = table.columns[nameProperty]?.[local];
+        const value = nameColumn?.[local];
         entry.names[local] =
           value === undefined || value === null || Array.isArray(value)
             ? undefined
@@ -1890,13 +1903,18 @@ export class IdentityTable implements Identity {
     const featureId = this.featureOf(entry, local);
     const featureHost =
       featureId === undefined ? undefined : this.hostLabels.get(featureId);
-    const own: Record<string, readonly string[]> = {};
+    // By taxonomy and by a property's name, both outside text: a map, and
+    // the column read only when it is the table's own.
+    const own = new Map<string, readonly string[]>();
     const table = this.world.scene.featureTables[entry.index];
     for (const t of entry.item?.taxonomies ?? []) {
       if (t.from === "property" && t.property && table) {
-        const labels = labelsOfValue(table.columns[t.property]?.[local]);
-        if (labels && own[t.taxonomy] === undefined) {
-          own[t.taxonomy] = labels;
+        const column = Object.hasOwn(table.columns, t.property)
+          ? table.columns[t.property]
+          : undefined;
+        const labels = labelsOfValue(column?.[local]);
+        if (labels && !own.has(t.taxonomy)) {
+          own.set(t.taxonomy, labels);
         }
       }
     }
@@ -1904,7 +1922,7 @@ export class IdentityTable implements Identity {
       [
         host ? Object.fromEntries(host) : undefined,
         featureHost ? Object.fromEntries(featureHost) : undefined,
-        own,
+        Object.fromEntries(own),
         entry.identity?.contentLabels,
         entry.item?.labels,
       ],
@@ -1914,9 +1932,10 @@ export class IdentityTable implements Identity {
 
   /** The label-set index of a slot in `taxonomy`, for a semantic image (0: none). */
   semanticOfSlot(slot: number, taxonomy: string = DEFAULT_TAXONOMY): number {
+    const labels = this.labelsOfSlot(slot, [taxonomy]);
     return this.labels.index(
       taxonomy,
-      this.labelsOfSlot(slot, [taxonomy])[taxonomy],
+      Object.hasOwn(labels, taxonomy) ? labels[taxonomy] : undefined,
     );
   }
 

@@ -523,12 +523,16 @@ function vertexRange(
   }
   const kind = "geometry" in batch ? batch.geometry : "point";
   const offsets = "offsets" in batch ? batch.offsets : undefined;
-  const type = {
-    point: "Point",
-    label: "Point",
-    line: "LineString",
-    polygon: "Polygon",
-  }[kind];
+  // A batch's geometry kind is a source's text: read as the table's own key.
+  const type = own(
+    {
+      point: "Point",
+      label: "Point",
+      line: "LineString",
+      polygon: "Polygon",
+    },
+    kind,
+  );
   if (geometry.type !== type) {
     return undefined;
   }

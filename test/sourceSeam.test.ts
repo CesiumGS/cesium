@@ -4409,9 +4409,60 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           if (!labels?.kind?.includes(name)) {
             broken.push(`labels on ${JSON.stringify(name.slice(0, 16))}`);
           }
+          // Every hostile taxonomy the host's labels take reads back as
+          // written: its own key, never a prototype's (CS-1168 A).
+          for (const taxonomy of HOSTILE) {
+            const written = `t-${i}`;
+            if (refused(() => content.setLabels(name, taxonomy, [written]))) {
+              continue;
+            }
+            const shown = world.identity.identify(
+              content.featureId(name),
+            )?.labels;
+            const set =
+              shown && Object.hasOwn(shown, taxonomy)
+                ? shown[taxonomy]
+                : undefined;
+            if (set?.length !== 1 || set[0] !== written) {
+              broken.push(
+                `taxonomy ${JSON.stringify(taxonomy.slice(0, 16))} on ${JSON.stringify(name.slice(0, 16))}`,
+              );
+            }
+          }
         }
         for (const taxonomy of HOSTILE) {
           refused(() => content.setLabels(`plain-${i}`, taxonomy, ["a"]));
+        }
+      });
+      // An item's labels by every hostile taxonomy (checkLabels and
+      // resolveLabels), read back through one of its draws.
+      const itemTaxonomies = HOSTILE.filter((t) => t.length > 0);
+      sinks.draws.addDraw({
+        mesh,
+        id: "item-probe",
+        origin: Float64Array.of(0, 0, 0),
+      });
+      const item = world.add(content, {
+        id: "hostile-item",
+        labels: Object.fromEntries(
+          itemTaxonomies.map((t, j) => [t, [`item-${j}`]]),
+        ),
+      });
+      const itemLabels = world.identity.identify(
+        instanceIdOf({
+          kind: "draw",
+          item: item.key,
+          source: content.source,
+          content: "item-probe",
+        }),
+      )?.labels;
+      itemTaxonomies.forEach((t, j) => {
+        const set =
+          itemLabels && Object.hasOwn(itemLabels, t)
+            ? itemLabels[t]
+            : undefined;
+        if (set?.length !== 1 || set[0] !== `item-${j}`) {
+          broken.push(`item label ${JSON.stringify(t.slice(0, 16))}`);
         }
       });
       expect.soft(broken).toEqual([]);
