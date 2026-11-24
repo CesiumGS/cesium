@@ -232,11 +232,6 @@ class ScreenSpaceZoomCameraController {
       handler.setInputAction(this._handleZoom.bind(this), input);
     }
 
-    handler.setInputAction(
-      this._handleZoomPosition.bind(this),
-      ScreenSpaceEventType.MOUSE_MOVE,
-    );
-
     this._dragInputState = ScreenSpaceInputBindings.registerDragInputBindings(
       handler,
       this.dragInputs,
@@ -245,6 +240,15 @@ class ScreenSpaceZoomCameraController {
         change: this._handleDrag.bind(this),
       },
     );
+
+    // Compose actions, otherwise the zoom position handler would overwrite the drag move handler.
+    const dragMove = handler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+    handler.setInputAction((event) => {
+      this._handleZoomPosition(event);
+      if (defined(dragMove)) {
+        dragMove(event);
+      }
+    }, ScreenSpaceEventType.MOUSE_MOVE);
   }
 
   /**

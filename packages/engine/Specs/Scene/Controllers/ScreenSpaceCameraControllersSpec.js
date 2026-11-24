@@ -6,10 +6,14 @@ import {
   getTimestamp,
 } from "@cesium/core";
 import {
+  FeatureDetection,
+  KeyboardEventModifier,
+  MouseButton,
   ScreenSpaceTiltOrbitCameraController,
   ScreenSpaceZoomCameraController,
 } from "../../../index.js";
 import createCamera from "../../../../../Specs/createCamera.js";
+import DomEventSimulator from "../../../../../Specs/DomEventSimulator.js";
 
 describe("Scene/Controllers/ScreenSpaceCameraControllers", function () {
   const canvas = { clientWidth: 512, clientHeight: 384 };
@@ -79,6 +83,108 @@ describe("Scene/Controllers/ScreenSpaceCameraControllers", function () {
 
       expect(pick).toHaveBeenCalled();
       expect(pick.calls.mostRecent().args[1]).toEqual(new Cartesian2(10, 20));
+    });
+
+    describe("connected input events", function () {
+      let element;
+      let controller;
+
+      beforeEach(function () {
+        element = document.createElement("div");
+        element.disableRootEvents = true;
+        document.body.appendChild(element);
+        if (FeatureDetection.supportsPointerEvents()) {
+          spyOn(element, "setPointerCapture");
+        }
+      });
+
+      afterEach(function () {
+        controller.disconnectedCallback(element);
+        document.body.removeChild(element);
+      });
+
+      function mouseEvent(type, position, shiftKey = false) {
+        const rect = element.getBoundingClientRect();
+        const options = {
+          button: 1,
+          clientX: rect.left + position.x,
+          clientY: rect.top + position.y,
+          pointerType: "mouse",
+          shiftKey: shiftKey,
+        };
+        if (FeatureDetection.supportsPointerEvents()) {
+          DomEventSimulator[`firePointer${type}`](element, options);
+        } else {
+          DomEventSimulator[`fireMouse${type}`](element, options);
+        }
+      }
+
+      function expectScrollPick(options) {
+        controller = new ScreenSpaceZoomCameraController(options);
+        controller.usePointerPosition = true;
+        const pick = spyOn(controller, "pickWorldPosition").and.returnValue(
+          undefined,
+        );
+        controller.connectedCallback(element);
+        mouseEvent("Move", new Cartesian2(10, 20));
+        DomEventSimulator.fireWheel(element, { deltaY: -1 });
+        prepareUpdate(controller);
+        controller.update(createScene(createLevelCamera(100.0)));
+
+        expect(pick).toHaveBeenCalled();
+        expect(pick.calls.mostRecent().args[1]).toEqual(new Cartesian2(10, 20));
+      }
+
+      it("uses the mouse position for wheel zoom with default drag bindings", function () {
+        expectScrollPick();
+      });
+
+      it("uses the mouse position for wheel zoom without drag bindings", function () {
+        expectScrollPick({ dragInputs: [] });
+      });
+
+      it("preserves middle drag zoom and uses the drag start position", function () {
+        controller = new ScreenSpaceZoomCameraController();
+        controller.usePointerPosition = true;
+        const pick = spyOn(controller, "pickWorldPosition").and.returnValue(
+          undefined,
+        );
+        controller.connectedCallback(element);
+
+        mouseEvent("Down", new Cartesian2(30, 40));
+        mouseEvent("Move", new Cartesian2(30, 60));
+        prepareUpdate(controller);
+        controller.update(createScene(createLevelCamera(100.0)));
+
+        expect(pick).toHaveBeenCalled();
+        expect(pick.calls.mostRecent().args[1]).toEqual(new Cartesian2(30, 40));
+        mouseEvent("Up", new Cartesian2(30, 60));
+      });
+
+      it("preserves drag bindings with modifiers", function () {
+        controller = new ScreenSpaceZoomCameraController({
+          dragInputs: [
+            {
+              button: MouseButton.MIDDLE,
+              modifier: KeyboardEventModifier.SHIFT,
+            },
+          ],
+        });
+        controller.usePointerPosition = true;
+        const pick = spyOn(controller, "pickWorldPosition").and.returnValue(
+          undefined,
+        );
+        controller.connectedCallback(element);
+
+        mouseEvent("Down", new Cartesian2(30, 40), true);
+        mouseEvent("Move", new Cartesian2(30, 60), true);
+        prepareUpdate(controller);
+        controller.update(createScene(createLevelCamera(100.0)));
+
+        expect(pick).toHaveBeenCalled();
+        expect(pick.calls.mostRecent().args[1]).toEqual(new Cartesian2(30, 40));
+        mouseEvent("Up", new Cartesian2(30, 60), true);
+      });
     });
 
     it("zooms forward when nothing is picked below the ellipsoid's maximum radius", function () {
