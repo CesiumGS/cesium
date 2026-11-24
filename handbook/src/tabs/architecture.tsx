@@ -632,20 +632,24 @@ export function Architecture() {
           </li>
           <li>
             Content has a name its host or resolver declares (a dataset's ID,
-            say), in a form no URL fits, so a URL or a piece of one is refused
-            as a name. Content with none gets a name the engine derives: a
-            digest of everything its kind receives (its kind, its URL and its
-            options) but the credential its resolver declares, so two contents a
-            kind could tell apart never share one. The engine's own messages
-            name content by its kind and a number, never by its name or its
-            keys. Everything a source writes carries a stable ID in two parts: a
-            feature ID, the source's own key for the feature projected in the
-            content's name, the same wherever, however often and in whichever
-            run it is opened; and an instance ID for each placement, which its
-            draws carry and which is never its feature ID. The key is the
-            address: edits and labels are set by key and reach every placement,
-            and hosts save keys rather than IDs until the API review settles the
-            IDs' encoding.
+            say): letters, digits and a few marks, its parts joined with a
+            colon, with no slash and no @. The engine adds nothing to a name,
+            and no URL, authority with a path, or path of several parts fits the
+            grammar. Content with none gets a random name for the session, with
+            nothing from its kind, its URL or its options in it, and the engine
+            says when it opens it that its IDs last for this session only. So
+            the engine puts nothing from where content lives into any name, ID,
+            change set or message, and a test that runs twice with every part of
+            the location different finds every output the same. The engine's own
+            messages name content by its kind and a number, never by its name or
+            its keys. Everything a source writes carries a stable ID in two
+            parts: a feature ID, the source's own key for the feature projected
+            in the content's name, the same wherever, however often and in
+            whichever run content of one declared name is opened; and an
+            instance ID for each placement, which its draws carry and which is
+            never its feature ID. The key is the address: edits and labels are
+            set by key and reach every placement, and hosts save keys rather
+            than IDs until the API review settles the IDs' encoding.
           </li>
         </ul>
         <p>
@@ -694,13 +698,14 @@ export function Architecture() {
             change is applied to what is loaded or turned into an invalidation,
             and the engine holds nothing else of it: for a new feature to show,
             its source invalidates the tile that holds it, and serves content at
-            or past what it pushed. A queue that overflows, or a change set that
-            fails its check, becomes an invalidation of everything, so the
-            source reloads and nothing is lost. The engine applies them in its
-            apply phase, and on a stepped clock samples wait for their scene
-            times, so a replayed feed gives the same rows. The engine never
-            polls; a source may check its own server on an interval it declares
-            and push what changed.
+            or past what it pushed. Each push is checked once, as it arrives:
+            one of a known kind that is malformed in any way, or a queue that
+            overflows, becomes an invalidation of everything, so the source
+            reloads and nothing is lost. The engine applies them in its apply
+            phase, and on a stepped clock samples wait for their scene times, so
+            a replayed feed gives the same rows. The engine never polls; a
+            source may check its own server on an interval it declares and push
+            what changed.
           </li>
           <li>
             For editing: write capabilities (every source is read-only for now),
