@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>9 of 25 done"]
   CS_9["WebGL 2 renderer<br/>8 of 21 done"]
-  CS_10["Cesium IR<br/>49 of 89 done"]
+  CS_10["Cesium IR<br/>50 of 89 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 18 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -54,7 +54,7 @@ graph LR
   CS_10 -->|1| CS_17
   CS_191 -->|2| CS_188
   CS_437 -->|1| CS_189
-  CS_10 -->|3| CS_190
+  CS_10 -->|2| CS_190
   CS_16 -->|1| CS_191
   CS_188 -->|1| CS_191
   CS_189 -->|2| CS_192
@@ -64,7 +64,6 @@ graph LR
   CS_188 -->|1| CS_193
   CS_190 -->|1| CS_193
   CS_389 -->|2| CS_195
-  CS_10 -->|1| CS_196
   CS_188 -->|2| CS_196
   CS_191 -->|1| CS_196
   CS_15 -->|1| CS_8

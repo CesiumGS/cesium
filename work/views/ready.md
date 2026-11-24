@@ -32,7 +32,6 @@ CS-10 Cesium IR
   CS-941  A compiled route's residual statements go through Cesium IR's emitters (CS-920 B)
   CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
   CS-989  Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
-  CS-1146  docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23
   CS-1196  decision: Merge CS-955, the df64 route-center pass measured, with a CPU fallback
 
 CS-11 Live MaterialX graph editing
@@ -321,5 +320,5 @@ CS-609 A clean 2.0 branch and a modern build
 CS-197 Ray queries and path tracing
   CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
 
-250 ready
+249 ready
 ```

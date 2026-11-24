@@ -12,9 +12,9 @@ CS-9 The WebGL 2 renderer [Planned], led by owner
   waits on: CS-10 Cesium IR (3); CS-13 The worker-mode façade (1)
   waited on by: CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
-  49 of 89 done, 15 ready, 10 blocked, 15 proposed
+  50 of 89 done, 14 ready, 10 blocked, 15 proposed
   waits on: CS-609 A clean 2.0 branch and a modern build (1)
-  waited on by: CS-9 The WebGL 2 renderer (3); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (3); CS-17 The transform graph (1); CS-190 Vector drawing and the styling language (3); CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (3)
+  waited on by: CS-9 The WebGL 2 renderer (3); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (3); CS-17 The transform graph (1); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner
   0 of 18 done, 6 ready, 11 blocked, 1 proposed
   waits on: CS-10 Cesium IR (2); CS-9 The WebGL 2 renderer (1)
@@ -61,7 +61,7 @@ CS-189 Frames and engineering coordinates follow-ups [Planned], led by owner
   waited on by: CS-192 Sky, light and atmosphere (2); CS-584 The widgets library (1); CS-642 Geometry generators (1); CS-18 The work tracker (4)
 CS-190 Vector drawing and the styling language [Planned], led by owner
   0 of 14 done, 4 ready, 6 blocked, 4 proposed, 2 dropped
-  waits on: CS-10 Cesium IR (3)
+  waits on: CS-10 Cesium IR (2)
   waited on by: CS-193 B-reps and geometry queries (1); CS-18 The work tracker (4); CS-191 Content sources and formats (2); CS-642 Geometry generators (1); CS-197 Ray queries and path tracing (1)
 CS-191 Content sources and formats [Planned], led by owner
   65 of 142 done, 33 ready, 21 blocked, 23 proposed
@@ -85,7 +85,7 @@ CS-195 Benchmarks, parity and image regression [Planned], led by owner
   waited on by: CS-18 The work tracker (4); CS-596 Trust and evals (1)
 CS-196 Infrastructure and geoscience capabilities [Planned], led by owner
   4 of 16 done, 5 ready, 2 blocked, 5 proposed
-  waits on: CS-10 Cesium IR (1); CS-188 Earth to Moon (frames 5c to 5h) (2); CS-191 Content sources and formats (1)
+  waits on: CS-188 Earth to Moon (frames 5c to 5h) (2); CS-191 Content sources and formats (1)
   waited on by: CS-18 The work tracker (2); CS-584 The widgets library (1)
 CS-197 Ray queries and path tracing [Planned], led by owner
   0 of 10 done, 1 ready, 2 blocked, 7 proposed

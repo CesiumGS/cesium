@@ -29,6 +29,7 @@ CS-10 Cesium IR
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
   CS-837  Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates
   CS-921  A compiled route's center term subtracts its highs as integers on both emitters
+  CS-1146  docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23
 
 CS-12 The job system's ports
   CS-86  The first slice: `Jobs` behind `WorkerPool`
@@ -146,5 +147,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-109 merged item(s) not in a release
+110 merged item(s) not in a release
 ```

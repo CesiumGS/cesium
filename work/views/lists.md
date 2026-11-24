@@ -82,7 +82,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 49 of 89 done, 15 ready, 10 blocked, 15 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 50 of 89 done, 14 ready, 10 blocked, 15 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -173,7 +173,7 @@ No milestone
 - [x] CS-1141 decision: What is the styling color model?. Done.
 - [x] CS-1142 decision: What does a missing property read as?. Done.
 - [x] CS-1143 decision: When does a styling proposal go to the 3D Tiles group?. Done.
-- [ ] CS-1146 docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23. Needs CS-1129, CS-1130, CS-1131 and CS-1132.
+- [x] CS-1146 docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23. Done.
 - [x] CS-1169 decision: Does 2.0 accept MapLibre style JSON as a styling front end?. Done.
 - [x] CS-1180 decision: Merge CS-1146, the styling runtime's design note. Done.
 - [ ] CS-1196 decision: Merge CS-955, the df64 route-center pass measured, with a CPU fallback. Needs nothing. Decided by owner.
@@ -1007,7 +1007,7 @@ CS-196, Planned, led by owner: 4 of 16 done, 5 ready, 2 blocked, 5 proposed. Pla
 
 Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Planned)
 
-- [?] CS-337 Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-1146 (Cesium IR).
+- [?] CS-337 Scalar fields on any geometry: values, color ramps, legends and picks. Proposed. Needs CS-1146 (Cesium IR).
 - [ ] CS-338 Per-element overrides at scale, through the styling language. Needs CS-1108 (Content sources and formats).
 - [ ] CS-340 Printing to scale. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 - [?] CS-342 The infrastructure and geoscience gallery examples. Proposed. Needs nothing.

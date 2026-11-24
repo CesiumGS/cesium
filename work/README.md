@@ -139,7 +139,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 49 of 89 done, 15 ready, 10 blocked, 15 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 50 of 89 done, 14 ready, 10 blocked, 15 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -230,7 +230,7 @@ No milestone
 - [x] [CS-1141](./items/CS-1141-what-is-the-styling-color-model.md) decision: What is the styling color model?. Done.
 - [x] [CS-1142](./items/CS-1142-what-does-a-missing-property-read-as.md) decision: What does a missing property read as?. Done.
 - [x] [CS-1143](./items/CS-1143-when-does-a-styling-proposal-go-to-the-3d-tiles.md) decision: When does a styling proposal go to the 3D Tiles group?. Done.
-- [ ] [CS-1146](./items/CS-1146-docs-design-styling-runtime-md-lands-the-shared.md) docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23. Needs CS-1129, CS-1130, CS-1131 and CS-1132.
+- [x] [CS-1146](./items/CS-1146-docs-design-styling-runtime-md-lands-the-shared.md) docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23. Done.
 - [x] [CS-1169](./items/CS-1169-does-2-0-accept-maplibre-style-json-as-a.md) decision: Does 2.0 accept MapLibre style JSON as a styling front end?. Done.
 - [x] [CS-1180](./items/CS-1180-merge-cs-1146-the-styling-runtime-s-design-note.md) decision: Merge CS-1146, the styling runtime's design note. Done.
 - [ ] [CS-1196](./items/CS-1196-merge-cs-955-the-df64-route-center-pass.md) decision: Merge CS-955, the df64 route-center pass measured, with a CPU fallback. Needs nothing. Decided by owner.
@@ -1064,7 +1064,7 @@ No milestone
 
 Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestones/CS-534-infrastructure-and-geoscience-data-shows-in-2-0.md), Planned)
 
-- [?] [CS-337](./items/CS-337-scalar-fields-on-any-geometry-values-colour.md) Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-1146 (Cesium IR).
+- [?] [CS-337](./items/CS-337-scalar-fields-on-any-geometry-values-colour.md) Scalar fields on any geometry: values, color ramps, legends and picks. Proposed. Needs CS-1146 (Cesium IR).
 - [ ] [CS-338](./items/CS-338-per-element-overrides-at-scale-through-the.md) Per-element overrides at scale, through the styling language. Needs CS-1108 (Content sources and formats).
 - [ ] [CS-340](./items/CS-340-printing-to-scale.md) Printing to scale. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 - [?] [CS-342](./items/CS-342-the-infrastructure-and-geoscience-gallery.md) The infrastructure and geoscience gallery examples. Proposed. Needs nothing.

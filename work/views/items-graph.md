@@ -133,7 +133,7 @@ graph LR
     CS_1141["CS-1141 What is the styling color model?"]:::done
     CS_1142["CS-1142 What does a missing property read as?"]:::done
     CS_1143["CS-1143 When does a styling proposal go to the 3D Tiles group?"]:::done
-    CS_1146["CS-1146 docs/design/styling-runtime.md lands: the shared styling runti"]:::open
+    CS_1146["CS-1146 docs/design/styling-runtime.md lands: the shared styling runti"]:::done
     CS_1169["CS-1169 Does 2.0 accept MapLibre style JSON as a styling front end?"]:::done
     CS_1180["CS-1180 Merge CS-1146, the styling runtime's design note"]:::done
     CS_1196["CS-1196 Merge CS-955, the df64 route-center pass measured, with a CPU "]:::decision
@@ -697,7 +697,7 @@ graph LR
     CS_1121["CS-1121 The memory ledger's report call: bytes by owner and kind, on t"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
-    CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
+    CS_337["CS-337 Scalar fields on any geometry: values, color ramps, legends and"]:::proposed
     CS_338["CS-338 Per-element overrides at scale, through the styling language"]:::open
     CS_339["CS-339 Volumes: voxel grids, ray-marched or as isosurfaces"]:::open
     CS_340["CS-340 Printing to scale"]:::open
