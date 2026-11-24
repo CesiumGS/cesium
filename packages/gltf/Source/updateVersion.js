@@ -14,7 +14,6 @@ import findAccessorMinMax from "./findAccessorMinMax.js";
 import ForEach from "./ForEach.js";
 import getAccessorByteStride from "./getAccessorByteStride.js";
 import numberOfComponentsForType from "./numberOfComponentsForType.js";
-import removeUnusedElements from "./removeUnusedElements.js";
 import updateAccessorComponentTypes from "./updateAccessorComponentTypes.js";
 import removeExtension from "./removeExtension.js";
 
@@ -770,38 +769,47 @@ function moveByteStrideToBufferView(gltf) {
   for (const bufferViewId in bufferViewMap) {
     if (Object.prototype.hasOwnProperty.call(bufferViewMap, bufferViewId)) {
       bufferView = bufferViews[bufferViewId];
+      const bufferViewByteOffset = bufferView.byteOffset;
       const accessors = bufferViewMap[bufferViewId];
       accessors.sort(function (a, b) {
         return a.byteOffset - b.byteOffset;
+      });
+      // Writing the first group's byteStride to the buffer view changes what getAccessorByteStride returns
+      const accessorByteStrides = accessors.map(function (accessor) {
+        return computeAccessorByteStride(gltf, accessor);
       });
       let currentByteOffset = 0;
       let currentIndex = 0;
       const accessorsLength = accessors.length;
       for (i = 0; i < accessorsLength; ++i) {
         let accessor = accessors[i];
-        const accessorByteStride = computeAccessorByteStride(gltf, accessor);
+        const accessorByteStride = accessorByteStrides[i];
         const accessorByteOffset = accessor.byteOffset;
         const accessorByteLength = accessor.count * accessorByteStride;
         delete accessor.byteStride;
 
         const hasNextAccessor = i < accessorsLength - 1;
         const nextAccessorByteStride = hasNextAccessor
-          ? computeAccessorByteStride(gltf, accessors[i + 1])
+          ? accessorByteStrides[i + 1]
           : undefined;
         if (accessorByteStride !== nextAccessorByteStride) {
-          const newBufferView = clone(bufferView, true);
+          // The first group of accessors keeps the original buffer view
+          let groupBufferView = bufferView;
+          if (currentIndex > 0) {
+            groupBufferView = clone(bufferView, true);
+            const groupBufferViewId = addToArray(bufferViews, groupBufferView);
+            for (j = currentIndex; j <= i; ++j) {
+              accessor = accessors[j];
+              accessor.bufferView = groupBufferViewId;
+              accessor.byteOffset = accessor.byteOffset - currentByteOffset;
+            }
+          }
           if (bufferViewHasVertexAttributes[bufferViewId]) {
-            newBufferView.byteStride = accessorByteStride;
+            groupBufferView.byteStride = accessorByteStride;
           }
-          newBufferView.byteOffset += currentByteOffset;
-          newBufferView.byteLength =
+          groupBufferView.byteOffset = bufferViewByteOffset + currentByteOffset;
+          groupBufferView.byteLength =
             accessorByteOffset + accessorByteLength - currentByteOffset;
-          const newBufferViewId = addToArray(bufferViews, newBufferView);
-          for (j = currentIndex; j <= i; ++j) {
-            accessor = accessors[j];
-            accessor.bufferView = newBufferViewId;
-            accessor.byteOffset = accessor.byteOffset - currentByteOffset;
-          }
           // Set current byte offset to next accessor's byte offset
           currentByteOffset = hasNextAccessor
             ? accessors[i + 1].byteOffset
@@ -811,9 +819,6 @@ function moveByteStrideToBufferView(gltf) {
       }
     }
   }
-
-  // Remove unused buffer views
-  removeUnusedElements(gltf, ["accessor", "bufferView", "buffer"]);
 }
 
 function requirePositionAccessorMinMax(gltf) {
