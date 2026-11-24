@@ -28,7 +28,9 @@ class ControllerHost {
   }
 
   /**
-   * The controllers registered to this host, in the order they are updated. A new array each time, so changing it doesn't change the host.
+   * The controllers registered to this host, in the order they are updated. A shallow copy is returned, so modifying the array does not modify the controllers registered with the host.
+
+
    * @type {Controller[]}
    * @readonly
    */

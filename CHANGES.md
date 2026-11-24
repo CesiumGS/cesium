@@ -50,6 +50,7 @@
 - Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
 - Fixed camera controllers continuing to move with leftover inertia after being re-enabled, and `HybridScreenSpacePanCameraController.enabled` not enabling or disabling the map and elevator controllers it switches between. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
 - Fixed `ScreenSpaceZoomCameraController.usePointerPosition` having no effect and zooming in the wrong direction when nothing is picked near the ellipsoid surface. Fixed `ScreenSpaceTiltOrbitCameraController` misbehaving with damping enabled when `orbitMagnitude` or `tiltMagnitude` is negative; negative values now reverse the orbit or tilt direction. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
+- Fixed `ScreenSpaceZoomCameraController.minimumZoomDistance` not limiting zoom; the camera, including its momentum, now slows to a stop at that distance from the zoom target. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
 
 ## 1.147 - 2026-11-02
 

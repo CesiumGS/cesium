@@ -210,6 +210,94 @@ describe("Scene/Controllers/ScreenSpaceCameraControllers", function () {
       expect(Cartesian3.dot(moved, direction)).toBeGreaterThan(0.0);
     });
 
+    describe("minimumZoomDistance", function () {
+      const frameTime = 1000.0 / 60.0;
+
+      // Scrolls for two seconds, then coasts, and returns the closest approach to the target.
+      function zoomTowardTarget(minimumZoomDistance, wheelDelta) {
+        const camera = createLevelCamera(100.0);
+        const target = Cartesian3.add(
+          camera.positionWC,
+          Cartesian3.multiplyByScalar(
+            camera.directionWC,
+            1000.0,
+            new Cartesian3(),
+          ),
+          new Cartesian3(),
+        );
+
+        const controller = new ScreenSpaceZoomCameraController();
+        controller.minimumZoomDistance = minimumZoomDistance;
+        controller.pickWorldPosition = (scene, windowPosition, result) =>
+          Cartesian3.clone(target, result);
+        const scene = createScene(camera);
+
+        let closest = Number.POSITIVE_INFINITY;
+        for (let i = 0; i < 600; i++) {
+          if (i < 120 && i % 3 === 0) {
+            controller._handleZoom(wheelDelta);
+          }
+          controller._lastUpdateTime = getTimestamp() - frameTime;
+          controller.update(scene);
+          closest = Math.min(
+            closest,
+            Cartesian3.distance(camera.positionWC, target),
+          );
+        }
+        return closest;
+      }
+
+      it("does not zoom past the target with momentum", function () {
+        const closest = zoomTowardTarget(0.0, 100.0);
+        expect(closest).toBeGreaterThanOrEqual(0.0);
+        expect(closest).toBeLessThan(10.0);
+      });
+
+      it("stops at the minimum zoom distance with momentum", function () {
+        const closest = zoomTowardTarget(500.0, 100.0);
+        expect(closest).toBeGreaterThanOrEqual(500.0 - CesiumMath.EPSILON3);
+        expect(closest).toBeLessThan(510.0);
+      });
+
+      it("zooms out from inside the minimum zoom distance", function () {
+        const camera = createLevelCamera(100.0);
+        const target = Cartesian3.add(
+          camera.positionWC,
+          Cartesian3.multiplyByScalar(
+            camera.directionWC,
+            100.0,
+            new Cartesian3(),
+          ),
+          new Cartesian3(),
+        );
+        const controller = new ScreenSpaceZoomCameraController();
+        controller.minimumZoomDistance = 500.0;
+        controller.dampingEnabled = false;
+        controller.pickWorldPosition = (scene, windowPosition, result) =>
+          Cartesian3.clone(target, result);
+
+        controller._handleZoom(-1.0);
+        prepareUpdate(controller);
+        controller.update(createScene(camera));
+
+        expect(Cartesian3.distance(camera.positionWC, target)).toBeGreaterThan(
+          100.0,
+        );
+      });
+      it("does not throw when the camera is at the target", function () {
+        const camera = createLevelCamera(100.0);
+        const target = Cartesian3.clone(camera.positionWC);
+        const controller = new ScreenSpaceZoomCameraController();
+        controller.pickWorldPosition = (scene, windowPosition, result) =>
+          Cartesian3.clone(target, result);
+
+        controller._handleZoom(-1.0);
+        prepareUpdate(controller);
+
+        expect(() => controller.update(createScene(camera))).not.toThrow();
+      });
+    });
+
     it("re-enabling discards zoom input and inertia", function () {
       const controller = new ScreenSpaceZoomCameraController();
 

@@ -139,14 +139,14 @@ class ScreenSpaceZoomCameraController {
     this.inertialDecay = 6.0;
 
     /**
-     * The minimum distance from the zoom target used to scale the zoom speed. The camera zooms more slowly as it approaches the target and stops short of it when this is 0.0; a larger value keeps it moving, so it can zoom up to and past the target.
+     * The minimum distance from the zoom target that the camera can zoom in to. Zoom speed is proportional to the remaining distance to the pick target.
      * @type {number}
      * @default 0.0
      */
     this.minimumZoomDistance = 0.0;
 
     /**
-     * Maximum distance from the zoom target that the camera can move away.
+     * The maximum distance from the zoom target used to scale the zoom speed. The camera zooms out at a speed proportional to its distance from the target, up to this distance.
      * @type {number}
      * @default 100000.0
      */
@@ -182,6 +182,9 @@ class ScreenSpaceZoomCameraController {
 
     this._target = new Cartesian3();
     this._zoomDirection = new Cartesian3();
+    this._zoomDistance = 0.0;
+    // The damped quantity is the fraction of the remaining distance to move per frame, so that
+    // momentum scales down with the distance to the target.
     this._zoomDampenedResults = {
       velocity: 0.0,
       value: 0.0,
@@ -273,16 +276,16 @@ class ScreenSpaceZoomCameraController {
   }
 
   /**
-   * The current zoom distance of the camera in meters. This is the distance from the camera to the zoom target.
+   * The distance in meters the camera moved toward the zoom target during the last update.
    * @type {number}
    * @private
    */
   get zoomDistance() {
-    return this._zoomDampenedResults.value;
+    return this._zoomDistance;
   }
 
   /**
-   * The current zoom velocity of the camera in radians per second.
+   * The current zoom velocity, in fractions of the remaining distance to the zoom target per second.
    * @type {number}
    * @private
    */
@@ -291,7 +294,7 @@ class ScreenSpaceZoomCameraController {
   }
 
   /**
-   * The current zoom velocity of the camera in radians per second.
+   * The current zoom velocity, in fractions of the remaining distance to the zoom target per second.
    * @type {number}
    * @private
    */
@@ -360,13 +363,20 @@ class ScreenSpaceZoomCameraController {
     }
     const target = this.pickWorldPosition(scene, windowPosition, this._target);
     if (defined(target)) {
-      direction = Cartesian3.subtract(
+      const toTarget = Cartesian3.subtract(
         target,
         camera.positionWC,
         this._zoomDirection,
       );
-      direction = Cartesian3.normalize(direction, this._zoomDirection);
-      distance = Cartesian3.distance(target, camera.positionWC);
+      distance = Cartesian3.magnitude(toTarget);
+      // At the target (distance = 0) keep the camera's direction to avoid a division by 0.
+      if (distance > 0.0) {
+        direction = Cartesian3.divideByScalar(
+          toTarget,
+          distance,
+          this._zoomDirection,
+        );
+      }
     } else {
       // Without a target, scale the zoom by the camera's distance from the ellipsoid surface.
       const surface = ellipsoid.scaleToGeodeticSurface(
@@ -378,13 +388,22 @@ class ScreenSpaceZoomCameraController {
       }
     }
 
-    distance = CesiumMath.clamp(
-      distance,
-      this.minimumZoomDistance,
-      this.maximumZoomDistance,
+    const { minimumZoomDistance, maximumZoomDistance } = this;
+    // Zooming in is proportional to the distance remaining above the minimum, so the camera always stops there.
+    const zoomInScale = CesiumMath.clamp(
+      distance - minimumZoomDistance,
+      0.0,
+      maximumZoomDistance,
     );
 
-    const zoom = dz * distance * this.zoomDistanceRatio;
+    // Zooming out is proportional to the distance, so even at the minimum distance, we can still zoom out.
+    const zoomOutScale = CesiumMath.clamp(
+      distance,
+      minimumZoomDistance,
+      maximumZoomDistance,
+    );
+
+    const zoom = dz * this.zoomDistanceRatio;
 
     const smoothTime = this.dampingEnabled
       ? this.zoomAnimationDuration
@@ -399,7 +418,16 @@ class ScreenSpaceZoomCameraController {
       this._zoomDampenedResults,
     );
 
-    camera.move(direction, this.zoomDistance);
+    // Applying the damped fraction to the current distance lets momentum decay as the camera nears the minimum.
+    const fraction = CesiumMath.clamp(
+      this._zoomDampenedResults.value,
+      -1.0,
+      1.0,
+    );
+
+    this._zoomDistance =
+      fraction * (fraction > 0.0 ? zoomInScale : zoomOutScale);
+    camera.move(direction, this._zoomDistance);
 
     // Reset for next frame
     this._lastUpdateTime = getTimestamp();
