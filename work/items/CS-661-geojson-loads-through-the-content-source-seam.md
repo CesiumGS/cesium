@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-17
 project: CS-191
-needs: [CS-552]
+needs: [CS-552, CS-261]
 tier_override: 1
 ---
 
