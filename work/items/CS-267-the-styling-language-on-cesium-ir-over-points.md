@@ -8,7 +8,7 @@ project: CS-190
 needs: [CS-1140, CS-55]
 ---
 
-**Proposal** (CS-686). Source: later, a copy of the follow-up list in `docs/design/styling-language.md`, made by the 2026-11-13 plan migration. Why now: Nothing committed needs it; no release on the ladder names it. It also waits on CS-265, CS-55. Rough size: large, a project of its own. Decider: the owner. Filed: 2026-11-13.
+**Proposal** (CS-686). Source: later, a copy of the follow-up list in `docs/design/styling-language.md`, made by the 2026-11-13 plan migration. Why now: Nothing committed needs it; no release on the ladder names it. It also waits on CS-1140 and CS-55 (CS-265 was closed as superseded). Rough size: large, a project of its own. Decider: the owner. Filed: 2026-11-13.
 
 ## Done when
 
