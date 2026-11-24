@@ -2,10 +2,11 @@
 id: CS-1146
 title: "docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-23
 project: CS-10
 needs: [CS-1129, CS-1130, CS-1131, CS-1132]
+claimed_by: orch-11-CS-1146
 ---
 
 > **Committed by the owner (2026-11-23):** "write the design note". The draft is `styling-runtime-draft.md` in the chief of staff's shared notes. It needs updating with the owner's later answers before it lands: CS-1133 to CS-1143.
