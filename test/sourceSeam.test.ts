@@ -68,6 +68,7 @@ import {
 } from "../packages/core/src/source/runtime.ts";
 import { ContentRows } from "../packages/core/src/source/sinks.ts";
 import type {
+  SampleBatch as SampleBatchOf,
   SourceChange,
   SourceClock,
 } from "../packages/core/src/source/types.ts";
@@ -1356,7 +1357,7 @@ describe("pushes under bounds and the apply phase's budget", () => {
       },
     });
     expect(reports.at(-1)).toMatch(
-      /push of samples is refused, and becomes an invalidation of everything.*its values are Float64Arrays, one per time/,
+      /push of samples is refused, and becomes an invalidation of everything.*its values are Float64Arrays of finite numbers, one per time/,
     );
     // Its source loads everything again.
     rt.tick();
@@ -1841,6 +1842,195 @@ describe("the bounds turn what doesn't fit into an invalidation, and say what th
     const admitted = admit({ kind: "invalidate", keys })!;
     keys.push("t2");
     expect(admitted.change).toMatchObject({ keys: ["t1"] });
+  });
+
+  it("admits each field of a push from one read: getters that answer differently later, and later changes to the source's object, change nothing queued; each getter is read once (CS-1168 A)", () => {
+    /** Reads per field, by its path. */
+    const reads = new Map<string, number>();
+    /** An object whose fields are getters: `first` on the first read, `later` after. */
+    const fickle = (
+      path: string,
+      fields: Record<string, [first: unknown, later?: unknown]>,
+    ): Record<string, unknown> => {
+      const out = {};
+      for (const [name, [first, later]] of Object.entries(fields)) {
+        Object.defineProperty(out, name, {
+          enumerable: true,
+          get: () => {
+            const n = (reads.get(`${path}.${name}`) ?? 0) + 1;
+            reads.set(`${path}.${name}`, n);
+            return n === 1 || later === undefined ? first : later;
+          },
+        });
+      }
+      return out as Record<string, unknown>;
+    };
+    const keys = ["t1"];
+    const region = {
+      region: fickle("region.region", {
+        west: [0, "x"],
+        south: [0, "x"],
+        east: [1, "x"],
+        north: [1, "x"],
+      }),
+      box: fickle("region.box", {
+        crs: ["EPSG:4978", 5],
+        min: [[0, 0, 0], "x"],
+        max: [[1, 1, 1], "x"],
+      }),
+    };
+    const invalidate = admit(
+      fickle("invalidate", {
+        kind: ["invalidate"],
+        keys: [keys, "x"],
+        region: [region, "x"],
+        version: ["v1", 5],
+      }),
+    )!;
+    const ops = [
+      fickle("op", {
+        op: ["update", "x"],
+        key: ["k1", 5],
+        patch: [{ properties: { n: 1 } }, "x"],
+      }),
+    ];
+    const changes = fickle("changes", {
+      id: ["cs-1", 5],
+      source: ["s", 5],
+      ops: [ops, "x"],
+    });
+    const features = admit(
+      fickle("features", { kind: ["features"], changes: [changes, "x"] }),
+    )!;
+    const times = Float64Array.of(1, 2);
+    const samples = admit(
+      fickle("samples", {
+        kind: ["samples"],
+        samples: [
+          fickle("batch", {
+            times: [times, "x"],
+            names: [["a", "b"], "x"],
+            positions: [new Float64Array(6), "x"],
+            values: [{ speed: Float64Array.of(3, 4) }, "x"],
+          }),
+          "x",
+        ],
+      }),
+    )!;
+    // Each a checked change, not a refusal: the first read was well formed.
+    expect([invalidate, features, samples].map((a) => a.refused)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    // Every getter was read exactly once.
+    const twice = [...reads].filter(([, n]) => n !== 1);
+    expect(twice).toEqual([]);
+    expect(reads.size).toBe(25); // 11 in the invalidation, 8 in the change set, 6 in the samples
+    // Later reads, and changes to what the first reads gave, change nothing queued.
+    keys.push("t2");
+    ops.push(ops[0]!);
+    times[0] = 99;
+    expect(invalidate.change).toMatchObject({
+      keys: ["t1"],
+      version: "v1",
+      region: {
+        region: { west: 0, south: 0, east: 1, north: 1 },
+        box: { crs: "EPSG:4978", min: [0, 0, 0], max: [1, 1, 1] },
+      },
+    });
+    expect(features.change).toMatchObject({
+      changes: {
+        id: "cs-1",
+        source: "s",
+        ops: [{ op: "update", key: "k1", patch: { properties: { n: 1 } } }],
+      },
+    });
+    expect(features.ops).toBe(1);
+    const batch = (samples.change as { samples: SampleBatchOf }).samples;
+    expect([...batch.times]).toEqual([1, 2]);
+    expect(batch.names).toEqual(["a", "b"]);
+    // A resizable buffer shrunk after the push changes nothing queued.
+    const buffer = new ArrayBuffer(16, { maxByteLength: 64 });
+    const tracking = new Float64Array(buffer);
+    tracking.set([5, 6]);
+    const resized = admit({
+      kind: "samples",
+      samples: { times: tracking, names: ["a", "b"] },
+    })!;
+    buffer.resize(8);
+    expect([
+      ...(resized.change as { samples: SampleBatchOf }).samples.times,
+    ]).toEqual([5, 6]);
+  });
+
+  it("refuses symbol and non-enumerable fields, a kind it can't read, non-finite samples, a long version, and too many ops before reading one (CS-1168 A's Minors)", () => {
+    const hidden = { kind: "invalidate" };
+    Object.defineProperty(hidden, "keys", { value: ["t1"], enumerable: false });
+    const unreadable = {};
+    Object.defineProperty(unreadable, "kind", {
+      enumerable: true,
+      get: () => {
+        throw new Error("no kind");
+      },
+    });
+    let opReads = 0;
+    const manyOps = new Proxy(
+      new Array(10_001).fill({ op: "delete", key: "k" }),
+      {
+        get: (target, property, receiver) => {
+          if (typeof property === "string" && /^\d+$/.test(property)) {
+            opReads++;
+          }
+          return Reflect.get(target, property, receiver);
+        },
+      },
+    );
+    const CASES: [string, unknown][] = [
+      ["a symbol field", { kind: "invalidate", [Symbol("x")]: 1 }],
+      ["a non-enumerable field", hidden],
+      ["a kind that can't be read", unreadable],
+      [
+        "NaN in positions",
+        {
+          kind: "samples",
+          samples: {
+            times: Float64Array.of(1),
+            names: ["a"],
+            positions: Float64Array.of(0, NaN, 0),
+          },
+        },
+      ],
+      [
+        "Infinity in values",
+        {
+          kind: "samples",
+          samples: {
+            times: Float64Array.of(1),
+            names: ["a"],
+            values: { v: Float64Array.of(Infinity) },
+          },
+        },
+      ],
+      [
+        "a version of 257 characters",
+        { kind: "invalidate", version: "v".repeat(257) },
+      ],
+      [
+        "10 001 ops",
+        { kind: "features", changes: { id: "c", source: "s", ops: manyOps } },
+      ],
+    ];
+    const admitted = CASES.filter(([, push]) => !admit(push)?.refused).map(
+      ([what]) => what,
+    );
+    expect(admitted).toEqual([]);
+    expect(opReads).toBe(0);
+    expect(admit(unreadable)!.what).toBe("push");
+    // At the cap, a version is fine.
+    expect(
+      admit({ kind: "invalidate", version: "v".repeat(256) })!.refused,
+    ).toBeUndefined();
   });
 
   it("reports samples dropped at the bound once per run of drops", async () => {

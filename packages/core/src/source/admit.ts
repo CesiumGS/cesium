@@ -14,12 +14,22 @@
  * - **Nothing,** for a kind it doesn't know: the union is open (CS-831's
  *   S5), so later kinds don't break sources.
  *
- * Bounds (an invalidation's keys, a change set's ops) are read from the
- * checked value. A change set's nested feature data is checked here and
- * held by reference, as a sink holds a batch: a source doesn't change it
- * once pushed.
+ * Each field of a push is read once, into a local, then checked and
+ * copied: a getter that answers differently later changes nothing, and a
+ * symbol or non-enumerable field is refused as unknown. Arrays are read by
+ * their length once and each entry once; samples' arrays and an op's
+ * nested data are copied. Bounds (an invalidation's keys, a change set's
+ * ops) are read from the checked value, and a change set's op count is
+ * checked before its ops are copied.
  */
-import { checkChangeSet, type ChangeSet } from "./editing.ts";
+import {
+  CHANGE_SET_FIELDS,
+  DEFAULT_OPS,
+  META_FIELDS,
+  OP_FIELDS,
+  checkChangeSet,
+  type ChangeSet,
+} from "./editing.ts";
 import { own } from "./records.ts";
 import type {
   ContentKey,
@@ -105,42 +115,58 @@ export interface Admitted {
   /** Why a known kind was refused (naming no value): `change` is then an invalidation of everything. */
   readonly refused?: Error;
   /** What the refused push was. */
-  readonly what?: "invalidation" | "change set" | "push of samples";
+  readonly what?: "invalidation" | "change set" | "push of samples" | "push";
 }
+
+/** Most characters of an invalidation's `version`: a tag, an ETag or a time, never a payload. */
+export const MAX_VERSION_LENGTH = 256;
 
 /** `change` checked, an invalidation of everything for a malformed known kind, or undefined for a kind it doesn't know. */
 export function admit(change: unknown): Admitted | undefined {
+  if (!isRecord(change)) {
+    return undefined;
+  }
   let kind: unknown;
   try {
-    kind = isRecord(change) ? change.kind : undefined;
-  } catch {
-    return undefined;
+    kind = change.kind; // read once; the checks below don't read it again
+  } catch (error) {
+    // Malformed, not unknown: its kind can't be read. Reported.
+    return refusal(error, "push");
   }
   if (kind !== "invalidate" && kind !== "features" && kind !== "samples") {
     return undefined;
   }
   try {
-    const record = change as Record<string, unknown>;
     const checked =
       kind === "invalidate"
-        ? checkInvalidation(record)
+        ? checkInvalidation(change)
         : kind === "features"
-          ? checkFeatures(record)
-          : checkSamples(record);
+          ? checkFeatures(change)
+          : checkSamples(change);
     return { change: checked, ops: opsOf(checked) };
   } catch (error) {
-    return {
-      change: invalidation(),
-      ops: 1,
-      refused: error instanceof Error ? error : new TypeError("malformed."),
-      what:
-        kind === "invalidate"
-          ? "invalidation"
-          : kind === "features"
-            ? "change set"
-            : "push of samples",
-    };
+    return refusal(
+      error,
+      kind === "invalidate"
+        ? "invalidation"
+        : kind === "features"
+          ? "change set"
+          : "push of samples",
+    );
   }
+}
+
+/** A malformed push: an invalidation of everything, with why. */
+function refusal(
+  error: unknown,
+  what: NonNullable<Admitted["what"]>,
+): Admitted {
+  return {
+    change: invalidation(),
+    ops: 1,
+    refused: error instanceof Error ? error : new TypeError("malformed."),
+    what,
+  };
 }
 
 /** An invalidation the engine makes itself: of `keys`, else of everything. */
@@ -156,95 +182,158 @@ export function invalidation(
 function checkInvalidation(
   change: Record<string, unknown>,
 ): CheckedInvalidation {
-  fields(change, ["kind", "keys", "region", "version"], "an invalidation");
-  const { keys, region, version } = change;
-  const checkedKeys: unknown[] | undefined = Array.isArray(keys)
-    ? [...(keys as unknown[])]
-    : undefined;
+  const fields = read(
+    change,
+    ["kind", "keys", "region", "version"],
+    "an invalidation",
+  );
+  const keys = fields.get("keys");
+  const region = fields.get("region");
+  const version = fields.get("version");
+  const checkedKeys =
+    keys === undefined
+      ? undefined
+      : strings(keys, "an invalidation's keys are an array of strings.");
   if (
-    (keys !== undefined && checkedKeys === undefined) ||
-    !(checkedKeys ?? []).every((k) => typeof k === "string")
+    version !== undefined &&
+    (typeof version !== "string" || version.length > MAX_VERSION_LENGTH)
   ) {
-    throw new TypeError("an invalidation's keys are an array of strings.");
-  }
-  if (version !== undefined && typeof version !== "string") {
-    throw new TypeError("an invalidation's version is a string.");
+    throw new TypeError(
+      `an invalidation's version is a string of at most ${MAX_VERSION_LENGTH} characters.`,
+    );
   }
   return new CheckedInvalidation(
     TOKEN,
-    checkedKeys as ContentKey[] | undefined,
+    checkedKeys,
     region === undefined ? undefined : extent(region),
     version,
   );
 }
 
+/** Every field an op of any kind may have; `checkChangeSet` checks each kind's own. */
+const OP_FIELD_NAMES = [
+  ...new Set(Object.values(OP_FIELDS).flatMap((names) => [...names])),
+];
+
 function checkFeatures(change: Record<string, unknown>): CheckedFeatures {
-  fields(change, ["kind", "changes"], "a features push");
-  const changes = change.changes;
-  // Its envelope and ops, copied: what is checked is what is queued.
-  const copy = isRecord(changes)
-    ? {
-        ...changes,
-        ...(Array.isArray(changes.ops)
-          ? {
-              ops: (changes.ops as unknown[]).map((op) =>
-                isRecord(op) ? { ...op } : op,
+  const changes = read(change, ["kind", "changes"], "a features push").get(
+    "changes",
+  );
+  if (!isRecord(changes)) {
+    throw new TypeError("change set: not an object.");
+  }
+  // Its envelope, each field read once; its ops counted, then each read
+  // once and copied, nested data by structured clone: what is checked is
+  // what is queued.
+  const envelope = Object.fromEntries(
+    read(changes, [...CHANGE_SET_FIELDS], "change set"),
+  );
+  const ops: unknown = envelope.ops;
+  if (Array.isArray(ops)) {
+    const count: number = ops.length;
+    if (!(count <= DEFAULT_OPS)) {
+      throw new TypeError("change set: more ops than its limit.");
+    }
+    const copied: unknown[] = [];
+    for (let i = 0; i < count; i++) {
+      const op: unknown = ops[i];
+      copied.push(
+        isRecord(op)
+          ? Object.fromEntries(
+              [...read(op, OP_FIELD_NAMES, `change set: op ${i}`)].map(
+                ([name, value]) => [name, plainCopy(value)],
               ),
-            }
-          : {}),
-      }
-    : changes;
-  checkChangeSet(copy as ChangeSet);
-  return new CheckedFeatures(TOKEN, copy as ChangeSet);
+            )
+          : op,
+      );
+    }
+    envelope.ops = copied;
+  }
+  const meta: unknown = envelope.meta;
+  if (isRecord(meta)) {
+    envelope.meta = Object.fromEntries(
+      read(meta, [...META_FIELDS], "change set: its meta"),
+    );
+  }
+  checkChangeSet(envelope as unknown as ChangeSet);
+  return new CheckedFeatures(TOKEN, envelope as unknown as ChangeSet);
+}
+
+/** An op's field's value: an object copied by structured clone (each getter read once), else as it is. */
+function plainCopy(value: unknown): unknown {
+  return typeof value === "object" && value !== null
+    ? structuredClone(value)
+    : value;
 }
 
 function checkSamples(change: Record<string, unknown>): CheckedSamples {
-  fields(change, ["kind", "samples"], "a push of samples");
-  const batch = change.samples;
+  const batch = read(change, ["kind", "samples"], "a push of samples").get(
+    "samples",
+  );
   if (!isRecord(batch)) {
     throw new TypeError("samples: not an object.");
   }
-  fields(batch, ["times", "names", "positions", "values"], "samples");
-  const { times, names, positions, values } = batch;
+  const fields = read(
+    batch,
+    ["times", "names", "positions", "values"],
+    "samples",
+  );
+  const times = fields.get("times");
+  const positions = fields.get("positions");
+  const values = fields.get("values");
   if (!(times instanceof Float64Array)) {
     throw new TypeError("samples: its times are a Float64Array.");
   }
-  const count = times.length;
-  const checkedNames = Array.isArray(names) ? [...(names as unknown[])] : [];
-  if (
-    !Array.isArray(names) ||
-    checkedNames.length !== count ||
-    !checkedNames.every((n) => typeof n === "string")
-  ) {
+  // Copies, so a buffer the source resizes or writes later changes nothing queued.
+  const checkedTimes = new Float64Array(times);
+  const count = checkedTimes.length;
+  const names = strings(
+    fields.get("names"),
+    "samples: its names are strings, one per time.",
+  );
+  if (names.length !== count) {
     throw new TypeError("samples: its names are strings, one per time.");
   }
-  if (
-    positions !== undefined &&
-    !(positions instanceof Float64Array && positions.length === count * 3)
-  ) {
-    throw new TypeError(
-      "samples: its positions are a Float64Array, three per time.",
-    );
-  }
+  const checkedPositions =
+    positions === undefined
+      ? undefined
+      : finite(
+          positions,
+          count * 3,
+          "samples: its positions are a Float64Array of finite numbers, three per time.",
+        );
   let checkedValues: Record<string, Float64Array> | undefined;
   if (values !== undefined) {
-    const entries = isRecord(values) ? Object.entries(values) : [];
-    if (
-      !isRecord(values) ||
-      !entries.every(([, v]) => v instanceof Float64Array && v.length === count)
-    ) {
-      throw new TypeError(
-        "samples: its values are Float64Arrays, one per time.",
-      );
+    const message =
+      "samples: its values are Float64Arrays of finite numbers, one per time.";
+    if (!isRecord(values) || !plainKeys(values)) {
+      throw new TypeError(message);
     }
-    checkedValues = Object.fromEntries(entries) as Record<string, Float64Array>;
+    checkedValues = Object.fromEntries(
+      Object.entries(values).map(([name, v]) => [
+        name,
+        finite(v, count, message),
+      ]),
+    );
   }
   return new CheckedSamples(TOKEN, {
-    times,
-    names: checkedNames as string[],
-    ...(positions !== undefined ? { positions } : {}),
+    times: checkedTimes,
+    names,
+    ...(checkedPositions !== undefined ? { positions: checkedPositions } : {}),
     ...(checkedValues !== undefined ? { values: checkedValues } : {}),
   });
+}
+
+/** A copy of `value`, a Float64Array of `length` finite numbers, else throws `message`. */
+function finite(value: unknown, length: number, message: string): Float64Array {
+  if (!(value instanceof Float64Array)) {
+    throw new TypeError(message);
+  }
+  const copy = new Float64Array(value);
+  if (copy.length !== length || !copy.every(Number.isFinite)) {
+    throw new TypeError(message);
+  }
+  return copy;
 }
 
 /** An extent (`SourceExtent`): known parts only, finite numbers, a string CRS and frame. */
@@ -253,9 +342,12 @@ function extent(value: unknown): SourceExtent {
   if (!isRecord(value)) {
     throw new TypeError(`${where} is an object.`);
   }
-  fields(value, ["region", "box", "time", "frame"], where);
-  const { region, box, time, frame } = value;
-  /** `part`'s `names` and those of `optional` it has, each a finite number. */
+  const parts = read(value, ["region", "box", "time", "frame"], where);
+  const region = parts.get("region");
+  const box = parts.get("box");
+  const time = parts.get("time");
+  const frame = parts.get("frame");
+  /** `part`'s `names` and those of `optional` it has, each read once, each a finite number. */
   const numbers = (
     part: unknown,
     names: readonly string[],
@@ -264,10 +356,10 @@ function extent(value: unknown): SourceExtent {
     if (!isRecord(part)) {
       throw new TypeError(`${where} has a part that isn't an object.`);
     }
-    fields(part, [...names, ...optional], where);
+    const got = read(part, [...names, ...optional], where);
     const entries = [...names, ...optional].flatMap(
       (name): [string, number][] => {
-        const n = own(part, name);
+        const n = got.get(name);
         if (n === undefined && optional.includes(name)) {
           return [];
         }
@@ -279,15 +371,21 @@ function extent(value: unknown): SourceExtent {
     );
     return Object.fromEntries(entries);
   };
+  /** A box corner: its length and each number read once. */
   const triple = (v: unknown): [number, number, number] => {
-    if (
-      !Array.isArray(v) ||
-      v.length !== 3 ||
-      !v.every((n) => typeof n === "number" && Number.isFinite(n))
-    ) {
-      throw new TypeError(`${where}'s box corners are three finite numbers.`);
+    const message = `${where}'s box corners are three finite numbers.`;
+    if (!Array.isArray(v)) {
+      throw new TypeError(message);
     }
-    return [v[0], v[1], v[2]] as [number, number, number];
+    const length: number = v.length;
+    if (length !== 3) {
+      throw new TypeError(message);
+    }
+    const out: unknown[] = [v[0], v[1], v[2]];
+    if (!out.every((n) => typeof n === "number" && Number.isFinite(n))) {
+      throw new TypeError(message);
+    }
+    return out as [number, number, number];
   };
   const out: {
     region?: SourceExtent["region"];
@@ -303,11 +401,19 @@ function extent(value: unknown): SourceExtent {
     ) as SourceExtent["region"];
   }
   if (box !== undefined) {
-    if (!isRecord(box) || typeof box.crs !== "string") {
+    if (!isRecord(box)) {
       throw new TypeError(`${where}'s box names its CRS.`);
     }
-    fields(box, ["crs", "min", "max"], where);
-    out.box = { crs: box.crs, min: triple(box.min), max: triple(box.max) };
+    const corners = read(box, ["crs", "min", "max"], where);
+    const crs = corners.get("crs");
+    if (typeof crs !== "string") {
+      throw new TypeError(`${where}'s box names its CRS.`);
+    }
+    out.box = {
+      crs,
+      min: triple(corners.get("min")),
+      max: triple(corners.get("max")),
+    };
   }
   if (time !== undefined) {
     out.time = numbers(time, ["start", "stop"]) as SourceExtent["time"];
@@ -330,15 +436,56 @@ function opsOf(change: CheckedChange): number {
       : 1;
 }
 
-/** Throws naming `where` when `record` has a field `known` doesn't list (never the field's value). */
-function fields(
+/**
+ * `record`'s fields, each read once (`kind` aside: `admit` read it), after
+ * checking it has none `known` doesn't list: a symbol, a non-enumerable
+ * field or another name is refused as unknown, naming no value.
+ */
+function read(
   record: Record<string, unknown>,
   known: readonly string[],
   where: string,
-): void {
-  if (!Object.keys(record).every((name) => known.includes(name))) {
+): Map<string, unknown> {
+  if (!plainKeys(record)) {
     throw new TypeError(`${where} has a field it doesn't know.`);
   }
+  const names = Object.keys(record);
+  if (!names.every((name) => known.includes(name))) {
+    throw new TypeError(`${where} has a field it doesn't know.`);
+  }
+  const out = new Map<string, unknown>();
+  for (const name of names) {
+    if (name !== "kind") {
+      out.set(name, own(record, name));
+    }
+  }
+  return out;
+}
+
+/** Whether every own key of `record` is a string and enumerable: no symbol, no hidden field. */
+function plainKeys(record: object): boolean {
+  const keys = Reflect.ownKeys(record);
+  return (
+    keys.every((key) => typeof key === "string") &&
+    keys.length === Object.keys(record).length
+  );
+}
+
+/** A copy of `value`, an array of strings (its length and each entry read once), else throws `message`. */
+function strings(value: unknown, message: string): string[] {
+  if (!Array.isArray(value)) {
+    throw new TypeError(message);
+  }
+  const length: number = value.length;
+  const out: string[] = [];
+  for (let i = 0; i < length; i++) {
+    const item: unknown = value[i];
+    if (typeof item !== "string") {
+      throw new TypeError(message);
+    }
+    out.push(item);
+  }
+  return out;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

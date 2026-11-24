@@ -273,7 +273,8 @@ export interface ChangeSetLimits {
 
 /** The versions `changeSetFromJson` reads: its own minor version. */
 const VERSION_READ = /^0\.2\.\d+$/;
-const DEFAULT_OPS = 10_000;
+/** @internal The most ops a change set has by default (`ChangeSetLimits.ops`). */
+export const DEFAULT_OPS = 10_000;
 const DEFAULT_CHARS = 16 * 1024 * 1024;
 const MAX_ID = (1n << 64n) - 1n;
 /** How deep a property value nests before it's refused. */
@@ -281,13 +282,35 @@ const MAX_DEPTH = 32;
 
 /** The fields each part of a change set may have (0.x: no others). */
 const ENVELOPE_FIELDS = new Set(["format", "version", "changeSet"]);
-const CHANGE_SET_FIELDS = new Set(["id", "source", "base", "ops", "meta"]);
-const META_FIELDS = new Set(["author", "time", "note"]);
-const OP_FIELDS: Readonly<Record<ChangeOp["op"], ReadonlySet<string>>> = {
-  insert: new Set(["op", "key", "id", "feature"]),
-  update: new Set(["op", "key", "id", "base", "patch", "before", "overwrite"]),
-  delete: new Set(["op", "key", "id", "base", "before", "overwrite"]),
-};
+/** @internal The fields a change set may have (0.x: no others). */
+export const CHANGE_SET_FIELDS: ReadonlySet<string> = new Set([
+  "id",
+  "source",
+  "base",
+  "ops",
+  "meta",
+]);
+/** @internal The fields a change set's meta may have. */
+export const META_FIELDS: ReadonlySet<string> = new Set([
+  "author",
+  "time",
+  "note",
+]);
+/** @internal The fields each kind of op may have. */
+export const OP_FIELDS: Readonly<Record<ChangeOp["op"], ReadonlySet<string>>> =
+  {
+    insert: new Set(["op", "key", "id", "feature"]),
+    update: new Set([
+      "op",
+      "key",
+      "id",
+      "base",
+      "patch",
+      "before",
+      "overwrite",
+    ]),
+    delete: new Set(["op", "key", "id", "base", "before", "overwrite"]),
+  };
 const FEATURE_FIELDS = new Set(["properties", "geometry"]);
 const GEOMETRY_FIELDS = new Set(["crs", "type", "coordinates"]);
 
