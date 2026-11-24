@@ -19,3 +19,7 @@ USD loads as a source through the seam. Related: CS-304 (`BrepSource.fromUsd`) a
 - `UsdPreviewSurface` materials draw through the material system, point instancers through instancing, and `SemanticsLabelsAPI` labels reach picks (CS-815).
 - Time samples play through the views' clock.
 - A new dependency comes in only with the owner's yes.
+
+## Note (2026-11-23)
+
+`docs/design/styling-runtime.md` (section 13): a USD prim with a semantic label carries a declared content name and a key like any other feature, so per-feature styling channels apply. Materials stay with the material system, and the style stage composes before a custom shader (CS-1132), not in place of a material. The scope here is unchanged.

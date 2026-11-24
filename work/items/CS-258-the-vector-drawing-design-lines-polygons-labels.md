@@ -12,3 +12,7 @@ project: CS-190
 A reviewed design for one line-and-point path shared by vector layers, CAD display styles and B-rep edges, with labels' collision, decals and `View.overlays` folding into vector rendering (owner, 2026-11-13).
 
 Detail: `docs/design/cad-display-extensions.md`; `docs/design/transforms-and-instancing.md`, "Billboards, points and decals"; `docs/superpowers/plans/2026-11-13-worker-facade.md`, its answers.
+
+## Note (2026-11-23)
+
+`docs/design/styling-runtime.md` makes the styling runtime's output primitives (section 4.4) this design's input contract: the drawing path draws those layouts, whoever produced them. Label collision is the runtime's (section 7, CS-1137). Label drawing stays here.

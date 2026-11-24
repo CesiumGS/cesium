@@ -22,3 +22,7 @@ In the design's order: map and tile services, feature services, I3S scene layers
 - Elevation services load as a terrain kind, with a LERC decoder from CS-811.
 - Each is tested on recorded responses, with no outside service.
 - This is large. The main session may split I3S and elevation into items of their own (a question below).
+
+## Note (2026-11-23)
+
+`docs/design/styling-runtime.md` (section 13): a feature service's fields bind as feature-rate inputs through its schema, and an elevation service becomes a provider of the terrain-height input. Service-defined symbology, if wanted, is a front end. The scope here is unchanged.

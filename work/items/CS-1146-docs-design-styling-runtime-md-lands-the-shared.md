@@ -2,7 +2,7 @@
 id: CS-1146
 title: "docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-23
 project: CS-10
 needs: [CS-1129, CS-1130, CS-1131, CS-1132]
