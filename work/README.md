@@ -61,7 +61,7 @@ Generated from the item files by `npx hitld work views` (its marker keeps the ol
 
 ### Engine profiles
 
-[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 8 of 25 done, 10 ready, 3 blocked, 4 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
+[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 9 of 25 done, 9 ready, 3 blocked, 4 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why ([CS-466](./milestones/CS-466-each-view-knows-what-the-device-supports-and-why.md), Planned)
 
@@ -95,7 +95,7 @@ No milestone
 - [x] [CS-539](./items/CS-539-how-cs-20-reaches-main-while-the-merge-queue.md) decision: How CS-20 reaches main while the merge queue cannot verify it. Done.
 - [x] [CS-755](./items/CS-755-merge-cs-22-paths-in-one-place-with-the-seam.md) decision: Merge CS-22, paths in one place with the seam test. Done.
 - [x] [CS-779](./items/CS-779-merge-cs-23-support-reports-on-engine-and-view.md) decision: Merge CS-23, support reports on Engine and View (view.support, view.effective, view.explain, strict). Done.
-- [ ] [CS-971](./items/CS-971-every-slang-loop-is-bounded-by-a-constant-and-a.md) Every Slang loop is bounded by a constant, and a test enforces it. Needs nothing.
+- [x] [CS-971](./items/CS-971-every-slang-loop-is-bounded-by-a-constant-and-a.md) Every Slang loop is bounded by a constant, and a test enforces it. Done.
 - [?] [CS-1029](./items/CS-1029-user-custom-shaders-customshader-wgsl-and-slang.md) User custom shaders (CustomShader WGSL and Slang, and CustomShader.fromSlang) pass the loop guard before they reach the GPU. Proposed. Needs nothing.
 - [?] [CS-1082](./items/CS-1082-clamp-every-data-derived-buffer-index-outside.md) Clamp every data-derived buffer index outside loops, and extend unclampedIndices to every entry point. Proposed. Needs CS-971.
 - [x] [CS-1185](./items/CS-1185-merge-cs-971-every-slang-loop-bounded-by-a.md) decision: Merge CS-971, every Slang loop bounded by a constant. Done.

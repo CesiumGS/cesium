@@ -4,7 +4,7 @@
 
 ### Engine profiles
 
-CS-8, Planned, led by owner: 8 of 25 done, 10 ready, 3 blocked, 4 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
+CS-8, Planned, led by owner: 9 of 25 done, 9 ready, 3 blocked, 4 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why (CS-466, Planned)
 
@@ -38,7 +38,7 @@ No milestone
 - [x] CS-539 decision: How CS-20 reaches main while the merge queue cannot verify it. Done.
 - [x] CS-755 decision: Merge CS-22, paths in one place with the seam test. Done.
 - [x] CS-779 decision: Merge CS-23, support reports on Engine and View (view.support, view.effective, view.explain, strict). Done.
-- [ ] CS-971 Every Slang loop is bounded by a constant, and a test enforces it. Needs nothing.
+- [x] CS-971 Every Slang loop is bounded by a constant, and a test enforces it. Done.
 - [?] CS-1029 User custom shaders (CustomShader WGSL and Slang, and CustomShader.fromSlang) pass the loop guard before they reach the GPU. Proposed. Needs nothing.
 - [?] CS-1082 Clamp every data-derived buffer index outside loops, and extend unclampedIndices to every entry point. Proposed. Needs CS-971.
 - [x] CS-1185 decision: Merge CS-971, every Slang loop bounded by a constant. Done.

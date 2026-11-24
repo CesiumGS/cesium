@@ -26,7 +26,7 @@ graph LR
     CS_539["CS-539 How CS-20 reaches main while the merge queue cannot verify it"]:::done
     CS_755["CS-755 Merge CS-22, paths in one place with the seam test"]:::done
     CS_779["CS-779 Merge CS-23, support reports on Engine and View (view.support, "]:::done
-    CS_971["CS-971 Every Slang loop is bounded by a constant, and a test enforces "]:::open
+    CS_971["CS-971 Every Slang loop is bounded by a constant, and a test enforces "]:::done
     CS_1029["CS-1029 User custom shaders (CustomShader WGSL and Slang, and CustomSh"]:::proposed
     CS_1082["CS-1082 Clamp every data-derived buffer index outside loops, and exten"]:::proposed
     CS_1185["CS-1185 Merge CS-971, every Slang loop bounded by a constant"]:::done

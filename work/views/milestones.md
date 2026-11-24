@@ -638,8 +638,8 @@ CS-859 The engine starts fast: pipelines compile in one round and optional subsy
 
 CS-1158 Hostile content can't hang the GPU, exhaust a worker or reach past its tile [Planned], under CS-191 Content sources and formats
   outcome: A tileset, model or file from an untrusted source can't run a shader loop without bound, make a worker allocate or recurse past stated limits, name a feature in another tile, or send credentials to another origin; each limit has a test.
-  constraints: 1 of 5 done
-  unmet: not linked to a clause yet (open: CS-969, CS-970, CS-971, CS-972; check not passed)
+  constraints: 2 of 5 done
+  unmet: not linked to a clause yet (open: CS-969, CS-970, CS-972; check not passed)
   to shape: done_when; check; link CS-966, CS-969, CS-970, CS-971, CS-972 to a clause
 
 CS-1159 Time and reference frames say what they are [Planned], under CS-196 Infrastructure and geoscience capabilities

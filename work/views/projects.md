@@ -4,7 +4,7 @@
 
 ```text
 CS-8 Engine profiles [Planned], led by owner
-  8 of 25 done, 10 ready, 3 blocked, 4 proposed
+  9 of 25 done, 9 ready, 3 blocked, 4 proposed
   waits on: CS-12 The job system's ports (1); CS-15 Refinement and convergence (1)
   waited on by: CS-13 The worker-mode façade (1); CS-18 The work tracker (4)
 CS-9 The WebGL 2 renderer [Planned], led by owner

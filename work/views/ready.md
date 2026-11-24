@@ -13,7 +13,6 @@ CS-8 Engine profiles
   CS-365  Limit-forced accuracy changes carried into query results
   CS-368  `Engine.queries` takes the application's backends
   CS-507  Silent fallbacks become support notices
-  CS-971  Every Slang loop is bounded by a constant, and a test enforces it
 
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
@@ -322,5 +321,5 @@ CS-609 A clean 2.0 branch and a modern build
 CS-197 Ray queries and path tracing
   CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
 
-251 ready
+250 ready
 ```

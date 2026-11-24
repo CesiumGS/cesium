@@ -8,6 +8,7 @@ CS-8 Engine profiles
   CS-21  The catalog, rules and resolver
   CS-22  Paths in one place, with the seam test
   CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
+  CS-971  Every Slang loop is bounded by a constant, and a test enforces it
 
 CS-9 The WebGL 2 renderer
   CS-33  The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
@@ -145,5 +146,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-108 merged item(s) not in a release
+109 merged item(s) not in a release
 ```
