@@ -59,6 +59,7 @@ import {
   type EditAddressing,
   type FeatureAddress,
 } from "./editLayer.ts";
+import { invalidation, type CheckedInvalidation } from "./admit.ts";
 import { ContentRows, type HeldRows } from "./sinks.ts";
 import type {
   ContentSource,
@@ -570,8 +571,24 @@ export class SourceContent {
     }
   }
 
-  /** @internal The engine applied an invalidation: its source selects again. */
-  noteInvalidated(change: InvalidateChange): void {
+  /**
+   * @internal The engine applied an invalidation: its source selects again.
+   * Folded, so what waits for its source's next update stays bounded: an
+   * invalidation of everything covers the rest, and while no item shows
+   * it, any invalidation becomes one of everything.
+   */
+  noteInvalidated(change: CheckedInvalidation): void {
+    if (
+      this.invalidated.some(
+        (c) => c.keys === undefined && c.region === undefined,
+      )
+    ) {
+      return;
+    }
+    if (change.everything || !this.shown) {
+      this.invalidated = [change.everything ? change : invalidation()];
+      return;
+    }
     this.invalidated.push(change);
   }
 

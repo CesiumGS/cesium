@@ -40,6 +40,10 @@ import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
 import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import {
+  CheckedInvalidation,
+  admit,
+} from "../packages/core/src/source/admit.ts";
 import { BudgetArbiter } from "../packages/core/src/source/budget.ts";
 import type {
   ContentWorld,
@@ -591,7 +595,7 @@ describe("push on a stepped clock", () => {
       samples: { times: Float64Array.of(1, 2), names: ["car-1"] },
     });
     expect(reports).toEqual([
-      "\"sample\" content 1's samples threw: times, names, positions and values don't agree in length; dropped.",
+      '"sample" content 1\'s push of samples is refused, and becomes an invalidation of everything, so its source loads committed state again: samples: its names are strings, one per time.',
     ]);
   });
 });
@@ -1336,7 +1340,7 @@ describe("pushes under bounds and the apply phase's budget", () => {
     );
   });
 
-  it("drops a sample with no finite time, checks values' lengths, and isolates each sample's apply", async () => {
+  it("drops a sample with no finite time, refuses values' lengths that don't agree, and isolates each sample's apply", async () => {
     const { rt, place, reports } = runtime();
     const content = await rt.open({ url: "https://feed.test/cars.sample" });
     place(content);
@@ -1351,7 +1355,12 @@ describe("pushes under bounds and the apply phase's budget", () => {
         values: { speed: Float64Array.of(5) },
       },
     });
-    expect(reports.at(-1)).toMatch(/don't agree in length; dropped/);
+    expect(reports.at(-1)).toMatch(
+      /push of samples is refused, and becomes an invalidation of everything.*its values are Float64Arrays, one per time/,
+    );
+    // Its source loads everything again.
+    rt.tick();
+    rt.tick();
     const apply = vi.spyOn(content.rows, "applySamples");
     apply.mockImplementationOnce(() => {
       throw new Error("one sample failed");
@@ -1741,6 +1750,97 @@ describe("the bounds turn what doesn't fit into an invalidation, and say what th
     expect(waiting).toHaveLength(1);
     expect(waiting[0]!.keys).toBeUndefined();
     expect(waiting[0]!.region).toBeUndefined();
+  });
+
+  it("admits a push one way: checked, an invalidation of everything for a known kind malformed in any way, or nothing for a kind it doesn't know", () => {
+    const AREA = { west: 0, south: 0, east: 1, north: 1 };
+    const CASES: [unknown, "checked" | "everything" | "nothing"][] = [
+      [{ kind: "invalidate", keys: ["t1"] }, "checked"],
+      [{ kind: "invalidate" }, "checked"],
+      [{ kind: "invalidate", region: { region: AREA } }, "checked"],
+      [{ kind: "invalidate", region: {}, version: "2" }, "checked"],
+      [{ kind: "invalidate", keys: "t1" }, "everything"],
+      [{ kind: "invalidate", keys: [1] }, "everything"],
+      [{ kind: "invalidate", keys: null }, "everything"],
+      [{ kind: "invalidate", version: 5 }, "everything"],
+      [
+        { kind: "invalidate", region: { region: { ...AREA, west: NaN } } },
+        "everything",
+      ],
+      [{ kind: "invalidate", region: { length: 1, 0: "t1" } }, "everything"],
+      [{ kind: "invalidate", keys: ["t1"], extra: true }, "everything"],
+      [
+        { kind: "features", changes: { id: "c", source: "s", ops: [] } },
+        "checked",
+      ],
+      [{ kind: "features", changes: null }, "everything"],
+      [
+        { kind: "features", changes: { id: "c", source: "s", ops: "t1" } },
+        "everything",
+      ],
+      [
+        { kind: "features", changes: { id: "c", source: "s", ops: [["t1"]] } },
+        "everything",
+      ],
+      [
+        {
+          kind: "samples",
+          samples: { times: Float64Array.of(1), names: ["a"] },
+        },
+        "checked",
+      ],
+      [
+        { kind: "samples", samples: { times: [1], names: ["a"] } },
+        "everything",
+      ],
+      [
+        { kind: "samples", samples: { times: Float64Array.of(1), names: "a" } },
+        "everything",
+      ],
+      [
+        {
+          kind: "samples",
+          samples: {
+            times: Float64Array.of(1),
+            names: ["a"],
+            values: { v: [1] },
+          },
+        },
+        "everything",
+      ],
+      [{ kind: "presence", peers: [] }, "nothing"],
+      [{ kind: 5 }, "nothing"],
+      [null, "nothing"],
+      ["invalidate", "nothing"],
+    ];
+    const wrong: string[] = [];
+    for (const [push, expected] of CASES) {
+      const admitted = admit(push);
+      const outcome =
+        admitted === undefined
+          ? "nothing"
+          : admitted.refused
+            ? "everything"
+            : "checked";
+      if (outcome !== expected) {
+        wrong.push(`${JSON.stringify(push)}: ${outcome}, not ${expected}`);
+      }
+    }
+    expect(wrong).toEqual([]);
+    // Only admit makes a checked change, and it holds what it checked.
+    expect(
+      () =>
+        new (
+          CheckedInvalidation as unknown as new (
+            token: symbol,
+            keys: undefined,
+          ) => unknown
+        )(Symbol("CheckedChange"), undefined),
+    ).toThrow(/only admit makes one/);
+    const keys = ["t1"];
+    const admitted = admit({ kind: "invalidate", keys })!;
+    keys.push("t2");
+    expect(admitted.change).toMatchObject({ keys: ["t1"] });
   });
 
   it("reports samples dropped at the bound once per run of drops", async () => {

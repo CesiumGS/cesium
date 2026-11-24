@@ -24,12 +24,18 @@
  *   URL or the options in it; a session name is reported once at `open`.
  *   The engine's own text names a content by a label it mints, its kind and
  *   an ordinal (`labelOf`), never by its name, a content key or a row key.
+ * - **One way in** (`admit`): a push is checked once, at `host.changed`,
+ *   and becomes a checked change of a type only `admit` makes; a known kind
+ *   malformed in any way becomes an invalidation of everything, reported;
+ *   a kind it doesn't know is ignored. The queue holds checked changes
+ *   only, and the apply phase takes nothing else.
  * - **Two outcomes** (CS-1102 A): a pushed change is applied to what is
  *   resident, or turned into an invalidation; the engine keeps nothing else
  *   of it. An op for a key nothing resident holds, a peer's insert included,
  *   is not held: the source invalidates the content that holds an insert,
- *   and its reload shows it. A change set that fails its check becomes an
- *   invalidation of everything, reported.
+ *   and its reload shows it. A change set that fails its check, or its
+ *   resolve against its content, becomes an invalidation of everything,
+ *   reported.
  * - **Bounds:** between ticks a source may queue at most `MAX_QUEUED_CHANGES`
  *   ops (a change set counts its ops, an invalidation its keys). Past that,
  *   its whole queue, change sets included, collapses into one invalidation
@@ -45,9 +51,16 @@
 import type { FetchProvider } from "../io/fetchProvider.ts";
 import { ContentName } from "../scene/identity.ts";
 import type { Job, Jobs, JobSpec } from "../io/Jobs.ts";
+import {
+  admit,
+  invalidation,
+  type CheckedFeatures,
+  type CheckedInvalidation,
+  type CheckedSamples,
+} from "./admit.ts";
 import { BudgetArbiter, type BudgetOptions } from "./budget.ts";
 import { SourceContent } from "./content.ts";
-import { checkChangeSet, type ChangeOp, type ChangeSet } from "./editing.ts";
+import type { ChangeOp } from "./editing.ts";
 import {
   SourceKinds,
   UrlResolver,
@@ -61,8 +74,6 @@ import type {
   BudgetClient,
   ContentSinks,
   ContentSource,
-  SampleBatch,
-  SourceChange,
   SourceClock,
   SourceHost,
   SourceJobs,
@@ -159,10 +170,10 @@ interface Opened {
   collapsed: boolean;
 }
 
-/** A change waiting for the apply phase. */
+/** A checked change waiting for the apply phase: samples wait apart. */
 interface Queued {
   readonly opened: Opened;
-  readonly change: SourceChange;
+  readonly change: CheckedInvalidation | CheckedFeatures;
   /** Its ops, as counted against `MAX_QUEUED_CHANGES`. */
   readonly ops: number;
   /** The invalidation of everything an overflow collapsed its queue into. */
@@ -171,7 +182,7 @@ interface Queued {
 
 interface BufferedSample {
   readonly opened: Opened;
-  readonly samples: SampleBatch;
+  readonly samples: CheckedSamples["samples"];
   readonly index: number;
   readonly time: number;
   readonly seq: number;
@@ -460,8 +471,12 @@ export class SourceRuntime {
     };
   }
 
-  /** A source's push: queued for the apply phase, and the engine wakes. */
-  private push(opened: Opened, change: SourceChange): void {
+  /**
+   * A source's push: admitted (`admit`), then queued for the apply phase,
+   * and the engine wakes. A kind it doesn't know is ignored; a known kind
+   * malformed in any way becomes an invalidation of everything, reported.
+   */
+  private push(opened: Opened, pushed: unknown): void {
     if (this.destroyed || opened.content.destroyed) {
       return;
     }
@@ -472,23 +487,27 @@ export class SourceRuntime {
       );
       return;
     }
-    if (typeof change !== "object" || change === null) {
-      return;
+    const admitted = admit(pushed);
+    if (admitted === undefined) {
+      return; // a kind it doesn't know: the union is open (CS-831's S5)
+    }
+    const { change, ops, refused, what } = admitted;
+    if (refused) {
+      this.reportMessage(
+        `${opened.content.label}'s ${what ?? "push"} is refused, and becomes an invalidation of everything, so its source loads committed state again: ${messageOf(refused)}`,
+      );
     }
     if (change.kind === "samples") {
-      if (!this.bufferSamples(opened, change.samples)) {
+      if (!this.bufferSamples(opened, change)) {
         return;
       }
     } else if (opened.collapsed) {
       return; // the invalidation of everything it queued covers it
+    } else if (opened.queued + ops > MAX_QUEUED_CHANGES) {
+      this.collapse(opened);
     } else {
-      const ops = opsOf(change);
-      if (opened.queued + ops > MAX_QUEUED_CHANGES) {
-        this.collapse(opened);
-      } else {
-        this.queue.push({ opened, change, ops });
-        opened.queued += ops;
-      }
+      this.queue.push({ opened, change, ops });
+      opened.queued += ops;
     }
     this.scheduleApply();
     this.options.wake?.();
@@ -507,7 +526,7 @@ export class SourceRuntime {
     this.queueHead = 0;
     this.queue.push({
       opened,
-      change: { kind: "invalidate" },
+      change: invalidation(),
       ops: 1,
       collapse: true,
     });
@@ -522,30 +541,16 @@ export class SourceRuntime {
   }
 
   /**
-   * Buffers a push's samples for the apply phase. Drops the push when its
-   * arrays don't agree in length or it would pass `MAX_BUFFERED_SAMPLES`,
-   * and each sample whose time isn't finite; reports each (a run of pushes
-   * dropped at the bound, once). Returns whether any sample was buffered.
+   * Buffers checked samples (`admit`: their arrays agree in length) for
+   * the apply phase. Drops the push when it would pass
+   * `MAX_BUFFERED_SAMPLES`, and each sample whose time isn't finite;
+   * reports each (a run of pushes dropped at the bound, once). Returns
+   * whether any sample was buffered.
    */
-  private bufferSamples(opened: Opened, samples: SampleBatch): boolean {
+  private bufferSamples(opened: Opened, change: CheckedSamples): boolean {
     const where = `${opened.content.label}'s samples`;
-    const count = samples?.times?.length;
-    const lengthsAgree =
-      typeof count === "number" &&
-      samples.names?.length === count &&
-      (!samples.positions || samples.positions.length === count * 3) &&
-      Object.values(samples.values ?? {}).every(
-        (values) => values?.length === count,
-      );
-    if (!lengthsAgree) {
-      this.report(
-        where,
-        new Error(
-          "times, names, positions and values don't agree in length; dropped.",
-        ),
-      );
-      return false;
-    }
+    const { samples } = change;
+    const count = samples.times.length;
     if (this.bufferedSamples + count > MAX_BUFFERED_SAMPLES) {
       if (!this.samplesDropping) {
         this.samplesDropping = true;
@@ -631,12 +636,14 @@ export class SourceRuntime {
         continue;
       }
       try {
-        if (change.kind === "invalidate") {
-          this.invalidate(opened, change);
-        } else if (change.kind === "features") {
-          this.applyFeatures(opened, change.changes);
+        switch (change.kind) {
+          case "invalidate":
+            this.invalidate(opened, change);
+            break;
+          case "features":
+            this.applyFeatures(opened, change);
+            break;
         }
-        // Other kinds are ignored: the union is open (CS-831's S5).
       } catch (error) {
         this.report(`${opened.content.label}'s ${change.kind} change`, error);
       }
@@ -711,10 +718,8 @@ export class SourceRuntime {
     }
   }
 
-  private invalidate(
-    opened: Opened,
-    change: SourceChange & { kind: "invalidate" },
-  ): void {
+  /** A checked invalidation: its keys go, and its source selects again. */
+  private invalidate(opened: Opened, change: CheckedInvalidation): void {
     const rows = opened.content.rows;
     // Keys named go; with neither keys nor a region, everything does. A
     // region alone is the source's to map to keys (`SourceTick.invalidated`).
@@ -729,31 +734,31 @@ export class SourceRuntime {
 
   /**
    * Others' committed change set from the source's feed (CS-1085 A,
-   * CS-1102 A): checked and resolved by its keys, then applied to what is
-   * resident, under this client's edits (`ContentRows.applyFeed`). An op for
-   * a key nothing resident holds is not held: the source's next load brings
-   * committed state. Batches a patch doesn't fit are invalidated, so the
-   * source loads them again. A change set that fails its check (malformed,
-   * or an ID that isn't its key's) becomes an invalidation of everything,
-   * reported: its good ops are lost no more than a reload loses them.
+   * CS-1102 A), checked by `admit`: resolved by its keys, then applied to
+   * what is resident, under this client's edits (`ContentRows.applyFeed`).
+   * An op for a key nothing resident holds is not held: the source's next
+   * load brings committed state. Batches a patch doesn't fit are
+   * invalidated, so the source loads them again. A change set that fails
+   * its resolve (an ID that isn't its key's) becomes an invalidation of
+   * everything, reported: its good ops are lost no more than a reload
+   * loses them.
    */
-  private applyFeatures(opened: Opened, changes: ChangeSet): void {
+  private applyFeatures(opened: Opened, change: CheckedFeatures): void {
     const { content } = opened;
     let ops: ChangeOp[];
     try {
-      checkChangeSet(changes);
       // Its own source's feed: no `source` check, since it can only be its own.
-      ops = content.resolveOps(changes.ops);
+      ops = content.resolveOps(change.changes.ops);
     } catch (error) {
       this.reportMessage(
         `${content.label}'s change set is refused, and becomes an invalidation of everything, so its source loads committed state again: ${messageOf(error)}`,
       );
-      this.invalidate(opened, { kind: "invalidate" });
+      this.invalidate(opened, invalidation());
       return;
     }
     const stale = content.rows.applyFeed(ops);
     if (stale.length > 0) {
-      this.invalidate(opened, { kind: "invalidate", keys: stale });
+      this.invalidate(opened, invalidation(stale));
     }
   }
 
@@ -853,21 +858,11 @@ function labelOf(kind: string, ordinal: number): string {
   return `"${kind}" content ${ordinal}`;
 }
 
-/** What `error` says: its message, the source's own words. */
-function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
-
 /**
- * A change's ops, as counted against `MAX_QUEUED_CHANGES`, read before it is
- * checked: a change set's ops, an invalidation's keys, else one.
+ * What `error` says: an `Error`'s message, the source's own words. Of
+ * anything else thrown, only that it isn't an `Error`: the value may be its
+ * URL.
  */
-function opsOf(change: SourceChange): number {
-  const list =
-    change.kind === "features"
-      ? (change.changes as { ops?: unknown } | null | undefined)?.ops
-      : change.kind === "invalidate"
-        ? change.keys
-        : undefined;
-  return Array.isArray(list) ? Math.max(1, list.length) : 1;
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : "a value that isn't an Error";
 }

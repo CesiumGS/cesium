@@ -372,7 +372,12 @@ export interface SourceHost {
   readonly sinks: ContentSinks;
   /** The scene time of its content's world, and wall time apart (CS-960 A). */
   readonly clock: SourceClock;
-  /** A push: content changed. Wakes the engine; it applies in the apply phase. */
+  /**
+   * A push: content changed. Checked once, here: a known kind malformed in
+   * any way (a field of the wrong type or one it doesn't know, arrays that
+   * don't agree in length) becomes an invalidation of everything, reported.
+   * Wakes the engine; it applies in the apply phase.
+   */
   changed(change: SourceChange): void;
 }
 
@@ -707,7 +712,9 @@ export interface SampleBatch {
 
 /**
  * A push. The union is open: the engine ignores a kind it doesn't know
- * (CS-831's S5), so later kinds don't break sources.
+ * (CS-831's S5), so later kinds don't break sources. A known kind
+ * malformed in any way becomes an invalidation of everything, so its
+ * source loads committed state again.
  * @experimental
  */
 export type SourceChange =
