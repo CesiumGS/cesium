@@ -40,7 +40,7 @@
     "worktree_setup": [
       "pnpm install --frozen-lockfile --ignore-scripts --prefer-offline"
     ],
-    "serial_resources": ["gpu", "benchmark", "merge-queue", "heavy-suite"]
+    "serial_resources": ["gpu", "cpu-heavy", "benchmark", "merge-queue"]
   },
   "ids": {
     "blocks": [
