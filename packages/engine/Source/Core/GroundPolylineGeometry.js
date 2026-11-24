@@ -1203,8 +1203,8 @@ function generateGeometryAttributes(
   let lengthSoFar3D = 0.0;
   let lengthSoFar2D = 0.0;
 
-  // For translating bounding volume
-  let sumHeights = 0.0;
+  // For growing the bounding sphere from the wall at its initial heights to the volume
+  let maxHeightAdjustment = 0.0;
 
   for (i = 0; i < segmentCount; i++) {
     const startBottom = Cartesian3.clone(endBottom, segmentStartBottomScratch);
@@ -1479,9 +1479,11 @@ function generateGeometryAttributes(
     const minHeight = minMaxHeights.minimumTerrainHeight;
     const maxHeight = minMaxHeights.maximumTerrainHeight;
 
-    // Sum using abs() to properly account for negative eleavtions in calculating bounding sphere radius
-    sumHeights += Math.abs(minHeight);
-    sumHeights += Math.abs(maxHeight);
+    maxHeightAdjustment = Math.max(
+      maxHeightAdjustment,
+      Math.abs(minHeight - WALL_INITIAL_MIN_HEIGHT),
+      Math.abs(maxHeight - WALL_INITIAL_MAX_HEIGHT),
+    );
 
     adjustHeights(
       startBottom,
@@ -1590,8 +1592,9 @@ function generateGeometryAttributes(
   );
   const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
-  // Adjust bounding sphere height and radius to cover more of the volume
-  boundingSphere.radius += sumHeights / (segmentCount * 2.0);
+  // The spheres bound the wall at its initial heights. No vertex of the volume is farther
+  // from there than the largest height adjustment, so growing by it contains the volume.
+  boundingSphere.radius += maxHeightAdjustment;
 
   const attributes = {
     position: new GeometryAttribute({
