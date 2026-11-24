@@ -1951,7 +1951,12 @@ describe("the bounds turn what doesn't fit into an invalidation, and say what th
     expect([...batch.times]).toEqual([1, 2]);
     expect(batch.names).toEqual(["a", "b"]);
     // A resizable buffer shrunk after the push changes nothing queued.
-    const buffer = new ArrayBuffer(16, { maxByteLength: 64 });
+    // ES2024's resizable buffer, typed here since the project's lib predates it.
+    const Resizable = ArrayBuffer as unknown as new (
+      length: number,
+      options: { maxByteLength: number },
+    ) => ArrayBuffer & { resize(length: number): void };
+    const buffer = new Resizable(16, { maxByteLength: 64 });
     const tracking = new Float64Array(buffer);
     tracking.set([5, 6]);
     const resized = admit({
