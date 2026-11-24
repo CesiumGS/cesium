@@ -731,6 +731,24 @@ describe("Core/BoundingSphere", function () {
     expect(BoundingSphere.transform(bs, transform)).toEqual(expected);
   });
 
+  it("applies shear transform without underestimating the radius", function () {
+    const bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+    // Shear: start from identity and set column 1 to (1, 1, 0), so the
+    // longest column is sqrt(2) but the largest singular value is ~1.618.
+    // A sphere sized with the longest column would not contain the
+    // transformed unit sphere, so frustum culling could drop primitives
+    // still on screen.
+    const transform = Matrix4.clone(Matrix4.IDENTITY);
+    transform[4] = 1.0;
+    const result = BoundingSphere.transform(bs, transform);
+    expect(result.center).toEqual(Cartesian3.ZERO);
+    // The transformed unit sphere must be contained: the radius is at
+    // least the largest singular value (~1.618), and the Gershgorin
+    // bound used here is sqrt(3).
+    expect(result.radius).toBeGreaterThanOrEqual(1.618);
+    expect(result.radius).toEqualEpsilon(Math.sqrt(3.0), CesiumMath.EPSILON6);
+  });
+
   it("applies transform without scale", function () {
     const bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
     const transform = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
