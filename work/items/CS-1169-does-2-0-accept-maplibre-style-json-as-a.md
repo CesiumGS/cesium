@@ -2,10 +2,14 @@
 id: CS-1169
 title: Does 2.0 accept MapLibre style JSON as a styling front end?
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-10
 decider: owner
+answer: A
+answered_at: 2026-11-24T02:47:12.812Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
