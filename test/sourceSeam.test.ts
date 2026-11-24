@@ -3529,9 +3529,17 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       } else {
         // Malformed pushes of a known kind become an invalidation of
         // everything (CS-1102 A, admit): in place of what the source owes.
+        // One variant per round, so that invalidation, which is right, can't
+        // repair what another variant's wrong outcome broke before the
+        // round's check.
+        const variant = (["invalidate", "features", "samples"] as const)[
+          round % 3
+        ]!;
         const invalidate = (keys: string[]) =>
           source.push(
-            r() < 0.3 ? hostile("invalidate") : { kind: "invalidate", keys },
+            variant === "invalidate" && r() < 0.5
+              ? hostile("invalidate")
+              : { kind: "invalidate", keys },
           );
         let deferred: string[] = [];
         for (let i = 0; i < 1 + Math.floor(r() * 12); i++) {
@@ -3540,12 +3548,12 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
             "update",
             "delete",
           ]);
-          if (r() < 0.15) {
+          if (variant === "features" && r() < 0.15) {
             source.push(hostile("features", ops));
           } else {
             pushSet(ops);
           }
-          if (r() < 0.25) {
+          if (variant === "samples" && r() < 0.25) {
             source.push(hostile("samples"));
           }
           if (deferred.length > 0) {
