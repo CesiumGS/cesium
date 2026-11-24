@@ -13,3 +13,5 @@ project: CS-191
 
 - one pass for the maximum index in the worker; fail the tile with a named error.
 - The finding's evidence in the review is rechecked first, since the code may have moved.
+
+Seen again in CS-969's security review, 2026-11-24.

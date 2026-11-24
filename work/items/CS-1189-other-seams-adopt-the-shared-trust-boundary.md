@@ -13,5 +13,6 @@ needs: [CS-1188]
 ## Done when
 
 - Each seam that takes values from host-registered code is listed, with its inlets.
+- The list names `sinks.draws` and `SourceHost.fetch`, which CS-1188's review (2026-11-24) left outside its boundary.
 - Each one routes its inlets through CS-1188's boundary module, with a schema table of its own, and its tests check I1 to I3.
 - What can't adopt it is named, with the reason.
