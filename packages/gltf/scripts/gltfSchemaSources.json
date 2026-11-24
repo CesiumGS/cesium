@@ -1,0 +1,713 @@
+{
+  "core": {
+    "1.0": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "specification/1.0/schema"
+    },
+    "2.0": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "specification/2.0/schema"
+    },
+    "2.1": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "draft-2.1",
+      "commit": "c330f9e5a324c9858145be183d2a1e63718fd3e8",
+      "schemaDirectory": "specification/2.1/schema"
+    }
+  },
+  "extensions": {
+    "3DTILES_implicit_tiling": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.1/Vendor/3DTILES_implicit_tiling/schema",
+      "core": [
+        "2.1"
+      ],
+      "extends": {
+        "node.3DTILES_implicit_tiling.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "3DTILES_subtree": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.1/Vendor/3DTILES_subtree/schema",
+      "core": [
+        "2.1"
+      ],
+      "extends": {
+        "glTF.3DTILES_subtree.schema.json": [
+          "glTF"
+        ]
+      }
+    },
+    "3DTILES_tileset": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.1/Vendor/3DTILES_tileset/schema",
+      "core": [
+        "2.1"
+      ],
+      "extends": {
+        "glTF.3DTILES_tileset.schema.json": [
+          "glTF"
+        ],
+        "node.3DTILES_tileset.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "3DTILES_tileset_voxels": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.1/Vendor/3DTILES_tileset_voxels/schema",
+      "core": [
+        "2.1"
+      ],
+      "extends": {
+        "glTF.3DTILES_tileset_voxels.schema.json": [
+          "glTF"
+        ]
+      }
+    },
+    "AGI_articulations": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/AGI_articulations/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "gltf.AGI_articulations.schema.json": [
+          "glTF"
+        ],
+        "node.AGI_articulations.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "BENTLEY_materials_line_style": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Vendor/BENTLEY_materials_line_style/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.BENTLEY_materials_line_style.schema.json": [
+          "material"
+        ],
+        "mesh.primitive.BENTLEY_materials_line_style.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "BENTLEY_materials_planar_fill": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Vendor/BENTLEY_materials_planar_fill/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.BENTLEY_materials_planar_fill.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "BENTLEY_materials_point_style": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Vendor/BENTLEY_materials_point_style/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.BENTLEY_materials_point_style.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "CESIUM_RTC": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/1.0/Vendor/CESIUM_RTC",
+      "core": [
+        "1.0",
+        "2.x"
+      ],
+      "extends": {
+        "CESIUM_RTC.schema.json": [
+          "glTF"
+        ]
+      }
+    },
+    "CESIUM_primitive_outline": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/CESIUM_primitive_outline/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "primitive.CESIUM_primitive_outline.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "CESIUM_tile_edges": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/CESIUM_tile_edges/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.CESIUM_tile_edges.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "EXT_feature_metadata": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_feature_metadata/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.EXT_feature_metadata.schema.json": [
+          "glTF"
+        ],
+        "mesh.primitive.EXT_feature_metadata.schema.json": [
+          "mesh.primitive"
+        ],
+        "EXT_mesh_gpu_instancing/EXT_feature_metadata.schema.json": [
+          "EXT_mesh_gpu_instancing/glTF.EXT_mesh_gpu_instancing"
+        ]
+      }
+    },
+    "EXT_geospatial_crs": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.1/Vendor/EXT_geospatial_crs/schema",
+      "core": [
+        "2.1"
+      ],
+      "extends": {
+        "EXT_geospatial_crs.schema.json": [
+          "glTF"
+        ]
+      }
+    },
+    "EXT_implicit_cylinder_region": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_implicit_cylinder_region/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.KHR_implicit_shapes.shape.EXT_implicit_cylinder_region.schema.json": [
+          "KHR_implicit_shapes/glTF.KHR_implicit_shapes.shape"
+        ]
+      }
+    },
+    "EXT_implicit_ellipsoid_region": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_implicit_ellipsoid_region/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.KHR_implicit_shapes.shape.EXT_implicit_ellipsoid_region.schema.json": [
+          "KHR_implicit_shapes/glTF.KHR_implicit_shapes.shape"
+        ]
+      }
+    },
+    "EXT_instance_features": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_instance_features/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "node.EXT_instance_features.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "EXT_mesh_features": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_mesh_features/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.EXT_mesh_features.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "EXT_mesh_gpu_instancing": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_mesh_gpu_instancing/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.EXT_mesh_gpu_instancing.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "EXT_mesh_polygon": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_mesh_polygon",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "EXT_mesh_polygon.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "EXT_mesh_primitive_edge_visibility": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_mesh_primitive_edge_visibility/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "primitive.EXT_mesh_primitive_edge_visibility.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "EXT_mesh_primitive_restart": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_mesh_primitive_restart/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "EXT_mesh_primitive_restart.schema.json": [
+          "mesh"
+        ]
+      }
+    },
+    "EXT_meshopt_compression": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_meshopt_compression/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "buffer.EXT_meshopt_compression.schema.json": [
+          "buffer"
+        ],
+        "bufferView.EXT_meshopt_compression.schema.json": [
+          "bufferView"
+        ]
+      }
+    },
+    "EXT_primitive_voxels": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_primitive_voxels/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.EXT_primitive_voxels.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "EXT_structural_metadata": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_structural_metadata/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "EXT_structural_metadata.schema.json": [
+          "*"
+        ],
+        "glTF.EXT_structural_metadata.schema.json": [
+          "glTF"
+        ],
+        "mesh.primitive.EXT_structural_metadata.schema.json": [
+          "mesh.primitive"
+        ],
+        "node.EXT_voxels.EXT_structural_metadata.schema.json": [
+          "EXT_voxels/node.EXT_voxels"
+        ]
+      }
+    },
+    "EXT_textureInfo_constant_lod": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_textureInfo_constant_lod/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "textureInfo.EXT_textureInfo_constant_lod.schema.json": [
+          "material.textureInfo"
+        ]
+      }
+    },
+    "EXT_texture_webp": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Vendor/EXT_texture_webp/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.EXT_texture_webp.schema.json": [
+          "texture"
+        ]
+      }
+    },
+    "EXT_voxels": {
+      "repository": "CesiumGS/glTF",
+      "branch": "3d-tiles-2.0",
+      "commit": "e68efc9086f60743c331a2c757a1ffadcdb5d532",
+      "schemaDirectory": "extensions/2.1/Vendor/EXT_voxels/schema",
+      "core": [
+        "2.1"
+      ],
+      "extends": {
+        "node.EXT_voxels.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "KHR_binary_glTF": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/1.0/Khronos/KHR_binary_glTF/schema",
+      "core": [
+        "1.0"
+      ],
+      "extends": {
+        "image.KHR_binary_glTF.schema.json": [
+          "image"
+        ],
+        "shader.KHR_binary_glTF.schema.json": [
+          "shader"
+        ]
+      }
+    },
+    "KHR_draco_mesh_compression": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_draco_mesh_compression/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.KHR_draco_mesh_compression.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "KHR_gaussian_splatting": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_gaussian_splatting/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.KHR_gaussian_splatting.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "KHR_gaussian_splatting_compression_spz_2": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_gaussian_splatting_compression_spz_2/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.KHR_gaussian_splatting_compression_spz_2.schema.json": [
+          "KHR_gaussian_splatting/mesh.primitive.KHR_gaussian_splatting"
+        ]
+      }
+    },
+    "KHR_implicit_shapes": {
+      "repository": "CesiumGS/glTF",
+      "branch": "cesium-native",
+      "commit": "c3fa3604e240616d021aca3ebf61d7b61379b986",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_implicit_shapes/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.KHR_implicit_shapes.schema.json": [
+          "glTF"
+        ]
+      }
+    },
+    "KHR_materials_anisotropy": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_materials_anisotropy/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_materials_anisotropy.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_materials_clearcoat": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_materials_clearcoat/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_materials_clearcoat.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_materials_emissive_strength": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_materials_emissive_strength/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_materials_emissive_strength.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_materials_pbrSpecularGlossiness": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "glTF.KHR_materials_pbrSpecularGlossiness.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_materials_specular": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_materials_specular/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_materials_specular.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_materials_transmission": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_materials_transmission/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_materials_transmission.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_materials_unlit": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_materials_unlit/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_materials_unlit.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_mesh_primitive_restart": {
+      "core": [
+        "2.x"
+      ]
+    },
+    "KHR_mesh_quantization": {
+      "core": [
+        "2.x"
+      ]
+    },
+    "KHR_meshopt_compression": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_meshopt_compression/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "buffer.KHR_meshopt_compression.schema.json": [
+          "buffer"
+        ],
+        "bufferView.KHR_meshopt_compression.schema.json": [
+          "bufferView"
+        ]
+      }
+    },
+    "KHR_node_visibility": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_node_visibility/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "node.KHR_node_visibility.schema.json": [
+          "node"
+        ]
+      }
+    },
+    "KHR_spz_gaussian_splats_compression": {
+      "repository": "CesiumGS/glTF",
+      "branch": "draft-spz-splat-compression",
+      "commit": "a4d88217e20f1ad86f4539bbae55ab6b931cb9cc",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_spz_gaussian_splats_compression/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "mesh.primitive.KHR_spz_gaussian_splats_compression.schema.json": [
+          "mesh.primitive"
+        ]
+      }
+    },
+    "KHR_techniques_webgl": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Archived/KHR_techniques_webgl/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "material.KHR_techniques_webgl.schema.json": [
+          "material"
+        ]
+      }
+    },
+    "KHR_texture_basisu": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_texture_basisu/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "texture.KHR_texture_basisu.schema.json": [
+          "texture"
+        ]
+      }
+    },
+    "KHR_texture_transform": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/2.0/Khronos/KHR_texture_transform/schema",
+      "core": [
+        "2.x"
+      ],
+      "extends": {
+        "textureInfo.KHR_texture_transform.schema.json": [
+          "material.textureInfo"
+        ]
+      }
+    },
+    "WEB3D_quantized_attributes": {
+      "repository": "KhronosGroup/glTF",
+      "branch": "main",
+      "commit": "da88a3bbbe168cc728eddf71fa5e1915cc2c0629",
+      "schemaDirectory": "extensions/1.0/Vendor/WEB3D_quantized_attributes/schema",
+      "core": [
+        "1.0",
+        "2.x"
+      ],
+      "extends": {
+        "WEB3D_quantized_attributes.accessor.schema.json": [
+          "accessor"
+        ]
+      }
+    }
+  }
+}
