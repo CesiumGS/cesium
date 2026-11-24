@@ -2,10 +2,14 @@
 id: CS-1185
 title: Merge CS-971, every Slang loop bounded by a constant
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-8
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`, regenerates the views and logs the merge."
+answered_at: 2026-11-24T05:48:33.744Z
+answered_via: chat
+answered_by: owner
 ---
 
 ## Question
