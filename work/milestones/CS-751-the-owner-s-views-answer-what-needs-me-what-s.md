@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-19
 project: CS-389
 outcome: The Work page opens on a release's remaining milestones and the gates holding it, shows only the graph's exceptions, draws the path to any target, says what changed, shows projects as bets, orders work without a slot setting, makes each proposal a clear call, shows how well the system and the owner work together, and keeps Your move calm.
-constraints: [CS-744 c?, CS-745 c?, CS-746 c?, CS-747 c?, CS-748 c?, CS-749 c?, CS-750 c?, CS-752 c?, CS-753 c?]
+constraints: [CS-744 c?, CS-745 c?, CS-746 c?, CS-747 c?, CS-748 c?, CS-749 c?, CS-750 c?, CS-752 c?, CS-753 c?, CS-1156 c?]
 ---
 
 ## Done when
