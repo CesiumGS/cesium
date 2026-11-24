@@ -10,6 +10,15 @@ import { Check, Matrix4, defined } from "@cesium/core";
 const EMPTY_CHILDREN = Object.freeze([]);
 
 /**
+ * The shared, immutable primitives array used by nodes with no primitives, to
+ * avoid allocating an empty array for every node that owns no geometry.
+ *
+ * @type {ModelPrimitive[]}
+ * @private
+ */
+const EMPTY_PRIMITIVES = Object.freeze([]);
+
+/**
  * <div class="notice">
  * Use {@link Model#nodes}, {@link Model#rootNodes}, or {@link Model#getNode} to
  * get a node from a loaded model. Do not call the constructor directly.
@@ -46,6 +55,7 @@ function ModelNode(model, runtimeNode) {
   this._runtimeNode = runtimeNode;
   this._parent = undefined;
   this._children = EMPTY_CHILDREN;
+  this._primitives = EMPTY_PRIMITIVES;
 }
 
 Object.defineProperties(ModelNode.prototype, {
@@ -106,6 +116,20 @@ Object.defineProperties(ModelNode.prototype, {
   children: {
     get: function () {
       return this._children;
+    },
+  },
+
+  /**
+   * The primitives owned by this node.
+   *
+   * @memberof ModelNode.prototype
+   *
+   * @type {ModelPrimitive[]}
+   * @readonly
+   */
+  primitives: {
+    get: function () {
+      return this._primitives;
     },
   },
 

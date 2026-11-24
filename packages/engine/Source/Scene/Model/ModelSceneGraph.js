@@ -20,6 +20,7 @@ import ModelClippingPlanesPipelineStage from "./ModelClippingPlanesPipelineStage
 import ModelClippingPolygonsPipelineStage from "./ModelClippingPolygonsPipelineStage.js";
 import ModelVectorLookupPipelineStage from "./ModelVectorLookupPipelineStage.js";
 import ModelNode from "./ModelNode.js";
+import ModelPrimitive from "./ModelPrimitive.js";
 import ModelRuntimeNode from "./ModelRuntimeNode.js";
 import ModelRuntimePrimitive from "./ModelRuntimePrimitive.js";
 import ModelSkin from "./ModelSkin.js";
@@ -453,6 +454,16 @@ function traverseAndCreateSceneGraph(sceneGraph, node, transformToRoot) {
     children[i] = childNode;
   }
   publicNode._children = children;
+
+  // Wrap each runtime primitive in a public ModelPrimitive owned by this node.
+  const runtimePrimitives = runtimeNode.runtimePrimitives;
+  const numPrimitives = runtimePrimitives.length;
+  const primitives =
+    numPrimitives > 0 ? new Array(numPrimitives) : publicNode._primitives;
+  for (let i = 0; i < numPrimitives; i++) {
+    primitives[i] = new ModelPrimitive(model, publicNode, runtimePrimitives[i]);
+  }
+  publicNode._primitives = primitives;
 
   const name = node.name;
   if (defined(name)) {
@@ -1070,6 +1081,10 @@ ModelSceneGraph.prototype.pushDrawCommands = function (frameState) {
 
 // Callback is defined here to avoid allocating a closure in the render loop
 function pushPrimitiveDrawCommands(runtimePrimitive, options) {
+  if (!runtimePrimitive.show) {
+    return;
+  }
+
   const frameState = options.frameState;
   const hasSilhouette = options.hasSilhouette;
 
