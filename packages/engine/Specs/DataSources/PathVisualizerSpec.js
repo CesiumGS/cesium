@@ -1513,8 +1513,18 @@ describe(
       expect(Color.equals(firstColor, secondColor)).toEqual(false);
     });
 
-    // options.epoch: ISO 8601 start of the position samples.
-    // options.availabilityStart: seconds after the epoch at which the entity becomes available.
+    /**
+     * Creates a path entity in PORTIONS material mode with a straight sampled path from the
+     * epoch to 400 seconds after it, moving 1000 m along y per second. The lead and trail
+     * times are 200 seconds.
+     *
+     * @param {MaterialProperty} material The path material.
+     * @param {number} resolution The path resolution, in seconds.
+     * @param {object} [options]
+     * @param {string} [options.epoch="2026-04-01T00:00:00Z"] ISO 8601 time of the first position sample.
+     * @param {number} [options.availabilityStart] Seconds after the epoch at which the entity becomes available. If undefined, the entity has no availability.
+     * @returns {JulianDate} The time 200 seconds after the epoch, when the window spans the whole path.
+     */
     function createPortionsPathEntity(material, resolution, options) {
       options = options ?? {};
       const epoch = JulianDate.fromIso8601(
@@ -1611,9 +1621,11 @@ describe(
       color.intervals.addInterval(
         new TimeInterval({ start: at(200), stop: at(400), data: sampledColor }),
       );
+      // Availability anchors the resolution steps to the start of the path.
       const time = createPortionsPathEntity(
         new ColorMaterialProperty(color),
         50.0,
+        { availabilityStart: 0.0 },
       );
       visualizer.update(time);
 
@@ -1738,7 +1750,7 @@ describe(
     });
 
     it("keeps time-dynamic material split times fixed for paths before the default step anchor in PORTIONS materialMode", function () {
-      const epoch = "2016-06-01T00:00:00Z";
+      const epoch = "1999-06-01T00:00:00Z";
       const time = createPortionsPathEntity(
         createSampledColorMaterial(epoch),
         50.0,
@@ -1807,7 +1819,10 @@ describe(
           return this === other;
         },
       };
-      const time = createPortionsPathEntity(material, 50.0);
+      // Availability anchors the resolution steps to the start of the path.
+      const time = createPortionsPathEntity(material, 50.0, {
+        availabilityStart: 0.0,
+      });
       visualizer.update(time);
 
       expect(getShownPolylines(scene).length).toEqual(8);

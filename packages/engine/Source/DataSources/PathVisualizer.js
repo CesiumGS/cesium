@@ -10,6 +10,7 @@ import {
   Quaternion,
   ReferenceFrame,
   TimeInterval,
+  TimeStandard,
   arrayRemoveDuplicates,
   binarySearch,
   defined,
@@ -799,9 +800,9 @@ function getDynamicMaterialProperties(materialData) {
   return dynamic;
 }
 
-// Fallback anchor for step split times when no finite start time is available.
-// This is the most recent leap second, so steps fall on whole UTC seconds for data after it.
-const defaultStepAnchor = JulianDate.fromIso8601("2017-01-01T00:00:00Z");
+// Fallback anchor for step split times when no finite start time is available. Any fixed time
+// works; J2000 is a standard epoch used elsewhere in Cesium.
+const defaultStepAnchor = new JulianDate(2451545.0, 0.0, TimeStandard.TAI);
 
 // Returns a fixed time to anchor step split times to. The anchor must not depend on the
 // visible path window: if it did, split times change every frame as the window moves and the
