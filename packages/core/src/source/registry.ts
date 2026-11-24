@@ -6,8 +6,6 @@
  * URL("./csvSource.js", import.meta.url) }`. Its module's default export
  * is the `SourceKind`, imported the first time an asset needs it.
  */
-import type { Credential } from "../io/fetchProvider.ts";
-import { ContentName, canonicalSource } from "../scene/identity.ts";
 import type {
   AssetRef,
   AssetResolver,
@@ -112,82 +110,6 @@ export class SourceKinds {
   }
 }
 
-/**
- * The name of content no host or resolver names (CS-1100 A): a digest of
- * everything its kind's `open` receives but its declared credential. That
- * is the kind's ID; the URL's scheme, host, port and path and its whole
- * query but the declared credential's own parameters
- * (`asset.credentials.query`'s names, without case), sorted by name and
- * then value; and the options as canonical JSON. Never its user
- * information or fragment, and no list of likely credential names: so two
- * assets a kind could tell apart never share a name, while a URL with a
- * token nobody declared gets a name that changes with the token (reported
- * at `open`). A data URI's is its bytes' digest (CS-815's), with no query
- * read. A blob URL names a blob for one page's life only, so its name is
- * `session:` and a digest, and its IDs don't last. Only the digest is kept.
- * This is the one place the engine reads a URL for identity.
- * @internal
- */
-export function derivedName(
-  kind: string,
-  asset: {
-    readonly url: URL;
-    readonly credentials?: Credential;
-    readonly options?: unknown;
-  },
-): ContentName {
-  const { url } = asset;
-  const options = asset.options ?? {};
-  if (url.protocol === "data:") {
-    const bytes = /murmur3-128=([0-9a-f]{32})$/.exec(
-      canonicalSource(url.href),
-    )![1]!;
-    return ContentName.derived(canonicalJson([kind, "data:", bytes, options]));
-  }
-  if (url.protocol === "blob:") {
-    return ContentName.derived(
-      canonicalJson([kind, url.href, options]),
-      "session",
-    );
-  }
-  const declared = new Set(
-    Object.keys(asset.credentials?.query ?? {}).map((n) => n.toLowerCase()),
-  );
-  const query = [...url.searchParams]
-    .filter(([name]) => !declared.has(name.toLowerCase()))
-    .sort(([a, x], [b, y]) =>
-      a < b ? -1 : a > b ? 1 : x < y ? -1 : x > y ? 1 : 0,
-    );
-  return ContentName.derived(
-    canonicalJson([
-      kind,
-      url.protocol,
-      url.hostname,
-      url.port,
-      url.pathname,
-      query,
-      options,
-    ]),
-  );
-}
-
-/**
- * `value` as canonical JSON: objects' own keys sorted, so two equal option
- * sets give one text whatever their order. A key like `__proto__` is a key.
- */
-function canonicalJson(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(canonicalJson).join(",")}]`;
-  }
-  if (typeof value === "object" && value !== null) {
-    const entries = Object.entries(value)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([k, v]) => `${JSON.stringify(k)}:${canonicalJson(v)}`);
-    return `{${entries.join(",")}}`;
-  }
-  return JSON.stringify(value) ?? "null";
-}
-
 function checkKind(module: unknown, id: string): SourceKind {
   const kind = (module as { default?: unknown }).default as
     SourceKind | undefined;
@@ -211,8 +133,8 @@ function checkKind(module: unknown, id: string): SourceKind {
 
 /**
  * Plain URLs: `{ url, kind?, options? }` resolves to itself, with no name
- * (the engine derives one, `derivedName`), no credentials and no credits of
- * its own. A relative URL resolves against the page.
+ * (the engine mints a session name at `open`, CS-1149 A), no credentials
+ * and no credits of its own. A relative URL resolves against the page.
  * @experimental
  */
 export class UrlResolver implements AssetResolver {

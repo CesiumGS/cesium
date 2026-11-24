@@ -18,12 +18,12 @@
  *   wait until their world's scene time reaches them, so a replayed feed
  *   gives the same rows.
  *   The engine never polls a source (CS-863: a source may poll its own server).
- * - **Names and labels** (CS-1100 A, CS-1101 A): a content's name is
- *   declared, in a grammar no URL satisfies, or derived from everything its
- *   kind receives but its declared credential (`derivedName`); a derived
- *   one is reported once at `open`. The engine's own text names a content
- *   by a label it mints, its kind and an ordinal (`labelOf`), never by its
- *   name, a content key or a row key.
+ * - **Names and labels** (CS-1101 A, CS-1149 A): a content's name is
+ *   declared, in a grammar no URL satisfies, or a session name the engine
+ *   mints at `open` from 16 random bytes, with nothing from the kind, the
+ *   URL or the options in it; a session name is reported once at `open`.
+ *   The engine's own text names a content by a label it mints, its kind and
+ *   an ordinal (`labelOf`), never by its name, a content key or a row key.
  * - **Two outcomes** (CS-1102 A): a pushed change is applied to what is
  *   resident, or turned into an invalidation; the engine keeps nothing else
  *   of it. An op for a key nothing resident holds, a peer's insert included,
@@ -51,7 +51,6 @@ import { checkChangeSet, type ChangeOp, type ChangeSet } from "./editing.ts";
 import {
   SourceKinds,
   UrlResolver,
-  derivedName,
   moduleHref,
   type KindRef,
   type ModuleLoader,
@@ -110,10 +109,15 @@ export interface SourceRuntimeOptions {
   /** Where a source's failure or a dropped change is reported. */
   readonly report?: (message: string) => void;
   /**
-   * Whether a world's item holds `key`: a content ID derived from its
-   * source skips it, as a second item of a tileset takes an ordinal.
+   * Whether a world's item holds `key`: a content ID taken from its name
+   * skips it, as a second item of a tileset takes an ordinal.
    */
   readonly itemKeyTaken?: (key: string) => boolean;
+  /**
+   * Fills `bytes` with random bytes, for the session names minted at
+   * `open` (CS-1149 A). Default `crypto.getRandomValues`; a test seeds it.
+   */
+  readonly random?: (bytes: Uint8Array<ArrayBuffer>) => void;
 }
 
 /**
@@ -127,9 +131,10 @@ export interface OpenOptions {
    * resolver's (`ResolvedAsset.name`). 1 to 128 characters from ASCII
    * letters, digits and `. _ ~ : @ + -`, with single `/` between parts and
    * not at either end (CS-1101 A): `open` refuses a URL, its query or its
-   * path. Default: the resolver's, else a name the engine derives from the
-   * kind, the URL and the options (CS-1100 A), whose feature IDs last only
-   * as long as those do, reported at `open`.
+   * path. Default: the resolver's, else a session name the engine mints
+   * (CS-1149 A), so its feature IDs last for this session only, reported
+   * at `open`. Only a declared name gives the same feature IDs across
+   * opens, worlds, runs and peers.
    */
   readonly name?: string;
   /**
@@ -204,8 +209,14 @@ export class SourceRuntime {
   private applyScheduled = false;
   private destroyed = false;
 
+  /** Fills a session name's 16 bytes (`SourceRuntimeOptions.random`). */
+  private readonly random: (bytes: Uint8Array<ArrayBuffer>) => void;
+
   /** @internal Use `Engine.sources`. */
   constructor(private readonly options: SourceRuntimeOptions) {
+    this.random =
+      options.random ??
+      ((bytes) => void globalThis.crypto.getRandomValues(bytes));
     this.kinds = new SourceKinds(options.load);
     this.budget = new BudgetArbiter(options.budget, (message) =>
       this.reportMessage(message),
@@ -276,11 +287,9 @@ export class SourceRuntime {
       this.options.pool.loadDecoder(decoder.type, moduleHref(decoder.module));
       types.add(decoder.type);
     }
-    const declared = options.name ?? asset.name;
+    const declared = options.name !== undefined ? options.name : asset.name;
     const name =
-      declared === undefined
-        ? derivedName(kind.id, asset)
-        : declaredName(declared);
+      declared === undefined ? this.sessionName() : declaredName(declared);
     const ordinal = (this.ordinals.get(kind.id) ?? 0) + 1;
     this.ordinals.set(kind.id, ordinal);
     const label = labelOf(kind.id, ordinal);
@@ -293,7 +302,7 @@ export class SourceRuntime {
     );
     if (!name.declared) {
       this.reportMessage(
-        `open: ${label} has no declared name (OpenOptions.name, ResolvedAsset.name): its name is derived from its kind, URL and options, so its feature IDs last only as long as those do.`,
+        `open: ${label} has no declared name (OpenOptions.name, ResolvedAsset.name): its feature IDs last for this session only; declare a name to keep them.`,
       );
     }
     const client = this.budget.client(label);
@@ -327,6 +336,13 @@ export class SourceRuntime {
     this.opened.push(opened);
     this.options.wake?.();
     return content;
+  }
+
+  /** A session name (CS-1149 A): 16 random bytes, nothing else. */
+  private sessionName(): ContentName {
+    const bytes = new Uint8Array(16);
+    this.random(bytes);
+    return ContentName.session(bytes);
   }
 
   /**
@@ -763,16 +779,18 @@ export class SourceRuntime {
   }
 
   /**
-   * Content `explicit`'s ID, or `derived` (its name) when none is given.
-   * Two open contents never share one, since it is their first items' key,
-   * and so in their instance IDs (feature IDs never depend on it): a second `explicit` is refused, and a second `derived`
-   * takes an ordinal (`#2`), reported, as a second item of a tileset does.
-   * A `derived` one also skips the keys worlds' items hold: content and
-   * tileset items take one ordinal rule.
+   * Content `explicit`'s ID, or `named` (its name's text) when none is
+   * given. Two open contents never share one, since it is their first
+   * items' key, and so in their instance IDs (feature IDs never depend on
+   * it): a second `explicit` is refused, and a second `named` takes an
+   * ordinal (`#2`), reported, as a second item of a tileset does. A session
+   * name is never a second, so only a declared name meets that rule. A
+   * `named` one also skips the keys worlds' items hold: content and tileset
+   * items take one ordinal rule.
    */
   private contentId(
     explicit: string | undefined,
-    derived: string,
+    named: string,
     label: string,
   ): string {
     const taken = new Set(this.opened.map((o) => o.content.id));
@@ -788,7 +806,7 @@ export class SourceRuntime {
       return explicit;
     }
     let ordinal = 1;
-    const idOf = (n: number) => (n === 1 ? derived : `${derived}#${n}`);
+    const idOf = (n: number) => (n === 1 ? named : `${named}#${n}`);
     const held = (id: string) =>
       taken.has(id) || (this.options.itemKeyTaken?.(id) ?? false);
     while (held(idOf(ordinal))) {

@@ -206,9 +206,9 @@ export interface ResolvedAsset {
    * characters from ASCII letters, digits and `. _ ~ : @ + -`, with single
    * `/` between parts and not at either end, and `open` refuses anything
    * else, a URL, its query or its path included (CS-1101 A). Absent, the
-   * engine derives one from the kind, the URL and the options
-   * (`derived:` and 32 hexadecimal digits, CS-1100 A), reported at `open`.
-   * `OpenOptions.name` wins over it.
+   * engine mints a session name at `open` (`session:` and 32 hexadecimal
+   * digits from random bytes, CS-1149 A), reported there: its feature IDs
+   * last for this session only. `OpenOptions.name` wins over it.
    */
   readonly name?: string;
   /**

@@ -62,7 +62,6 @@ import {
   SourceRuntime,
   type SourceRuntimeOptions,
 } from "../packages/core/src/source/runtime.ts";
-import { derivedName } from "../packages/core/src/source/registry.ts";
 import { ContentRows } from "../packages/core/src/source/sinks.ts";
 import type {
   SourceChange,
@@ -160,7 +159,7 @@ function runtime(
   });
   jobs.phased = options.phased ?? false;
   const reports: string[] = [];
-  /** The notice `open` gives content with no declared name (CS-1100 A), kept apart. */
+  /** The notice `open` gives content with no declared name (CS-1149 A), kept apart. */
   const notices: string[] = [];
   const rt = new SourceRuntime(
     seededOptions(
@@ -1388,17 +1387,27 @@ describe("open: cleanup, one ID per content, and messages without payloads", () 
     expect(SampleSource.made.at(-1)!.destroyed).toBe(true);
   });
 
-  it("gives a second content of one URL an ordinal, reported; refuses a second explicit id", async () => {
+  it("gives a second content of one declared name an ordinal, reported; refuses a second explicit id; two opens of one URL have two session names", async () => {
     const { rt, reports } = runtime();
-    const first = await rt.open({ url: "https://data.test/city.sample" });
-    const second = await rt.open({ url: "https://data.test/city.sample" });
-    // Its name, the URL's digest, is its ID when none is given.
-    expect(first.id).toBe(first.source);
-    expect(first.id).toBe(
-      derivedName("sample", { url: new URL("https://data.test/city.sample") })
-        .text,
+    // With no name declared, each open has its own session name, its ID.
+    const a = await rt.open({ url: "https://data.test/city.sample" });
+    const b = await rt.open({ url: "https://data.test/city.sample" });
+    expect(a.id).toBe(a.source);
+    expect(a.source).toMatch(/^session:[0-9a-f]{32}$/);
+    expect(b.id).toBe(b.source);
+    expect(b.source).not.toBe(a.source);
+    expect(reports).toEqual([]);
+    // One declared name, twice: the second's ID takes an ordinal.
+    const first = await rt.open(
+      { url: "https://data.test/city.sample" },
+      { name: "datasets:city" },
     );
-    expect(second.id).toBe(`${first.source}#2`);
+    const second = await rt.open(
+      { url: "https://data.test/city.sample" },
+      { name: "datasets:city" },
+    );
+    expect(first.id).toBe("datasets:city");
+    expect(second.id).toBe("datasets:city#2");
     expect(reports).toEqual([
       expect.stringContaining("is open or drawn already; without an id"),
     ]);
@@ -2320,7 +2329,7 @@ describe("feature IDs and instance IDs apart, and a featureless draw by its key 
   });
 });
 
-describe("feature IDs from the canonical source and the key only (CS-1031 A)", () => {
+describe("feature IDs from the name and the key only (CS-1031 A, CS-1149 A)", () => {
   let engine: Engine;
   let world: World;
   beforeEach(async () => {
@@ -2332,6 +2341,8 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
   afterEach(() => engine.destroy());
 
   const CITY = "https://data.test/city.sample";
+  /** The city's declared name: only a declared name keeps feature IDs across opens. */
+  const NAME = "datasets:city";
   const instanceOf = (content: SourceContent, key: string) =>
     instanceIdOf({
       kind: "draw",
@@ -2340,28 +2351,40 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
       content: "a/box",
     });
 
-  /** Opens `url` with `id` and places it in `into`, loaded. */
-  async function placed(url: string, id: string, into: World = world) {
-    const content = await engine.open({ url }, { id });
+  /** Opens `url` with `id`, under `name` (none when null), and places it in `into`, loaded. */
+  async function placed(
+    url: string,
+    id: string,
+    into: World = world,
+    name: string | null = NAME,
+  ) {
+    const content = await engine.open(
+      { url },
+      name !== null ? { id, name } : { id },
+    );
     const item = into.add(content);
     engine.sources.tick();
     engine.sources.tick();
     return { content, item };
   }
 
-  it("gives one source opened twice, in two worlds, the same feature IDs and their own instance IDs; a token nobody declared splits its name, and never shows in it", async () => {
+  it("gives one declared name opened twice, in two worlds, the same feature IDs and their own instance IDs; without a name, each open has its own", async () => {
     const other = engine.createWorld();
     engine.addView({ target: new OffscreenTarget(64, 48), world: other });
     const a = await placed(CITY, "a");
     const b = await placed(CITY, "b", other);
-    expect(b.content.source).toBe(a.content.source);
-    // CS-1100 A: an undeclared token is part of what its kind receives.
-    const token = await engine.open(
-      { url: `${CITY}?token=s3cret-key` },
-      { id: "token" },
+    expect(b.content.source).toBe(NAME);
+    expect(a.content.source).toBe(NAME);
+    // CS-1149 A: undeclared, each open has a session name of its own.
+    const bare = await placed(CITY, "bare", world, null);
+    const again = await placed(CITY, "again", other, null);
+    expect(bare.content.source).not.toBe(again.content.source);
+    expect(bare.content.featureId("a/box")).not.toBe(
+      again.content.featureId("a/box"),
     );
-    expect(token.source).not.toBe(a.content.source);
-    expect(token.source).not.toContain("s3cret");
+    expect(bare.content.featureId("a/box")).not.toBe(
+      a.content.featureId("a/box"),
+    );
     expect(a.content.id).not.toBe(b.content.id);
     for (const key of ["road-0", "road-1", "a/box"]) {
       expect(b.content.featureId(key)).toBe(a.content.featureId(key));
@@ -2381,7 +2404,10 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
     const second = await fakeEngine();
     try {
       second.sources.registerKind({ id: "sample", module: SAMPLE });
-      const c = await second.open({ url: CITY }, { id: "elsewhere" });
+      const c = await second.open(
+        { url: `${CITY}?moved=1` },
+        { id: "elsewhere", name: NAME },
+      );
       expect(c.featureId("road-1")).toBe(a.content.featureId("road-1"));
     } finally {
       second.destroy();
@@ -2390,7 +2416,7 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
 
   it("applies a key-only change set and a peer's change set carrying its feature IDs", async () => {
     const mine = (await placed(CITY, "mine")).content;
-    const peer = await engine.open({ url: CITY }, { id: "peer" });
+    const peer = await engine.open({ url: CITY }, { id: "peer", name: NAME });
     const feed = (changes: ChangeSet) => {
       sourceOf(mine).push({ kind: "features", changes });
       engine.scene.workers.jobs.apply(Infinity);
@@ -2444,13 +2470,14 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
 
   it("gives two sources with one key different feature IDs", async () => {
     const city = (await placed(CITY, "city")).content;
-    const other = (await placed("https://data.test/other.sample", "other"))
-      .content;
+    const other = (
+      await placed("https://data.test/other.sample", "other", world, "other")
+    ).content;
     for (const key of ["road-0", "a/box"]) {
       expect(other.featureId(key)).not.toBe(city.featureId(key));
     }
-    // A derived name keeps the whole query: ion's `v` gives a new version
-    // new IDs, and so would a token nobody declared (CS-1100 A).
+    // Undeclared, each open is its own: ion's `v=1` and `v=2` apart, and
+    // so are two opens of `v=1` (CS-1149 A).
     engine.sources.registerKind({ id: "layered", module: LAYERED });
     const ion = "https://assets.ion.cesium.com/96188/tileset.json";
     const v1 = await engine.open(
@@ -2461,20 +2488,23 @@ describe("feature IDs from the canonical source and the key only (CS-1031 A)", (
       { url: `${ion}?v=2`, kind: "layered" },
       { id: "v2" },
     );
-    expect(v1.source).toBe(
-      derivedName("layered", { url: new URL(`${ion}?v=1`) }).text,
+    const v1again = await engine.open(
+      { url: `${ion}?v=1`, kind: "layered" },
+      { id: "v1again" },
     );
-    expect(v2.source).toBe(
-      derivedName("layered", { url: new URL(`${ion}?v=2`) }).text,
-    );
+    for (const content of [v1, v2, v1again]) {
+      expect(content.source).toMatch(/^session:[0-9a-f]{32}$/);
+    }
+    expect(new Set([v1, v2, v1again].map((c) => c.source)).size).toBe(3);
     expect(v2.featureId("road-0")).not.toBe(v1.featureId("road-0"));
+    expect(v1again.featureId("road-0")).not.toBe(v1.featureId("road-0"));
     expect(v1.featureId("road-0")).toBe(
       stableIdOf({ kind: "feature", source: v1.source, key: "road-0" }),
     );
   });
 });
 
-describe("named content: a declared name, else a name derived from what its kind receives (CS-1087 A, CS-1100 A, CS-1101 A, CS-1084 A)", () => {
+describe("named content: a declared name, else a session name (CS-1087 A, CS-1101 A, CS-1149 A, CS-1084 A)", () => {
   let engine: Engine;
   let world: World;
   beforeEach(async () => {
@@ -2496,98 +2526,51 @@ describe("named content: a declared name, else a name derived from what its kind
     return content;
   }
 
-  it("derives a plain URL's name from a digest: ?layer=roads and ?layer=buildings apart, ?a=1&b=2 and ?b=2&a=1 one, and says so once at open", async () => {
+  it("gives undeclared content a session name of its own at each open, with nothing from its URL in it, and says so once at open", async () => {
     const reports: string[] = [];
     engine.errors.on((e) => reports.push(e.message));
     const roads = await placed(
-      { url: "https://api.test/features.sample?layer=roads" },
+      { url: "https://api.test/features.sample?layer=roads&token=s3cret" },
       { id: "roads" },
     );
-    const buildings = await placed(
-      { url: "https://api.test/features.sample?layer=buildings" },
-      { id: "buildings" },
+    const again = await placed(
+      { url: "https://api.test/features.sample?layer=roads&token=s3cret" },
+      { id: "again" },
     );
-    expect(roads.source).toMatch(/^derived:[0-9a-f]{32}$/);
+    expect(roads.source).toMatch(/^session:[0-9a-f]{32}$/);
+    expect(again.source).toMatch(/^session:[0-9a-f]{32}$/);
     expect(reports.filter((m) => m.includes("has no declared name"))).toEqual([
-      'open: "sample" content 1 has no declared name (OpenOptions.name, ResolvedAsset.name): its name is derived from its kind, URL and options, so its feature IDs last only as long as those do.',
-      'open: "sample" content 2 has no declared name (OpenOptions.name, ResolvedAsset.name): its name is derived from its kind, URL and options, so its feature IDs last only as long as those do.',
+      'open: "sample" content 1 has no declared name (OpenOptions.name, ResolvedAsset.name): its feature IDs last for this session only; declare a name to keep them.',
+      'open: "sample" content 2 has no declared name (OpenOptions.name, ResolvedAsset.name): its feature IDs last for this session only; declare a name to keep them.',
     ]);
-    expect(buildings.source).not.toBe(roads.source);
-    expect(buildings.featureId("road-0")).not.toBe(roads.featureId("road-0"));
+    // One URL, two opens: two names, two sets of feature IDs.
+    expect(again.source).not.toBe(roads.source);
+    expect(again.featureId("road-0")).not.toBe(roads.featureId("road-0"));
     // Their labels and change sets don't cross.
     world.identity.setLabels(roads.featureId("a/box"), "class", ["road"]);
     expect(
-      world.identity.identify(buildings.featureId("a/box"))!.labels.class,
+      world.identity.identify(again.featureId("a/box"))!.labels.class,
     ).toBeUndefined();
     expect(() =>
-      buildings.resolve({
+      again.resolve({
         id: "cs-1",
         source: roads.source,
         ops: [{ op: "delete", key: "road-0" }],
       }),
     ).toThrow(/isn't this content's name/);
-    const name = (url: string) =>
-      derivedName("sample", { url: new URL(url) }).text;
-    expect(name("https://api.test/f.sample?b=2&a=1")).toBe(
-      name("https://api.test/f.sample?a=1&b=2"),
-    );
-    expect(name("https://u:p@api.test/f.sample?k=1#x")).toBe(
-      name("https://api.test/f.sample?k=1"),
-    );
   });
 
-  it("lets only the declared credential's own parameters out of a derived name: any other parameter, a likely credential's included, splits it, and so do the kind and the options (CS-1100 A)", () => {
-    const plain = "https://api.test/f.json?layer=roads";
-    const name = (
-      url: string,
-      credential?: Credential,
-      options?: Record<string, string>,
-      kind = "sample",
-    ) =>
-      derivedName(kind, {
-        url: new URL(url),
-        ...(credential ? { credentials: credential } : {}),
-        ...(options ? { options } : {}),
-      }).text;
-    // No list of likely credential names: ?key=roads and ?key=rivers apart.
-    for (const parameter of [
-      "key",
-      "policy",
-      "st",
-      "sig",
-      "token",
-      "X-Amz-Signature",
+  it("gives data URIs and blob URLs session names too, reading nothing of them", async () => {
+    engine.sources.registerKind({ id: "layered", module: LAYERED });
+    for (const url of [
+      "data:text/plain,a?b=1&token=secret-payload",
+      "blob:https://app.test/0b5e-secret-payload",
     ]) {
-      expect(name(`${plain}&${parameter}=a`), parameter).not.toBe(name(plain));
-      expect(name(`${plain}&${parameter}=a`), parameter).not.toBe(
-        name(`${plain}&${parameter}=b`),
-      );
+      const content = await engine.open({ url, kind: "layered" });
+      expect(content.source).toMatch(/^session:[0-9a-f]{32}$/);
+      expect(content.id).toBe(content.source);
+      content.destroy();
     }
-    // The declared credential's own, in any case, never enters.
-    const signed = new Credential({ query: { Session: "s1" } });
-    expect(name(`${plain}&session=s1`, signed)).toBe(name(plain, signed));
-    expect(name(`${plain}&SESSION=s2`, signed)).toBe(name(plain, signed));
-    expect(name(`${plain}&session=s1`)).not.toBe(name(plain));
-    // User information and the fragment never enter.
-    expect(name("https://u:p@api.test/f.json?layer=roads#x")).toBe(name(plain));
-    // The kind and the options do, the options in any key order.
-    expect(name(plain, undefined, undefined, "layered")).not.toBe(name(plain));
-    expect(name(plain, undefined, { style: "a" })).not.toBe(name(plain));
-    expect(name(plain, undefined, { a: "1", b: "2" })).toBe(
-      name(plain, undefined, { b: "2", a: "1" }),
-    );
-  });
-
-  it("names a data URI by its bytes' digest, with no query read, and marks a blob URL as for this session only", () => {
-    const name = (url: string) =>
-      derivedName("sample", { url: new URL(url) }).text;
-    const a = name("data:text/plain,a?b=1&token=x");
-    expect(a).toMatch(/^derived:[0-9a-f]{32}$/);
-    expect(name("data:text/plain,a?b=1&token=x")).toBe(a);
-    expect(name("data:text/plain,a?b=1&token=y")).not.toBe(a);
-    expect(name("blob:https://app.test/0b5e")).toMatch(
-      /^session:[0-9a-f]{32}$/,
-    );
   });
 
   it("refuses a declared name outside the grammar no URL satisfies, at open, naming no value (CS-1101 A, CS-1150 A)", async () => {
@@ -2874,8 +2857,12 @@ describe("edits, draws and two opens of one source in one world (CS-847)", () =>
       RecordFlags.hidden) !==
     0;
 
+  /** Opens the city under one declared name, so two opens share feature IDs (CS-1149 A). */
   async function placed(id: string) {
-    const content = await engine.open({ url: CITY }, { id });
+    const content = await engine.open(
+      { url: CITY },
+      { id, name: "datasets:city" },
+    );
     const item = world.add(content);
     engine.sources.tick();
     engine.sources.tick();
@@ -3000,29 +2987,6 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     ).join("");
   const pick = <T>(r: () => number, list: readonly T[]): T =>
     list[Math.floor(r() * list.length)]!;
-
-  /** Locators with secrets in every place a URL can hold one. */
-  function locators(n: number): string[] {
-    const r = random(847);
-    return Array.from({ length: n }, (_, i) => {
-      const host = `h${i}.example.test`;
-      const secret = word(r, 24);
-      switch (i % 6) {
-        case 0:
-          return `https://${host}/${word(r, 8)}/tiles.layers?access_token=${secret}&layer=${word(r, 5)}`;
-        case 1:
-          return `https://${host}/data.layers?X-Amz-Signature=${secret}&X-Amz-Date=20261122T000000Z&X-Amz-Credential=${word(r, 16)}`;
-        case 2:
-          return `https://${host}/v1/q.layers?next=${encodeURIComponent(`https://other.test/x?token=${secret}`)}&sig=${word(r, 12)}`;
-        case 3:
-          return `data:application/json,${word(r, 10)}?token=${secret}&x=${word(r, 6)}`;
-        case 4:
-          return `https://u${word(r, 4)}:${secret}@${host}/p.layers?k=${word(r, 6)}#${word(r, 10)}`;
-        default:
-          return `https://${host}/a/b.layers?se=2026-12-01&sp=r&sv=2024&sr=b&sig=${secret}#f${word(r, 8)}`;
-      }
-    });
-  }
 
   const text = (value: unknown) =>
     JSON.stringify(value, (_, v: unknown) =>
@@ -3630,8 +3594,8 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
         },
       });
       const opened: SourceContent[] = [];
-      // Derived names: a plain URL with options, twice (an ordinal, reported),
-      // and a resolver's asset with a credential.
+      // Session names: a plain URL with options, twice, and a resolver's
+      // asset with a credential.
       opened.push(
         await engine.open({ url: url.href, kind: "layered", options }),
       );
@@ -4363,13 +4327,12 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
 
   it("every ID a namespace makes round-trips through stableIdToHex and parseStableId", async () => {
     const r = random(940);
-    const urls = locators(24);
     const made: StableId[] = [];
     for (let i = 0; i < 200; i++) {
       const name =
         i % 2
           ? ContentName.declared(`datasets:${word(r, 8)}`)
-          : derivedName("layered", { url: new URL(pick(r, urls)) });
+          : ContentName.session(seeded(i)(new Uint8Array(16)));
       const namespace = namespaceOf(name);
       const key = word(r, 1 + (i % 12));
       made.push(

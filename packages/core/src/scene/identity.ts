@@ -582,13 +582,6 @@ export function stableIdOf(key: StableKey): StableId {
     : hashKey(canonicalKey(key));
 }
 
-/** @internal The 32 hexadecimal digits of MurmurHash3_x86_128 of `text`'s UTF-8 bytes. */
-export function digestHex(text: string): string {
-  return murmur3x86x128(ENCODER.encode(text))
-    .map((w) => w.toString(16).padStart(8, "0"))
-    .join("");
-}
-
 /** Held by this module alone: only `namespaceFor` makes a namespace. */
 const NAMESPACE_TOKEN = Symbol("FeatureNamespace");
 
@@ -672,14 +665,14 @@ const DECLARED_NAME = /^[A-Za-z0-9._~:@+-]+(?:\/[A-Za-z0-9._~:@+-]+)*$/;
 /** The most characters a declared name has. */
 const MAX_NAME = 128;
 
-/** A derived name's text: its scope and a digest. */
-const DERIVED_NAME = /^(?:derived|session):[0-9a-f]{32}$/;
+/** A session name's text: `session:` and the hex of 16 random bytes. */
+const SESSION_NAME = /^session:[0-9a-f]{32}$/;
 
 /** Reads a name's namespace: set once, in `ContentName`'s static block. */
 let namespaceOfName: (name: ContentName) => FeatureNamespace;
 
 /**
- * @internal A content's name (CS-1087 A, CS-1100 A, CS-1101 A): what its
+ * @internal A content's name (CS-1087 A, CS-1101 A, CS-1149 A): what its
  * feature IDs are projected from, and what its change sets, its
  * `SourceContent.source` and its `StableKey`s carry. A value, made only
  * here, and it says which it is:
@@ -690,11 +683,11 @@ let namespaceOfName: (name: ContentName) => FeatureNamespace;
  *   end. No `?`, `#`, `&`, `=`, `%`, whitespace or `//`, so no URL, query,
  *   path or encoded URL is one, by shape and with no list of secrets. Two
  *   opens with one declared name share feature IDs, on purpose.
- * - **Derived** by the engine when none is declared: `derived:` and a
- *   digest of everything its kind receives but its declared credential
- *   (`derivedName` in source/registry.ts), or `session:` and a digest for
- *   what lasts one page's life (a blob URL). A declared name doesn't take
- *   either prefix.
+ * - **A session name** the engine mints at `open` when none is declared:
+ *   `session:` and the hex of 16 random bytes. Nothing from the kind, the
+ *   URL or the options enters it, so no two opens share one, and its
+ *   feature IDs last for this session only. A declared name doesn't take
+ *   the prefix.
  *
  * The engine's own text (reports, errors) never holds one: it names a
  * content by a label it mints (CS-1101 A).
@@ -708,7 +701,7 @@ export class ContentName {
     namespaceOfName = (name) => name.#namespace;
   }
 
-  /** Only this module makes one: `declared`, `derived`, `parse`. */
+  /** Only this module makes one: `declared`, `session`, `parse`. */
   constructor(token: symbol, text: string, declared: boolean) {
     if (token !== NAME_TOKEN) {
       throw new TypeError("ContentName: only the engine makes one.");
@@ -723,7 +716,7 @@ export class ContentName {
     return this.#text;
   }
 
-  /** Whether a host or a resolver declared it (else the engine derived it). */
+  /** Whether a host or a resolver declared it (else it is a session name). */
   get declared(): boolean {
     return this.#declared;
   }
@@ -738,36 +731,33 @@ export class ContentName {
       typeof text !== "string" ||
       text.length > MAX_NAME ||
       !DECLARED_NAME.test(text) ||
-      /^(?:derived|session):/.test(text)
+      text.startsWith("session:")
     ) {
       throw new TypeError(
-        `a declared name is 1 to ${MAX_NAME} characters from ASCII letters, digits and . _ ~ : @ + -, with single / between parts, and doesn't start with derived: or session: (CS-1101 A). A URL, its query or its path isn't one.`,
+        `a declared name is 1 to ${MAX_NAME} characters from ASCII letters, digits and . _ ~ : @ + -, with single / between parts, and doesn't start with session: (CS-1101 A). A URL, its query or its path isn't one.`,
       );
     }
     return new ContentName(NAME_TOKEN, text, true);
   }
 
   /**
-   * A derived name: `scope`, then the digest of `canonical`, the canonical
-   * text of what its content's kind receives. Only the digest is kept.
+   * A session name (CS-1149 A): `session:` and the hex of `bytes`, 16
+   * random bytes the runtime draws at `open`. Nothing else enters it.
    */
-  static derived(
-    canonical: string,
-    scope: "derived" | "session" = "derived",
-  ): ContentName {
-    return new ContentName(
-      NAME_TOKEN,
-      `${scope}:${digestHex(canonical)}`,
-      false,
-    );
+  static session(bytes: Uint8Array): ContentName {
+    if (!(bytes instanceof Uint8Array) || bytes.length !== 16) {
+      throw new TypeError("a session name is made from 16 random bytes.");
+    }
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0"));
+    return new ContentName(NAME_TOKEN, `session:${hex.join("")}`, false);
   }
 
-  /** A name as change sets and `StableKey`s carry it: declared or derived text, else undefined. */
+  /** A name as change sets and `StableKey`s carry it: declared or session text, else undefined. */
   static parse(text: unknown): ContentName | undefined {
     if (typeof text !== "string") {
       return undefined;
     }
-    if (DERIVED_NAME.test(text)) {
+    if (SESSION_NAME.test(text)) {
       return new ContentName(NAME_TOKEN, text, false);
     }
     try {

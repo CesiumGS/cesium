@@ -16,10 +16,12 @@
  *   key for the feature (a row's name, a draw's `DrawOptions.id`) in the
  *   content's namespace, its name (`SourceContent.source`, CS-1087 A)
  *   hashed once at open, and nothing else: never from an item, the
- *   content's ID or its URL, so one content opened twice, placed in two
- *   worlds or opened in another run under one name gives the same ones. Their key kind is `feature`, which has no item. Rows, the
- *   edit layer, change sets and labels set on them name them; every item
- *   shows the same edits and labels.
+ *   content's ID or its URL. So one declared name, opened twice, placed in
+ *   two worlds or opened in another run, gives the same ones; content with
+ *   no declared name has a session name, and its feature IDs are its own
+ *   for this session only (CS-1149 A). Their key kind is `feature`, which
+ *   has no item. Rows, the edit layer, change sets and labels set on them
+ *   name them; every item shows the same edits and labels.
  * - **Instance IDs** (`InstanceId`) add the item: each item's draws carry its
  *   identity, keyed by `ContentItem.key`, so one content placed twice, or
  *   one source opened twice, gives two, and neither is ever its feature ID. A pick reports the instance ID;
@@ -27,8 +29,8 @@
  *   and the edit layer takes either.
  *
  * IDs don't change when an item is removed and the content placed again.
- * Two open contents of one name share feature IDs, and each keeps its own
- * edits; their content IDs differ (`Engine.open` refuses or numbers a
+ * Two open contents of one declared name share feature IDs, and each keeps
+ * its own edits; their content IDs differ (`Engine.open` refuses or numbers a
  * second of one ID), and so do their items' keys and instance IDs.
  *
  * Once destroyed, its sinks refuse writes (they throw), its source's jobs
@@ -183,8 +185,9 @@ export class SourceContent {
   /**
    * Its name's text (CS-1087 A, CS-1101 A): `OpenOptions.name`, else its
    * resolver's (`ResolvedAsset.name`), each in the grammar no URL satisfies;
-   * else a name the engine derives, `derived:` and a digest of its kind,
-   * URL and options (CS-1100 A). Its feature IDs are its source's keys
+   * else a session name the engine mints at open, `session:` and 32
+   * hexadecimal digits from random bytes, with nothing from its kind, URL
+   * or options in it (CS-1149 A). Its feature IDs are its source's keys
    * projected in this name's namespace, and its change sets name it
    * (`ChangeSet.source`). The engine's own messages never print it.
    */
