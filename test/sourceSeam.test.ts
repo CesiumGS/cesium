@@ -3845,10 +3845,50 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
         .toEqual(expected.sort(order));
     };
     check(-1, "loaded");
+    /** Rounds that reached each case, counted from what the source saw. */
+    const reached = { piled: 0, region: 0 };
     for (let round = 0; round < 60; round++) {
       const kind =
-        round % 10 === 4 ? "burst" : round % 10 === 7 ? "malformed" : "mixed";
-      if (kind === "burst") {
+        round % 10 === 4
+          ? "burst"
+          : round % 10 === 7
+            ? "malformed"
+            : round % 10 === 2
+              ? "piled"
+              : round % 10 === 9
+                ? "region"
+                : "mixed";
+      source.mostInvalidated = 0;
+      const regionsBefore = source.regionsSeen;
+      if (kind === "piled" || kind === "region") {
+        // Commits with inserts; the invalidations the source owes come
+        // after 120 others, before the engine's next tick ("piled"), or as
+        // region-only invalidations it maps to tiles itself ("region").
+        const touched = new Set<string>();
+        for (let i = 0; i < 4; i++) {
+          const made = commit(
+            i === 0 ? ["insert"] : ["insert", "update", "delete"],
+          );
+          pushSet(made.ops);
+          made.tiles.forEach((t) => touched.add(t));
+        }
+        if (kind === "piled") {
+          for (let i = 0; i < 120; i++) {
+            source.push({ kind: "invalidate", keys: [`none-${i}`] });
+          }
+          for (const tile of touched) {
+            source.push({ kind: "invalidate", keys: [tile] });
+          }
+        } else {
+          for (const tile of touched) {
+            const n = Number(tile.slice(1));
+            source.push({
+              kind: "invalidate",
+              region: { region: { west: n, south: 0, east: n + 1, north: 1 } },
+            });
+          }
+        }
+      } else if (kind === "burst") {
         // Updates only, more than the queue's bound between ticks.
         for (let i = 0; i <= MAX_QUEUED_CHANGES + 10; i++) {
           pushSet(commit(["update"]).ops);
@@ -3909,7 +3949,22 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
       }
       quiet();
       check(round, kind);
+      if (kind === "piled" && source.mostInvalidated >= 100) {
+        reached.piled++;
+      }
+      if (kind === "region" && source.regionsSeen > regionsBefore) {
+        reached.region++;
+      }
     }
+    // Coverage: each case was reached, by the source's own count.
+    expect(
+      reached.piled,
+      "rounds with 100 or more invalidations waiting",
+    ).toBeGreaterThan(0);
+    expect(
+      reached.region,
+      "rounds with region-only invalidations",
+    ).toBeGreaterThan(0);
   });
 
   it("T3, the canary matrix: a canary in every inlet reaches only the outlets its table allows, and a careless resolver's open is refused", async () => {

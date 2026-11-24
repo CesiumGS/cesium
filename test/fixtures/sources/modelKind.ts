@@ -50,6 +50,10 @@ export class ModelSource implements ContentSource {
   readonly server: ModelServer;
   /** Tiles it loaded and holds now. */
   readonly loaded = new Set<string>();
+  /** The most invalidations one update has seen (T2's coverage). */
+  mostInvalidated = 0;
+  /** Region-only invalidations its updates have seen (T2's coverage). */
+  regionsSeen = 0;
 
   constructor(
     readonly asset: ResolvedAsset,
@@ -65,7 +69,26 @@ export class ModelSource implements ContentSource {
   }
 
   update(tick: SourceTick): void {
+    this.mostInvalidated = Math.max(
+      this.mostInvalidated,
+      tick.invalidated.length,
+    );
     for (const change of tick.invalidated) {
+      const area = change.region?.region;
+      if (change.keys === undefined && area !== undefined) {
+        // A region is this source's to map to keys: tile tN spans
+        // longitudes N to N + 1. The engine dropped nothing for it, so the
+        // source releases what it reloads.
+        this.regionsSeen++;
+        for (const tile of [...this.loaded]) {
+          const n = Number(tile.slice(1));
+          if (n >= area.west && n < area.east) {
+            this.loaded.delete(tile);
+            this.host.budget.release(tile);
+          }
+        }
+        continue;
+      }
       for (const key of change.keys ?? [...this.loaded]) {
         this.loaded.delete(key);
       }
