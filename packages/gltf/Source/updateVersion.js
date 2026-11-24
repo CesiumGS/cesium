@@ -283,7 +283,6 @@ function objectToArray(object, mapping) {
 }
 
 function objectsToArrays(gltf) {
-  let i;
   const globalMapping = {
     accessors: {},
     animations: {},
@@ -304,12 +303,11 @@ function objectsToArrays(gltf) {
   };
 
   // Map joint names to id names
-  let jointName;
   const jointNameToId = {};
   const nodes = gltf.nodes;
   for (const id in nodes) {
     if (Object.prototype.hasOwnProperty.call(nodes, id)) {
-      jointName = nodes[id].jointName;
+      const jointName = nodes[id].jointName;
       if (defined(jointName)) {
         jointNameToId[jointName] = id;
       }
@@ -330,7 +328,7 @@ function objectsToArrays(gltf) {
   }
 
   // Remap joint names to array indexes
-  for (jointName in jointNameToId) {
+  for (const jointName in jointNameToId) {
     if (Object.prototype.hasOwnProperty.call(jointNameToId, jointName)) {
       jointNameToId[jointName] = globalMapping.nodes[jointNameToId[jointName]];
     }
@@ -407,7 +405,7 @@ function objectsToArrays(gltf) {
     let children = node.children;
     if (defined(children)) {
       const childrenLength = children.length;
-      for (i = 0; i < childrenLength; ++i) {
+      for (let i = 0; i < childrenLength; ++i) {
         children[i] = globalMapping.nodes[children[i]];
       }
     }
@@ -417,7 +415,7 @@ function objectsToArrays(gltf) {
       const meshesLength = meshes.length;
       if (meshesLength > 0) {
         node.mesh = globalMapping.meshes[meshes[0]];
-        for (i = 1; i < meshesLength; ++i) {
+        for (let i = 1; i < meshesLength; ++i) {
           const meshNode = {
             mesh: globalMapping.meshes[meshes[i]],
           };
@@ -460,7 +458,7 @@ function objectsToArrays(gltf) {
     if (defined(jointNames)) {
       const joints = [];
       const jointNamesLength = jointNames.length;
-      for (i = 0; i < jointNamesLength; ++i) {
+      for (let i = 0; i < jointNamesLength; ++i) {
         joints[i] = jointNameToId[jointNames[i]];
       }
       skin.joints = joints;
@@ -471,7 +469,7 @@ function objectsToArrays(gltf) {
     const sceneNodes = scene.nodes;
     if (defined(sceneNodes)) {
       const sceneNodesLength = sceneNodes.length;
-      for (i = 0; i < sceneNodesLength; ++i) {
+      for (let i = 0; i < sceneNodesLength; ++i) {
         sceneNodes[i] = globalMapping.nodes[sceneNodes[i]];
       }
     }
@@ -742,9 +740,6 @@ function requireByteLength(gltf) {
 }
 
 function moveByteStrideToBufferView(gltf) {
-  let i;
-  let j;
-  let bufferView;
   const bufferViews = gltf.bufferViews;
 
   const bufferViewHasVertexAttributes = {};
@@ -768,7 +763,7 @@ function moveByteStrideToBufferView(gltf) {
   // Split accessors with different byte strides
   for (const bufferViewId in bufferViewMap) {
     if (Object.prototype.hasOwnProperty.call(bufferViewMap, bufferViewId)) {
-      bufferView = bufferViews[bufferViewId];
+      const bufferView = bufferViews[bufferViewId];
       const bufferViewByteOffset = bufferView.byteOffset;
       const accessors = bufferViewMap[bufferViewId];
       accessors.sort(function (a, b) {
@@ -781,8 +776,8 @@ function moveByteStrideToBufferView(gltf) {
       let currentByteOffset = 0;
       let currentIndex = 0;
       const accessorsLength = accessors.length;
-      for (i = 0; i < accessorsLength; ++i) {
-        let accessor = accessors[i];
+      for (let i = 0; i < accessorsLength; ++i) {
+        const accessor = accessors[i];
         const accessorByteStride = accessorByteStrides[i];
         const accessorByteOffset = accessor.byteOffset;
         const accessorByteLength = accessor.count * accessorByteStride;
@@ -798,10 +793,11 @@ function moveByteStrideToBufferView(gltf) {
           if (currentIndex > 0) {
             groupBufferView = clone(bufferView, true);
             const groupBufferViewId = addToArray(bufferViews, groupBufferView);
-            for (j = currentIndex; j <= i; ++j) {
-              accessor = accessors[j];
-              accessor.bufferView = groupBufferViewId;
-              accessor.byteOffset = accessor.byteOffset - currentByteOffset;
+            for (let j = currentIndex; j <= i; ++j) {
+              const groupAccessor = accessors[j];
+              groupAccessor.bufferView = groupBufferViewId;
+              groupAccessor.byteOffset =
+                groupAccessor.byteOffset - currentByteOffset;
             }
           }
           if (bufferViewHasVertexAttributes[bufferViewId]) {
