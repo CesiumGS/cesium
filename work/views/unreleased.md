@@ -110,12 +110,14 @@ CS-199 Dyno hardening, packaging and CI
   CS-580  naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output
   CS-850  eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes
   CS-919  dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it
+  CS-1194  Executors take the machine-wide locks for their own heavy steps: AGENTS.md and the dyno skill say how
 
 CS-191 Content sources and formats
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
   CS-898  64-bit integer properties keep their exact value
   CS-900  Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD
+  CS-913  The subset reader's composition faults on broken assets, tested against OpenUSD
   CS-966  resolveUri stops copying the base URL's query to other origins, and credentials go only to their own origins
 
 CS-609 A clean 2.0 branch and a modern build
@@ -143,5 +145,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-106 merged item(s) not in a release
+108 merged item(s) not in a release
 ```

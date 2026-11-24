@@ -34,6 +34,7 @@ CS-10 Cesium IR
   CS-955  The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
   CS-989  Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
   CS-1146  docs/design/styling-runtime.md lands: the shared styling runtime's contracts, from the owner's decisions of 2026-11-23
+  CS-1196  decision: Merge CS-955, the df64 route-center pass measured, with a CPU fallback
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -127,6 +128,7 @@ CS-190 Vector drawing and the styling language
   CS-258  The vector drawing design: lines, polygons, labels and CAD styles on one path
   CS-262  Real-time tracks: cull small shadow casters, and one glTF asset in several worlds
   CS-264  Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1
+  CS-1170  A MapLibre expressions front end lowers to Cesium IR
 
 CS-191 Content sources and formats
   CS-270  decision: Where does 2.0's default evaluation token come from?
@@ -147,7 +149,6 @@ CS-191 Content sources and formats
   CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
   CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-902  CS-559's scope, from the chosen reader and CS-833's study
-  CS-913  The subset reader's composition faults on broken assets, tested against OpenUSD
   CS-914  OpenUSD in WebAssembly as a test oracle for the USD source
   CS-961  Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
   CS-962  Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)
@@ -221,7 +222,6 @@ CS-198 GPU-driven rendering and capacities
 
 CS-199 Dyno hardening, packaging and CI
   CS-358  Snyk findings in the dev server and the bench suite
-  CS-359  Keep the Google Maps and iTwin share keys out of builds
   CS-360  Static hosting of the built gallery: data paths, the error alert, the favicon
   CS-361  CI runs `packages/next`'s tests on Node 24
   CS-362  Prettier clean across `packages/next`
@@ -239,6 +239,9 @@ CS-199 Dyno hardening, packaging and CI
   CS-984  Baseline and golden changes carry a logged reason, and every merge decision lists them (CS-980 A)
   CS-1127  Dyno's headless runner seeds the ion token into the page at run time, never into a build, a URL or a log
   CS-1152  Dyno's overview compares like with like: GPU and CPU time per frame for both engines, and frame time labeled for what it is
+  CS-1174  Dyno skips milk-truck-fleet in the uncapped orbit
+  CS-1195  decision: Merge CS-1127, Dyno's headless runs get the ion token
+  CS-1204  decision: Merge CS-538, the no-scene-gains test holds under load
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -259,6 +262,9 @@ CS-389 Dyno as the development harness
   CS-992  Dyno loads an outside module and benchmarks it as it does the built-in sources
   CS-1008  Dyno's quiet rule gets a wait limit, after which the orchestrator holds executors until the measurement runs (CS-1004 C)
   CS-1154  Dyno's In progress lists only work that is running: no branch main has moved past, and a slow hitld read shown as slow
+  CS-1156  Merges on Your move say which step each finished item is at: in review, fixing, waiting for a measurement, checking, waiting for your yes, or stalled
+  CS-1172  Dyno's Work board reads live sources cheaply and pauses for measurements
+  CS-1179  Dyno's quiet rule ignores background-priority load and checks the GPU, once a noise test shows that is safe
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -316,5 +322,5 @@ CS-609 A clean 2.0 branch and a modern build
 CS-197 Ray queries and path tracing
   CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
 
-245 ready
+251 ready
 ```

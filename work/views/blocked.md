@@ -303,7 +303,7 @@ CS-188 Earth to Moon (frames 5c to 5h)
   CS-217  Free flight
       ← CS-216 Transitions between live rigs: paths, defaults and interruption policies
   CS-218  The orthographic camera, `fitBounds` and the dolly between projections
-      ← CS-216 Transitions between live rigs: paths, defaults and interruption policies
+      ← CS-1117 The camera record carries a general projective transform, and the engine derives level of detail, culling, picking and depth from it
   CS-219  The CAD-style controller
       ← CS-218 The orthographic camera, `fitBounds` and the dolly between projections
   CS-220  The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks
@@ -410,6 +410,8 @@ CS-191 Content sources and formats
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-991  A module in another package registers its own content-source kind by package name, documented, on the experimental tier
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-1188  One trust boundary for every content-source inlet, as a shared module, tested by snapshot, bounded-work and closed-text invariants
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -469,6 +471,10 @@ CS-197 Ray queries and path tracing
       ← CS-654 The surface-projection design: classification, draping and decals
         CS-348 A GPU viewshed
 
+CS-199 Dyno hardening, packaging and CI
+  CS-359  Keep the Google Maps and iTwin share keys out of builds
+      ← CS-1127 Dyno's headless runner seeds the ion token into the page at run time, never into a build, a URL or a log
+
 CS-389 Dyno as the development harness
   CS-396  The α study through Dyno (acceptance A)
       ← CS-405 The Studies page
@@ -496,6 +502,10 @@ CS-389 Dyno as the development harness
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
   CS-1145  The handbook becomes Dyno's Docs page, with an export to one self-contained page on demand
       ← CS-1027 The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
+  CS-1178  Dyno's Work board shows each executor's item, stage, context and running cost, and the orchestrator's
+      ← CS-1172 Dyno's Work board reads live sources cheaply and pauses for measurements
+  CS-1182  Dyno benchmarks both engines at matched visuals: a matched profile, a feature ladder and geometry-only scenes, apart from each engine's defaults
+      ← CS-1152 Dyno's overview compares like with like: GPU and CPU time per frame for both engines, and frame time labeled for what it is
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -522,100 +532,14 @@ CS-18 The work tracker
         CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer
         CS-859 The engine starts fast: pipelines compile in one round and optional subsystems load lazily
         CS-614 The branch is a clean, modern 2.0 build
-        CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
-        CS-904 Source-declared axis and scale, corrected through placement
-        CS-906 Variant selections and payload policy as open options, and their change as invalidation
-        CS-955 The df64 route-center pass is measured on an Apple GPU, with a CPU fallback where a self-test fails
-        CS-961 Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
-        CS-962 Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)
-        CS-969 Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker
-        CS-970 Feature IDs and feature counts from content are checked, so one tile can't name another item's features
-        CS-971 Every Slang loop is bounded by a constant, and a test enforces it
-        CS-972 A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
-        CS-977 Adapters and engine internals leave core's public entry for the packages the map gives them, before alpha.1 (CS-974 C)
-        CS-978 dispose() everywhere, with Symbol.dispose on every disposable (CS-976 A)
-        CS-1001 The packages' shared utilities move from @cesium/core/internal into their own package, documented as internal
-        CS-1020 The ITRF frame becomes its named realization, confirmed from the EOP series in use, and other realizations are refused (CS-1018 A)
-        CS-1021 Instant hides its storage behind methods and states its resolution (CS-1019 A)
-        CS-1027 The handbook catches up with 2026-11-22: generated project states, the packages, WebGPU first, and pinned runs for its figures
-        CS-218 The orthographic camera, `fitBounds` and the dolly between projections
-        CS-1117 The camera record carries a general projective transform, and the engine derives level of detail, culling, picking and depth from it
-        CS-1124 @cesium/navigation: camera utilities, transitions and flights, and orbit, globe and inspect controllers, on core's public API
+        CS-1158 Hostile content can't hang the GPU, exhaust a worker or reach past its tile
+        CS-1159 Time and reference frames say what they are
+        CS-1160 Hosts drive orthographic and projective cameras, with navigation
   CS-531  Release 2.0.0-beta.1
-      ← CS-530 Release 2.0.0-alpha.1
-        CS-415 WebGL 2 draws models, tiles and the globe
-        CS-417 Transforms and styles compile through Cesium IR
-        CS-418 Any shader language reaches both renderers
-        CS-419 Cesium IR covers what materials need
-        CS-420 The public API shape is approved
-        CS-457 The approved API changes are made
-        CS-421 Every public call can cross a thread
-        CS-422 The engine runs in a worker behind the same API
-        CS-456 Refinement, profiles and streaming work in worker mode
-        CS-509 Apps run their own jobs
-        CS-462 Loads and decodes run on Jobs
-        CS-464 Tile selection runs off the main thread
-        CS-424 The Earth and the Moon render together
-        CS-425 Cameras move freely on any body
-        CS-426 Each body has its own sky and light
-        CS-427 Engineering models open in their design space
-        CS-487 The frames plans' carried-forward fixes are closed
-        CS-488 Measurement tools ship as a module on standing queries
-        CS-489 Satellite frames plug in as an add-on
-        CS-490 Reference data's hosting and shipping are settled
-        CS-492 The sky plan's carry-forward is closed
-        CS-494 B-reps snap and measure exactly
-        CS-473 Warped views draw without twins or stalls
-        CS-475 The engine material speaks OpenPBR and glTF
-        CS-476 Shaders swap live on models, tilesets and the globe
-        CS-498 glTF and 3D Tiles load at 1.x's coverage
-        CS-499 Lines, polygons, labels and CAD styles draw on one path
-        CS-500 Real-time tracks stay cheap at scale
-        CS-501 The styling language's form and semantics are decided
-        CS-460 Network health is visible and guarded
-        CS-469 Apps can tell when the image has stopped improving
-        CS-595 Every 1.x widget's job has a StrataKit widget
-        CS-641 Particles run on the GPU for 1.x's uses and beyond
-        CS-646 Geometry generators make 1.x's shapes on the ellipsoid
-        CS-653 Content and motion follow one time model
-        CS-668 1.x's data formats load as modules
-        CS-675 1.x's smaller tools have 2.0 homes
-        CS-463 Main-thread work fits the tick's slices
-        CS-461 A headed run shows whether worker mode ticks smoother
+      ← CS-1166 Release 2.0.0-alpha.5
+        CS-1167 The public API is frozen after a final review
         CS-505 Issues found for other teams are filed and answered
-        CS-493 Planets show as points, then disks
-        CS-471 Nothing pops when level of detail changes
-        CS-423 Measurements set the default thread
-        CS-465 Jobs share one tick budget and decode can't hang
-        CS-474 Steep warps draw without artifacts
-        CS-495 USD B-reps stream as 3D Tiles
-        CS-467 Fidelity adapts without silent fallbacks
-        CS-534 Infrastructure and geoscience data shows in 2.0
-        CS-504 Tiles are chosen by benefit per byte across views
-        CS-830 2.0's examples show its seams in use
-        CS-963 Each engine takes its own fetch and credential provider, defaulting to the page's (CS-958 A)
-        CS-964 A small coordinate contract in core, implemented by crs-proj or the host and registered per engine (CS-959 A)
-        CS-965 Content sources see the scene clock, with its epoch and time scale named, and wall time apart (CS-960 A)
-        CS-484 The performance targets are met or the gaps explained
-        CS-985 A declarations report beside api/surface.txt records signatures, as an owner path (CS-981 A)
-        CS-989 Accuracy statements gain a drawing term for the GPU's arithmetic, and the docs say statements cover the float64 math until then (CS-987 A)
-        CS-990 GpuDevice and the GPU-typed names move to a main-thread-only entry, and World stays on the main entry (CS-988 B)
-        CS-103 Reads reshaped, on the main thread
-        CS-104 Writes reshaped, on the main thread
-        CS-105 Functions reshaped, on the main thread
-        CS-106 Functions as Cesium IR programs; closures refused
-        CS-107 Internals out of the main entry
-        CS-108 The façade and the direct transport
-        CS-322 One engine-wide GPU and cache budget, with GPU texture transcoding
-        CS-1007 Tile becomes a table a worker can read, not an exported object tree (CS-1002)
-        CS-1010 The performance targets restated as budgets per tick on named devices, with a like-for-like study against 1.x (CS-1005 B)
-        CS-1014 The engine's format limits are named public constants a host can read and raise (CS-1012 A)
-        CS-1022 A missing accuracy reads as unstated, and a time-dependent operation with no epoch reports undefined accuracy (CS-1016, CS-1017)
-        CS-1028 Per-feature entry points with byte budgets: three budgeted pages in the bundle check (CS-1026 A)
-        CS-1116 A feature mask that post stages read, with one reference outline stage outside core
-        CS-1118 Draw layers replace DrawOptions.underlay: layer, depth mode and order, sharing names with render features' slots
-        CS-1119 One clip primitive: a region, its targets and its effect, shared by clip sets, cut tints, planar masks and classification
-        CS-338 Per-element overrides at scale, through the styling language
+        CS-1162 Problems the alphas turn up are fixed, or deferred on the owner's word
   CS-532  Release 2.0.0-rc.1
       ← CS-531 Release 2.0.0-beta.1
         CS-416 WebGL 2 reaches parity with WebGPU
@@ -654,6 +578,65 @@ CS-18 The work tracker
         CS-674 Panoramas, sensors and legacy glTF ship as experimental modules
         CS-676 Geometry has physics representations
         CS-535 Rays query the scene on the GPU
+  CS-1163  Release 2.0.0-alpha.2
+      ← CS-530 Release 2.0.0-alpha.1
+        CS-420 The public API shape is approved
+        CS-457 The approved API changes are made
+        CS-424 The Earth and the Moon render together
+        CS-425 Cameras move freely on any body
+        CS-426 Each body has its own sky and light
+        CS-427 Engineering models open in their design space
+        CS-493 Planets show as points, then disks
+        CS-487 The frames plans' carried-forward fixes are closed
+        CS-489 Satellite frames plug in as an add-on
+        CS-490 Reference data's hosting and shipping are settled
+        CS-492 The sky plan's carry-forward is closed
+        CS-488 Measurement tools ship as a module on standing queries
+        CS-494 B-reps snap and measure exactly
+        CS-495 USD B-reps stream as 3D Tiles
+        CS-653 Content and motion follow one time model
+  CS-1164  Release 2.0.0-alpha.3
+      ← CS-1163 Release 2.0.0-alpha.2
+        CS-415 WebGL 2 draws models, tiles and the globe
+        CS-417 Transforms and styles compile through Cesium IR
+        CS-418 Any shader language reaches both renderers
+        CS-419 Cesium IR covers what materials need
+        CS-475 The engine material speaks OpenPBR and glTF
+        CS-476 Shaders swap live on models, tilesets and the globe
+        CS-498 glTF and 3D Tiles load at 1.x's coverage
+        CS-499 Lines, polygons, labels and CAD styles draw on one path
+        CS-500 Real-time tracks stay cheap at scale
+        CS-501 The styling language's form and semantics are decided
+        CS-641 Particles run on the GPU for 1.x's uses and beyond
+        CS-646 Geometry generators make 1.x's shapes on the ellipsoid
+        CS-1161 Hosts mask, layer and clip content through general primitives
+        CS-473 Warped views draw without twins or stalls
+        CS-474 Steep warps draw without artifacts
+        CS-668 1.x's data formats load as modules
+  CS-1165  Release 2.0.0-alpha.4
+      ← CS-1164 Release 2.0.0-alpha.3
+        CS-421 Every public call can cross a thread
+        CS-422 The engine runs in a worker behind the same API
+        CS-456 Refinement, profiles and streaming work in worker mode
+        CS-509 Apps run their own jobs
+        CS-462 Loads and decodes run on Jobs
+        CS-464 Tile selection runs off the main thread
+        CS-463 Main-thread work fits the tick's slices
+        CS-461 A headed run shows whether worker mode ticks smoother
+        CS-465 Jobs share one tick budget and decode can't hang
+        CS-423 Measurements set the default thread
+  CS-1166  Release 2.0.0-alpha.5
+      ← CS-1165 Release 2.0.0-alpha.4
+        CS-460 Network health is visible and guarded
+        CS-469 Apps can tell when the image has stopped improving
+        CS-467 Fidelity adapts without silent fallbacks
+        CS-471 Nothing pops when level of detail changes
+        CS-504 Tiles are chosen by benefit per byte across views
+        CS-484 The performance targets are met or the gaps explained
+        CS-534 Infrastructure and geoscience data shows in 2.0
+        CS-595 Every 1.x widget's job has a StrataKit widget
+        CS-675 1.x's smaller tools have 2.0 homes
+        CS-830 2.0's examples show its seams in use
 
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
@@ -771,5 +754,9 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-231 blocked
+CS-198 GPU-driven rendering and capacities
+  CS-1177  Why 2.0's GPU-paced frames cost more than 1.x's on melbourne, nyc-buildings and bim-design-model
+      ← CS-1152 Dyno's overview compares like with like: GPU and CPU time per frame for both engines, and frame time labeled for what it is
+
+240 blocked
 ```

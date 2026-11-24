@@ -3,7 +3,7 @@
 # Critical path
 
 ```text
-1. weight 19, 19 item(s)
+1. weight 18, 18 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -16,14 +16,13 @@
    CS-214  Gestures as bindings [Planned]
    CS-215  The orbit controller on any reference frame, and the globe controller on any body [Planned]
    CS-216  Transitions between live rigs: paths, defaults and interruption policies [Planned]
-   CS-218  The orthographic camera, `fitBounds` and the dolly between projections [Planned]
-   CS-219  The CAD-style controller [Planned]
+   CS-217  Free flight [Planned]
    CS-220  The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks [Planned]
    CS-229  The earth-to-moon example: the pad, the mission clock, stage reference frames, cameras and the flight path [Planned]
    CS-235  The simulated ascent and each separated stage's path [Planned]
    CS-237  Plumes with ambient pressure, and re-entry heating and plasma, in Slang [Planned]
    CS-238  Approximations of launch smoke and the splashdown splash [Planned]
-2. weight 18, 18 item(s)
+2. weight 17, 17 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -36,13 +35,12 @@
    CS-214  Gestures as bindings [Planned]
    CS-215  The orbit controller on any reference frame, and the globe controller on any body [Planned]
    CS-216  Transitions between live rigs: paths, defaults and interruption policies [Planned]
-   CS-218  The orthographic camera, `fitBounds` and the dolly between projections [Planned]
-   CS-219  The CAD-style controller [Planned]
+   CS-217  Free flight [Planned]
    CS-220  The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks [Planned]
    CS-229  The earth-to-moon example: the pad, the mission clock, stage reference frames, cameras and the flight path [Planned]
    CS-230  The self-directing replay: the time director and the camera director [Planned]
    CS-233  The Artemis II replay's design pass and browser checks [Planned]
-3. weight 17, 17 item(s)
+3. weight 15, 15 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -55,29 +53,22 @@
    CS-214  Gestures as bindings [Planned]
    CS-215  The orbit controller on any reference frame, and the globe controller on any body [Planned]
    CS-216  Transitions between live rigs: paths, defaults and interruption policies [Planned]
-   CS-218  The orthographic camera, `fitBounds` and the dolly between projections [Planned]
-   CS-530  Release 2.0.0-alpha.1 [Planned]
-   CS-531  Release 2.0.0-beta.1 [Planned]
-   CS-532  Release 2.0.0-rc.1 [Planned]
-   CS-533  Release 2.0.0 [Planned]
-4. weight 16, 16 item(s)
-   CS-202  A view on another body [Planned]
-   CS-203  Depth across bodies [Planned]
-   CS-204  The impostor's level of detail and surface tilesets [Planned]
-   CS-205  Declared tilesets, ion failures by kind, and header refresh [Planned]
-   CS-206  The impostor pass on the GPU [Planned]
-   CS-207  One material for the impostor and its surface tiles [Planned]
-   CS-208  View links and the Viewer per body; the Viewer's Moon [Planned]
-   CS-209  Earth and Moon together: 5c's done-when checks [Planned]
-   CS-213  The rig and the controller seam [Planned]
-   CS-214  Gestures as bindings [Planned]
-   CS-215  The orbit controller on any reference frame, and the globe controller on any body [Planned]
-   CS-216  Transitions between live rigs: paths, defaults and interruption policies [Planned]
-   CS-218  The orthographic camera, `fitBounds` and the dolly between projections [Planned]
-   CS-219  The CAD-style controller [Planned]
+   CS-217  Free flight [Planned]
    CS-220  The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks [Planned]
    CS-224  Design view as a render root, and the morph as one transition [Planned]
-5. weight 14, 14 item(s)
+4. weight 11, 11 item(s)
+   CS-431  The camera chain's layers checked against what each may know [Planned]
+   CS-102  The public API review, with the protocol table and the façade's constraints [Planned]
+   CS-438  Which of the first public API review's proposed changes do you approve? [Planned]
+   CS-103  Reads reshaped, on the main thread [Planned]
+   CS-108  The façade and the direct transport [Planned]
+   CS-109  The channel transport, and the API suite in both modes [Planned]
+   CS-110  The worker backend (canvas transfer, resize, input, built-in controllers) [Planned]
+   CS-111  The probe and `thread: "auto"` [Planned]
+   CS-117  Measurements and the default [Planned]
+   CS-118  Do the façade's measurements ask for a shared snapshot? [Planned]
+   CS-119  A shared snapshot [Proposed]
+5. weight 11, 11 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -87,9 +78,6 @@
    CS-208  View links and the Viewer per body; the Viewer's Moon [Planned]
    CS-209  Earth and Moon together: 5c's done-when checks [Planned]
    CS-213  The rig and the controller seam [Planned]
-   CS-214  Gestures as bindings [Planned]
-   CS-215  The orbit controller on any reference frame, and the globe controller on any body [Planned]
-   CS-216  Transitions between live rigs: paths, defaults and interruption policies [Planned]
-   CS-218  The orthographic camera, `fitBounds` and the dolly between projections [Planned]
-   CS-308  The CSG sample's four-view layout [Planned]
+   CS-341  WebXR, including aligning a model with its site [Planned]
+   CS-592  The VR button widget [Planned]
 ```

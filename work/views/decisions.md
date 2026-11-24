@@ -53,6 +53,11 @@ CS-615 Packaging and package names
 
 CS-199 Dyno hardening, packaging and CI
   CS-982  Where does the merge bar live: one gate script, or policy.json's lists? (owner)
+  CS-1195  Merge CS-1127, Dyno's headless runs get the ion token (owner)
+  CS-1204  Merge CS-538, the no-scene-gains test holds under load (owner)
 
-16 open decision(s) for owner
+CS-10 Cesium IR
+  CS-1196  Merge CS-955, the df64 route-center pass measured, with a CPU fallback (owner)
+
+19 open decision(s) for owner
 ```
