@@ -332,8 +332,6 @@ function Primitive(options) {
   this._backFaceDepthFailMirroredRS = undefined;
   this._renderStateMirror = undefined;
   this._useMirroredRenderState = false;
-  this._bakedToWorld = false;
-  this._bakedModelMatrixSign = 0;
 
   this._pickIds = [];
 
@@ -1299,8 +1297,6 @@ function loadAsynchronous(primitive, frameState) {
           result.modelMatrix,
           primitive.modelMatrix,
         );
-        primitive._bakedToWorld = result.bakedToWorld;
-        primitive._bakedModelMatrixSign = result.bakedModelMatrixSign;
         primitive._useMirroredRenderState = false;
         primitive._pickOffsets = result.pickOffsets;
         primitive._offsetInstanceExtend = result.offsetInstanceExtend;
@@ -1373,8 +1369,6 @@ function loadSynchronous(primitive, frameState) {
     result.modelMatrix,
     primitive.modelMatrix,
   );
-  primitive._bakedToWorld = result.bakedToWorld;
-  primitive._bakedModelMatrixSign = result.bakedModelMatrixSign;
   primitive._useMirroredRenderState = false;
   primitive._pickOffsets = result.pickOffsets;
   primitive._offsetInstanceExtend = result.offsetInstanceExtend;
@@ -2077,18 +2071,14 @@ Primitive._updateBoundingVolumes = function (
   }
 };
 
-function usesMirroredRenderState(primitive, modelMatrix) {
+function usesMirroredRenderState(modelMatrix) {
+  // The instance matrices are either already baked into the vertices or, on
+  // the un-baked path, folded into this matrix. Either way this is the
+  // transform that is applied to the draw command, so a negative determinant
+  // mirrors the geometry that reaches the rasterizer and flips its front
+  // faces. A singular matrix has no orientation, so it is never mirrored.
   Matrix4.getMatrix3(modelMatrix, scratchMatrix3);
-  const sign = Math.sign(Matrix3.determinant(scratchMatrix3));
-  if (primitive._bakedToWorld) {
-    const bakedSign = primitive._bakedModelMatrixSign;
-    // A singular matrix has no orientation, and the winding order was not
-    // reversed for it when the geometry was baked, so never flip in that case.
-    return bakedSign !== 0 && sign !== 0 && sign !== bakedSign;
-  }
-  // On the un-baked path the combined matrix is applied to the draw command,
-  // so a negative determinant mirrors the geometry without a winding change.
-  return sign < 0;
+  return Matrix3.determinant(scratchMatrix3) < 0.0;
 }
 
 function updateAndQueueCommands(
@@ -2114,7 +2104,7 @@ function updateAndQueueCommands(
 
   Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
 
-  const mirrored = usesMirroredRenderState(primitive, modelMatrix);
+  const mirrored = usesMirroredRenderState(modelMatrix);
   if (mirrored !== primitive._useMirroredRenderState) {
     const mirror = primitive._renderStateMirror;
     if (defined(mirror)) {

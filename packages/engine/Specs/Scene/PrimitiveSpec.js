@@ -1076,17 +1076,15 @@ describe(
       commands.length = 0;
       primitive.update(frameState);
       expect(commands.length).toEqual(1);
-      // The winding order was baked for the mirrored model matrix, so back face
-      // culling is still correct at this point.
-      expect(commands[0].renderState.cull.face).toEqual(CullFace.BACK);
+      // The instance matrices are not mirrored, so the winding order is not
+      // changed; the mirrored primitive matrix flips the cull face instead.
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.FRONT);
 
       primitive.modelMatrix = Matrix4.IDENTITY;
       commands.length = 0;
       primitive.update(frameState);
       expect(commands.length).toEqual(1);
-      // The baked geometry is still reversed, so the cull face has to be
-      // flipped for the unmirrored draw.
-      expect(commands[0].renderState.cull.face).toEqual(CullFace.FRONT);
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.BACK);
     });
 
     it("uses a front cull face for a mirrored combined matrix on the un-baked path", function () {
@@ -1111,7 +1109,7 @@ describe(
       expect(commands[0].renderState.cull.face).toEqual(CullFace.FRONT);
     });
 
-    it("keeps the baked model matrix sign for an asynchronous primitive", function () {
+    it("applies the cull face for a mirrored model matrix after the asynchronous round trip", function () {
       scene.frameState.scene3DOnly = false;
 
       primitive = new Primitive({
@@ -1134,9 +1132,12 @@ describe(
         scene.render();
         return primitive.ready;
       }).then(function () {
-        // The value has to survive the combineGeometry worker round trip.
-        expect(primitive._bakedToWorld).toBe(true);
-        expect(primitive._bakedModelMatrixSign).toBe(-1);
+        frameState.commandList.length = 0;
+        primitive.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+        expect(frameState.commandList[0].renderState.cull.face).toEqual(
+          CullFace.FRONT,
+        );
       });
     });
 
@@ -1220,7 +1221,7 @@ describe(
       expect(command.derivedCommands.depth).toBeDefined();
       expect(
         command.derivedCommands.depth.depthOnlyCommand.renderState.cull.face,
-      ).toEqual(CullFace.BACK);
+      ).toEqual(CullFace.FRONT);
 
       primitive.modelMatrix = Matrix4.IDENTITY;
       frameState.commandList.length = 0;
@@ -1233,7 +1234,7 @@ describe(
       scene.updateDerivedCommands(command);
       expect(
         command.derivedCommands.depth.depthOnlyCommand.renderState.cull.face,
-      ).toEqual(CullFace.FRONT);
+      ).toEqual(CullFace.BACK);
     });
 
     it("update throws when geometry primitive types are different", function () {

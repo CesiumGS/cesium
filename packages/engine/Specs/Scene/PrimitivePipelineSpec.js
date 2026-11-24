@@ -128,7 +128,7 @@ describe(
       ]);
     });
 
-    it("bases the winding order on the product of the instance and primitive model matrices", function () {
+    it("uses only the instance model matrix for the winding order", function () {
       const instanceA = makeInstance(
         [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
         [0, 1, 2],
@@ -142,13 +142,14 @@ describe(
         OFFSET,
       );
 
-      // The primitive matrix is mirrored too: two mirrors combine into a positive
-      // determinant (no reversal), while the plain instance B combined with the
-      // mirrored primitive matrix is a mirror (reversal).
+      // The primitive's model matrix is applied to the draw command and can
+      // change at any time, so it does not participate in the baked winding
+      // order here: only the mirrored instance is reversed, and the mirrored
+      // primitive matrix is handled at draw time by flipping the cull face.
       const results = combine([instanceA, instanceB], MIRROR);
       const geometry = results.geometries[0];
 
-      expect(geometry.indices).toEqual([0, 1, 2, 5, 4, 3]);
+      expect(geometry.indices).toEqual([2, 1, 0, 3, 4, 5]);
     });
 
     it("reverses the winding order of non-indexed triangles without adding indices", function () {
@@ -216,8 +217,6 @@ describe(
         0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 0.0, 0.0, 101.0,
         0.0, 0.0, 100.0, 1.0, 0.0,
       ]);
-      expect(results.bakedToWorld).toBe(true);
-      expect(results.bakedModelMatrixSign).toBe(1);
     });
 
     it("reverses each non-indexed triangle without reordering the triangles", function () {
@@ -292,8 +291,6 @@ describe(
       // The model matrix stays on the draw command; the geometry is untouched
       expect(instance.geometry.indices).toEqual([0, 1, 2]);
       expect(results.modelMatrix.equals(Matrix4.clone(MIRROR))).toBe(true);
-      expect(results.bakedToWorld).toBe(false);
-      expect(results.bakedModelMatrixSign).toBe(0);
     });
   },
   "WebGL",

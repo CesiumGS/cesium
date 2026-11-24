@@ -151,12 +151,6 @@ function transformToWorldCoordinates(
   const length = instances.length;
   let i;
 
-  // The primitive matrix is modified below on the un-baked path, so record its
-  // determinant sign first. When the geometry is baked to world coordinates,
-  // the winding order is corrected against this sign.
-  Matrix4.getMatrix3(primitiveModelMatrix, scratchMatrix3);
-  const primitiveDeterminant = Matrix3.determinant(scratchMatrix3);
-
   if (!toWorld && length > 1) {
     const modelMatrix = instances[0].modelMatrix;
 
@@ -169,12 +163,13 @@ function transformToWorldCoordinates(
   }
 
   if (toWorld) {
-    // The transform applied to the rendered triangles is the product of the
-    // instance matrix (baked into the vertices here) and the primitive's model
-    // matrix (applied to the draw command afterwards). A product with a
-    // negative determinant mirrors the geometry, which flips the front face of
-    // every triangle, so the winding order must be reversed to keep back face
-    // culling from culling the front faces.
+    // The instance matrices are baked into the vertex data here, so a negative
+    // determinant mirrors the geometry and flips the front face of every
+    // triangle, and the winding order is reversed to keep back face culling
+    // from culling the front faces. The primitive's model matrix is applied to
+    // the draw command afterwards and can change at any time, so it is handled
+    // at draw time instead by flipping the cull face, the same way
+    // ModelUtility.getCullFace handles mirrored glTF nodes.
     const mirrored = new Array(length);
     let mirroredStripOrFan = false;
     for (i = 0; i < length; ++i) {
@@ -184,8 +179,7 @@ function transformToWorldCoordinates(
         continue;
       }
       Matrix4.getMatrix3(instances[i].modelMatrix, scratchMatrix3);
-      mirrored[i] =
-        primitiveDeterminant * Matrix3.determinant(scratchMatrix3) < 0.0;
+      mirrored[i] = Matrix3.determinant(scratchMatrix3) < 0.0;
       if (
         mirrored[i] &&
         PrimitiveType.isTriangles(geometry.primitiveType) &&
@@ -232,10 +226,7 @@ function transformToWorldCoordinates(
     );
   }
 
-  return {
-    toWorld: toWorld,
-    primitiveDeterminant: primitiveDeterminant,
-  };
+  return toWorld;
 }
 function addGeometryBatchId(geometry, batchId) {
   const attributes = geometry.attributes;
@@ -307,11 +298,7 @@ function geometryPipeline(parameters) {
   //>>includeEnd('debug');
 
   // Unify to world coordinates before combining.
-  const bakeInfo = transformToWorldCoordinates(
-    instances,
-    modelMatrix,
-    scene3DOnly,
-  );
+  transformToWorldCoordinates(instances, modelMatrix, scene3DOnly);
 
   // Clip to IDL
   if (!scene3DOnly) {
@@ -434,13 +421,7 @@ function geometryPipeline(parameters) {
     geometries = splitGeometries;
   }
 
-  return {
-    geometries: geometries,
-    bakedToWorld: bakeInfo.toWorld,
-    bakedModelMatrixSign: bakeInfo.toWorld
-      ? Math.sign(bakeInfo.primitiveDeterminant)
-      : 0,
-  };
+  return geometries;
 }
 
 function createPickOffsets(instances, geometryName, geometries, pickOffsets) {
@@ -519,13 +500,8 @@ PrimitivePipeline.combineGeometry = function (parameters) {
 
   let offsetInstanceExtend;
   let hasOffset = false;
-  let bakedToWorld = false;
-  let bakedModelMatrixSign = 0;
   if (length > 0) {
-    const pipelineResult = geometryPipeline(parameters);
-    geometries = pipelineResult.geometries;
-    bakedToWorld = pipelineResult.bakedToWorld;
-    bakedModelMatrixSign = pipelineResult.bakedModelMatrixSign;
+    geometries = geometryPipeline(parameters);
     if (geometries.length > 0) {
       attributeLocations = GeometryPipeline.createAttributeLocations(
         geometries[0],
@@ -583,8 +559,6 @@ PrimitivePipeline.combineGeometry = function (parameters) {
   return {
     geometries: geometries,
     modelMatrix: parameters.modelMatrix,
-    bakedToWorld: bakedToWorld,
-    bakedModelMatrixSign: bakedModelMatrixSign,
     attributeLocations: attributeLocations,
     pickOffsets: pickOffsets,
     offsetInstanceExtend: offsetInstanceExtend,
@@ -1035,8 +1009,6 @@ PrimitivePipeline.packCombineGeometryResults = function (
     geometries: results.geometries,
     attributeLocations: results.attributeLocations,
     modelMatrix: results.modelMatrix,
-    bakedToWorld: results.bakedToWorld,
-    bakedModelMatrixSign: results.bakedModelMatrixSign,
     pickOffsets: results.pickOffsets,
     offsetInstanceExtend: results.offsetInstanceExtend,
     boundingSpheres: packedBoundingSpheres,
@@ -1052,8 +1024,6 @@ PrimitivePipeline.unpackCombineGeometryResults = function (packedResult) {
     geometries: packedResult.geometries,
     attributeLocations: packedResult.attributeLocations,
     modelMatrix: packedResult.modelMatrix,
-    bakedToWorld: packedResult.bakedToWorld,
-    bakedModelMatrixSign: packedResult.bakedModelMatrixSign,
     pickOffsets: packedResult.pickOffsets,
     offsetInstanceExtend: packedResult.offsetInstanceExtend,
     boundingSpheres: unpackBoundingSpheres(packedResult.boundingSpheres),
