@@ -51,3 +51,22 @@ Measured values (milliseconds, bytes, frame times), machine configurations and t
 
 - `dyno serve start dyno` (or `handbook`) starts your own server, detached, on a free port from 5200 to 5299, one per worktree: run it again and it says where the running one is. `dyno serve status`, `logs` and `stop` follow it. `--port <n>` takes your leased port; a port anything else listens on is refused.
 - 5190 (Dyno) and 5199 (the handbook) are the owner's. `--owner` starts or stops them, only from the main checkout, and only when the owner asks. To look at them, open a browser tab of your own.
+
+## Machine-wide locks
+
+Heavy work takes a hitld lock that every project on this machine shares, so two projects' suites and GPU runs don't pile up and fail each other's timing tests. The names are the same in every project's `policy.json`: `gpu`, `cpu-heavy`, `benchmark` and `merge-queue` (the last is per repository).
+
+- `cpu-heavy`: a full suite, `test:data`, a build, an install, `checkBundle`, a check across the whole repository.
+- `gpu`: `dyno lab`, and any browser run that creates a WebGPU or WebGL device.
+- Both: `cpu-heavy` first, then `gpu`; release in reverse.
+- No lock: focused tests, one package's type check, lint on changed files, and Dyno measurements, which queue for quiet on their own. Lock takers wait while `dyno status` says `busy` or `waiting-for-quiet`.
+- Lock each step, not a chain. Pass `--pid` so a dead job's lock goes stale, and a TTL longer than the step. Never break a lock; `npx hitld env status` shows its holder.
+
+Run the lock, the step and the unlock in one command, for example:
+
+```sh
+npx hitld env lock --resource cpu-heavy --dispatch "$ID" --wait --pid $$ --ttl-seconds 5400 >/dev/null &&
+  { trap 'npx hitld env unlock --resource cpu-heavy --dispatch "$ID" >/dev/null' EXIT; npm test; }
+```
+
+Where an orchestrator gives you a gate script, `gate && step` in one command does the same.
