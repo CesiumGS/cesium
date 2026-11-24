@@ -15,3 +15,7 @@ Reads Part 4's current status before building, and corrects the design note if i
 ## Done when
 
 - As the design note's follow-up section and the sections it points to describe, with its tests and checks.
+
+## A host application's need
+
+On 2026-11-24 a host application said it will write to 2.0 sources that can write, such as OGC API Features and Esri feature services, through the same writer shape it uses for its own models. So it depends on CS-831's edit layer (CS-868) and the writers (CS-870, CS-877, CS-878).
