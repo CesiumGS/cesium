@@ -2,7 +2,7 @@
 id: CS-1288
 title: Do the three raw WebGPU routes stay public at alpha.1, beside the seams-only context?
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-437
 decider: owner
@@ -28,4 +28,4 @@ Recommended: A for alpha.1, then B once CS-848's slots cover what `sprites.ts` d
 
 ## Answer
 
-Open.
+The owner, 2026-11-24: "A, then B later (Recommended)". Keep the three routes for alpha.1, named in the API review as an explicit raw tier outside the seams' promise. Move them to internal once CS-848's slots cover what `sprites.ts` does: that's CS-1290.
