@@ -95,6 +95,8 @@ export class SampleSource implements ContentSource {
   throwOnUpdate = 0;
   /** What a throwing update says. */
   failure = "the sample's update failed";
+  /** What a throwing update throws, when set: this value as it is, not an Error. */
+  thrown: unknown = undefined;
   /** Its `destroy` ran. */
   destroyed = false;
   private lastPoll = -Infinity;
@@ -150,6 +152,9 @@ export class SampleSource implements ContentSource {
     });
     if (this.throwOnUpdate > 0) {
       this.throwOnUpdate--;
+      if (this.thrown !== undefined) {
+        throw this.thrown; // a source that throws what isn't an Error (T3)
+      }
       throw new Error(this.failure);
     }
     const track = this.options.track;

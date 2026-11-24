@@ -60,10 +60,15 @@ import {
   MAX_BUFFERED_SAMPLES,
   MAX_QUEUED_CHANGES,
   SourceRuntime,
+  type SourceRuntimeOptions,
 } from "../packages/core/src/source/runtime.ts";
 import { derivedName } from "../packages/core/src/source/registry.ts";
 import { ContentRows } from "../packages/core/src/source/sinks.ts";
-import type { SourceClock } from "../packages/core/src/source/types.ts";
+import type {
+  SourceChange,
+  SourceClock,
+} from "../packages/core/src/source/types.ts";
+import { HOSTILE_KEYS, HOSTILE_VALUES } from "./fixtures/sources/hostile.ts";
 import { ModelServer, ModelSource } from "./fixtures/sources/modelKind.ts";
 import { SUM, SampleSource } from "./fixtures/sources/sampleKind.ts";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -72,8 +77,6 @@ const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
 const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
 const LAYERED = new URL("./fixtures/sources/layeredKind.ts", import.meta.url);
 const MODEL = new URL("./fixtures/sources/modelKind.ts", import.meta.url);
-const ECHO = new URL("./fixtures/sources/echoKind.ts", import.meta.url);
-const ECHO_B = new URL("./fixtures/sources/echoKindB.ts", import.meta.url);
 
 /** A plain bigint as a `StableId`, as test/identity.test.ts does. */
 const asId = (n: bigint) => n as StableId;
@@ -88,6 +91,26 @@ const instanceIdOf = (key: StableKey & { kind: "draw" }) =>
 /** A namespace for a test's rows: a declared name's. */
 const namespaceNamed = (name: string) =>
   namespaceOf(ContentName.declared(name));
+
+/** Bytes from a seeded generator (mulberry32), for a runtime's session names. */
+function seeded(seed: number): (bytes: Uint8Array) => Uint8Array {
+  let s = seed | 0;
+  return (bytes) => {
+    for (let i = 0; i < bytes.length; i++) {
+      s = (s + 0x6d2b79f5) | 0;
+      let t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      bytes[i] = (t ^ (t >>> 14)) & 0xff;
+    }
+    return bytes;
+  };
+}
+
+/** A runtime's options with its random source seeded (`SourceRuntimeOptions.random`). */
+const seededOptions = (
+  options: SourceRuntimeOptions,
+  seed: number,
+): SourceRuntimeOptions => Object.assign({}, options, { random: seeded(seed) });
 
 /** A source's clock: scene time `seconds`, and wall time apart (the same unless given). */
 function sourceClock(
@@ -125,6 +148,8 @@ function runtime(
     clock?: () => SourceClock;
     phased?: boolean;
     fetch?: FetchProvider;
+    /** The seed of its session names. */
+    seed?: number;
   } = {},
 ) {
   /** What the jobs posted to the (fake) worker, in order. */
@@ -137,20 +162,25 @@ function runtime(
   const reports: string[] = [];
   /** The notice `open` gives content with no declared name (CS-1100 A), kept apart. */
   const notices: string[] = [];
-  const rt = new SourceRuntime({
-    pool: {
-      jobs,
-      submit: (spec) => jobs.submit(spec),
-      loadDecoder: () => {},
-    },
-    fetch: () => options.fetch ?? FetchProvider.default,
-    clock: options.clock ?? (() => sourceClock(0)),
-    budget: { slotsPerOrigin: options.slots ?? 16 },
-    report: (message) =>
-      (message.includes("has no declared name") ? notices : reports).push(
-        message,
-      ),
-  });
+  const rt = new SourceRuntime(
+    seededOptions(
+      {
+        pool: {
+          jobs,
+          submit: (spec) => jobs.submit(spec),
+          loadDecoder: () => {},
+        },
+        fetch: () => options.fetch ?? FetchProvider.default,
+        clock: options.clock ?? (() => sourceClock(0)),
+        budget: { slotsPerOrigin: options.slots ?? 16 },
+        report: (message) =>
+          (message.includes("has no declared name") ? notices : reports).push(
+            message,
+          ),
+      },
+      options.seed ?? 847,
+    ),
+  );
   rt.registerKind({ id: "sample", module: SAMPLE });
   const { world, visible } = stubWorld();
   const place = (content: SourceContent) =>
@@ -1689,6 +1719,21 @@ describe("the bounds turn what doesn't fit into an invalidation, and say what th
     expect(content.rows.features.size).toBe(0);
   });
 
+  it("folds the invalidations of content no item shows into one of everything, so what waits for its source's next update stays bounded", async () => {
+    const { rt, jobs } = runtime();
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    expect(content.shown).toBe(false);
+    const source = sourceOf(content);
+    for (let i = 0; i < 1000; i++) {
+      source.push({ kind: "invalidate", keys: [`k${i}`] });
+      jobs.apply(Infinity);
+    }
+    const waiting = content.takeInvalidated();
+    expect(waiting).toHaveLength(1);
+    expect(waiting[0]!.keys).toBeUndefined();
+    expect(waiting[0]!.region).toBeUndefined();
+  });
+
   it("reports samples dropped at the bound once per run of drops", async () => {
     const { rt, place, reports } = runtime({
       clock: () => sourceClock(0, true),
@@ -2545,7 +2590,7 @@ describe("named content: a declared name, else a name derived from what its kind
     );
   });
 
-  it("refuses a declared name outside the grammar no URL satisfies, at open, naming no value (CS-1101 A)", async () => {
+  it("refuses a declared name outside the grammar no URL satisfies, at open, naming no value (CS-1101 A, CS-1150 A)", async () => {
     const url = "https://u:secret@api.test/a/b.sample?token=t0k3n#frag";
     const parsed = new URL(url);
     for (const bad of [
@@ -2563,8 +2608,17 @@ describe("named content: a declared name, else a name derived from what its kind
       "a&b",
       "100%",
       "x".repeat(129),
-      "derived:0123456789abcdef0123456789abcdef",
       "session:x",
+      "session:0123456789abcdef0123456789abcdef",
+      // No `/` and no `@` at all (CS-1150 A), review 7's probe1 names among them.
+      "acme/roads@3",
+      "a/b",
+      "h0.example.test/abc/tiles.layers",
+      "alice:s3cr3t@h.test",
+      "s3:bucket/AKIAXXXX/key",
+      "a/b/../c",
+      "@",
+      "datasets:city@2",
     ]) {
       const refused = await engine
         .open({ url }, { name: bad })
@@ -2576,9 +2630,16 @@ describe("named content: a declared name, else a name derived from what its kind
     }
     for (const good of [
       "datasets:roads",
-      "acme/roads@3",
-      "a.b_c~d:e@f+g-h",
+      "ion:96188:v3",
+      "service:layer",
+      "a.b_c~d:e+f-g",
       "x".repeat(128),
+      // Review 7's probe1 names that fit: no URL, authority or path.
+      "https:",
+      "Derived:0123456789abcdef0123456789abcdef",
+      "derived:0123456789abcdef0123456789abcdef",
+      ":",
+      "..",
     ]) {
       const content = await engine.open({ url }, { name: good, id: good });
       expect(content.source).toBe(good);
@@ -3234,7 +3295,7 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     }
   });
 
-  it("T2, convergence against a model: after any commits pushed as change sets, with or without invalidations, overflowing or malformed, every resident tile shows the model", async () => {
+  it("T2, convergence against a model: after any commits pushed as change sets, with or without invalidations, overflowing or malformed, and pushes of every kind with a field from the hostile pool, every resident tile shows the model", async () => {
     const { rt, jobs, place } = runtime({ phased: true });
     rt.registerKind({ id: "model", module: MODEL });
     const r = random(1102);
@@ -3317,6 +3378,57 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
             : ops,
         },
       });
+    /**
+     * A push of a known kind with one field drawn from the hostile pool
+     * (test/fixtures/sources/hostile.ts): an invalidation in place of one
+     * the source owes, a change set in place of a commit's (the model took
+     * its ops), or samples for a row nobody has.
+     */
+    const hostile = (
+      variant: "invalidate" | "features" | "samples",
+      ops: ChangeOp[] = [],
+    ): SourceChange => {
+      const value = pick(r, HOSTILE_VALUES);
+      if (variant === "invalidate") {
+        return {
+          kind: "invalidate",
+          [pick(r, ["keys", "region", "version"])]: value,
+        } as unknown as SourceChange;
+      }
+      if (variant === "features") {
+        const field = pick(r, ["changes", "id", "source", "ops"]);
+        return {
+          kind: "features",
+          changes:
+            field === "changes"
+              ? value
+              : {
+                  id: `cs-${fresh++}`,
+                  source: content.source,
+                  ops,
+                  [field]: value,
+                },
+        } as unknown as SourceChange;
+      }
+      const field = pick(r, [
+        "samples",
+        "times",
+        "names",
+        "positions",
+        "values",
+      ]);
+      return {
+        kind: "samples",
+        samples:
+          field === "samples"
+            ? value
+            : {
+                times: Float64Array.of(0),
+                names: ["nobody"],
+                [field]: value,
+              },
+      } as unknown as SourceChange;
+    };
     const idKeys = new Map<bigint, string>();
     const check = (round: number, kind: string) => {
       const expected: [string, unknown][] = [];
@@ -3351,6 +3463,12 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           pushSet(commit(["update", "delete"]).ops, i === 2);
         }
       } else {
+        // Malformed pushes of a known kind become an invalidation of
+        // everything (CS-1102 A, admit): in place of what the source owes.
+        const invalidate = (keys: string[]) =>
+          source.push(
+            r() < 0.3 ? hostile("invalidate") : { kind: "invalidate", keys },
+          );
         let deferred: string[] = [];
         for (let i = 0; i < 1 + Math.floor(r() * 12); i++) {
           const { ops, tiles: touched } = commit([
@@ -3358,9 +3476,16 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
             "update",
             "delete",
           ]);
-          pushSet(ops);
+          if (r() < 0.15) {
+            source.push(hostile("features", ops));
+          } else {
+            pushSet(ops);
+          }
+          if (r() < 0.25) {
+            source.push(hostile("samples"));
+          }
           if (deferred.length > 0) {
-            source.push({ kind: "invalidate", keys: deferred });
+            invalidate(deferred);
             deferred = [];
           }
           // The source invalidates what holds an insert (CS-1102 A): in this
@@ -3368,14 +3493,14 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           const inserts = ops.some((o) => o.op === "insert");
           if ((inserts || r() < 0.3) && touched.size > 0) {
             if (r() < 0.5) {
-              source.push({ kind: "invalidate", keys: [...touched] });
+              invalidate([...touched]);
             } else {
               deferred = [...touched];
             }
           }
         }
         if (deferred.length > 0) {
-          source.push({ kind: "invalidate", keys: deferred });
+          invalidate(deferred);
         }
       }
       quiet();
@@ -3458,13 +3583,30 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           headers: { Authorization: `Bearer ${c("credentialHeader")}` },
         });
       const declared = `datasets:${c("declaredName")}`;
-      /** Names careless resolvers declare: each is URL text. */
+      /**
+       * Names careless resolvers declare, each a piece of the URL, from the
+       * grammar's sentence (CS-1150 A): "no URL, authority with a path, or
+       * path of several parts fits the grammar", and no `@` at all. Review
+       * 7 found host and path, a path without its leading `/`, and
+       * user:password@host.
+       */
       const careless: Record<string, (u: URL) => string> = {
+        // A URL: whole, encoded, without its scheme, or its query.
         href: (u) => u.href,
-        search: (u) => u.search,
-        pathname: (u) => u.pathname,
-        originPath: (u) => `${u.origin}${u.pathname}`,
         encoded: (u) => encodeURIComponent(u.href),
+        schemeRelative: (u) => `//${u.host}${u.pathname}`,
+        search: (u) => u.search,
+        // An authority with a path.
+        originPath: (u) => `${u.origin}${u.pathname}`,
+        hostPath: (u) => `${u.host}${u.pathname}`,
+        userHostPath: (u) =>
+          `${u.username}:${u.password}@${u.host}${u.pathname}`,
+        // A path of several parts.
+        pathname: (u) => u.pathname,
+        relativePath: (u) => u.pathname.slice(1),
+        lastTwo: (u) => u.pathname.split("/").slice(-2).join("/"),
+        // No `@`: user information and its host.
+        userHost: (u) => `${u.username}:${u.password}@${u.host}`,
       };
       engine.sources.addResolver({
         id: "t3",
@@ -3517,6 +3659,35 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
           .toBe(true);
         if (accepted) {
           outlets.push(["source", accepted.source], ["id", accepted.id]);
+        }
+      }
+      // The hostile pool as a declared name and as an ID: a value that
+      // isn't a string is refused; a string the open takes is handed back
+      // as written.
+      for (const value of [...HOSTILE_VALUES, ...HOSTILE_KEYS]) {
+        for (const field of ["name", "id"] as const) {
+          let accepted: SourceContent | undefined;
+          const refusedOpen = await thrown(async () => {
+            accepted = await engine.open(
+              { url: url.href, kind: "layered", options },
+              { [field]: value } as { name?: string; id?: string },
+            );
+          });
+          if (typeof value !== "string") {
+            expect
+              .soft(
+                refusedOpen,
+                `${field} ${text(value)?.slice(0, 40)} is refused`,
+              )
+              .toBe(true);
+          }
+          if (accepted) {
+            expect
+              .soft(field === "name" ? accepted.source : accepted.id)
+              .toBe(value);
+            outlets.push(["source", accepted.source], ["id", accepted.id]);
+            accepted.destroy();
+          }
         }
       }
       for (const content of opened) {
@@ -3583,11 +3754,18 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
         source.throwOnUpdate = 1;
         engine.sources.tick();
         engine.sources.tick();
+        // A thrown value that isn't an Error, its URL: not relayed.
+        source.thrown = content.asset.url.href;
+        source.throwOnUpdate = 1;
+        engine.sources.tick();
+        engine.sources.tick();
+        source.thrown = undefined;
         // A change set for other content, refused.
         await thrown(() =>
           content.resolve({ id: "x", source: `other-${word(r, 4)}`, ops: [] }),
         );
-        // The outlets.
+        // The outlets. `content.asset` isn't one read here: it is the
+        // host's own asset handed back, URL and credential included.
         outlets.push(["source", content.source], ["id", content.id]);
         outlets.push(["itemKey", item.key]);
         const box = world.identity.identify(content.featureId(drawKey))!;
@@ -3638,146 +3816,368 @@ describe("the seam's invariants, against oracles (CS-1100 to CS-1103)", () => {
     }
   });
 
-  it("T4, different content, different namespace: opens that differ in one thing a kind receives get different feature IDs, unless only the declared credential differs or one name is declared for both", async () => {
-    const { rt, place } = runtime();
-    rt.registerKind({ id: "echo", module: ECHO });
-    rt.registerKind({ id: "echo-b", module: ECHO_B });
-    interface Spec {
-      kind: "echo" | "echo-b";
-      /** The URL's path. */
-      path: string;
-      query: Record<string, string>;
-      options: Record<string, string>;
-      /** The declared credential's value (`token`), in the URL too when `inUrl`. */
-      credential?: string;
-      inUrl?: boolean;
-      name?: string;
-      /** `ResolvedAsset.version`: it enters identity only through a name (CS-1084 A). */
-      version?: string;
-    }
-    const specs = new Map<string, Spec>();
-    rt.addResolver({
-      id: "t4",
-      accepts: (ref) => "resolver" in ref && ref.resolver === "t4",
-      resolve: (ref) => {
-        const spec = specs.get("id" in ref ? ref.id : "")!;
-        const url = new URL(spec.path, "https://svc.test");
-        for (const [name, value] of Object.entries(spec.query)) {
-          url.searchParams.set(name, value);
-        }
-        if (spec.credential !== undefined && spec.inUrl) {
-          url.searchParams.set("token", spec.credential);
-        }
-        return Promise.resolve({
-          kind: spec.kind,
-          url,
-          credits: [],
-          options: spec.options,
-          ...(spec.credential !== undefined
-            ? {
-                credentials: new Credential({
-                  query: { token: spec.credential },
-                }),
-              }
-            : {}),
-          ...(spec.name !== undefined ? { name: spec.name } : {}),
-          ...(spec.version !== undefined ? { version: spec.version } : {}),
-        });
+  it("T3, non-interference: one script run twice, seeded alike, with every locator inlet different, gives byte-equal outlets", async () => {
+    /**
+     * Two locators that differ in every inlet: host, path, query, user
+     * information, fragment, options and credential. Run A's plain URL is
+     * review 7's probe2 victim: its token sat on a 16-byte step of the
+     * old digest, and came back from `content.source` alone.
+     */
+    const LOCATORS = [
+      {
+        url: "https://tiles.example.test/v1/xxxxxxxxxxxxxxroads/tiles.layers?layer=roads&token=Zq8vR2mXc4LpT7wB",
+        resolved:
+          "https://alice:s3cr3t@a.test/maps/roads/tiles.layers?key=k1&layer=roads#f1",
+        options: { style: "day", region: "west" },
+        query: "q1",
+        header: "h1",
       },
-    });
-    const open = async (spec: Spec) => {
-      const id = `s${specs.size}`;
-      specs.set(id, spec);
-      const content = await rt.open({ resolver: "t4", id });
-      place(content);
-      rt.tick();
-      rt.tick();
-      const rows = [...content.features()];
-      expect(rows).toHaveLength(1);
-      const out = {
-        id: content.featureId("x"),
-        content: rows[0]!.feature.properties!.content,
-      };
-      content.destroy();
-      return out;
-    };
-    const r = random(1100);
-    const PARAMETERS = ["key", "policy", "st", "layer", "sig", "auth"];
-    const base = (): Spec => ({
-      kind: pick(r, ["echo", "echo-b"] as const),
-      path: `/maps/${word(r, 4)}/data`,
-      version: word(r, 3),
-      query: Object.fromEntries(PARAMETERS.map((p) => [p, word(r, 5)])),
-      options: { style: word(r, 5), depth: word(r, 2) },
-    });
-    const differing = [
-      "kind",
-      "path",
-      "query",
-      "option",
-      "credential",
-      "name",
-      "one name",
+      {
+        url: "https://u:p@other.example:8443/v2/q/r/tiles.layers?layer=rivers&token=AAAAAAAAAAAAAAAA&extra=1#frag",
+        resolved:
+          "https://bob:hunter2@b.example/x/y/z/tiles.layers?sig=s2&key=k2#f2",
+        options: { style: "night", depth: "9", other: "z" },
+        query: "q2",
+        header: "h2",
+      },
     ] as const;
-    const failures: string[] = [];
-    for (let i = 0; i < 56; i++) {
-      const what = differing[i % differing.length]!;
-      const a = base();
-      const b: Spec = {
-        ...a,
-        query: { ...a.query },
-        options: { ...a.options },
-      };
-      if (what === "kind") {
-        b.kind = a.kind === "echo" ? "echo-b" : "echo";
-      } else if (what === "path") {
-        b.path = `/maps/${word(r, 5)}/data`;
-      } else if (what === "query") {
-        b.query[pick(r, PARAMETERS)] = word(r, 6);
-      } else if (what === "option") {
-        b.options[pick(r, ["style", "depth"])] = word(r, 6);
-      } else if (what === "credential") {
-        a.credential = word(r, 16);
-        b.credential = word(r, 16);
-        a.inUrl = b.inUrl = r() < 0.5;
-      } else if (what === "name") {
-        a.name = `datasets:${word(r, 8)}`;
-        b.name = `datasets:${word(r, 8)}`;
-      } else {
-        // One name for both, and everything else differs: kind, path,
-        // query, options and version.
-        a.name = b.name = `datasets:${word(r, 8)}`;
-        b.kind = a.kind === "echo" ? "echo-b" : "echo";
-        b.path = `/maps/${word(r, 5)}/data`;
-        b.query.layer = word(r, 6);
-        b.options.style = word(r, 6);
-        b.version = word(r, 4);
+    /** The script: opens, places, writes, pushes and reads every outlet, in order. */
+    const run = async (
+      locator: (typeof LOCATORS)[number],
+    ): Promise<[string, string][]> => {
+      const engine = await fakeEngine();
+      const outlets: [string, string][] = [];
+      try {
+        const world = engine.createWorld();
+        const reports: string[] = [];
+        engine.errors.on((e) => reports.push(e.message));
+        const rt = new SourceRuntime(
+          seededOptions(
+            {
+              pool: engine.scene.workers,
+              fetch: () => FetchProvider.default,
+              clock: () => sourceClock(0),
+              report: (message) => reports.push(message),
+              itemKeyTaken: (key) => world.identities.holdsItemKey(key),
+            },
+            8471,
+          ),
+        );
+        rt.registerKind({ id: "layered", module: LAYERED });
+        rt.addResolver({
+          id: "ni",
+          accepts: (ref) => "resolver" in ref && ref.resolver === "ni",
+          resolve: (ref) =>
+            Promise.resolve({
+              kind: "layered",
+              url: new URL(locator.resolved),
+              credits: [],
+              options: locator.options,
+              credentials: new Credential({
+                query: { token: locator.query },
+                headers: { Authorization: `Bearer ${locator.header}` },
+              }),
+              ...("id" in ref && ref.id === "declared"
+                ? { name: "datasets:roads" }
+                : {}),
+            }),
+        });
+        const settle = () => {
+          for (let i = 0; i < 2; i++) {
+            rt.tick();
+            engine.scene.workers.jobs.apply(Infinity);
+          }
+        };
+        const plain = {
+          url: locator.url,
+          kind: "layered",
+          options: locator.options,
+        };
+        const contents = [
+          await rt.open(plain),
+          await rt.open(plain),
+          await rt.open({ resolver: "ni", id: "bare" }),
+          await rt.open({ resolver: "ni", id: "declared" }),
+          await rt.open({ resolver: "ni", id: "declared" }, { id: "mine" }),
+        ];
+        for (const content of contents) {
+          const item = world.add(content);
+          settle();
+          const source = sourceOf(content);
+          const { sinks } = source.host;
+          sinks.points.put({
+            key: "c",
+            crs: "EPSG:4978",
+            count: 2,
+            positions: new Float64Array(6),
+            names: ["row-1", undefined],
+          });
+          sinks.draws.addDraw({
+            mesh: sinks.draws.addMesh(createBox()),
+            id: "draw-1",
+            origin: Float64Array.of(0, 0, 0),
+          });
+          source.push({
+            kind: "features",
+            changes: {
+              id: "cs-1",
+              source: content.source,
+              ops: [
+                { op: "update", key: "row-1", patch: { properties: { n: 2 } } },
+                { op: "delete", key: "car-0" },
+              ],
+            },
+          });
+          source.push({ kind: "invalidate", keys: ["a"] });
+          source.failure = "the update failed";
+          source.throwOnUpdate = 1;
+          settle();
+          settle();
+          const box = world.identity.identify(content.featureId("draw-1"))!;
+          outlets.push(
+            ["source", content.source],
+            ["id", content.id],
+            ["itemKey", item.key],
+            ["featureIds", text([...content.rows.ids()].sort())],
+            ["featureId", text(content.featureId("row-1"))],
+            ["stableKey", text(box.key)],
+            [
+              "instance",
+              text(world.identities.identityOfDraw(box.draw!.index)),
+            ],
+            [
+              "changeSet",
+              changeSetToJson(
+                content.resolve({
+                  id: "cs-out",
+                  source: content.source,
+                  ops: [
+                    { op: "delete", key: "row-1" },
+                    { op: "insert", key: "new-1", feature: {} },
+                  ],
+                }),
+              ),
+            ],
+          );
+        }
+        outlets.push(...reports.map((m): [string, string] => ["reports", m]));
+        return outlets;
+      } finally {
+        engine.destroy();
       }
-      const x = await open(a);
-      const y = await open(b);
-      // The oracle: from the fixture's content and the declarations only.
-      const same =
-        a.name !== undefined ? a.name === b.name : x.content === y.content;
-      if ((x.id === y.id) !== same) {
-        failures.push(
-          `${what}: content ${x.content === y.content ? "equal" : "differs"}, names ${a.name ?? "-"} / ${b.name ?? "-"}, feature IDs ${x.id === y.id ? "equal" : "differ"}`,
+    };
+    const a = await run(LOCATORS[0]);
+    const b = await run(LOCATORS[1]);
+    expect(a.length).toBeGreaterThan(40);
+    expect(b).toEqual(a);
+  });
+
+  it("T4, only a declared name decides: N undeclared opens give N names and N feature IDs for one key; two opens share feature IDs exactly when their declared names are one string; a declared name's IDs are the same in another runtime", async () => {
+    /** Assets by a resolver's ID: each table row's, as written. */
+    const assets = new Map<string, unknown>();
+    const runtimeWith = (seed: number) => {
+      const made = runtime({ seed });
+      made.rt.registerKind({ id: "layered", module: LAYERED });
+      made.rt.addResolver({
+        id: "t4",
+        accepts: (ref) => "resolver" in ref && ref.resolver === "t4",
+        resolve: (ref) =>
+          Promise.resolve(assets.get("id" in ref ? ref.id : "") as never),
+      });
+      return made.rt;
+    };
+    const rt = runtimeWith(1100);
+    let n = 0;
+    /** Opens `asset` through the t4 resolver: its name and its feature ID for one key. */
+    const open = async (
+      asset: Record<string, unknown>,
+      into = rt,
+      name?: string,
+    ) => {
+      const id = `a${n++}`;
+      assets.set(id, { credits: [], kind: "layered", ...asset });
+      const content = await into.open(
+        { resolver: "t4", id },
+        name !== undefined ? { name, id } : { id },
+      );
+      return { source: content.source, feature: content.featureId("x") };
+    };
+    const url = (text: string) => new URL(text);
+    // Part 1: undeclared opens. Review 7's probe1 pairs, each a pair a kind
+    // can tell apart that the old derived name merged, then repeats of one
+    // asset: every open gets its own name.
+    const KEY = { query: { key: "s1" } };
+    const PROBE_PAIRS: [
+      string,
+      Record<string, unknown>,
+      Record<string, unknown>,
+    ][] = [
+      [
+        "repeated order",
+        { url: url("https://h.test/a?layer=a&layer=b") },
+        { url: url("https://h.test/a?layer=b&layer=a") },
+      ],
+      [
+        "+ against %20",
+        { url: url("https://h.test/a?q=a+b") },
+        { url: url("https://h.test/a?q=a%20b") },
+      ],
+      [
+        "?a against ?a=",
+        { url: url("https://h.test/a?a") },
+        { url: url("https://h.test/a?a=") },
+      ],
+      [
+        "user information",
+        { url: url("https://alice:x@h.test/a") },
+        { url: url("https://bob:y@h.test/a") },
+      ],
+      [
+        "fragment",
+        { url: url("https://h.test/a#layer=1") },
+        { url: url("https://h.test/a#layer=2") },
+      ],
+      [
+        "Infinity against null",
+        { url: url("https://h.test/a"), options: { d: Infinity } },
+        { url: url("https://h.test/a"), options: { d: null } },
+      ],
+      [
+        "NaN against -Infinity",
+        { url: url("https://h.test/a"), options: { d: NaN } },
+        { url: url("https://h.test/a"), options: { d: -Infinity } },
+      ],
+      [
+        "undefined against null",
+        { url: url("https://h.test/a"), options: { d: undefined } },
+        { url: url("https://h.test/a"), options: { d: null } },
+      ],
+      [
+        "two Dates",
+        { url: url("https://h.test/a"), options: { t: new Date(0) } },
+        { url: url("https://h.test/a"), options: { t: new Date(9e12) } },
+      ],
+      [
+        "two Maps",
+        { url: url("https://h.test/a"), options: { m: new Map([["a", 1]]) } },
+        { url: url("https://h.test/a"), options: { m: new Map([["b", 2]]) } },
+      ],
+      [
+        "-0 against 0",
+        { url: url("https://h.test/a"), options: { d: -0 } },
+        { url: url("https://h.test/a"), options: { d: 0 } },
+      ],
+      [
+        "[undefined] against [null]",
+        { url: url("https://h.test/a"), options: { d: [undefined] } },
+        { url: url("https://h.test/a"), options: { d: [null] } },
+      ],
+      [
+        "a credential's name in another case",
+        {
+          url: url("https://h.test/a?key=s1&KEY=roads"),
+          credentials: new Credential(KEY),
+        },
+        {
+          url: url("https://h.test/a?key=s1&KEY=rivers"),
+          credentials: new Credential(KEY),
+        },
+      ],
+      [
+        "host case and default port",
+        { url: url("HTTPS://H.TEST:443/a") },
+        { url: url("https://h.test/a") },
+      ],
+    ];
+    const sources: string[] = [];
+    const features: StableId[] = [];
+    const merged: string[] = [];
+    for (const [what, x, y] of PROBE_PAIRS) {
+      const a = await open(x);
+      const b = await open(y);
+      sources.push(a.source, b.source);
+      features.push(a.feature, b.feature);
+      if (a.source === b.source || a.feature === b.feature) {
+        merged.push(what);
+      }
+    }
+    // One asset, opened again and again: the same URL, kind and options.
+    const same = {
+      url: url("https://h.test/city.layers?layer=roads"),
+      options: { style: "a" },
+    };
+    for (let i = 0; i < 6; i++) {
+      const a = await open(same);
+      sources.push(a.source);
+      features.push(a.feature);
+    }
+    expect.soft(merged).toEqual([]);
+    expect.soft(new Set(sources).size, "names").toBe(sources.length);
+    expect.soft(new Set(features).size, "feature IDs").toBe(features.length);
+    // Part 2: declared names, as literal pairs. Each pair is opened with
+    // everything else different (URL, options, version, credential); they
+    // share feature IDs exactly when the two names are one string.
+    const NAME_PAIRS: [string, string][] = [
+      ["datasets:roads", "datasets:roads"],
+      ["datasets:roads", "datasets:Roads"],
+      ["datasets:roads", "datasets:roads."],
+      ["ion:96188:v3", "ion:96188:v3"],
+      ["ion:96188:v3", "ion:96188:v4"],
+      ["service:layer", "service:layer"],
+      ["a.b", "a-b"],
+      ["0", "00"],
+      ["__proto__", "__proto__"],
+      ["constructor", "toString"],
+      ["x".repeat(128), "x".repeat(128)],
+      ["x".repeat(128), `${"x".repeat(127)}y`],
+    ];
+    const wrong: string[] = [];
+    for (const [i, [x, y]] of NAME_PAIRS.entries()) {
+      const a = await open(
+        {
+          url: url(`https://a${i}.test/p/q.layers?k=1`),
+          options: { style: "a" },
+          version: "1",
+        },
+        rt,
+        x,
+      );
+      const b = await open(
+        {
+          url: url(`https://u:p@b${i}.test/r.layers?k=2#f`),
+          options: { style: "b" },
+          version: "2",
+          credentials: new Credential(KEY),
+        },
+        rt,
+        y,
+      );
+      if (a.source !== x || b.source !== y) {
+        wrong.push(`${x} / ${y}: not handed back as written`);
+      }
+      if ((a.feature === b.feature) !== (x === y)) {
+        wrong.push(
+          `${x} / ${y}: feature IDs ${a.feature === b.feature ? "equal" : "differ"}`,
         );
       }
     }
-    expect(failures).toEqual([]);
+    expect(wrong).toEqual([]);
+    // Part 3: a declared name's IDs in another runtime, seeded otherwise.
+    const other = runtimeWith(2);
+    for (const [x] of NAME_PAIRS) {
+      const here = await open({ url: url("https://h.test/a.layers") }, rt, x);
+      const there = await open(
+        { url: url("https://elsewhere.test/b.layers?v=9") },
+        other,
+        x,
+      );
+      expect(there.feature, x).toBe(here.feature);
+    }
   });
 
   it("T5, hostile keys: keys like __proto__ at every inlet change neither Object.prototype nor Array.prototype, and each reads back as written", async () => {
-    const HOSTILE = [
-      "__proto__",
-      "constructor",
-      "toString",
-      "hasOwnProperty",
-      "",
-      "0",
-      "\ud800",
-      "x".repeat(100_000),
-    ];
+    // The hostile pool's keys (test/fixtures/sources/hostile.ts).
+    const HOSTILE = HOSTILE_KEYS;
     const prototypes = () =>
       [Object.prototype, Array.prototype, Object, Function.prototype].map((o) =>
         Reflect.ownKeys(o).map(String).sort(),
