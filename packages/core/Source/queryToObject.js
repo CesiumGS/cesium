@@ -1,3 +1,5 @@
+// @ts-check
+
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -8,7 +10,7 @@ import DeveloperError from "./DeveloperError.js";
  * @function queryToObject
  *
  * @param {string} queryString The query string.
- * @returns {object} An object containing the parameters parsed from the query string.
+ * @returns {Object<string, string|string[]>} An object containing the parameters parsed from the query string.
  *
  *
  * @example
@@ -29,6 +31,7 @@ function queryToObject(queryString) {
   }
   //>>includeEnd('debug');
 
+  /** @type {Object<string, string|string[]>} */
   const result = {};
   if (queryString === "") {
     return result;

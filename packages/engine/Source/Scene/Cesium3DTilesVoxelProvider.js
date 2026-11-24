@@ -20,6 +20,7 @@ import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitSubtreeCache from "./ImplicitSubtreeCache.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import ImplicitTileset from "./ImplicitTileset.js";
+import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataSemantic from "./MetadataSemantic.js";
 import MetadataType from "./MetadataType.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
@@ -366,11 +367,14 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
  * @param {Resource|string} url The URL to a tileset JSON file
  * @returns {Promise<Cesium3DTilesVoxelProvider>} The created provider
  *
- * @exception {RuntimeException} Root must have content
- * @exception {RuntimeException} Root tile content must have 3DTILES_content_voxels extension
- * @exception {RuntimeException} Root tile must have implicit tiling
- * @exception {RuntimeException} Tileset must have a metadata schema
- * @exception {RuntimeException} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
+ * @exception {RuntimeError} Root must have content
+ * @exception {RuntimeError} Root tile content must have 3DTILES_content_voxels extension
+ * @exception {RuntimeError} Root tile must have implicit tiling
+ * @exception {RuntimeError} Tileset must have a metadata schema
+ * @exception {RuntimeError} Tileset does not contain any voxel metadata properties.
+ * @exception {RuntimeError} Unsupported voxel metadata type
+ * @exception {RuntimeError} Unsupported voxel metadata component type
+ * @exception {RuntimeError} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
  *
  * @example
  * try {
@@ -396,12 +400,21 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   const resource = Resource.createIfNeeded(url);
   const tilesetJson = await resource.fetchJson();
 
-  validate(tilesetJson);
+  validateTilesetJson(tilesetJson);
 
   const schemaLoader = getMetadataSchemaLoader(tilesetJson, resource);
   await schemaLoader.load();
+  const metadataSchema = schemaLoader.schema;
 
   const { root } = tilesetJson;
+  const voxelExtension = root.content.extensions["3DTILES_content_voxels"];
+  const className = voxelExtension.class;
+  try {
+    validateMetadataSchema(metadataSchema, className);
+  } catch (error) {
+    ResourceCache.unload(schemaLoader);
+    throw error;
+  }
 
   const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
     ? tilesetJson.extensions["3DTILES_metadata"]
@@ -409,11 +422,8 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
 
   const tilesetMetadata = new Cesium3DTilesetMetadata({
     metadataJson: metadataJson,
-    schema: schemaLoader.schema,
+    schema: metadataSchema,
   });
-
-  const voxel = root.content.extensions["3DTILES_content_voxels"];
-  const className = voxel.class;
 
   const providerOptions = getAttributeInfo(tilesetMetadata, className);
   Object.assign(providerOptions, getShape(root.boundingVolume));
@@ -423,21 +433,18 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
     providerOptions.globalTransform = Matrix4.clone(Matrix4.IDENTITY);
   }
 
-  providerOptions.dimensions = Cartesian3.unpack(voxel.dimensions);
+  providerOptions.dimensions = Cartesian3.unpack(voxelExtension.dimensions);
   providerOptions.maximumTileCount = getTileCount(tilesetMetadata);
 
-  if (defined(voxel.padding)) {
-    providerOptions.paddingBefore = Cartesian3.unpack(voxel.padding.before);
-    providerOptions.paddingAfter = Cartesian3.unpack(voxel.padding.after);
+  const { padding } = voxelExtension;
+  if (defined(padding)) {
+    providerOptions.paddingBefore = Cartesian3.unpack(padding.before);
+    providerOptions.paddingAfter = Cartesian3.unpack(padding.after);
   }
 
   const provider = new Cesium3DTilesVoxelProvider(providerOptions);
 
-  const implicitTileset = new ImplicitTileset(
-    resource,
-    root,
-    schemaLoader.schema,
-  );
+  const implicitTileset = new ImplicitTileset(resource, root, metadataSchema);
   provider._implicitTileset = implicitTileset;
   provider._availableLevels = implicitTileset.availableLevels;
 
@@ -617,8 +624,8 @@ function getTileCount(metadata) {
   );
 }
 
-function validate(tileset) {
-  const root = tileset.root;
+function validateTilesetJson(tilesetJson) {
+  const { root } = tilesetJson;
 
   if (!defined(root.content)) {
     throw new RuntimeError("Root must have content");
@@ -638,12 +645,54 @@ function validate(tileset) {
   }
 
   if (
-    !defined(tileset.schema) &&
-    !defined(tileset.schemaUri) &&
-    !hasExtension(tileset, "3DTILES_metadata")
+    !defined(tilesetJson.schema) &&
+    !defined(tilesetJson.schemaUri) &&
+    !hasExtension(tilesetJson, "3DTILES_metadata")
   ) {
     throw new RuntimeError("Tileset must have a metadata schema");
   }
+}
+
+const supportedVoxelTypes = [
+  MetadataType.SCALAR,
+  MetadataType.VEC2,
+  MetadataType.VEC3,
+  MetadataType.VEC4,
+];
+
+const supportedVoxelComponentTypes = [
+  MetadataComponentType.UINT8,
+  MetadataComponentType.FLOAT32,
+  MetadataComponentType.FLOAT64,
+];
+
+/**
+ * Validates that every property of the voxel metadata class has a type and
+ * component type that can be rendered as voxels.
+ * @param {MetadataSchema} schema The metadata schema
+ * @param {string} className The name of the class containing voxel metadata properties
+ * @private
+ */
+function validateMetadataSchema(schema, className) {
+  const properties = schema.classes?.[className]?.properties;
+  if (!defined(properties) || Object.keys(properties).length === 0) {
+    throw new RuntimeError(
+      "Tileset does not contain any voxel metadata properties.",
+    );
+  }
+  Object.values(properties).forEach((property) => {
+    const { type, componentType } = property;
+    if (!supportedVoxelTypes.includes(type)) {
+      throw new RuntimeError(
+        `Unsupported voxel metadata type ${type}. Supported types are ${supportedVoxelTypes.join(", ")}`,
+      );
+    }
+    if (!supportedVoxelComponentTypes.includes(componentType)) {
+      throw new RuntimeError(
+        `Unsupported voxel metadata component type ${componentType}. Supported component types are ${supportedVoxelComponentTypes.join(", ")}`,
+      );
+    }
+  });
 }
 
 function getShape(boundingVolume) {
@@ -737,6 +786,13 @@ function getCylinderShape(cylinder) {
   };
 }
 
+/**
+ * Get a loader for a tileset's metadata schema. The schema can be specified either directly in the tileset JSON or via a URI.
+ * @private
+ * @param {object} tilesetJson The tileset JSON object.
+ * @param {Resource} resource The resource for the tileset JSON file.
+ * @returns {MetadataSchemaLoader}
+ */
 function getMetadataSchemaLoader(tilesetJson, resource) {
   const { schemaUri, schema } = tilesetJson;
   if (!defined(schemaUri)) {
