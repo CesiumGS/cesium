@@ -139,14 +139,14 @@ class ScreenSpaceZoomCameraController {
     this.inertialDecay = 6.0;
 
     /**
-     * @private
-     * @type number
+     * The minimum distance from the zoom target that the camera can zoom in to. Zoom speed is proportional to the remaining distance to the pick target.
+     * @type {number}
      * @default 0.0
      */
     this.minimumZoomDistance = 0.0;
 
     /**
-     * Maximum distance from the zoom target that the camera can move away.
+     * The maximum distance from the zoom target used to scale the zoom speed. The camera zooms out at a speed proportional to its distance from the target, up to this distance.
      * @type {number}
      * @default 100000.0
      */
@@ -182,6 +182,9 @@ class ScreenSpaceZoomCameraController {
 
     this._target = new Cartesian3();
     this._zoomDirection = new Cartesian3();
+    this._zoomDistance = 0.0;
+    // The damped quantity is the fraction of the remaining distance to move per frame, so that
+    // momentum scales down with the distance to the target.
     this._zoomDampenedResults = {
       velocity: 0.0,
       value: 0.0,
@@ -195,6 +198,9 @@ class ScreenSpaceZoomCameraController {
     return this._enabled;
   }
   set enabled(value) {
+    if (value === this._enabled) {
+      return;
+    }
     this._enabled = value;
 
     if (value) {
@@ -202,6 +208,8 @@ class ScreenSpaceZoomCameraController {
       this._scrollDelta = 0.0;
       this._dragDelta.x = 0.0;
       this._dragDelta.y = 0.0;
+      this._zoomInputVelocity = 0.0;
+      this.zoomVelocity = 0.0;
     } else if (defined(this._dragInputState)) {
       this._dragInputState.isDragging = false;
     }
@@ -227,11 +235,6 @@ class ScreenSpaceZoomCameraController {
       handler.setInputAction(this._handleZoom.bind(this), input);
     }
 
-    handler.setInputAction(
-      this._handleZoomPosition.bind(this),
-      ScreenSpaceEventType.MOUSE_MOVE,
-    );
-
     this._dragInputState = ScreenSpaceInputBindings.registerDragInputBindings(
       handler,
       this.dragInputs,
@@ -240,6 +243,15 @@ class ScreenSpaceZoomCameraController {
         change: this._handleDrag.bind(this),
       },
     );
+
+    // Compose actions, otherwise the zoom position handler would overwrite the drag move handler.
+    const dragMove = handler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+    handler.setInputAction((event) => {
+      this._handleZoomPosition(event);
+      if (defined(dragMove)) {
+        dragMove(event);
+      }
+    }, ScreenSpaceEventType.MOUSE_MOVE);
   }
 
   /**
@@ -264,16 +276,16 @@ class ScreenSpaceZoomCameraController {
   }
 
   /**
-   * The current zoom distance of the camera in meters. This is the distance from the camera to the zoom target.
+   * The distance in meters the camera moved toward the zoom target during the last update.
    * @type {number}
    * @private
    */
   get zoomDistance() {
-    return this._zoomDampenedResults.value;
+    return this._zoomDistance;
   }
 
   /**
-   * The current zoom velocity of the camera in radians per second.
+   * The current zoom velocity, in fractions of the remaining distance to the zoom target per second.
    * @type {number}
    * @private
    */
@@ -282,7 +294,7 @@ class ScreenSpaceZoomCameraController {
   }
 
   /**
-   * The current zoom velocity of the camera in radians per second.
+   * The current zoom velocity, in fractions of the remaining distance to the zoom target per second.
    * @type {number}
    * @private
    */
@@ -339,35 +351,59 @@ class ScreenSpaceZoomCameraController {
     const { camera, ellipsoid } = scene;
 
     let direction = camera.direction;
-    let distance =
-      Cartesian3.magnitude(camera.positionWC) - ellipsoid.maximumRadius;
+    let distance = 0.0;
 
     let windowPosition = this.isDragging
       ? this._screenSpaceDragPosition
       : this._screenSpaceScrollPosition;
-    if (!this.useDragPosition) {
+    if (!this.usePointerPosition) {
       windowPosition = this._screenSpaceOrigin;
       windowPosition.x = clientWidth / 2.0;
       windowPosition.y = clientHeight / 2.0;
     }
     const target = this.pickWorldPosition(scene, windowPosition, this._target);
     if (defined(target)) {
-      direction = Cartesian3.subtract(
+      const toTarget = Cartesian3.subtract(
         target,
         camera.positionWC,
         this._zoomDirection,
       );
-      direction = Cartesian3.normalize(direction, this._zoomDirection);
-      distance = Cartesian3.distance(target, camera.positionWC);
+      distance = Cartesian3.magnitude(toTarget);
+      // At the target (distance = 0) keep the camera's direction to avoid a division by 0.
+      if (distance > 0.0) {
+        direction = Cartesian3.divideByScalar(
+          toTarget,
+          distance,
+          this._zoomDirection,
+        );
+      }
+    } else {
+      // Without a target, scale the zoom by the camera's distance from the ellipsoid surface.
+      const surface = ellipsoid.scaleToGeodeticSurface(
+        camera.positionWC,
+        this._target,
+      );
+      if (defined(surface)) {
+        distance = Cartesian3.distance(surface, camera.positionWC);
+      }
     }
 
-    distance = CesiumMath.clamp(
-      distance,
-      distance > 0.0 ? this.minimumZoomDistance : -this.maximumZoomDistance,
-      distance > 0.0 ? this.maximumZoomDistance : -this.minimumZoomDistance,
+    const { minimumZoomDistance, maximumZoomDistance } = this;
+    // Zooming in is proportional to the distance remaining above the minimum, so the camera always stops there.
+    const zoomInScale = CesiumMath.clamp(
+      distance - minimumZoomDistance,
+      0.0,
+      maximumZoomDistance,
     );
 
-    const zoom = dz * distance * this.zoomDistanceRatio;
+    // Zooming out is proportional to the distance, so even at the minimum distance, we can still zoom out.
+    const zoomOutScale = CesiumMath.clamp(
+      distance,
+      minimumZoomDistance,
+      maximumZoomDistance,
+    );
+
+    const zoom = dz * this.zoomDistanceRatio;
 
     const smoothTime = this.dampingEnabled
       ? this.zoomAnimationDuration
@@ -382,7 +418,16 @@ class ScreenSpaceZoomCameraController {
       this._zoomDampenedResults,
     );
 
-    camera.move(direction, this.zoomDistance);
+    // Applying the damped fraction to the current distance lets momentum decay as the camera nears the minimum.
+    const fraction = CesiumMath.clamp(
+      this._zoomDampenedResults.value,
+      -1.0,
+      1.0,
+    );
+
+    this._zoomDistance =
+      fraction * (fraction > 0.0 ? zoomInScale : zoomOutScale);
+    camera.move(direction, this._zoomDistance);
 
     // Reset for next frame
     this._lastUpdateTime = getTimestamp();

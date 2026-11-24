@@ -24,6 +24,7 @@
 - `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
 - Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
+- Added `ControllerHost.controllers` to get the controllers registered to a scene. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
 
 #### Fixes :wrench:
 
@@ -47,6 +48,9 @@
 - Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
+- Fixed camera controllers continuing to move with leftover inertia after being re-enabled, and `HybridScreenSpacePanCameraController.enabled` not enabling or disabling the map and elevator controllers it switches between. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
+- Fixed `ScreenSpaceZoomCameraController.usePointerPosition` having no effect and zooming in the wrong direction when nothing is picked near the ellipsoid surface. Fixed `ScreenSpaceTiltOrbitCameraController` misbehaving with damping enabled when `orbitMagnitude` or `tiltMagnitude` is negative; negative values now reverse the orbit or tilt direction. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
+- Fixed `ScreenSpaceZoomCameraController.minimumZoomDistance` not limiting zoom; the camera, including its momentum, now slows to a stop at that distance from the zoom target. [#14036](https://github.com/CesiumGS/cesium/pull/14036)
 
 ## 1.147 - 2026-11-02
 
