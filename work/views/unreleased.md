@@ -117,6 +117,7 @@ CS-199 Dyno hardening, packaging and CI
 CS-191 Content sources and formats
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+  CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-898  64-bit integer properties keep their exact value
   CS-900  Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD
   CS-913  The subset reader's composition faults on broken assets, tested against OpenUSD
@@ -147,5 +148,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-110 merged item(s) not in a release
+111 merged item(s) not in a release
 ```

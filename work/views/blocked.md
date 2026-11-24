@@ -221,11 +221,8 @@ CS-15 Refinement and convergence
       ← CS-136 `converged()`, replacing `whenReady`
 
 CS-16 Streaming robustness
-  CS-145  The fetch layer (three timers, structured failures, `isCancel`)
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-146  Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses)
       ← CS-145 The fetch layer (three timers, structured failures, `isCancel`)
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-147  Retries for 3D Tiles content (episodes owned by the tile)
       ← CS-146 Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses)
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
@@ -234,12 +231,10 @@ CS-16 Streaming robustness
   CS-149  The globe (terrain upsampled on 404, imagery recovery)
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
         CS-148 Missing content and recovery (the parent stays, cool-downs, `retryFailed()`)
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
         CS-555 The globe's terrain and imagery load through the content-source seam
         CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
   CS-150  ion tokens
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-151  Online, hidden and offline
       ← CS-147 Retries for 3D Tiles content (episodes owned by the tile)
   CS-152  The inspector's Network section and the recorder
@@ -363,8 +358,6 @@ CS-190 Vector drawing and the styling language
       ← CS-654 The surface-projection design: classification, draping and decals
 
 CS-191 Content sources and formats
-  CS-269  Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-271  A default evaluation token, with the on-screen notice
       ← CS-269 Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
         CS-270 Where does 2.0's default evaluation token come from?
@@ -372,14 +365,11 @@ CS-191 Content sources and formats
   CS-278  glTF animation playback: skins, morph targets and animated nodes
       ← CS-212 The core's setters, per-node transforms and tracks
   CS-554  3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-        CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
+      ← CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
   CS-555  The globe's terrain and imagery load through the content-source seam
       ← CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
         CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
         CS-848 Render features: content modules register passes in named slots, declared for picks, rays and shadows
-  CS-556  glTF files load through the content-source seam
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-557  MVT vector tiles load through the content-source seam
       ← CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
         CS-261 Wide lines, polygons and decals, with vector sources and vector tiles
@@ -398,20 +388,6 @@ CS-191 Content sources and formats
       ← CS-654 The surface-projection design: classification, draping and decals
   CS-811  2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
-  CS-848  Render features: content modules register passes in named slots, declared for picks, rays and shadows
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-849  Streams for push sources: connect on the fetch and credential provider
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-903  Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-904  Source-declared axis and scale, corrected through placement
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-906  Variant selections and payload policy as open options, and their change as invalidation
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-991  A module in another package registers its own content-source kind by package name, documented, on the experimental tier
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-  CS-1188  One trust boundary for every content-source inlet, as a shared module, tested by snapshot, bounded-work and closed-text invariants
-      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -758,5 +734,5 @@ CS-198 GPU-driven rendering and capacities
   CS-1177  Why 2.0's GPU-paced frames cost more than 1.x's on melbourne, nyc-buildings and bim-design-model
       ← CS-1152 Dyno's overview compares like with like: GPU and CPU time per frame for both engines, and frame time labeled for what it is
 
-240 blocked
+230 blocked
 ```

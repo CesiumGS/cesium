@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>9 of 25 done"]
   CS_9["WebGL 2 renderer<br/>8 of 21 done"]
-  CS_10["Cesium IR<br/>50 of 89 done"]
+  CS_10["Cesium IR<br/>50 of 94 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 18 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -19,7 +19,7 @@ graph LR
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 44 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
-  CS_191["Content sources and formats<br/>65 of 142 done"]
+  CS_191["Content sources and formats<br/>66 of 143 done"]
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 22 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
@@ -49,7 +49,7 @@ graph LR
   CS_10 -->|3| CS_13
   CS_8 -->|1| CS_13
   CS_12 -->|1| CS_13
-  CS_191 -->|7| CS_16
+  CS_191 -->|3| CS_16
   CS_15 -->|1| CS_16
   CS_10 -->|1| CS_17
   CS_191 -->|2| CS_188
@@ -115,7 +115,7 @@ graph LR
   CS_191 -->|7| CS_628
   CS_584 -->|1| CS_628
   CS_437 -->|3| CS_628
-  CS_191 -->|5| CS_579
+  CS_191 -->|4| CS_579
   CS_628 -->|1| CS_579
   CS_193 -->|1| CS_579
   CS_191 -->|1| CS_615

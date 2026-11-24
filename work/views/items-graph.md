@@ -144,6 +144,11 @@ graph LR
     CS_1201["CS-1201 The route-center pass and its self-test measured on a second G"]:::proposed
     CS_1202["CS-1202 The handbook's precision tab gets CS-955's Apple GPU numbers a"]:::proposed
     CS_1203["CS-1203 test/curvilinearRoutes.test.ts settles until no route is pendi"]:::proposed
+    CS_1205["CS-1205 Reserve StyleOutputs and the composition order of the style st"]:::proposed
+    CS_1206["CS-1206 The viewer-input interface the styling runtime reads"]:::proposed
+    CS_1207["CS-1207 A generated batch in the draw-arguments seam"]:::proposed
+    CS_1208["CS-1208 FORMAT.md and the conformance vectors move to the IR crate, an"]:::proposed
+    CS_1209["CS-1209 Amend core-ir.md decision 4 in place for CS-1133"]:::proposed
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -498,7 +503,7 @@ graph LR
     CS_844["CS-844 D4: how do push sources get streams under the same proxies and "]:::done
     CS_845["CS-845 D5: how are the content sources' entry points grouped and named"]:::done
     CS_846["CS-846 D6: what is ion's interface, an asset resolver or a source of i"]:::done
-    CS_847["CS-847 The content-source seam's core: types, kind registry, host, sha"]:::open
+    CS_847["CS-847 The content-source seam's core: types, kind registry, host, sha"]:::done
     CS_848["CS-848 Render features: content modules register passes in named slots"]:::open
     CS_849["CS-849 Streams for push sources: connect on the fetch and credential p"]:::open
     CS_853["CS-853 Merge CS-832, the design for semantic metadata and picking"]:::done
@@ -593,6 +598,7 @@ graph LR
     CS_1190["CS-1190 Explore untrusted plugins: a worker-hosted source host the eng"]:::proposed
     CS_1191["CS-1191 Mutation testing for the seam boundaries with StrykerJS and fa"]:::proposed
     CS_1192["CS-1192 Seam tests: a forced collision in T3, and a samples variant T2"]:::proposed
+    CS_1210["CS-1210 Merge CS-1117, the camera record carries a general projective "]:::decision
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external

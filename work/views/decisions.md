@@ -28,6 +28,7 @@ CS-189 Frames and engineering coordinates follow-ups
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
+  CS-1210  Merge CS-1117, the camera record carries a general projective transform (owner)
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -59,5 +60,5 @@ CS-199 Dyno hardening, packaging and CI
 CS-10 Cesium IR
   CS-1196  Merge CS-955, the df64 route-center pass measured, with a CPU fallback (owner)
 
-19 open decision(s) for owner
+20 open decision(s) for owner
 ```

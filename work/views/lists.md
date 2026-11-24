@@ -82,7 +82,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 50 of 89 done, 14 ready, 10 blocked, 15 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 50 of 94 done, 14 ready, 10 blocked, 20 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -184,6 +184,11 @@ No milestone
 - [?] CS-1201 The route-center pass and its self-test measured on a second GPU vendor. Proposed. Needs CS-955.
 - [?] CS-1202 The handbook's precision tab gets CS-955's Apple GPU numbers and the CPU fallback. Proposed. Needs CS-955 and CS-1027 (A clean 2.0 branch and a modern build).
 - [?] CS-1203 test/curvilinearRoutes.test.ts settles until no route is pending. Proposed. Needs nothing.
+- [?] CS-1205 Reserve StyleOutputs and the composition order of the style stage. Proposed. Needs nothing.
+- [?] CS-1206 The viewer-input interface the styling runtime reads. Proposed. Needs nothing.
+- [?] CS-1207 A generated batch in the draw-arguments seam. Proposed. Needs nothing.
+- [?] CS-1208 FORMAT.md and the conformance vectors move to the IR crate, and 2.0 pins them. Proposed. Needs nothing.
+- [?] CS-1209 Amend core-ir.md decision 4 in place for CS-1133. Proposed. Needs nothing.
 
 ### Live MaterialX graph editing
 
@@ -360,7 +365,7 @@ No milestone
 
 ### Streaming robustness
 
-CS-16, Planned, led by owner: 2 of 23 done, 5 ready, 15 blocked, 1 proposed. Plan: [2026-11-13-streaming-robustness.md](docs/superpowers/plans/2026-11-13-streaming-robustness.md).
+CS-16, Planned, led by owner: 2 of 23 done, 6 ready, 14 blocked, 1 proposed. Plan: [2026-11-13-streaming-robustness.md](docs/superpowers/plans/2026-11-13-streaming-robustness.md).
 
 Milestone: Every fetch has a deadline and retries within its origin's budget (CS-458, Planned)
 
@@ -672,7 +677,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 65 of 142 done, 33 ready, 21 blocked, 23 proposed.
+CS-191, Planned, led by owner: 66 of 143 done, 42 ready, 12 blocked, 23 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -702,7 +707,7 @@ Milestone: Content from any source loads through one module seam (CS-560, Planne
 - [x] CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers. Done.
 - [ ] CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits. Needs CS-809.
 - [ ] CS-811 2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree. Needs CS-808.
-- [ ] CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push. Needs CS-552, CS-809, CS-815 (public API reviews), CS-831 (Editing) and CS-846.
+- [x] CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push. Done.
 - [ ] CS-848 Render features: content modules register passes in named slots, declared for picks, rays and shadows. Needs CS-847 and CS-841.
 - [ ] CS-849 Streams for push sources: connect on the fetch and credential provider. Needs CS-847, CS-809 and CS-844.
 - [x] CS-898 64-bit integer properties keep their exact value. Done.
@@ -839,6 +844,7 @@ No milestone
 - [?] CS-1190 Explore untrusted plugins: a worker-hosted source host the engine can terminate. Proposed. Needs CS-1188.
 - [?] CS-1191 Mutation testing for the seam boundaries with StrykerJS and fast-check. Proposed. Needs CS-1188.
 - [?] CS-1192 Seam tests: a forced collision in T3, and a samples variant T2 can fail. Proposed. Needs CS-847.
+- [ ] CS-1210 decision: Merge CS-1117, the camera record carries a general projective transform. Needs nothing. Decided by owner.
 
 ### Sky, light and atmosphere
 

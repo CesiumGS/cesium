@@ -462,8 +462,8 @@ CS-535 Rays query the scene on the GPU [Planned], under CS-197 Ray queries and p
 
 CS-560 Content from any source loads through one module seam [Planned], under CS-191 Content sources and formats
   outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
-  constraints: 4 of 21 done
-  unmet: not linked to a clause yet (open: CS-554, CS-555, CS-556, CS-557, CS-1170, CS-558, CS-559, CS-553, CS-808, CS-810, CS-811, CS-847, CS-848, CS-849, CS-903, CS-904, CS-906; check not passed)
+  constraints: 5 of 21 done
+  unmet: not linked to a clause yet (open: CS-554, CS-555, CS-556, CS-557, CS-1170, CS-558, CS-559, CS-553, CS-808, CS-810, CS-811, CS-848, CS-849, CS-903, CS-904, CS-906; check not passed)
   to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-1170, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831, CS-847, CS-848, CS-849, CS-903, CS-904, CS-906, CS-898 to a clause
 
 CS-561 Dyno's Work page shows the live system and the release plan [Planned], under CS-18 The work tracker

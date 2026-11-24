@@ -63,6 +63,7 @@ CS-15 Refinement and convergence
   CS-382  The sleeping loop's missed wakes, and the Viewer's clock listener
 
 CS-16 Streaming robustness
+  CS-145  The fetch layer (three timers, structured failures, `isCancel`)
   CS-158  external: Cesium ion's answers on status codes and token lifetimes
   CS-177  external: `Timing-Allow-Origin` on the ion tile CDN
   CS-178  external: `Timing-Allow-Origin` on the iTwin mesh-export CDN
@@ -129,6 +130,7 @@ CS-190 Vector drawing and the styling language
   CS-1170  A MapLibre expressions front end lowers to Cesium IR
 
 CS-191 Content sources and formats
+  CS-269  Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
   CS-270  decision: Where does 2.0's default evaluation token come from?
   CS-272  3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes
   CS-273  glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness
@@ -136,6 +138,7 @@ CS-191 Content sources and formats
   CS-277  Gaussian splats with a GPU sort
   CS-279  More terrain and imagery providers, and several imagery layers on one globe
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
+  CS-556  glTF files load through the content-source seam
   CS-659  KML and KMZ load through the content-source seam
   CS-660  GPX loads through the content-source seam
   CS-661  GeoJSON loads through the content-source seam
@@ -145,8 +148,12 @@ CS-191 Content sources and formats
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
   CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
   CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
-  CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-848  Render features: content modules register passes in named slots, declared for picks, rays and shadows
+  CS-849  Streams for push sources: connect on the fetch and credential provider
   CS-902  CS-559's scope, from the chosen reader and CS-833's study
+  CS-903  Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
+  CS-904  Source-declared axis and scale, corrected through placement
+  CS-906  Variant selections and payload policy as open options, and their change as invalidation
   CS-914  OpenUSD in WebAssembly as a test oracle for the USD source
   CS-961  Stable IDs come in two parts: a feature ID per content and an instance ID per placement (CS-957 A)
   CS-962  Change sets name a feature by the source's own key, with the engine's stable ID beside it (CS-952 A)
@@ -156,12 +163,15 @@ CS-191 Content sources and formats
   CS-969  Content workers bound what a file states: allocation, recursion and graph limits, and a watchdog that ends a hung worker
   CS-970  Feature IDs and feature counts from content are checked, so one tile can't name another item's features
   CS-972  A render feature's context reaches the GPU only through the seams, under the seams' bypass tests (CS-968 A)
+  CS-991  A module in another package registers its own content-source kind by package name, documented, on the experimental tier
   CS-1014  The engine's format limits are named public constants a host can read and raise (CS-1012 A)
   CS-1116  A feature mask that post stages read, with one reference outline stage outside core
   CS-1117  The camera record carries a general projective transform, and the engine derives level of detail, culling, picking and depth from it
   CS-1118  Draw layers replace DrawOptions.underlay: layer, depth mode and order, sharing names with render features' slots
   CS-1119  One clip primitive: a region, its targets and its effect, shared by clip sets, cut tints, planar masks and classification
   CS-1120  A host-set light rig and render-product reads for looks, so a host builds its own CAD lighting
+  CS-1188  One trust boundary for every content-source inlet, as a shared module, tested by snapshot, bounded-work and closed-text invariants
+  CS-1210  decision: Merge CS-1117, the camera record carries a general projective transform
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -320,5 +330,5 @@ CS-609 A clean 2.0 branch and a modern build
 CS-197 Ray queries and path tracing
   CS-1125  An optional ray model for physical cameras: sensor area, thin lens, distortion and fisheye, used by ray-traced products
 
-249 ready
+259 ready
 ```
