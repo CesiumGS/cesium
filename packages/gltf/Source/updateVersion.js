@@ -175,10 +175,7 @@ function removeTechniquePasses(gltf) {
     const passName = technique.pass ?? "defaultPass";
     if (Object.prototype.hasOwnProperty.call(passes, passName)) {
       const pass = passes[passName];
-      const instanceProgram = pass.instanceProgram;
-      technique.attributes = technique.attributes ?? instanceProgram.attributes;
-      technique.program = technique.program ?? instanceProgram.program;
-      technique.uniforms = technique.uniforms ?? instanceProgram.uniforms;
+      technique.uniforms = technique.uniforms ?? pass.instanceProgram.uniforms;
       technique.states = technique.states ?? pass.states;
     }
     delete technique.passes;
@@ -190,19 +187,7 @@ function glTF08to10(gltf) {
   if (!defined(gltf.asset)) {
     gltf.asset = {};
   }
-  const asset = gltf.asset;
-  asset.version = "1.0";
-  // Profile should be an object, not a string
-  if (typeof asset.profile === "string") {
-    const split = asset.profile.split(" ");
-    asset.profile = {
-      api: split[0],
-      version: split[1],
-    };
-  } else {
-    asset.profile = {};
-  }
-
+  gltf.asset.version = "1.0";
   // Version property should be in asset, not on the root element
   if (defined(gltf.version)) {
     delete gltf.version;
@@ -223,16 +208,8 @@ function glTF08to10(gltf) {
     gltf.extensionsUsed = gltf.allExtensions;
     delete gltf.allExtensions;
   }
-  // gltf.lights -> khrMaterialsCommon.lights
-  if (defined(gltf.lights)) {
-    const extensions = gltf.extensions ?? {};
-    gltf.extensions = extensions;
-    const materialsCommon = extensions.KHR_materials_common ?? {};
-    extensions.KHR_materials_common = materialsCommon;
-    materialsCommon.lights = gltf.lights;
-    delete gltf.lights;
-    addExtensionsUsed(gltf, "KHR_materials_common");
-  }
+  // gltf.lights is not used by PBR materials
+  delete gltf.lights;
 }
 
 function removeAnimationSamplersIndirection(gltf) {
@@ -273,10 +250,8 @@ function objectsToArrays(gltf) {
     materials: {},
     meshes: {},
     nodes: {},
-    programs: {},
     samplers: {},
     scenes: {},
-    shaders: {},
     skins: {},
     textures: {},
     techniques: {},
@@ -324,43 +299,6 @@ function objectsToArrays(gltf) {
     if (defined(accessor.bufferView)) {
       accessor.bufferView = globalMapping.bufferViews[accessor.bufferView];
     }
-  });
-  ForEach.shader(gltf, function (shader) {
-    const extensions = shader.extensions;
-    if (defined(extensions)) {
-      const binaryGltf = extensions.KHR_binary_glTF;
-      if (defined(binaryGltf)) {
-        shader.bufferView = globalMapping.bufferViews[binaryGltf.bufferView];
-        delete extensions.KHR_binary_glTF;
-      }
-      if (Object.keys(extensions).length === 0) {
-        delete shader.extensions;
-      }
-    }
-  });
-  ForEach.program(gltf, function (program) {
-    if (defined(program.vertexShader)) {
-      program.vertexShader = globalMapping.shaders[program.vertexShader];
-    }
-    if (defined(program.fragmentShader)) {
-      program.fragmentShader = globalMapping.shaders[program.fragmentShader];
-    }
-  });
-  ForEach.technique(gltf, function (technique) {
-    if (defined(technique.program)) {
-      technique.program = globalMapping.programs[technique.program];
-    }
-    ForEach.techniqueParameter(technique, function (parameter) {
-      if (defined(parameter.node)) {
-        parameter.node = globalMapping.nodes[parameter.node];
-      }
-      const value = parameter.value;
-      if (typeof value === "string") {
-        parameter.value = {
-          index: globalMapping.textures[value],
-        };
-      }
-    });
   });
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
@@ -550,7 +488,6 @@ function stripAsset(gltf) {
 
 const knownExtensions = {
   CESIUM_RTC: true,
-  KHR_materials_common: true,
   WEB3D_quantized_attributes: true,
 };
 function requireKnownExtensions(gltf) {
@@ -597,18 +534,6 @@ function requireAttributeSetIndex(gltf) {
       );
       delete primitive.attributes.TEXCOORD;
       delete primitive.attributes.COLOR;
-    });
-  });
-  ForEach.technique(gltf, function (technique) {
-    ForEach.techniqueParameter(technique, function (parameter) {
-      const semantic = parameter.semantic;
-      if (defined(semantic)) {
-        if (semantic === "TEXCOORD") {
-          parameter.semantic = "TEXCOORD_0";
-        } else if (semantic === "COLOR") {
-          parameter.semantic = "COLOR_0";
-        }
-      }
     });
   });
 }
@@ -663,14 +588,6 @@ function underscoreApplicationSpecificSemantics(gltf) {
           }
         },
       );
-    });
-  });
-  ForEach.technique(gltf, function (technique) {
-    ForEach.techniqueParameter(technique, function (parameter) {
-      const mappedSemantic = mappedSemantics[parameter.semantic];
-      if (defined(mappedSemantic)) {
-        parameter.semantic = mappedSemantic;
-      }
     });
   });
 }

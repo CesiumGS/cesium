@@ -2,7 +2,7 @@ import { defined } from "@cesium/core";
 import ForEach from "./ForEach.js";
 
 /**
- * Iterate through the objects within the glTF and delete their pipeline extras object.
+ * Iterate through the buffers within the glTF and delete their pipeline extras object.
  *
  * @param {object} gltf A javascript object containing a glTF asset.
  * @returns {object} glTF with no pipeline extras.
@@ -10,17 +10,9 @@ import ForEach from "./ForEach.js";
  * @internal
  */
 function removePipelineExtras(gltf) {
-  ForEach.shader(gltf, function (shader) {
-    removeExtras(shader);
-  });
   ForEach.buffer(gltf, function (buffer) {
     removeExtras(buffer);
   });
-  ForEach.image(gltf, function (image) {
-    removeExtras(image);
-  });
-
-  removeExtras(gltf);
 
   return gltf;
 }

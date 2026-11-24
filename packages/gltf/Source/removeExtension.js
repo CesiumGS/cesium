@@ -1,5 +1,4 @@
 import { defined } from "@cesium/core";
-import ForEach from "./ForEach.js";
 import removeExtensionsUsed from "./removeExtensionsUsed.js";
 
 /**
@@ -15,21 +14,7 @@ import removeExtensionsUsed from "./removeExtensionsUsed.js";
 function removeExtension(gltf, extension) {
   removeExtensionsUsed(gltf, extension); // Also removes from extensionsRequired
 
-  if (extension === "CESIUM_RTC") {
-    removeCesiumRTC(gltf);
-  }
-
   return removeExtensionAndTraverse(gltf, extension);
-}
-
-function removeCesiumRTC(gltf) {
-  ForEach.technique(gltf, function (technique) {
-    ForEach.techniqueUniform(technique, function (uniform) {
-      if (uniform.semantic === "CESIUM_RTC_MODELVIEW") {
-        uniform.semantic = "MODELVIEW";
-      }
-    });
-  });
 }
 
 function removeExtensionAndTraverse(object, extension) {

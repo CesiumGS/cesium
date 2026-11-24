@@ -1,7 +1,6 @@
 // @ts-check
 
 import { defined } from "@cesium/core";
-import usesExtension from "./usesExtension.js";
 
 /** @import { ForEachElementHandler } from "./ForEachElementHandler.js"; */
 /** @import { ForEachIdHandler } from "./ForEachIdHandler.js"; */
@@ -318,14 +317,7 @@ ForEach.material = function (gltf, handler) {
  * @private
  */
 ForEach.materialValue = function (material, handler) {
-  let values = material.values;
-  if (
-    defined(material.extensions) &&
-    defined(material.extensions.KHR_techniques_webgl)
-  ) {
-    values = material.extensions.KHR_techniques_webgl.values;
-  }
-
+  const values = material.values;
   for (const name in values) {
     if (Object.prototype.hasOwnProperty.call(values, name)) {
       const value = handler(values[name], name);
@@ -444,74 +436,6 @@ ForEach.node = function (gltf, handler) {
 
 /**
  * @param {*} gltf A javascript object containing a glTF asset.
- * @param {number[]} nodeIds The ids of the root nodes of the trees to traverse.
- * @param {ForEachElementHandler} handler Called with each node and its id.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.nodeInTree = function (gltf, nodeIds, handler) {
-  const nodes = gltf.nodes;
-  if (defined(nodes)) {
-    const length = nodeIds.length;
-    for (let i = 0; i < length; i++) {
-      const nodeId = nodeIds[i];
-      const node = nodes[nodeId];
-      if (defined(node)) {
-        let value = handler(node, nodeId);
-
-        if (defined(value)) {
-          return value;
-        }
-
-        const children = node.children;
-        if (defined(children)) {
-          value = ForEach.nodeInTree(gltf, children, handler);
-
-          if (defined(value)) {
-            return value;
-          }
-        }
-      }
-    }
-  }
-};
-
-/**
- * @param {*} gltf A javascript object containing a glTF asset.
- * @param {*} scene A glTF scene.
- * @param {ForEachElementHandler} handler Called with each node in the scene and its id.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.nodeInScene = function (gltf, scene, handler) {
-  const sceneNodeIds = scene.nodes;
-  if (defined(sceneNodeIds)) {
-    return ForEach.nodeInTree(gltf, sceneNodeIds, handler);
-  }
-};
-
-/**
- * @param {*} gltf A javascript object containing a glTF asset.
- * @param {ForEachElementHandler} handler Called with each program.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.program = function (gltf, handler) {
-  if (usesExtension(gltf, "KHR_techniques_webgl")) {
-    return ForEach.object(
-      gltf.extensions.KHR_techniques_webgl.programs,
-      handler,
-    );
-  }
-
-  return ForEach.topLevel(gltf, "programs", handler);
-};
-
-/**
- * @param {*} gltf A javascript object containing a glTF asset.
  * @param {ForEachElementHandler} handler Called with each sampler.
  * @returns {*} The first defined value returned by the handler.
  *
@@ -534,24 +458,6 @@ ForEach.scene = function (gltf, handler) {
 
 /**
  * @param {*} gltf A javascript object containing a glTF asset.
- * @param {ForEachElementHandler} handler Called with each shader.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.shader = function (gltf, handler) {
-  if (usesExtension(gltf, "KHR_techniques_webgl")) {
-    return ForEach.object(
-      gltf.extensions.KHR_techniques_webgl.shaders,
-      handler,
-    );
-  }
-
-  return ForEach.topLevel(gltf, "shaders", handler);
-};
-
-/**
- * @param {*} gltf A javascript object containing a glTF asset.
  * @param {ForEachElementHandler} handler Called with each skin.
  * @returns {*} The first defined value returned by the handler.
  *
@@ -559,106 +465,6 @@ ForEach.shader = function (gltf, handler) {
  */
 ForEach.skin = function (gltf, handler) {
   return ForEach.topLevel(gltf, "skins", handler);
-};
-
-/**
- * @param {*} skin A glTF skin.
- * @param {ForEachIdHandler} handler Called with each joint's node id.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.skinJoint = function (skin, handler) {
-  const joints = skin.joints;
-  if (defined(joints)) {
-    const jointsLength = joints.length;
-    for (let i = 0; i < jointsLength; i++) {
-      const joint = joints[i];
-      const value = handler(joint);
-
-      if (defined(value)) {
-        return value;
-      }
-    }
-  }
-};
-
-/**
- * @param {*} technique A glTF technique.
- * @param {ForEachNamedHandler} handler Called with each attribute and its name.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.techniqueAttribute = function (technique, handler) {
-  const attributes = technique.attributes;
-  for (const attributeName in attributes) {
-    if (Object.prototype.hasOwnProperty.call(attributes, attributeName)) {
-      const value = handler(attributes[attributeName], attributeName);
-
-      if (defined(value)) {
-        return value;
-      }
-    }
-  }
-};
-
-/**
- * @param {*} technique A glTF technique.
- * @param {ForEachNamedHandler} handler Called with each uniform and its name.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.techniqueUniform = function (technique, handler) {
-  const uniforms = technique.uniforms;
-  for (const uniformName in uniforms) {
-    if (Object.prototype.hasOwnProperty.call(uniforms, uniformName)) {
-      const value = handler(uniforms[uniformName], uniformName);
-
-      if (defined(value)) {
-        return value;
-      }
-    }
-  }
-};
-
-/**
- * @param {*} technique A glTF technique.
- * @param {ForEachNamedHandler} handler Called with each parameter and its name.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.techniqueParameter = function (technique, handler) {
-  const parameters = technique.parameters;
-  for (const parameterName in parameters) {
-    if (Object.prototype.hasOwnProperty.call(parameters, parameterName)) {
-      const value = handler(parameters[parameterName], parameterName);
-
-      if (defined(value)) {
-        return value;
-      }
-    }
-  }
-};
-
-/**
- * @param {*} gltf A javascript object containing a glTF asset.
- * @param {ForEachElementHandler} handler Called with each technique.
- * @returns {*} The first defined value returned by the handler.
- *
- * @private
- */
-ForEach.technique = function (gltf, handler) {
-  if (usesExtension(gltf, "KHR_techniques_webgl")) {
-    return ForEach.object(
-      gltf.extensions.KHR_techniques_webgl.techniques,
-      handler,
-    );
-  }
-
-  return ForEach.topLevel(gltf, "techniques", handler);
 };
 
 /**
