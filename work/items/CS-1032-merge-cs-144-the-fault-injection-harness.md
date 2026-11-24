@@ -2,10 +2,14 @@
 id: CS-1032
 title: Merge CS-144, the fault-injection harness
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-16
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, fast-forwards, regenerates the views and logs the merge; CS-145, the fetch layer, starts next on the chain."
+answered_at: 2026-11-24T00:09:51.403Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
