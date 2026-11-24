@@ -22,13 +22,13 @@
       "packages/*/src/index.ts",
       "packages/*/package.json",
       "package.json",
-      ".human-in-the-lead/",
+      ".human-in-the-lead/**",
       "AGENTS.md",
       "packages/next/AGENTS.md",
-      ".husky/",
-      ".github/",
-      ".claude/",
-      "packages/next/.claude/"
+      ".husky/**",
+      ".github/**",
+      ".claude/**",
+      "packages/next/.claude/**"
     ]
   },
   "dispatch": {
