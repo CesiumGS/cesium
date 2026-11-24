@@ -61,140 +61,129 @@ function updateVersion(gltf) {
 }
 
 function updateInstanceTechniques(gltf) {
-  const materials = gltf.materials;
-  for (const materialId in materials) {
-    if (Object.prototype.hasOwnProperty.call(materials, materialId)) {
-      const material = materials[materialId];
-      const instanceTechnique = material.instanceTechnique;
-      if (defined(instanceTechnique)) {
-        material.technique = instanceTechnique.technique;
-        material.values = instanceTechnique.values;
-        delete material.instanceTechnique;
-      }
+  ForEach.objectLegacy(gltf.materials, function (material) {
+    const instanceTechnique = material.instanceTechnique;
+    if (!defined(instanceTechnique)) {
+      return;
     }
-  }
+
+    material.technique = instanceTechnique.technique;
+    material.values = instanceTechnique.values;
+    delete material.instanceTechnique;
+  });
 }
 
 function setPrimitiveModes(gltf) {
-  const meshes = gltf.meshes;
-  for (const meshId in meshes) {
-    if (Object.prototype.hasOwnProperty.call(meshes, meshId)) {
-      const mesh = meshes[meshId];
-      const primitives = mesh.primitives;
-      if (defined(primitives)) {
-        const primitivesLength = primitives.length;
-        for (let i = 0; i < primitivesLength; ++i) {
-          const primitive = primitives[i];
-          const defaultMode = primitive.primitive ?? WebGLConstants.TRIANGLES;
-          primitive.mode = primitive.mode ?? defaultMode;
-          delete primitive.primitive;
-        }
-      }
+  ForEach.objectLegacy(gltf.meshes, function (mesh) {
+    const primitives = mesh.primitives;
+    if (!defined(primitives)) {
+      return;
     }
-  }
+
+    const primitivesLength = primitives.length;
+    for (let i = 0; i < primitivesLength; ++i) {
+      const primitive = primitives[i];
+      const defaultMode = primitive.primitive ?? WebGLConstants.TRIANGLES;
+      primitive.mode = primitive.mode ?? defaultMode;
+      delete primitive.primitive;
+    }
+  });
 }
 
 function updateNodes(gltf) {
-  const nodes = gltf.nodes;
   const axis = new Cartesian3();
   const quat = new Quaternion();
-  for (const nodeId in nodes) {
-    if (Object.prototype.hasOwnProperty.call(nodes, nodeId)) {
-      const node = nodes[nodeId];
-      if (defined(node.rotation)) {
-        const rotation = node.rotation;
-        Cartesian3.fromArray(rotation, 0, axis);
-        Quaternion.fromAxisAngle(axis, rotation[3], quat);
-        node.rotation = [quat.x, quat.y, quat.z, quat.w];
-      }
-      const instanceSkin = node.instanceSkin;
-      if (defined(instanceSkin)) {
-        node.skeletons = instanceSkin.skeletons;
-        node.skin = instanceSkin.skin;
-        node.meshes = instanceSkin.meshes;
-        delete node.instanceSkin;
-      }
+  ForEach.objectLegacy(gltf.nodes, function (node) {
+    if (defined(node.rotation)) {
+      const rotation = node.rotation;
+      Cartesian3.fromArray(rotation, 0, axis);
+      Quaternion.fromAxisAngle(axis, rotation[3], quat);
+      node.rotation = [quat.x, quat.y, quat.z, quat.w];
     }
-  }
+    const instanceSkin = node.instanceSkin;
+    if (defined(instanceSkin)) {
+      node.skeletons = instanceSkin.skeletons;
+      node.skin = instanceSkin.skin;
+      node.meshes = instanceSkin.meshes;
+      delete node.instanceSkin;
+    }
+  });
 }
 
 function updateAnimations(gltf) {
-  const animations = gltf.animations;
   const accessors = gltf.accessors;
   const bufferViews = gltf.bufferViews;
   const buffers = gltf.buffers;
   const updatedAccessors = {};
   const axis = new Cartesian3();
   const quat = new Quaternion();
-  for (const animationId in animations) {
-    if (Object.prototype.hasOwnProperty.call(animations, animationId)) {
-      const animation = animations[animationId];
-      const channels = animation.channels;
-      const parameters = animation.parameters;
-      const samplers = animation.samplers;
-      if (defined(channels)) {
-        const channelsLength = channels.length;
-        for (let i = 0; i < channelsLength; ++i) {
-          const channel = channels[i];
-          if (channel.target.path === "rotation") {
-            const accessorId = parameters[samplers[channel.sampler].output];
-            if (defined(updatedAccessors[accessorId])) {
-              continue;
-            }
-            updatedAccessors[accessorId] = true;
-            const accessor = accessors[accessorId];
-            const bufferView = bufferViews[accessor.bufferView];
-            const buffer = buffers[bufferView.buffer];
-            const source = buffer.extras._pipeline.source;
-            const byteOffset =
-              source.byteOffset + bufferView.byteOffset + accessor.byteOffset;
-            const componentType = accessor.componentType;
-            const count = accessor.count;
-            const componentsLength = numberOfComponentsForType(accessor.type);
-            const length = accessor.count * componentsLength;
-            const typedArray = ComponentDatatype.createArrayBufferView(
-              componentType,
-              source.buffer,
-              byteOffset,
-              length,
-            );
+  ForEach.objectLegacy(gltf.animations, function (animation) {
+    const channels = animation.channels;
+    if (!defined(channels)) {
+      return;
+    }
 
-            for (let j = 0; j < count; j++) {
-              const offset = j * componentsLength;
-              Cartesian3.unpack(typedArray, offset, axis);
-              const angle = typedArray[offset + 3];
-              Quaternion.fromAxisAngle(axis, angle, quat);
-              Quaternion.pack(quat, typedArray, offset);
-            }
-          }
-        }
+    const parameters = animation.parameters;
+    const samplers = animation.samplers;
+    const channelsLength = channels.length;
+    for (let i = 0; i < channelsLength; ++i) {
+      const channel = channels[i];
+      if (channel.target.path !== "rotation") {
+        continue;
+      }
+
+      const accessorId = parameters[samplers[channel.sampler].output];
+      if (defined(updatedAccessors[accessorId])) {
+        continue;
+      }
+      updatedAccessors[accessorId] = true;
+      const accessor = accessors[accessorId];
+      const bufferView = bufferViews[accessor.bufferView];
+      const buffer = buffers[bufferView.buffer];
+      const source = buffer.extras._pipeline.source;
+      const byteOffset =
+        source.byteOffset + bufferView.byteOffset + accessor.byteOffset;
+      const componentType = accessor.componentType;
+      const count = accessor.count;
+      const componentsLength = numberOfComponentsForType(accessor.type);
+      const length = accessor.count * componentsLength;
+      const typedArray = ComponentDatatype.createArrayBufferView(
+        componentType,
+        source.buffer,
+        byteOffset,
+        length,
+      );
+
+      for (let j = 0; j < count; j++) {
+        const offset = j * componentsLength;
+        Cartesian3.unpack(typedArray, offset, axis);
+        const angle = typedArray[offset + 3];
+        Quaternion.fromAxisAngle(axis, angle, quat);
+        Quaternion.pack(quat, typedArray, offset);
       }
     }
-  }
+  });
 }
 
 function removeTechniquePasses(gltf) {
-  const techniques = gltf.techniques;
-  for (const techniqueId in techniques) {
-    if (Object.prototype.hasOwnProperty.call(techniques, techniqueId)) {
-      const technique = techniques[techniqueId];
-      const passes = technique.passes;
-      if (defined(passes)) {
-        const passName = technique.pass ?? "defaultPass";
-        if (Object.prototype.hasOwnProperty.call(passes, passName)) {
-          const pass = passes[passName];
-          const instanceProgram = pass.instanceProgram;
-          technique.attributes =
-            technique.attributes ?? instanceProgram.attributes;
-          technique.program = technique.program ?? instanceProgram.program;
-          technique.uniforms = technique.uniforms ?? instanceProgram.uniforms;
-          technique.states = technique.states ?? pass.states;
-        }
-        delete technique.passes;
-        delete technique.pass;
-      }
+  ForEach.objectLegacy(gltf.techniques, function (technique) {
+    const passes = technique.passes;
+    if (!defined(passes)) {
+      return;
     }
-  }
+
+    const passName = technique.pass ?? "defaultPass";
+    if (Object.prototype.hasOwnProperty.call(passes, passName)) {
+      const pass = passes[passName];
+      const instanceProgram = pass.instanceProgram;
+      technique.attributes = technique.attributes ?? instanceProgram.attributes;
+      technique.program = technique.program ?? instanceProgram.program;
+      technique.uniforms = technique.uniforms ?? instanceProgram.uniforms;
+      technique.states = technique.states ?? pass.states;
+    }
+    delete technique.passes;
+    delete technique.pass;
+  });
 }
 
 function glTF08to10(gltf) {
@@ -247,38 +236,29 @@ function glTF08to10(gltf) {
 }
 
 function removeAnimationSamplersIndirection(gltf) {
-  const animations = gltf.animations;
-  for (const animationId in animations) {
-    if (Object.prototype.hasOwnProperty.call(animations, animationId)) {
-      const animation = animations[animationId];
-      const parameters = animation.parameters;
-      if (defined(parameters)) {
-        const samplers = animation.samplers;
-        for (const samplerId in samplers) {
-          if (Object.prototype.hasOwnProperty.call(samplers, samplerId)) {
-            const sampler = samplers[samplerId];
-            sampler.input = parameters[sampler.input];
-            sampler.output = parameters[sampler.output];
-          }
-        }
-        delete animation.parameters;
-      }
+  ForEach.objectLegacy(gltf.animations, function (animation) {
+    const parameters = animation.parameters;
+    if (!defined(parameters)) {
+      return;
     }
-  }
+
+    ForEach.objectLegacy(animation.samplers, function (sampler) {
+      sampler.input = parameters[sampler.input];
+      sampler.output = parameters[sampler.output];
+    });
+    delete animation.parameters;
+  });
 }
 
 function objectToArray(object, mapping) {
   const array = [];
-  for (const id in object) {
-    if (Object.prototype.hasOwnProperty.call(object, id)) {
-      const value = object[id];
-      mapping[id] = array.length;
-      array.push(value);
-      if (!defined(value.name)) {
-        value.name = id;
-      }
+  ForEach.objectLegacy(object, function (value, id) {
+    mapping[id] = array.length;
+    array.push(value);
+    if (!defined(value.name)) {
+      value.name = id;
     }
-  }
+  });
   return array;
 }
 
@@ -304,35 +284,32 @@ function objectsToArrays(gltf) {
 
   // Map joint names to id names
   const jointNameToId = {};
-  const nodes = gltf.nodes;
-  for (const id in nodes) {
-    if (Object.prototype.hasOwnProperty.call(nodes, id)) {
-      const jointName = nodes[id].jointName;
-      if (defined(jointName)) {
-        jointNameToId[jointName] = id;
-      }
+  ForEach.objectLegacy(gltf.nodes, function (node, id) {
+    const jointName = node.jointName;
+    if (defined(jointName)) {
+      jointNameToId[jointName] = id;
     }
-  }
+  });
 
   // Convert top level objects to arrays
   for (const topLevelId in gltf) {
     if (
-      Object.prototype.hasOwnProperty.call(gltf, topLevelId) &&
-      defined(globalMapping[topLevelId])
+      !Object.prototype.hasOwnProperty.call(gltf, topLevelId) ||
+      !defined(globalMapping[topLevelId])
     ) {
-      const objectMapping = {};
-      const object = gltf[topLevelId];
-      gltf[topLevelId] = objectToArray(object, objectMapping);
-      globalMapping[topLevelId] = objectMapping;
+      continue;
     }
+
+    const objectMapping = {};
+    const object = gltf[topLevelId];
+    gltf[topLevelId] = objectToArray(object, objectMapping);
+    globalMapping[topLevelId] = objectMapping;
   }
 
   // Remap joint names to array indexes
-  for (const jointName in jointNameToId) {
-    if (Object.prototype.hasOwnProperty.call(jointNameToId, jointName)) {
-      jointNameToId[jointName] = globalMapping.nodes[jointNameToId[jointName]];
-    }
-  }
+  ForEach.objectLegacy(jointNameToId, function (nodeId, jointName) {
+    jointNameToId[jointName] = globalMapping.nodes[nodeId];
+  });
 
   // Fix references
   if (defined(gltf.scene)) {
@@ -549,11 +526,13 @@ function removeAnimationSamplerNames(gltf) {
 
 function removeEmptyArrays(gltf) {
   for (const topLevelId in gltf) {
-    if (Object.prototype.hasOwnProperty.call(gltf, topLevelId)) {
-      const array = gltf[topLevelId];
-      if (Array.isArray(array) && array.length === 0) {
-        delete gltf[topLevelId];
-      }
+    if (!Object.prototype.hasOwnProperty.call(gltf, topLevelId)) {
+      continue;
+    }
+
+    const array = gltf[topLevelId];
+    if (Array.isArray(array) && array.length === 0) {
+      delete gltf[topLevelId];
     }
   }
   ForEach.node(gltf, function (node) {
@@ -674,16 +653,16 @@ function underscoreApplicationSpecificSemantics(gltf) {
           }
         },
       );
-      for (const semantic in mappedSemantics) {
-        if (Object.prototype.hasOwnProperty.call(mappedSemantics, semantic)) {
-          const mappedSemantic = mappedSemantics[semantic];
+      ForEach.objectLegacy(
+        mappedSemantics,
+        function (mappedSemantic, semantic) {
           const accessorId = primitive.attributes[semantic];
           if (defined(accessorId)) {
             delete primitive.attributes[semantic];
             primitive.attributes[mappedSemantic] = accessorId;
           }
-        }
-      }
+        },
+      );
     });
   });
   ForEach.technique(gltf, function (technique) {
@@ -762,57 +741,61 @@ function moveByteStrideToBufferView(gltf) {
 
   // Split accessors with different byte strides
   for (const bufferViewId in bufferViewMap) {
-    if (Object.prototype.hasOwnProperty.call(bufferViewMap, bufferViewId)) {
-      const bufferView = bufferViews[bufferViewId];
-      const bufferViewByteOffset = bufferView.byteOffset;
-      const accessors = bufferViewMap[bufferViewId];
-      accessors.sort(function (a, b) {
-        return a.byteOffset - b.byteOffset;
-      });
-      // Writing the first group's byteStride to the buffer view changes what getAccessorByteStride returns
-      const accessorByteStrides = accessors.map(function (accessor) {
-        return computeAccessorByteStride(gltf, accessor);
-      });
-      let currentByteOffset = 0;
-      let currentIndex = 0;
-      const accessorsLength = accessors.length;
-      for (let i = 0; i < accessorsLength; ++i) {
-        const accessor = accessors[i];
-        const accessorByteStride = accessorByteStrides[i];
-        const accessorByteOffset = accessor.byteOffset;
-        const accessorByteLength = accessor.count * accessorByteStride;
-        delete accessor.byteStride;
+    if (!Object.prototype.hasOwnProperty.call(bufferViewMap, bufferViewId)) {
+      continue;
+    }
 
-        const hasNextAccessor = i < accessorsLength - 1;
-        const nextAccessorByteStride = hasNextAccessor
-          ? accessorByteStrides[i + 1]
-          : undefined;
-        if (accessorByteStride !== nextAccessorByteStride) {
-          // The first group of accessors keeps the original buffer view
-          let groupBufferView = bufferView;
-          if (currentIndex > 0) {
-            groupBufferView = clone(bufferView, true);
-            const groupBufferViewId = addToArray(bufferViews, groupBufferView);
-            for (let j = currentIndex; j <= i; ++j) {
-              const groupAccessor = accessors[j];
-              groupAccessor.bufferView = groupBufferViewId;
-              groupAccessor.byteOffset =
-                groupAccessor.byteOffset - currentByteOffset;
-            }
-          }
-          if (bufferViewHasVertexAttributes[bufferViewId]) {
-            groupBufferView.byteStride = accessorByteStride;
-          }
-          groupBufferView.byteOffset = bufferViewByteOffset + currentByteOffset;
-          groupBufferView.byteLength =
-            accessorByteOffset + accessorByteLength - currentByteOffset;
-          // Set current byte offset to next accessor's byte offset
-          currentByteOffset = hasNextAccessor
-            ? accessors[i + 1].byteOffset
-            : undefined;
-          currentIndex = i + 1;
+    const bufferView = bufferViews[bufferViewId];
+    const bufferViewByteOffset = bufferView.byteOffset;
+    const accessors = bufferViewMap[bufferViewId];
+    accessors.sort(function (a, b) {
+      return a.byteOffset - b.byteOffset;
+    });
+    // Writing the first group's byteStride to the buffer view changes what getAccessorByteStride returns
+    const accessorByteStrides = accessors.map(function (accessor) {
+      return computeAccessorByteStride(gltf, accessor);
+    });
+    let currentByteOffset = 0;
+    let currentIndex = 0;
+    const accessorsLength = accessors.length;
+    for (let i = 0; i < accessorsLength; ++i) {
+      const accessor = accessors[i];
+      const accessorByteStride = accessorByteStrides[i];
+      const accessorByteOffset = accessor.byteOffset;
+      const accessorByteLength = accessor.count * accessorByteStride;
+      delete accessor.byteStride;
+
+      const hasNextAccessor = i < accessorsLength - 1;
+      const nextAccessorByteStride = hasNextAccessor
+        ? accessorByteStrides[i + 1]
+        : undefined;
+      if (accessorByteStride === nextAccessorByteStride) {
+        continue;
+      }
+
+      // The first group of accessors keeps the original buffer view
+      let groupBufferView = bufferView;
+      if (currentIndex > 0) {
+        groupBufferView = clone(bufferView, true);
+        const groupBufferViewId = addToArray(bufferViews, groupBufferView);
+        for (let j = currentIndex; j <= i; ++j) {
+          const groupAccessor = accessors[j];
+          groupAccessor.bufferView = groupBufferViewId;
+          groupAccessor.byteOffset =
+            groupAccessor.byteOffset - currentByteOffset;
         }
       }
+      if (bufferViewHasVertexAttributes[bufferViewId]) {
+        groupBufferView.byteStride = accessorByteStride;
+      }
+      groupBufferView.byteOffset = bufferViewByteOffset + currentByteOffset;
+      groupBufferView.byteLength =
+        accessorByteOffset + accessorByteLength - currentByteOffset;
+      // Set current byte offset to next accessor's byte offset
+      currentByteOffset = hasNextAccessor
+        ? accessors[i + 1].byteOffset
+        : undefined;
+      currentIndex = i + 1;
     }
   }
 }
