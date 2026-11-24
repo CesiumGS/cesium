@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-437
 outcome: "The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point."
-constraints: [CS-434 c?, CS-435 c?, CS-708 c?, CS-763 c?, CS-780 c?]
+constraints: [CS-434 c?, CS-435 c?, CS-708 c?, CS-763 c?, CS-780 c?, CS-990 c?]
 ---
 
 ## Done when

@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-189
 outcome: "The fixes the frames plans carried forward are made, `accuracyOf` composes on `separationAccuracy`, and the owner decides whether a frame with both fallbacks takes the ballpark."
-constraints: [CS-239 c?, CS-240 c?, CS-241 c?, CS-443 c?, CS-257 c?, CS-441 c?]
+constraints: [CS-239 c?, CS-240 c?, CS-241 c?, CS-443 c?, CS-257 c?, CS-441 c?, CS-964 c?]
 ---
 
 ## Done when

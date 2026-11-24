@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-526, CS-414, CS-560, CS-458, CS-459, CS-466, CS-468, CS-485, CS-486, CS-497, CS-621, CS-635, CS-606, CS-722, CS-506, CS-519, CS-561, CS-751, CS-819, CS-657, CS-857, CS-858, CS-859, CS-614, CS-898, CS-903, CS-904, CS-906, CS-921, CS-939, CS-940, CS-943, CS-955, CS-961, CS-962, CS-966, CS-969, CS-970, CS-971, CS-972, CS-977, CS-978, CS-1001, CS-1020, CS-1021, CS-1027, CS-218, CS-1117, CS-1124]
+needs: [CS-526, CS-414, CS-560, CS-458, CS-459, CS-466, CS-468, CS-485, CS-486, CS-497, CS-621, CS-635, CS-606, CS-722, CS-506, CS-519, CS-561, CS-751, CS-819, CS-657, CS-857, CS-858, CS-859, CS-614, CS-1158, CS-1159, CS-1160]
 release: 2.0.0-alpha.1
 ---
 
@@ -26,3 +26,5 @@ CS-819 (machines can read the engine) joined on 2026-11-21, on the owner's word 
 CS-657 (content projects onto any surface, which holds CS-261), CS-857 (subdivision surfaces have a measured path), CS-858 (meshes can be edited) and CS-859 (the engine starts fast) joined on 2026-11-21, from the owner's review of the Health view's exceptions.
 
 CS-614 (the branch is a clean, modern 2.0 build) joined from rc.1 on 2026-11-21, on the owner's word: 1.x leaves and the new build lands before alpha.1 publishes, and the package move goes once into the final layout.
+
+On 2026-11-23 its loose work items joined milestones, since a release needs whole milestones (CS-1157): new milestones CS-1158 (hostile content), CS-1159 (time and reference frames) and CS-1160 (cameras), and existing ones (CS-560, CS-819, CS-621, CS-614, CS-466).

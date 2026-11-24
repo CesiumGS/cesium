@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-12
 outcome: "A fresh profile guides cuts to main-thread selection, then traversal runs in a worker over a transferable tile table."
-constraints: [CS-96 c?, CS-449 c?, CS-97 c?, CS-98 c?]
+constraints: [CS-96 c?, CS-449 c?, CS-97 c?, CS-98 c?, CS-1007 c?]
 ---
 
 ## Done when

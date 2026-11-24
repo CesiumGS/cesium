@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-17
 project: CS-615
 outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
-constraints: [CS-616 c?, CS-617 c?, CS-618 c?, CS-363 c?, CS-310 c?, CS-834 c?, CS-882 c?]
+constraints: [CS-616 c?, CS-617 c?, CS-618 c?, CS-363 c?, CS-310 c?, CS-834 c?, CS-882 c?, CS-943 c?, CS-977 c?, CS-978 c?, CS-1001 c?]
 ---
 
 ## Done when

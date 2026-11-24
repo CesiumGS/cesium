@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-21
 project: CS-437
 outcome: A simulator, a synthetic-data pipeline or a world model drives the engine step by step and reads back depth, normals, motion and IDs, with each frame's camera record and stable, labeled identity.
-constraints: [CS-813 c?, CS-814 c?, CS-815 c?, CS-816 c?, CS-832 c?, CS-833 c?]
+constraints: [CS-813 c?, CS-814 c?, CS-815 c?, CS-816 c?, CS-832 c?, CS-833 c?, CS-961 c?, CS-962 c?, CS-939 c?, CS-940 c?]
 ---
 
 ## Done when

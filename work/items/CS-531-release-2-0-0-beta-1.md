@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-527, CS-530, CS-415, CS-417, CS-418, CS-419, CS-420, CS-457, CS-421, CS-422, CS-456, CS-509, CS-462, CS-464, CS-424, CS-425, CS-426, CS-427, CS-487, CS-488, CS-489, CS-490, CS-492, CS-494, CS-473, CS-475, CS-476, CS-498, CS-499, CS-500, CS-501, CS-460, CS-469, CS-595, CS-641, CS-646, CS-653, CS-668, CS-675, CS-463, CS-461, CS-505, CS-493, CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534, CS-504, CS-830, CS-963, CS-964, CS-965, CS-484, CS-985, CS-989, CS-990, CS-103, CS-104, CS-105, CS-106, CS-107, CS-108, CS-322, CS-1007, CS-1010, CS-1014, CS-1022, CS-1028, CS-1116, CS-1118, CS-1119, CS-338]
+needs: [CS-527, CS-1166, CS-1167, CS-505, CS-1162]
 release: 2.0.0-beta.1
 ---
 
@@ -28,3 +28,5 @@ CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534 and CS-504 moved here fro
 CS-830 (2.0's examples show its seams in use) joined on 2026-11-21, on the owner's word.
 
 CS-657 moved to alpha.1 on 2026-11-21.
+
+On 2026-11-23 the owner chose a series of alphas (CS-1157 A): beta.1's feature milestones moved into alpha.2 to alpha.5, and beta.1 became the feature and API freeze. It needs the last alpha, the final API review and freeze (CS-1167; the first review, CS-420 and CS-457, moved to alpha.2, since worker mode builds on it), the follow-ups for other teams (CS-505), and the fixes the alphas turn up (CS-1162). Its loose work items joined milestones.

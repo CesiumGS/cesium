@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-17
 project: CS-609
 outcome: The branch holds 2.0 alone, built, tested and released by a modern pipeline.
-constraints: [CS-611 c?, CS-612 c?, CS-613 c?, CS-610 c?, CS-835 c?]
+constraints: [CS-611 c?, CS-612 c?, CS-613 c?, CS-610 c?, CS-835 c?, CS-1027 c?]
 ---
 
 ## Done when

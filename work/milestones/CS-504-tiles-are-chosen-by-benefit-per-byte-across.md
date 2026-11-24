@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-194
 outcome: "Refinement spends a byte budget by benefit, views share an origin fairly by weight, silhouettes and pixel coverage set importance, and paging evicts by working set with a prefetch band sized by hit rate."
-constraints: [CS-317 c?, CS-318 c?, CS-319 c?, CS-320 c?]
+constraints: [CS-317 c?, CS-318 c?, CS-319 c?, CS-320 c?, CS-322 c?]
 ---
 
 ## Done when

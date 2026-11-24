@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-196
 outcome: Scalar fields, volumes and per-element overrides draw at scale, models print to scale and align with their site in WebXR, and gallery examples show each.
-constraints: [CS-337 c?, CS-338 c?, CS-340 c?, CS-342 c?, CS-343 c?]
+constraints: [CS-337 c?, CS-338 c?, CS-340 c?, CS-342 c?, CS-343 c?, CS-1022 c?]
 ---
 
 ## Notes

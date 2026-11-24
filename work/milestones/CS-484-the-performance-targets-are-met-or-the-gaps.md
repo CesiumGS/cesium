@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-195
 outcome: "Throttled network scenarios run against a link-shaping server, Dyno's guardrails are revisited per scene, and every performance target, multi-view included, is met or its gap explained."
-constraints: [CS-328 c?, CS-329 c?, CS-451 c?]
+constraints: [CS-328 c?, CS-329 c?, CS-451 c?, CS-1010 c?, CS-1028 c?]
 ---
 
 ## Done when
