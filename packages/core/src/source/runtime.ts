@@ -129,9 +129,9 @@ export interface OpenOptions {
    * The content's name, its dataset's (CS-1087 A): what its feature IDs
    * are projected from and its change sets name it by. It wins over its
    * resolver's (`ResolvedAsset.name`). 1 to 128 characters from ASCII
-   * letters, digits and `. _ ~ : @ + -`, with single `/` between parts and
-   * not at either end (CS-1101 A): `open` refuses a URL, its query or its
-   * path. Default: the resolver's, else a session name the engine mints
+   * letters, digits and `. _ ~ : + -`, its parts joined with `:`, as in
+   * `ion:96188:v3` (CS-1150 A): no `/` and no `@`, so `open` refuses a URL,
+   * an authority with a path, or a path of several parts. Default: the resolver's, else a session name the engine mints
    * (CS-1149 A), so its feature IDs last for this session only, reported
    * at `open`. Only a declared name gives the same feature IDs across
    * opens, worlds, runs and peers.

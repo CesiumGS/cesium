@@ -2664,9 +2664,9 @@ describe("named content: a declared name, else a session name (CS-1087 A, CS-110
     // gives new IDs, as ion's resolver names its assets.
     const pinned = await placed(
       { resolver: "datasets", id: "city@2" },
-      { id: "pinned", name: "datasets:city@2" },
+      { id: "pinned", name: "datasets:city:v2" },
     );
-    expect(pinned.source).toBe("datasets:city@2");
+    expect(pinned.source).toBe("datasets:city:v2");
     expect(pinned.featureId("road-0")).not.toBe(v1.featureId("road-0"));
     await expect(
       engine.open({ url: "https://data.test/city.sample" }, { name: "" }),

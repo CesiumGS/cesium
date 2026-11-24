@@ -659,8 +659,12 @@ export class FeatureNamespace {
 /** Held by this module alone: only it makes a content's name. */
 const NAME_TOKEN = Symbol("ContentName");
 
-/** A declared name's grammar (CS-1101 A): no URL, nor a part of one, satisfies it. */
-const DECLARED_NAME = /^[A-Za-z0-9._~:@+-]+(?:\/[A-Za-z0-9._~:@+-]+)*$/;
+/**
+ * A declared name's grammar (CS-1150 A): one character class, with no `/`
+ * and no `@` at all, so no URL, authority with a path, or path of several
+ * parts fits it.
+ */
+const DECLARED_NAME = /^[A-Za-z0-9._~:+-]+$/;
 
 /** The most characters a declared name has. */
 const MAX_NAME = 128;
@@ -679,10 +683,11 @@ let namespaceOfName: (name: ContentName) => FeatureNamespace;
  *
  * - **Declared** by a host or a resolver (`OpenOptions.name`,
  *   `ResolvedAsset.name`): 1 to 128 characters from ASCII letters, digits
- *   and `. _ ~ : @ + -`, with single `/` between parts and not at either
- *   end. No `?`, `#`, `&`, `=`, `%`, whitespace or `//`, so no URL, query,
- *   path or encoded URL is one, by shape and with no list of secrets. Two
- *   opens with one declared name share feature IDs, on purpose.
+ *   and `. _ ~ : + -`, its parts joined with `:` (`ion:96188:v3`,
+ *   `service:layer`). No `/` and no `@` at all, so no URL, authority with a
+ *   path, or path of several parts fits it, by shape and with no list of
+ *   secrets (CS-1150 A). Two opens with one declared name share feature
+ *   IDs, on purpose.
  * - **A session name** the engine mints at `open` when none is declared:
  *   `session:` and the hex of 16 random bytes. Nothing from the kind, the
  *   URL or the options enters it, so no two opens share one, and its
@@ -723,8 +728,8 @@ export class ContentName {
 
   /**
    * A declared name, refused (`TypeError`, naming no value) outside the
-   * grammar: so a URL, its search, its path, an origin with a path or an
-   * encoded URL is refused by shape.
+   * grammar: so a URL, an authority with a path, or a path of several parts
+   * is refused by shape.
    */
   static declared(text: unknown): ContentName {
     if (
@@ -734,7 +739,7 @@ export class ContentName {
       text.startsWith("session:")
     ) {
       throw new TypeError(
-        `a declared name is 1 to ${MAX_NAME} characters from ASCII letters, digits and . _ ~ : @ + -, with single / between parts, and doesn't start with session: (CS-1101 A). A URL, its query or its path isn't one.`,
+        `a declared name is 1 to ${MAX_NAME} characters from ASCII letters, digits and . _ ~ : + -, its parts joined with : (no / and no @), and doesn't start with session: (CS-1150 A). A URL, an authority with a path or a path of several parts isn't one.`,
       );
     }
     return new ContentName(NAME_TOKEN, text, true);

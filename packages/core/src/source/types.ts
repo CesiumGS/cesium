@@ -203,9 +203,10 @@ export interface ResolvedAsset {
    * its layer; ion's resolver names an asset with its version, since its
    * keys can be positional (CS-1084 A). No URL text: a name is the content's
    * identity, and the URL is how it is fetched. So it is 1 to 128
-   * characters from ASCII letters, digits and `. _ ~ : @ + -`, with single
-   * `/` between parts and not at either end, and `open` refuses anything
-   * else, a URL, its query or its path included (CS-1101 A). Absent, the
+   * characters from ASCII letters, digits and `. _ ~ : + -`, its parts
+   * joined with `:` (`ion:96188:v3`), and `open` refuses anything else: no
+   * `/` and no `@`, so no URL, authority with a path, or path of several
+   * parts (CS-1150 A). Absent, the
    * engine mints a session name at `open` (`session:` and 32 hexadecimal
    * digits from random bytes, CS-1149 A), reported there: its feature IDs
    * last for this session only. `OpenOptions.name` wins over it.
