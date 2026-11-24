@@ -2,7 +2,8 @@
 id: CS-1286
 title: Bulk feature-state writes for a host's own keys, about a million at a time, with no loop per key
 kind: work
-state: proposed
+state: dropped
+reason: "Folded into CS-338 (per-element overrides at scale) on the owner's yes, 2026-11-24: its bulk writes and Dyno measurement are now in CS-338's done-when."
 created: 2026-11-24
 project: CS-196
 ---
@@ -15,3 +16,7 @@ project: CS-196
 - About a million keys are written with no script loop per key. Measured in Dyno, with a run ID cited.
 - Unknown keys are reported, not dropped silently.
 - It fits CS-338's per-element overrides and CS-1108's per-feature state.
+
+## Dropped (2026-11-24)
+
+The owner said yes to folding it into CS-338 (per-element overrides at scale), which already covers state keyed by stable ID for millions of elements. Its bulk requirement and Dyno measurement are now in CS-338's done-when.

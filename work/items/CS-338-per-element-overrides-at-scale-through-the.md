@@ -14,6 +14,8 @@ needs: [CS-1108]
 
 Colour, transparency, visibility and emphasis for millions of elements over time, keyed by stable element ID and joined to each tile's features; the note wants the process-plant example before the API review settles it.
 
+Also (2026-11-24, folded in from CS-1286 by the owner's yes): a host writes state in bulk for its own keys, about a million at a time, with no script loop per key. That means arrays of keys and values (a `setByKey`, or a bulk key-to-ID call and then a bulk write). Unknown keys are reported, not dropped silently. It's measured in Dyno, with a run ID cited.
+
 Detail: `docs/design/infrastructure-and-geoscience-capabilities.md`, capability 5.
 
 ## Note (2026-11-23)
