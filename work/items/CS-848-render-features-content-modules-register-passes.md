@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-21
 project: CS-191
 needs: [CS-847, CS-841]
+tier_override: 1
 touches: [packages/next/src/render/view/viewFrame.ts, packages/next/src/render/features/**, packages/next/test/seams.test.ts, packages/next/src/index.ts, packages/next/api/surface.txt]
 ---
 
