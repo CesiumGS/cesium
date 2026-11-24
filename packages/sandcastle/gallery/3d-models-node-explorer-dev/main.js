@@ -7,7 +7,7 @@ import Sandcastle from "Sandcastle";
 const modelUrl = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
 
 const viewModel = {
-  nodeName: undefined,
+  nodeId: undefined,
   showTranslation: false,
   showRotation: false,
   showScale: false,
@@ -16,12 +16,12 @@ const viewModel = {
 
 Cesium.knockout.track(viewModel);
 
-// transformation is a computed property returning the values storage for the current node name
+// transformation is a computed property returning the values storage for the current node
 Cesium.knockout.defineProperty(viewModel, "transformation", function () {
   const transformations = viewModel.transformations;
-  const nodeName = viewModel.nodeName;
-  if (!Cesium.defined(transformations[nodeName])) {
-    transformations[nodeName] = {
+  const nodeId = viewModel.nodeId;
+  if (!Cesium.defined(transformations[nodeId])) {
+    transformations[nodeId] = {
       translationX: 0.0,
       translationY: 0.0,
       translationZ: 0.0,
@@ -32,9 +32,9 @@ Cesium.knockout.defineProperty(viewModel, "transformation", function () {
       scaleY: 1.0,
       scaleZ: 1.0,
     };
-    Cesium.knockout.track(transformations[nodeName]);
+    Cesium.knockout.track(transformations[nodeId]);
   }
-  return transformations[nodeName];
+  return transformations[nodeId];
 });
 
 // these writable computed properties produce individual values for use in the UI
@@ -130,22 +130,28 @@ try {
       new Cesium.HeadingPitchRange(heading, pitch, r * 2.0),
     );
 
-    // enumerate nodes and add options
-    const options = Object.keys(model._nodesByName).map(function (nodeName) {
-      return {
-        text: nodeName,
+    // Enumerate every node by walking the hierarchy from the root nodes,
+    // indenting each level. Nodes without a name are labeled by their index,
+    // so unnamed nodes (like those in this model) can still be selected.
+    const options = [];
+    function addNodeOption(node, depth) {
+      const label = Cesium.defined(node.name) ? node.name : `Node ${node.id}`;
+      options.push({
+        text: `${"\u00A0\u00A0".repeat(depth)}${label}`,
         onselect: function () {
-          viewModel.nodeName = nodeName;
+          viewModel.nodeId = node.id;
         },
-      };
-    });
+      });
+      node.children.forEach((child) => addNodeOption(child, depth + 1));
+    }
+    model.rootNodes.forEach((root) => addNodeOption(root, 0));
     options[0].onselect();
     Sandcastle.addToolbarMenu(options);
 
     // This only affects nodes that draw primitives. Setting this value
     // for a joint node will have no effect.
     Sandcastle.addToggleButton("Show Node", true, function (value) {
-      const node = model.getNode(viewModel.nodeName);
+      const node = model.nodes[viewModel.nodeId];
       node.show = value;
     });
 
@@ -153,10 +159,7 @@ try {
     Cesium.knockout
       .getObservable(viewModel, "matrix")
       .subscribe(function (newValue) {
-        const node = model.getNode(viewModel.nodeName);
-        if (!Cesium.defined(node.originalMatrix)) {
-          node.originalMatrix = node.matrix.clone();
-        }
+        const node = model.nodes[viewModel.nodeId];
         node.matrix = Cesium.Matrix4.multiply(
           node.originalMatrix,
           newValue,
