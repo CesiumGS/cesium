@@ -2,10 +2,14 @@
 id: CS-1181
 title: Merge CS-913, the USD subset reader's composition faults
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`, regenerates the views and logs the merge."
+answered_at: 2026-11-24T04:40:57.161Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
