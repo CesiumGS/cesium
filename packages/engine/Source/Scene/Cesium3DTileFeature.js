@@ -3,6 +3,7 @@ import { Color, defined } from "@cesium/core";
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 
 /**
  * A feature of a {@link Cesium3DTileset}.
@@ -124,6 +125,18 @@ class Cesium3DTileFeature {
   }
 
   /**
+   * Gets the feature layer containing the feature, if any.
+   *
+   * @type {FeatureLayer|undefined}
+   *
+   * @readonly
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  get featureLayer() {
+    return Cesium3DTileFeature.getFeatureLayer(this._content);
+  }
+
+  /**
    * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
    * the tileset containing the feature.
    *
@@ -202,6 +215,22 @@ class Cesium3DTileFeature {
    */
   getProperty(name) {
     return this._content.batchTable.getProperty(this._batchId, name);
+  }
+
+  /**
+   * Gets the feature layer of a content's features. A tile's layer wins;
+   * inner contents of tiles with multiple contents fall back to their own group.
+   *
+   * @param {Cesium3DTileContent} content The content containing the features.
+   * @returns {FeatureLayer|undefined} The feature layer, if any.
+   *
+   * @ignore
+   */
+  static getFeatureLayer(content) {
+    return (
+      content.tile._featureLayer ??
+      content.tileset.featureLayers._getByGroup(content.group?.metadata)
+    );
   }
 
   /**

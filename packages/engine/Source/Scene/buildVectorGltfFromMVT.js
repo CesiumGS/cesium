@@ -446,7 +446,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
   const nodes = [];
   const translation = [origin.x, origin.y, origin.z];
 
-  for (const layer of decoded.layers) {
+  for (const [layerIndex, layer] of decoded.layers.entries()) {
     const extent = layer.extent;
 
     /** @type {number[]} */
@@ -483,6 +483,7 @@ function buildVectorGltfFromMVT(decoded, tileCoordinates, options) {
         ? (mapFeatureIdFromProperty(
             feature,
             featureIdProperty,
+            layerIndex,
             featureIdLookup,
           ) ?? nullFeatureId)
         : getOrAssignAutoFeatureId(feature, featureIdLookup);
@@ -859,13 +860,22 @@ function getOrAssignAutoFeatureId(feature, featureIdLookup) {
 }
 
 /**
+ * Features in different source layers never share an ID, even when their
+ * property values match.
+ *
  * @param {VectorTileFeature} feature
  * @param {string} featureIdProperty
+ * @param {number} layerIndex
  * @param {Map<string, number>} featureIdLookup
  * @returns {number|undefined}
  * @ignore
  */
-function mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup) {
+function mapFeatureIdFromProperty(
+  feature,
+  featureIdProperty,
+  layerIndex,
+  featureIdLookup,
+) {
   const properties = feature.properties;
   if (!defined(properties)) {
     return undefined;
@@ -884,7 +894,7 @@ function mapFeatureIdFromProperty(feature, featureIdProperty, featureIdLookup) {
   if (typeof propertyValue === "number" && !Number.isFinite(propertyValue)) {
     return undefined;
   }
-  const mapKey = `${typeof propertyValue}:${propertyValue}`;
+  const mapKey = `${layerIndex}:${typeof propertyValue}:${propertyValue}`;
   let mappedFeatureId = featureIdLookup.get(mapKey);
   if (defined(mappedFeatureId)) {
     return mappedFeatureId;

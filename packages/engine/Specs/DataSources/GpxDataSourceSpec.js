@@ -461,6 +461,46 @@ describe("DataSources/GpxDataSource", function () {
     );
   });
 
+  it("Description: creates links from explicit URLs", async function () {
+    const gpx = parser.parseFromString(
+      `<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1">
+        <wpt lon="1" lat="2">
+          <desc>https://example.invalid/track http://example.invalid/source</desc>
+        </wpt>
+      </gpx>`,
+      "text/xml",
+    );
+    const dataSource = await GpxDataSource.load(gpx);
+    const element = document.createElement("div");
+    element.innerHTML = dataSource.entities.values[0].description.getValue();
+
+    const links = element.querySelectorAll("a");
+    expect(links.length).toEqual(2);
+    expect(links[0].getAttribute("href")).toEqual(
+      "https://example.invalid/track",
+    );
+    expect(links[1].getAttribute("href")).toEqual(
+      "http://example.invalid/source",
+    );
+    expect(links[0].getAttribute("target")).toEqual("_blank");
+    expect(links[1].getAttribute("target")).toEqual("_blank");
+  });
+
+  it("Description: does not create links from non-explicit URLs", async function () {
+    const gpx = parser.parseFromString(
+      `<gpx xmlns="http://www.topografix.com/GPX/1/1" version="1.1">
+        <wpt lon="1" lat="2"><desc>states.id example.com</desc></wpt>
+      </gpx>`,
+      "text/xml",
+    );
+    const dataSource = await GpxDataSource.load(gpx);
+    const element = document.createElement("div");
+    element.innerHTML = dataSource.entities.values[0].description.getValue();
+
+    expect(element.querySelectorAll("a").length).toEqual(0);
+    expect(element.textContent).toEqual("Description: states.id example.com");
+  });
+
   it("Description: handles time", function () {
     const gpx =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\

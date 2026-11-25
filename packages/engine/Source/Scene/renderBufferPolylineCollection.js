@@ -29,6 +29,7 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 
 /** @import FrameState from "./FrameState.js"; */
 /** @import BufferPolylineCollection from "./BufferPolylineCollection.js"; */
+/** @import { BufferPrimitiveChangeTracker } from "./BufferPrimitiveCollection.js"; */
 /** @import {TypedArray} from "@cesium/core"; */
 
 const { DirtyFlags } = BufferPrimitiveCollection;
@@ -78,6 +79,8 @@ const BufferPolylineAttributeLocations = {
  * @property {RenderState} [renderState]
  * @property {ShaderProgram} [shaderProgram]
  * @property {DrawCommand} [command]
+ * @property {BufferPolylineCollection} [collection]
+ * @property {BufferPrimitiveChangeTracker} [changeTracker]
  * @property {Function} destroy
  * @ignore
  */
@@ -115,7 +118,12 @@ const encodedN = new EncodedCartesian3();
  */
 function renderBufferPolylineCollection(collection, frameState, renderContext) {
   const context = frameState.context;
-  renderContext = renderContext || { destroy: destroyRenderContext };
+  renderContext = renderContext || {
+    destroy: destroyRenderContext,
+    collection,
+    changeTracker: collection._addChangeTracker(),
+  };
+  const tracker = renderContext.changeTracker;
   const useFloat64 = collection._positionDatatype === ComponentDatatype.DOUBLE;
   const attributeLocations = useFloat64
     ? BufferPolylineAttributeLocationsFloat64
@@ -170,11 +178,8 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
     };
   }
 
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.PROPERTIES
-  ) {
-    const { _dirtyOffset, _dirtyCount } = collection;
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {
+    const { offset, count, full } = tracker;
 
     const widthInMeters = collection.widthUnits === "meters";
 
@@ -184,10 +189,10 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       alpha: alphaArray,
     } = renderContext.attributeArrays;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, polyline);
 
-      if (!polyline._dirty) {
+      if (!full && !polyline._dirty) {
         continue;
       }
 
@@ -223,10 +228,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
   }
 
   // Fast path for position-only updates.
-  if (
-    collection._dirtyCount > 0 &&
-    collection._dirtyFlags & DirtyFlags.GEOMETRY
-  ) {
+  if (tracker.count > 0 && tracker.flags & DirtyFlags.GEOMETRY) {
     const { indexArray } = renderContext;
 
     const {
@@ -244,12 +246,12 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       nextPositionLow,
     } = renderContext.attributeArrays;
 
-    const { _dirtyOffset, _dirtyCount } = collection;
+    const { offset, count, full } = tracker;
 
-    for (let i = _dirtyOffset, il = _dirtyOffset + _dirtyCount; i < il; i++) {
+    for (let i = offset, il = offset + count; i < il; i++) {
       collection.get(i, polyline);
 
-      if (!polyline._dirty) {
+      if (!full && !polyline._dirty) {
         continue;
       }
 
@@ -497,9 +499,9 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
         },
       ],
     });
-  } else if (collection._dirtyCount > 0) {
+  } else if (tracker.count > 0) {
     const { indexOffset, indexCount, vertexOffset, vertexCount } =
-      getPolylineDirtyRanges(collection);
+      getPolylineDirtyRanges(collection, tracker);
 
     renderContext.vertexArray.copyIndexFromRange(
       renderContext.indexArray,
@@ -507,7 +509,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
       indexCount,
     );
 
-    if (collection._dirtyFlags & DirtyFlags.PROPERTIES) {
+    if (tracker.flags & DirtyFlags.PROPERTIES) {
       // Update all vertex attributes.
       for (const key in attributeLocations) {
         if (Object.hasOwn(attributeLocations, key)) {
@@ -520,7 +522,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
           );
         }
       }
-    } else if (collection._dirtyFlags & DirtyFlags.GEOMETRY) {
+    } else if (tracker.flags & DirtyFlags.GEOMETRY) {
       // Fast path for geometry-only updates.
 
       /** @type {BufferPolylineAttribute[]} */
@@ -611,7 +613,7 @@ function renderBufferPolylineCollection(collection, frameState, renderContext) {
 
   frameState.commandList.push(command);
 
-  collection._makeClean();
+  collection._makeClean(tracker);
 
   return renderContext;
 }
@@ -628,20 +630,21 @@ function getDrawIndexCount(collection) {
 /**
  * Computes dirty ranges for attribute and index buffers in a collection.
  * @param {BufferPolylineCollection} collection
+ * @param {BufferPrimitiveChangeTracker} tracker
  * @ignore
  */
-function getPolylineDirtyRanges(collection) {
-  const { _dirtyOffset, _dirtyCount } = collection;
+function getPolylineDirtyRanges(collection, tracker) {
+  const { offset, count } = tracker;
 
-  collection.get(_dirtyOffset, polyline);
+  collection.get(offset, polyline);
   const vertexOffset = polyline.vertexOffset * 2;
-  const segmentOffset = polyline.vertexOffset - _dirtyOffset;
+  const segmentOffset = polyline.vertexOffset - offset;
   const indexOffset = segmentOffset * 6;
 
-  collection.get(_dirtyOffset + _dirtyCount - 1, polyline);
+  collection.get(offset + count - 1, polyline);
   const vertexCount =
     (polyline.vertexOffset + polyline.vertexCount) * 2 - vertexOffset;
-  const segmentCount = vertexCount / 2 - _dirtyCount;
+  const segmentCount = vertexCount / 2 - count;
   const indexCount = segmentCount * 6;
 
   return { indexOffset, indexCount, vertexOffset, vertexCount };
@@ -654,6 +657,8 @@ function getPolylineDirtyRanges(collection) {
  */
 function destroyRenderContext() {
   const context = /** @type {BufferPolylineRenderContext} */ (this);
+
+  context.collection._removeChangeTracker(context.changeTracker);
 
   if (defined(context.vertexArray)) {
     context.vertexArray.destroy();

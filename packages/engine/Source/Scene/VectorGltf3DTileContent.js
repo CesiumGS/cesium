@@ -36,6 +36,7 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 /** @import { GeoJson } from "../Core/globalTypes.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import { Color } from "@cesium/core"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 /** @import FrameState from "./FrameState.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import { Ray } from "@cesium/core"; */
@@ -100,6 +101,12 @@ class VectorGltf3DTileContent {
     this._collectionFeatureTableIds = new Map();
 
     /**
+     * Maps vector primitive collection -> feature layer of its source layer.
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, FeatureLayer>}
+     */
+    this._collectionFeatureLayers = new Map();
+
+    /**
      * Maps propertyTableId -> featureId -> feature. Note that Feature IDs are
      * unique within their assigned property table, but not globally unique.
      * @type {Map<number, Map<number, Cesium3DTileVectorFeature>>}
@@ -117,6 +124,14 @@ class VectorGltf3DTileContent {
     this._metadata = undefined;
     /** @type {Cesium3DContentGroup} */
     this._group = undefined;
+
+    /**
+     * Whether this content (and all collections that it contains) is
+     * currently shown.
+     *
+     * @type {boolean}
+     */
+    this._show = true;
 
     /** @type {boolean} */
     this.featurePropertiesDirty = false;
@@ -163,10 +178,14 @@ class VectorGltf3DTileContent {
   }
 
   get batchTableByteLength() {
-    return this.batchTables.reduce(
-      // @ts-expect-error Missing types.
-      (acc, batchTable) => acc + batchTable.batchTableByteLength,
-      0,
+    // GeoJSON content has no model; its properties stay in the parsed JSON.
+    if (!defined(this._model)) {
+      return 0;
+    }
+    // @ts-expect-error Requires Model conversion to ES6 class.
+    const statistics = this._model.statistics;
+    return (
+      statistics.propertyTablesByteLength + statistics.batchTexturesByteLength
     );
   }
 
@@ -224,6 +243,25 @@ class VectorGltf3DTileContent {
 
   set group(value) {
     this._group = value;
+  }
+
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+  set show(value) {
+    this._show = value;
+    this.applyShow(this.show);
+  }
+  /**
+   * Apply the given 'show' flag to all collections
+   *
+   * @param {boolean} show The flag
+   */
+  applyShow(show) {
+    for (const collection of this._collections) {
+      collection.show = show;
+    }
   }
 
   /**
@@ -331,6 +369,7 @@ class VectorGltf3DTileContent {
         polygon.setMaterial(polygonMaterial);
       }
     }
+    this.applyShow(this.show);
   }
 
   /**
@@ -366,6 +405,9 @@ class VectorGltf3DTileContent {
 
     for (let i = 0; i < this._collections.length; i++) {
       const collection = this._collections[i];
+      if (this._collectionFeatureLayers.get(collection)?.show === false) {
+        continue;
+      }
       collection.blendOption = tileset._vectorBlendOption;
       Matrix4.multiplyTransformation(
         scratchTileModelMatrix,
@@ -632,6 +674,14 @@ function initializeVectorPrimitives(content) {
   content._collectionLocalMatrices = result.collectionLocalMatrices;
   content._collectionFeatureTableIds = result.collectionFeatureTableIds;
   content._featuresByTableId = result.featuresByTableId;
+
+  const featureLayers = content._tileset._featureLayers;
+  for (const [collection, name] of result.collectionNodeNames) {
+    const featureLayer = featureLayers?._getByName(name);
+    if (defined(featureLayer)) {
+      content._collectionFeatureLayers.set(collection, featureLayer);
+    }
+  }
 }
 
 export default VectorGltf3DTileContent;

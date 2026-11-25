@@ -1,3 +1,5 @@
+// @ts-check
+
 import getStringFromTypedArray from "./getStringFromTypedArray.js";
 
 /**

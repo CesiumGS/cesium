@@ -72,6 +72,18 @@ describe("Core/HermitePolynomialApproximation", function () {
     );
   });
 
+  it("interpolates constant values with zero derivatives", function () {
+    const result = HermitePolynomialApproximation.interpolate(
+      0.5,
+      [0, 1],
+      [5, 0, 5, 0],
+      1,
+      1,
+      1,
+    );
+    expect(result).toEqual([5, 0]);
+  });
+
   it("higher order interpolation produces correct results.", function () {
     const result = HermitePolynomialApproximation.interpolate(
       x,

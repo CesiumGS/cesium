@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import CesiumMath from "./Math.js";
@@ -54,7 +56,7 @@ class Spline {
    *
    * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or number.
    *
-   * @private
+   * @ignore
    */
   static getPointType(point) {
     if (typeof point === "number") {
