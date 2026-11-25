@@ -25,6 +25,10 @@ Recommended: A. Merge it. It meets the done-when with a browser check, emulation
 
 If unanswered by 2026-11-26T12:00:00Z: B. Hold it.
 
+## Amended (2026-11-24, orchestrator)
+
+Per your handbook answer ("In the branches, plus one item"), the branch now updates the handbook itself: the System architecture tab's Engine profiles paragraph names the Profile section and emulation, with its date (commit 8457424323). The replay is now 99083a0f02, and `npm run handbook` builds on it. CS-29's handbook round edits the same paragraph, so whichever merges second needs a hand merge there.
+
 ## Answer
 
 Recorded in the front matter once answered.
