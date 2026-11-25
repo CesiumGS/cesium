@@ -730,12 +730,22 @@ PostProcessStageLibrary.createAutoExposureStage = function () {
 };
 
 /**
- * Creates a temporal anti-aliasing stage useful for reducing stochastic noise.
- * It generates a motion-vector buffer from depth + previous view-projection
- * and applies neighborhood clamping to reduce ghosting.
+ * Creates a post-process stage that averages the scene over successive frames,
+ * which removes the noise of Gaussian splats drawn with
+ * {@link GaussianSplatRenderMode.STOCHASTIC}.
  *
- * @param {object} [options] Options passed to the temporal anti-aliasing stage.
- * @return {object} The stage.
+ * @param {object} [options] The options of {@link TemporalAntiAliasingStage}.
+ * @return {TemporalAntiAliasingStage} A temporal anti-aliasing stage.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @example
+ * tileset.gaussianSplatRenderMode = Cesium.GaussianSplatRenderMode.STOCHASTIC;
+ * const temporalAntiAliasing =
+ *   Cesium.PostProcessStageLibrary.createTemporalAntiAliasingStage({
+ *     progressive: true,
+ *   });
+ * scene.postProcessStages.add(temporalAntiAliasing);
  */
 PostProcessStageLibrary.createTemporalAntiAliasingStage = function (options) {
   return new TemporalAntiAliasingStage(options);

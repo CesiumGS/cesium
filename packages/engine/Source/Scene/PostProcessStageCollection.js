@@ -430,8 +430,8 @@ function removeStages(collection) {
 /**
  * Adds the post-process stage to the collection.
  *
- * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to add to the collection.
- * @return {PostProcessStage|PostProcessStageComposite} The post-process stage that was added to the collection.
+ * @param {PostProcessStage|PostProcessStageComposite|TemporalAntiAliasingStage} stage The post-process stage to add to the collection.
+ * @return {PostProcessStage|PostProcessStageComposite|TemporalAntiAliasingStage} The post-process stage that was added to the collection.
  *
  * @exception {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
  */

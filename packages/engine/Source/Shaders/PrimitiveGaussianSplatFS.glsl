@@ -5,6 +5,22 @@
 // a color modulated by the alpha and Gaussian weight.
 //
 
+#ifdef STOCHASTIC_TRANSPARENCY
+// Returns a random number in [0, 1] that differs for each pixel, splat and
+// frame, using a PCG hash.
+float stochasticTransparencyRandom() {
+    uvec2 coord = uvec2(gl_FragCoord.xy);
+    uint state = floatBitsToUint(czm_frameNumber)
+        + 0x9e3779b9u * coord.x
+        + 0x85ebca6bu * coord.y
+        + 0xc2b2ae35u * v_splatIndex;
+    state = state * 747796405u + 2891336453u;
+    uint hash = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    hash = (hash >> 22u) ^ hash;
+    return float(hash) / 4294967296.0;
+}
+#endif
+
 void main() {
     if (v_splitDirection < 0.0 && gl_FragCoord.x > czm_splitPosition) discard;
     if (v_splitDirection > 0.0 && gl_FragCoord.x < czm_splitPosition) discard;
@@ -63,15 +79,10 @@ void main() {
 #endif
 
 #ifdef STOCHASTIC_TRANSPARENCY
-    // Spark-style stochastic transparency: treat alpha as coverage and use a hash that
-    // includes per-splat entropy. This relies on depth writes + no blending.
-    uvec2 coord = uvec2(gl_FragCoord.xy);
-    uint state = floatBitsToUint(czm_frameNumber) + 0x9e3779b9u * coord.x + 0x85ebca6bu * coord.y + 0xc2b2ae35u * v_splatIndex;
-    state = state * 747796405u + 2891336453u;
-    uint hash = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
-    hash = (hash >> 22u) ^ hash;
-    float rand = float(hash) / 4294967296.0;
-    if (rand >= out_FragColor.a) {
+    // Stochastic transparency: keep the fragment with a probability equal to
+    // its alpha and draw it opaque, with depth writes and without blending.
+    // Averaged over frames, this converges to the alpha blended result.
+    if (stochasticTransparencyRandom() >= out_FragColor.a) {
         discard;
     }
     out_FragColor = vec4(out_FragColor.rgb / out_FragColor.a, 1.0);
