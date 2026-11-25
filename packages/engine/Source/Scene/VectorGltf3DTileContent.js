@@ -41,6 +41,7 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import { Ray } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import VectorPrimitiveGroup from "./VectorPrimitiveGroup.js"; */
 
 /** @ignore */
 const point = new BufferPoint();
@@ -105,6 +106,13 @@ class VectorGltf3DTileContent {
      * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, FeatureLayer>}
      */
     this._collectionFeatureLayers = new Map();
+
+    /**
+     * Maps group returned by {@link VectorStyle#compile} -> collection -> the
+     * primitives drawing the collection, or undefined if the style draws none.
+     * @type {Map<VectorPrimitiveGroup, Map<BufferPrimitiveCollection<BufferPrimitive>, VectorPrimitiveGroup|undefined>>}
+     */
+    this._styledPrimitives = new Map();
 
     /**
      * Maps propertyTableId -> featureId -> feature. Note that Feature IDs are
@@ -405,7 +413,10 @@ class VectorGltf3DTileContent {
 
     for (let i = 0; i < this._collections.length; i++) {
       const collection = this._collections[i];
-      if (this._collectionFeatureLayers.get(collection)?.show === false) {
+      const featureLayer =
+        this._collectionFeatureLayers.get(collection) ??
+        this._tile._featureLayer;
+      if (featureLayer?.show === false) {
         continue;
       }
       collection.blendOption = tileset._vectorBlendOption;
@@ -414,6 +425,14 @@ class VectorGltf3DTileContent {
         this._collectionLocalMatrices[i],
         collection.modelMatrix,
       );
+
+      if (
+        this._show &&
+        defined(featureLayer) &&
+        updateStyledPrimitives(this, collection, featureLayer, frameState)
+      ) {
+        continue;
+      }
 
       if (
         !isHeightReferenceClamp(tileset._heightReference) ||
@@ -442,6 +461,21 @@ class VectorGltf3DTileContent {
     return undefined;
   }
 
+  /**
+   * Destroys the primitives a compiled group draws this content with.
+   *
+   * @param {VectorPrimitiveGroup} group
+   * @ignore
+   */
+  _removeStyledPrimitives(group) {
+    const primitivesByCollection = this._styledPrimitives.get(group);
+    if (!defined(primitivesByCollection)) {
+      return;
+    }
+    destroyStyledPrimitives(primitivesByCollection);
+    this._styledPrimitives.delete(group);
+  }
+
   isDestroyed() {
     return false;
   }
@@ -449,6 +483,11 @@ class VectorGltf3DTileContent {
   destroy() {
     const vectorProvider = this._tileset._scene?.vectorProvider;
 
+    for (const [group, primitivesByCollection] of this._styledPrimitives) {
+      destroyStyledPrimitives(primitivesByCollection);
+      group._contents.delete(this);
+    }
+    this._styledPrimitives.clear();
     this._model?.destroy();
     this._model = undefined;
     for (const collection of this._collections) {
@@ -643,6 +682,59 @@ function makeModelOptions(tileset, tile, content, glb) {
     enableDebugWireframe: tileset._enableDebugWireframe,
     enableShowOutline: false,
   };
+}
+
+/**
+ * Updates the primitives that groups compiled for a feature layer draw a
+ * collection with, creating them on first use.
+ *
+ * @param {VectorGltf3DTileContent} content
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @param {FeatureLayer} featureLayer
+ * @param {FrameState} frameState
+ * @returns {boolean} Whether a compiled group draws the collection in place of its default appearance.
+ * @ignore
+ */
+function updateStyledPrimitives(content, collection, featureLayer, frameState) {
+  let styled = false;
+  for (const group of featureLayer._vectorPrimitiveGroups) {
+    let primitivesByCollection = content._styledPrimitives.get(group);
+    if (!defined(primitivesByCollection)) {
+      primitivesByCollection = new Map();
+      content._styledPrimitives.set(group, primitivesByCollection);
+      group._contents.add(content);
+    }
+
+    if (!primitivesByCollection.has(collection)) {
+      const primitives = group._style.createPrimitives(collection);
+      if (primitives.flatten().length > 0) {
+        primitivesByCollection.set(collection, primitives);
+      } else {
+        primitives.destroy();
+        primitivesByCollection.set(collection, undefined);
+      }
+    }
+
+    const primitives = primitivesByCollection.get(collection);
+    if (!defined(primitives)) {
+      continue;
+    }
+    styled = true;
+    if (group.show) {
+      primitives.update(frameState);
+    }
+  }
+  return styled;
+}
+
+/**
+ * @param {Map<BufferPrimitiveCollection<BufferPrimitive>, VectorPrimitiveGroup|undefined>} primitivesByCollection
+ * @ignore
+ */
+function destroyStyledPrimitives(primitivesByCollection) {
+  for (const primitives of primitivesByCollection.values()) {
+    primitives?.destroy();
+  }
 }
 
 /**

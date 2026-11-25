@@ -1,9 +1,14 @@
 // @ts-check
 
-import { Check, RuntimeError, defined } from "@cesium/core";
+import { Check, Ellipsoid, RuntimeError, defined } from "@cesium/core";
 import Resource from "../Core/Resource.js";
 import FeatureLayer from "./FeatureLayer.js";
 import FeatureLayerCollection from "./FeatureLayerCollection.js";
+import { createGeoJsonCollections } from "./GeoJsonPrimitive.js";
+import HeightReference from "./HeightReference.js";
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
+/** @import { GeoJson } from "../Core/globalTypes.js"; */
 /** @import FeatureLayerProvider from "./FeatureLayerProvider.js"; */
 
 /**
@@ -45,7 +50,10 @@ class GeoJsonFeatureLayerProvider {
   ) {
     this._geoJson = geoJson;
     this._featureLayers = new FeatureLayerCollection();
-    this._featureLayers._add(new FeatureLayer({ name: options?.name }));
+    const featureLayer = new FeatureLayer({ name: options?.name });
+    featureLayer._createCollections = () =>
+      createCollections(/** @type {GeoJson} */ (geoJson), featureLayer);
+    this._featureLayers._add(featureLayer);
   }
 
   /**
@@ -99,6 +107,37 @@ class GeoJsonFeatureLayerProvider {
     }
     return GeoJsonFeatureLayerProvider.fromGeoJson(geoJson, options);
   }
+}
+
+/**
+ * Creates the point, polyline, and polygon collections of a GeoJSON object.
+ * Each primitive's pick object exposes the feature's properties to styling
+ * expressions.
+ *
+ * @param {GeoJson} geoJson
+ * @param {FeatureLayer} featureLayer
+ * @returns {Array<BufferPrimitiveCollection<BufferPrimitive>>}
+ * @ignore
+ */
+function createCollections(geoJson, featureLayer) {
+  const { points, polylines, polygons } = createGeoJsonCollections(geoJson, {
+    ellipsoid: Ellipsoid.default,
+    heightReference: HeightReference.NONE,
+    createPickObject: (
+      featureId,
+      index,
+      collection,
+      PrimitiveClass,
+      properties,
+    ) => ({
+      featureLayer,
+      properties,
+      // Own keys only, so inherited names such as "constructor" are not properties.
+      getPropertyInherited: (/** @type {string} */ name) =>
+        Object.hasOwn(properties, name) ? properties[name] : undefined,
+    }),
+  });
+  return [points, polylines, polygons].filter(defined);
 }
 
 export default GeoJsonFeatureLayerProvider;

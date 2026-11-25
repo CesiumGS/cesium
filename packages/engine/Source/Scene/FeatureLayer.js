@@ -2,6 +2,10 @@
 
 import { Check } from "@cesium/core";
 
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
+/** @import VectorPrimitiveGroup from "./VectorPrimitiveGroup.js"; */
+
 /**
  * @typedef {object} FeatureLayerOptions
  * @property {string} [name]
@@ -30,6 +34,20 @@ class FeatureLayer {
   constructor(/** @type {FeatureLayerOptions} */ options) {
     this._name = options.name;
     this._show = true;
+
+    /**
+     * Groups compiled for this layer by {@link VectorStyle#compile}.
+     * @type {Set<VectorPrimitiveGroup>}
+     * @ignore
+     */
+    this._vectorPrimitiveGroups = new Set();
+
+    /**
+     * Creates the collections of a layer whose features are not loaded in tiles.
+     * @type {undefined|function(): Array<BufferPrimitiveCollection<BufferPrimitive>>}
+     * @ignore
+     */
+    this._createCollections = undefined;
   }
 
   /**
