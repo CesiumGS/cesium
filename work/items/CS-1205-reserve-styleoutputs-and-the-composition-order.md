@@ -2,7 +2,7 @@
 id: CS-1205
 title: Reserve StyleOutputs and the composition order of the style stage
 kind: work
-state: proposed
+state: planned
 created: 2026-11-23
 project: CS-10
 touches: [packages/core/src/scene/CustomShader.ts, packages/core/src/scene/**, packages/core/DESIGN.md, test/**]
@@ -15,3 +15,7 @@ touches: [packages/core/src/scene/CustomShader.ts, packages/core/src/scene/**, p
 - `StyleOutputs` (color, opacity, show, size, offset) is a named, reserved set of values that a style writes and a custom shader reads, in that order of composition (note section 9).
 - Room for them is reserved between the engine's stages, given today's limit of 16 float components for named values (`MAX_NAMED = 4`).
 - A test fails if the reserved names or their order change.
+
+## Notes
+
+Planned by the owner on 2026-11-24 ("Plan all four"). The API review (CS-102) needs it, so StyleOutputs and the style stage's composition order are reserved before the review approves the public surface. It is in 2.0.0-alpha.2.

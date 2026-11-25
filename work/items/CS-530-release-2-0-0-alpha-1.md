@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-526, CS-414, CS-560, CS-458, CS-459, CS-466, CS-468, CS-485, CS-486, CS-497, CS-621, CS-635, CS-606, CS-722, CS-506, CS-519, CS-561, CS-751, CS-819, CS-657, CS-857, CS-858, CS-859, CS-614, CS-1158, CS-1159, CS-1160]
+needs: [CS-526, CS-414, CS-560, CS-458, CS-459, CS-466, CS-468, CS-485, CS-486, CS-497, CS-621, CS-635, CS-606, CS-722, CS-506, CS-519, CS-561, CS-751, CS-819, CS-657, CS-857, CS-858, CS-859, CS-614, CS-1158, CS-1159, CS-1160, CS-1342]
 release: 2.0.0-alpha.1
 ---
 
@@ -28,3 +28,5 @@ CS-657 (content projects onto any surface, which holds CS-261), CS-857 (subdivis
 CS-614 (the branch is a clean, modern 2.0 build) joined from rc.1 on 2026-11-21, on the owner's word: 1.x leaves and the new build lands before alpha.1 publishes, and the package move goes once into the final layout.
 
 On 2026-11-23 its loose work items joined milestones, since a release needs whole milestones (CS-1157): new milestones CS-1158 (hostile content), CS-1159 (time and reference frames) and CS-1160 (cameras), and existing ones (CS-560, CS-819, CS-621, CS-614, CS-466).
+
+CS-1342 (the styling runtime builds, ships and loads as job types) joined on 2026-11-24, when the owner planned CS-1324 and CS-1208 ("Plan all four").

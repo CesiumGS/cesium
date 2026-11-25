@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-437
-needs: [CS-101, CS-430, CS-431, CS-432, CS-433, CS-454, CS-567, CS-572, CS-834]
+needs: [CS-101, CS-430, CS-431, CS-432, CS-433, CS-454, CS-567, CS-572, CS-834, CS-1205, CS-1206]
 ---
 
 The public API review, with CS-101's map and the façade's constraints. It also designs observed value types for in-place writes (three.js-style `camera.position.x = 5` becoming commands, owner 2026-11-13) and checks the API against three.js, Babylon.js and MapLibre idioms. Needs CS-101. The review collects the renames and open API questions the design notes left for it.
@@ -41,3 +41,7 @@ CS-810's review (the imagery and terrain provider seam) raised these for this re
 2. `TileMatrix` gives sizes and origin in "northing radians" (Web Mercator y over the WGS84 radius), an unusual public unit. Keep it, or state them in a named CRS's units?
 3. The quantized-mesh availability methods sit on the generic `TerrainProvider` interface. Move them to a quantized-mesh provider or a capability?
 4. The `"heightmap"` `TerrainTile` variant publishes a data layout before any decoder exists (CS-1319). Hold it back until CS-1319 lands?
+
+## Notes
+
+CS-1205 (StyleOutputs and the composition order) and CS-1206 (the viewer-input interface) joined its needs on 2026-11-24, when the owner planned them ("Plan all four"): the review settles both shapes.

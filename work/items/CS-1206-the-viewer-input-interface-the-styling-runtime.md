@@ -2,7 +2,7 @@
 id: CS-1206
 title: The viewer-input interface the styling runtime reads
 kind: work
-state: proposed
+state: planned
 created: 2026-11-23
 project: CS-10
 touches: [packages/core/src/**, packages/core/DESIGN.md, test/**]
@@ -16,3 +16,7 @@ touches: [packages/core/src/**, packages/core/DESIGN.md, test/**]
 - Its first entries are declared: the camera, terrain heights and gradients, time, view scale and the per-feature state columns (CS-338).
 - Terrain as an input has a sampling call the job system can serve.
 - It carries a version, additive minors and refusal by name, like the plan format (note section 8).
+
+## Notes
+
+Planned by the owner on 2026-11-24 ("Plan all four"). The API review (CS-102) needs it, so the interface the styling runtime reads is settled in the review. It is in 2.0.0-alpha.2.
