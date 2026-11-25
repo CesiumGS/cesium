@@ -118,3 +118,8 @@ The owner, on 2026-11-24: "the beta is for fixing bugs, feature complete should 
 - **Between beta.1 and 2.0.0:** fixes, performance tuning, the trust and evals track, the Sandcastle migration, the docs and outside validation, as above.
 - The beta.1 bullet above, and "a module that arrives after beta.1 ships in the experimental tier", no longer hold. An experimental module still ships in the experimental tier, but it arrives in an alpha.
 - So that the tracker matches: WebGL 2 parity (CS-416), the experimental modules (CS-674), physics representations (CS-676) and GPU rays (CS-535) moved from rc.1 and 2.0.0 into alpha.5 (CS-1166). Vector drawing (CS-499) is in alpha.3 (CS-1164). MVT tiles (CS-557) stay in alpha.1, drawn without labels; labels come with CS-499.
+- Later the same day, the owner: "i think worker mode and jobs needs to come up, i don't want to waste work doing things on the main thread and then reimplementing it on the jobs system." Worker mode builds on the public API review, so the two land together in alpha.2, and the alphas after it are built on Jobs. The alphas are now:
+  - alpha.2: the approved API, off the main thread;
+  - alpha.3: other bodies, exact geometry and maps;
+  - alpha.4: one shading path on both renderers;
+  - alpha.5: tuned and complete.
