@@ -44,7 +44,7 @@ class FeatureLayer {
 
     /**
      * Creates the collections of a layer whose features are not loaded in tiles.
-     * @type {(function(): Array<BufferPrimitiveCollection<BufferPrimitive>>)|undefined}
+     * @type {undefined|function(): Array<BufferPrimitiveCollection<BufferPrimitive>>}
      * @ignore
      */
     this._createCollections = undefined;
