@@ -118,7 +118,7 @@ function treeNodeFromResponse(response) {
  * @typedef {object} IonAssetElementService.PropertyValue
  * @property {string|number|boolean} value The raw value.
  * @property {string} displayValue The human-readable, pre-formatted value.
- * @property {string|null} units The unit of <code>value</code>, or <code>null</code> when the property is unitless.
+ * @property {string} [units] The unit of <code>value</code>, or <code>undefined</code> when the property is unitless.
  * @property {string} type The primitive type of <code>value</code>.
  */
 
@@ -662,7 +662,7 @@ class IonAssetElementService extends ElementService {
         return { propertyKey: item.propertyKey, type: item.type };
       }),
       total: response.total,
-      continuationToken: response.continuationToken,
+      continuationToken: response.continuationToken ?? undefined,
     };
   }
 
@@ -725,11 +725,11 @@ class IonAssetElementService extends ElementService {
         return {
           value: item.value,
           displayValue: item.displayValue,
-          units: item.units,
+          units: item.units ?? undefined,
           type: item.type,
         };
       }),
-      continuationToken: response.continuationToken,
+      continuationToken: response.continuationToken ?? undefined,
     };
   }
 }

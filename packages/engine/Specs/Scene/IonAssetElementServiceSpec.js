@@ -560,6 +560,28 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
+  it("listPropertyValues converts null units and continuationToken to undefined", async function () {
+    mockFetchJson({
+      items: [
+        {
+          value: "Wall",
+          displayValue: "Wall",
+          units: null,
+          type: "string",
+        },
+      ],
+      continuationToken: null,
+    });
+
+    const result = await service.listPropertyValues({
+      propertyKey: "Category.Name",
+      type: "string",
+    });
+
+    expect(result.items[0].units).toBeUndefined();
+    expect(result.continuationToken).toBeUndefined();
+  });
+
   it("propagates request errors", async function () {
     const error = new RequestErrorEvent(404, "Not found");
     spyOn(Resource.prototype, "fetchJson").and.rejectWith(error);
