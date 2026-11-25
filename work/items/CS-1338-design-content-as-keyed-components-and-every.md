@@ -2,7 +2,7 @@
 id: CS-1338
 title: "Design: content as keyed components, and every answer at a declared accuracy that can be refined"
 kind: work
-state: proposed
+state: planned
 created: 2026-11-24
 project: CS-191
 ---
@@ -30,3 +30,5 @@ project: CS-191
 - It lists the follow-up items in order with their needs, for the main session to file. Questions only the owner can answer become decision items. The tile format for view-refined exact content stays with CS-305 and CS-576.
 - CS-102 gets a note pointing at the amended seam, and the handbook's architecture tab says what changed, with its "checked" date.
 - Nothing in the repository names a particular host application.
+
+Planned by the owner on 2026-11-24 ("Plan it now"). Design-heavy, so it runs on the most capable model.
