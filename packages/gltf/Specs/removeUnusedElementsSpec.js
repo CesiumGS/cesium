@@ -1,5 +1,6 @@
 import { WebGLConstants } from "@cesium/core";
-import { ForEach, removeUnusedElements } from "../index.js";
+import ForEach from "../Source/ForEach.js";
+import removeUnusedElements from "../Source/removeUnusedElements.js";
 
 const gltf = {
   nodes: [

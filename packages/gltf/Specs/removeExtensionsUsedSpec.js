@@ -1,4 +1,4 @@
-import { removeExtensionsUsed } from "../index.js";
+import removeExtensionsUsed from "../Source/removeExtensionsUsed.js";
 
 describe("removeExtensionsUsed", function () {
   it("removes extension from extensionsUsed", function () {

@@ -34,7 +34,7 @@
   "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/core",
-    "build-ts": "gulp buildTs --workspace @cesium/core",
+    "build-ts": "gulp runTsdJsdoc --workspace @cesium/core",
     "coverage": "gulp coverage --workspace @cesium/core",
     "tsc": "gulp tsc --workspace @cesium/core",
     "test": "gulp test --workspace @cesium/core",

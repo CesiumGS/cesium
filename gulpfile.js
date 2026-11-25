@@ -21,6 +21,7 @@ import yargs from "yargs";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
+import { format as formatWithPrettier, resolveConfig } from "prettier";
 
 import { buildCore } from "./packages/core/scripts/build.js";
 import { buildGltf } from "./packages/gltf/scripts/build.js";
@@ -223,6 +224,8 @@ export async function buildWatch() {
   gulp.watch(
     [
       ...sourceFiles,
+      // gltf's index.js is hand-maintained, so it isn't regenerated from Source
+      "packages/gltf/index.js",
       // Shader results are generated in the previous watch task; no need to rebuild twice
       "!Source/Shaders/**",
     ],
@@ -288,49 +291,53 @@ export async function buildWatch() {
 export async function buildTs() {
   /** @type {string[]} */
   let workspaces;
-  if (Array.isArray(argv.workspace)) {
-    workspaces = argv.workspace;
-  } else if (argv.workspace) {
-    workspaces = [argv.workspace];
-  } else {
+  if (!argv.workspace) {
     workspaces = getWorkspaces(true);
+  } else if (Array.isArray(argv.workspace)) {
+    workspaces = argv.workspace.map(normalizeWorkspaceArg);
+  } else {
+    workspaces = [normalizeWorkspaceArg(argv.workspace)];
   }
 
-  // Earlier workspaces that aren't regenerated in this run are imported using their existing declarations.
+  for (const workspace of workspaces) {
+    execSync(`npm run build-ts --workspace @${scope}/${workspace}`, {
+      stdio: "inherit",
+    });
+  }
+
+  if (!argv.workspace) {
+    await generateCesiumTypeScriptDefinitions();
+  }
+}
+
+/**
+ * Runs tsd-jsdoc to generate the type declarations for the workspace given by
+ * `--workspace`. Earlier workspaces are imported using their existing declarations.
+ */
+export async function runTsdJsdoc() {
+  if (!argv.workspace || Array.isArray(argv.workspace)) {
+    throw new Error("runTsdJsdoc requires exactly one --workspace.");
+  }
+  const workspace = normalizeWorkspaceArg(argv.workspace);
+
   /** @type {Object<string, Set<string>>} */
   const dependencyExports = {};
-  const requested = workspaces.map(normalizeWorkspaceArg);
   const allWorkspaces = getWorkspaces(true);
-  const lastIndex = Math.max(
+  for (const dependency of allWorkspaces.slice(
     0,
-    ...requested.map((workspace) => allWorkspaces.indexOf(workspace)),
+    allWorkspaces.indexOf(workspace),
+  )) {
+    dependencyExports[dependency] = readWorkspaceExports(dependency);
+  }
+
+  await generateWorkspaceTypeScriptDefinitions(
+    workspace,
+    `packages/${workspace}/index.d.ts`,
+    `packages/${workspace}/tsd-conf.json`,
+    // The engine package needs its own Viewer circular-dependency workaround.
+    workspace === "engine" ? processEngineSource : undefined,
+    dependencyExports,
   );
-  for (const dependency of allWorkspaces.slice(0, lastIndex)) {
-    if (!requested.includes(dependency)) {
-      dependencyExports[dependency] = readWorkspaceExports(dependency);
-    }
-  }
-
-  // Generate types for passed packages in order.
-  for (const workspace of workspaces) {
-    const directory = normalizeWorkspaceArg(workspace);
-    const workspaceExports = await generateWorkspaceTypeScriptDefinitions(
-      directory,
-      `packages/${directory}/index.d.ts`,
-      `packages/${directory}/tsd-conf.json`,
-      // The engine package needs its own Viewer circular-dependency workaround.
-      directory === "engine" ? processEngineSource : undefined,
-      dependencyExports,
-    );
-    dependencyExports[directory] = workspaceExports;
-  }
-
-  if (argv.workspace) {
-    return;
-  }
-
-  // Generate types for CesiumJS.
-  await generateCesiumTypeScriptDefinitions();
 }
 
 export async function tsc() {
@@ -1163,7 +1170,7 @@ function generateWorkspaceTypeScriptDefinitions(
  */
 function parseWorkspaceExports(source) {
   const regex =
-    /^(?:declare|export) (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
+    /^export (?:declare )?(?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
   const exportNames = new Set();
   let match;
   while ((match = regex.exec(source))) {
@@ -1245,7 +1252,7 @@ function processEngineSource(source) {
   return newSource;
 }
 
-function generateCesiumTypeScriptDefinitions() {
+async function generateCesiumTypeScriptDefinitions() {
   // Engine's Viewer type stand-in collides with widgets' Viewer under export *,
   // which drops names exported by two modules, so name widgets' Viewer explicitly.
   mkdirSync("Build/Types", { recursive: true });
@@ -1286,6 +1293,13 @@ function generateCesiumTypeScriptDefinitions() {
     }
     source = source.replace(new RegExp(`\\b${name}_2\\b`, "g"), name);
   }
+
+  // API Extractor strips the leading spaces from every line it copies.
+  const prettierOptions = await resolveConfig("Source/Cesium.d.ts");
+  source = await formatWithPrettier(source, {
+    ...prettierOptions,
+    filepath: "Source/Cesium.d.ts",
+  });
   writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid

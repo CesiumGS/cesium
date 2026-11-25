@@ -1,4 +1,4 @@
-import { addToArray } from "../index.js";
+import addToArray from "../Source/addToArray.js";
 
 describe("addToArray", function () {
   it("adds item to array and returns its index", function () {

@@ -73,7 +73,7 @@ function formatTimeSinceInSeconds(start) {
  * @property {BuildContext} specs
  * @property {BuildContext} testWorkers
  * @property {Record<string, CesiumBundles>} packages Bundles for each published workspace package, keyed by workspace name.
- * @property {Record<string, FileGlobs>} packageSourceGlobs Each published workspace's Source globs, keyed by workspace name.
+ * @property {Record<string, FileGlobs | undefined>} packageSourceGlobs Source globs of each published workspace whose index.js is generated, keyed by workspace name.
  */
 
 /**
@@ -292,6 +292,18 @@ const throttle = (callback) => {
       "/Build/CesiumUnminified/Workers/*file.js",
       contexts.workers,
     );
+    const testWorkersCache = createRoute(
+      app,
+      "TestWorkers/*",
+      "/Build/Specs/TestWorkers/*file",
+      contexts.testWorkers,
+    );
+    const specsCache = createRoute(
+      app,
+      "Specs/*",
+      "/Build/Specs/*file",
+      contexts.specs,
+    );
     function clearTopLevelCaches() {
       esmCache.clear();
       iifeCache.clear();
@@ -331,10 +343,18 @@ const throttle = (callback) => {
           );
           clearTopLevelCaches();
           packageBundleCaches[workspace].clear();
+          specsCache.clear();
         });
       }
 
-      const sourceWatcher = chokidar.watch([`packages/${workspace}/Source`], {
+      const sourceGlobs = contexts.packageSourceGlobs[workspace];
+      /** @type {string[]} */
+      const watchedPaths = [`packages/${workspace}/Source`];
+      // A hand-maintained index.js isn't regenerated from Source, so watch it directly.
+      if (!sourceGlobs) {
+        watchedPaths.push(`packages/${workspace}/index.js`);
+      }
+      const sourceWatcher = chokidar.watch(watchedPaths, {
         ignored: [
           `packages/${workspace}/Source/Shaders`,
           `packages/${workspace}/Source/ThirdParty`,
@@ -347,30 +367,21 @@ const throttle = (callback) => {
       sourceWatcher.on("all", async () => {
         clearTopLevelCaches();
         packageBundleCaches[workspace].clear();
+        specsCache.clear();
 
-        await createIndexJs(
-          /** @type {Workspace} */ (workspace),
-          contexts.packageSourceGlobs[workspace],
-        );
+        if (sourceGlobs) {
+          await createIndexJs(
+            /** @type {Workspace} */ (workspace),
+            sourceGlobs,
+          );
+        }
       });
     }
 
-    const testWorkersCache = createRoute(
-      app,
-      "TestWorkers/*",
-      "/Build/Specs/TestWorkers/*file",
-      contexts.testWorkers,
-    );
     chokidar
       .watch(["Specs/TestWorkers/*.js"], { ignoreInitial: true })
       .on("all", testWorkersCache.clear);
 
-    const specsCache = createRoute(
-      app,
-      "Specs/*",
-      "/Build/Specs/*file",
-      contexts.specs,
-    );
     const specWatcher = chokidar.watch(
       [
         ...workspaces.map((workspace) => `packages/${workspace}/Specs`),

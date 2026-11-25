@@ -1,5 +1,5 @@
 import { WebGLConstants } from "@cesium/core";
-import { moveTechniquesToExtension } from "../index.js";
+import moveTechniquesToExtension from "../Source/moveTechniquesToExtension.js";
 
 describe("moveTechniquesToExtension", function () {
   it("moves techniques, shaders, and programs to extension", function () {

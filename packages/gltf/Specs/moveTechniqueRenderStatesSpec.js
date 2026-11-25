@@ -1,5 +1,5 @@
 import { WebGLConstants } from "@cesium/core";
-import { moveTechniqueRenderStates } from "../index.js";
+import moveTechniqueRenderStates from "../Source/moveTechniqueRenderStates.js";
 
 const gltf = {
   programs: {

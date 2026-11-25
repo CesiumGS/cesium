@@ -202,6 +202,7 @@ async function createZipFile() {
           "!Build/InlineWorkers.js",
           "!packages/core/Build/Specs/**",
           "!packages/gltf/Build/Specs/**",
+          "!packages/gltf/Build/Types/**",
           "!packages/engine/Build/Specs/**",
           "!packages/widgets/Build/Specs/**",
           "!packages/engine/Build/minifyShaders.state",

@@ -1,5 +1,5 @@
 import { WebGLConstants } from "@cesium/core";
-import { updateAccessorComponentTypes } from "../index.js";
+import updateAccessorComponentTypes from "../Source/updateAccessorComponentTypes.js";
 
 function concatUint8Arrays(arrays) {
   const totalLength = arrays.reduce((sum, array) => sum + array.length, 0);

@@ -31,7 +31,7 @@
   "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/gltf",
-    "build-ts": "gulp buildTs --workspace @cesium/gltf",
+    "build-ts": "node scripts/buildTs.js",
     "coverage": "gulp coverage --workspace @cesium/gltf",
     "tsc": "gulp tsc --workspace @cesium/gltf",
     "test": "gulp test --workspace @cesium/gltf",

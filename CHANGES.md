@@ -18,6 +18,12 @@
 
 - Fixed `HermitePolynomialApproximation.interpolate` returning zero instead of the sample value for constant samples with zero derivatives. [#13934](https://github.com/CesiumGS/cesium/pull/13934)
 
+### @cesium/gltf
+
+#### Breaking Changes :mega:
+
+- These private utilities are no longer exported: `ForEach`, `addBuffer`, `addExtensionsRequired`, `addExtensionsUsed`, `addToArray`, `findAccessorMinMax`, `forEachTextureInMaterial`, `moveTechniqueRenderStates`, `moveTechniquesToExtension`, `readAccessorPacked`, `removeExtension`, `removeExtensionsRequired`, `removeExtensionsUsed`, `removeUnusedElements`, `updateAccessorComponentTypes`. [#14076](https://github.com/CesiumGS/cesium/pull/14076)
+
 ### @cesium/engine
 
 #### Additions :tada:

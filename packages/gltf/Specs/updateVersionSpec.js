@@ -6,10 +6,10 @@ import {
 } from "@cesium/core";
 import {
   addPipelineExtras,
-  ForEach,
   numberOfComponentsForType,
   updateVersion,
 } from "../index.js";
+import ForEach from "../Source/ForEach.js";
 
 const gltf1Techniques = "./Data/Models/glTF-1.0/box/box.gltf";
 const gltf1TechniquesTextured =

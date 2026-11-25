@@ -1,5 +1,5 @@
 {
-  "include": ["Source/*.js"],
+  "include": ["index.js", "Source/*.js"],
   "extends": ["../../tsconfig.json"],
   "compilerOptions": {
     // The "strict mode" family of options is turned off by default to ease
