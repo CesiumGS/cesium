@@ -236,6 +236,7 @@
   "extensions": {
     "EXT_structural_metadata": {
       "schema": {
+        "id": "BuildingsMetadataSchemaId",
         "classes": {
           "building": {
             "properties": {

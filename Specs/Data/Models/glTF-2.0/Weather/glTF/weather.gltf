@@ -9,6 +9,7 @@
   "extensions": {
     "EXT_structural_metadata": {
       "schema": {
+        "id": "WeatherSchemaId",
         "classes": {
           "weather": {
             "name": "Weather Data",

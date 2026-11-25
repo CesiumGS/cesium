@@ -13,6 +13,7 @@
   "extensions": {
     "EXT_structural_metadata": {
       "schema": {
+        "id": "BoxInstancedInterleavedSchemaId",
         "classes": {
           "box": {
             "properties": {
