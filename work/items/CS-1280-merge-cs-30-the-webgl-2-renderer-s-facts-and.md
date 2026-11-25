@@ -2,10 +2,14 @@
 id: CS-1280
 title: Merge CS-30, the WebGL 2 renderer's facts and support rules
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-8
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`."
+answered_at: 2026-11-25T03:25:10.832Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

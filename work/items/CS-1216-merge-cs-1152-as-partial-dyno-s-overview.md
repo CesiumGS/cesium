@@ -2,10 +2,14 @@
 id: CS-1216
 title: Merge CS-1152 as partial, Dyno's overview compares like with like
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-199
 decider: owner
+answer: "A. A. Merge it as partial: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The item stays in progress until a quiet ion run after CS-1127, and CS-1174 can start."
+answered_at: 2026-11-25T03:25:13.569Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

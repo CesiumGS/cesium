@@ -2,10 +2,14 @@
 id: CS-1279
 title: Merge CS-581 as partial, dyno lab runs irWgsl for changes under src/ir
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-195
 decider: owner
+answer: "A. A. Merge it as partial: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The item stays in progress until the gate is wired."
+answered_at: 2026-11-25T03:25:06.989Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

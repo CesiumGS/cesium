@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-190
 outcome: "The owner has decided the styling language's form, where its spec lives, its semantics, and what editing the engine supports."
-constraints: [CS-1140 c?, CS-1108 c?, CS-453 c?]
+constraints: [CS-1140 c?, CS-1108 c?, CS-453 c?, CS-1345 c?]
 ---
 
 ## Done when
@@ -22,3 +22,7 @@ This was a learning milestone. A learning milestone is one whose check is a stud
 ## Note (2026-11-23)
 
 CS-265 and CS-266 closed as superseded by the owner's piecewise answers (CS-1108, CS-1129 to CS-1143). Their places here go to CS-1140 (the language: an experimental one of our own and a 1.x front end) and CS-1108 (per-feature state). CS-267 now needs CS-1140, CS-337 needs CS-1146, and CS-338 needs CS-1108.
+
+## Note (2026-11-24)
+
+CS-1345 joined: the design for data stages and sandboxed modules above Cesium IR, which settles the plan format's stage kinds and what the meter counts. The owner asked for it on 2026-11-24, and asked that no planned work sit outside the release chain.

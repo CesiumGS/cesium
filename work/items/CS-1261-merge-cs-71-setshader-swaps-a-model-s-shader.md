@@ -2,10 +2,14 @@
 id: CS-1261
 title: Merge CS-71, setShader swaps a model's shader when it's ready
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-11
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. CS-72 can then start."
+answered_at: 2026-11-25T03:25:16.362Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

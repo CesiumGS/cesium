@@ -2,10 +2,14 @@
 id: CS-1265
 title: Merge CS-165, the runaway at α 1 under a steep warp, diagnosed
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-17
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The handbook and plan state the cause."
+answered_at: 2026-11-25T03:25:09.345Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

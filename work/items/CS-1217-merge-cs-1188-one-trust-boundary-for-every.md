@@ -2,10 +2,14 @@
 id: CS-1217
 title: Merge CS-1188, one trust boundary for every content-source inlet
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`, and the follow-ups are filed."
+answered_at: 2026-11-25T03:25:03.347Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

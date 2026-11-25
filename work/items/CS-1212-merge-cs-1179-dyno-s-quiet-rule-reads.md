@@ -2,10 +2,14 @@
 id: CS-1212
 title: Merge CS-1179, Dyno's quiet rule reads foreground, background and GPU load
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-389
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. Measurements then wait on foreground, GPU and background bars instead of the load average."
+answered_at: 2026-11-25T03:25:12.187Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

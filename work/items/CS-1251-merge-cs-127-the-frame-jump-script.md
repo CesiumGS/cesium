@@ -2,10 +2,14 @@
 id: CS-1251
 title: Merge CS-127, the frame-jump script
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-14
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The Dyno wiring is filed as follow-up work."
+answered_at: 2026-11-25T03:25:15.137Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
