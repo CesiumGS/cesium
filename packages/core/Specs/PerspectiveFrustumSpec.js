@@ -336,6 +336,35 @@ describe("Core/PerspectiveFrustum", function () {
     expect(frustum).toEqual(frustum2);
   });
 
+  it("clone keeps xOffset and yOffset", function () {
+    frustum.xOffset = 0.25;
+    frustum.yOffset = -0.5;
+    const frustum2 = frustum.clone();
+    expect(frustum2.xOffset).toEqual(0.25);
+    expect(frustum2.yOffset).toEqual(-0.5);
+    expect(frustum2.equals(frustum)).toEqual(true);
+    expect(frustum2.projectionMatrix).toEqual(frustum.projectionMatrix);
+  });
+
+  it("clone with result parameter keeps xOffset and yOffset", function () {
+    frustum.xOffset = 0.25;
+    frustum.yOffset = -0.5;
+    const result = new PerspectiveFrustum({
+      fov: 1.0,
+      aspectRatio: 2.0,
+      near: 3.0,
+      far: 4.0,
+      xOffset: 7.0,
+      yOffset: 8.0,
+    });
+    const frustum2 = frustum.clone(result);
+    expect(frustum2).toBe(result);
+    expect(frustum2.xOffset).toEqual(0.25);
+    expect(frustum2.yOffset).toEqual(-0.5);
+    expect(frustum2.equals(frustum)).toEqual(true);
+    expect(frustum2.projectionMatrix).toEqual(frustum.projectionMatrix);
+  });
+
   createPackableSpecs(
     PerspectiveFrustum,
     new PerspectiveFrustum({
