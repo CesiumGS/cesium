@@ -411,6 +411,13 @@ describe("Scene/IonAssetElementService", function () {
           kind: "model",
           ignored: true,
         },
+        {
+          key: "null-metadata-node-key",
+          label: null,
+          hasChildren: false,
+          id: 8,
+          kind: null,
+        },
       ],
     });
 
@@ -431,6 +438,13 @@ describe("Scene/IonAssetElementService", function () {
           hasChildren: true,
           id: "7",
           kind: "model",
+        },
+        {
+          key: "null-metadata-node-key",
+          label: undefined,
+          hasChildren: false,
+          id: "8",
+          kind: undefined,
         },
       ],
     });
