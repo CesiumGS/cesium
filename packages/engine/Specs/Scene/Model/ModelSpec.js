@@ -887,6 +887,160 @@ describe(
       });
     });
 
+    it("shares one shader program across models with different property table counts when reading non-first properties", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
+      function createPointCloudGltf(count, secondPropertyValue) {
+        const positionsByteLength = count * 12;
+        const prop0ByteLength = Math.ceil((count * 2) / 4) * 4;
+        const prop1Offset = positionsByteLength + prop0ByteLength;
+        const prop1ByteLength = count * 4;
+        const buffer = new ArrayBuffer(prop1Offset + prop1ByteLength);
+
+        const positions = new Float32Array(buffer, 0, count * 3);
+        for (let i = 0; i < count; i++) {
+          positions[i * 3] = 0.0;
+          positions[i * 3 + 1] = 0.0;
+          positions[i * 3 + 2] = 0.0;
+        }
+        new Uint16Array(buffer, positionsByteLength, count).fill(100);
+        new Float32Array(buffer, prop1Offset, count).fill(secondPropertyValue);
+
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+        return {
+          asset: { version: "2.0" },
+          extensionsUsed: ["EXT_mesh_features", "EXT_structural_metadata"],
+          scenes: [{ nodes: [0] }],
+          nodes: [{ mesh: 0 }],
+          meshes: [
+            {
+              primitives: [
+                {
+                  mode: 0,
+                  attributes: { POSITION: 0 },
+                  extensions: {
+                    EXT_mesh_features: {
+                      featureIds: [{ featureCount: count, propertyTable: 0 }],
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+          accessors: [
+            {
+              bufferView: 0,
+              componentType: 5126,
+              count: count,
+              type: "VEC3",
+              min: [-0.01, -0.01, -0.01],
+              max: [0.01, 0.01, 0.01],
+            },
+          ],
+          bufferViews: [
+            {
+              buffer: 0,
+              byteOffset: 0,
+              byteLength: positionsByteLength,
+              target: 34962,
+            },
+            {
+              buffer: 0,
+              byteOffset: positionsByteLength,
+              byteLength: count * 2,
+            },
+            {
+              buffer: 0,
+              byteOffset: prop1Offset,
+              byteLength: prop1ByteLength,
+            },
+          ],
+          buffers: [
+            {
+              byteLength: buffer.byteLength,
+              uri: `data:application/octet-stream;base64,${base64}`,
+            },
+          ],
+          extensions: {
+            EXT_structural_metadata: {
+              schema: {
+                id: "point_schema",
+                classes: {
+                  point: {
+                    properties: {
+                      intensity: { type: "SCALAR", componentType: "UINT16" },
+                      gpsTime: { type: "SCALAR", componentType: "FLOAT32" },
+                    },
+                  },
+                },
+              },
+              propertyTables: [
+                {
+                  name: "points",
+                  class: "point",
+                  count: count,
+                  properties: {
+                    intensity: { values: 1 },
+                    gpsTime: { values: 2 },
+                  },
+                },
+              ],
+            },
+          },
+        };
+      }
+
+      const customShader = new CustomShader({
+        vertexShaderText: `
+          void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+          {
+            vsOutput.pointSize = 16.0;
+          }
+        `,
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+          {
+            material.diffuse = (abs(fsInput.metadata.gpsTime - 42.5) < 0.01)
+              ? vec3(0.0, 1.0, 0.0)
+              : vec3(1.0, 0.0, 0.0);
+          }
+        `,
+      });
+
+      await loadAndZoomToModelAsync(
+        {
+          gltf: createPointCloudGltf(3, 42.5),
+          customShader: customShader,
+        },
+        scene,
+      );
+      scene.renderForSpecs();
+      const shadersAfterFirstModel = scene.context.shaderCache.numberOfShaders;
+
+      scene.primitives.removeAll();
+      await loadAndZoomToModelAsync(
+        {
+          gltf: createPointCloudGltf(7, 42.5),
+          customShader: customShader,
+        },
+        scene,
+      );
+
+      expect({
+        scene: scene,
+        time: defaultDate,
+      }).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(0);
+        expect(rgba[1]).toBeGreaterThan(200);
+        expect(rgba[2]).toEqual(0);
+      });
+      expect(scene.context.shaderCache.numberOfShaders).toBe(
+        shadersAfterFirstModel,
+      );
+    });
+
     it("renders model with morph targets", async function () {
       // This model gets clipped if log depth is disabled, so zoom out
       // the camera just a little
