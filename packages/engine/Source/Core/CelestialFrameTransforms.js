@@ -16,8 +16,6 @@ import Iau2006XysSample from "./Iau2006XysSample.js";
  * Contains functions for transforming positions to various reference frames.
  *
  * @namespace CelestialFrameTransforms
- *
- * @private
  */
 const CelestialFrameTransforms = {};
 
@@ -171,11 +169,15 @@ CelestialFrameTransforms.iau2006XysData = new Iau2006XysData();
  * between the Fixed and ICRF axes.  By default, zero values are used for all EOP values,
  * yielding a reasonable but not completely accurate representation of the ICRF axes.
  * @type {EarthOrientationParameters}
+ * @default EarthOrientationParameters.NONE
  *
+ * @example
+ * const eop = await Cesium.EarthOrientationParameters.fromUrl("Data/EOP.json");
+ * Cesium.CelestialFrameTransforms.earthOrientationParameters = eop;
+ *
+ * @see EarthOrientationParameters
  * @see CelestialFrameTransforms.computeIcrfToFixedMatrix
  * @see CelestialFrameTransforms.computeFixedToIcrfMatrix
- *
- * @private
  */
 CelestialFrameTransforms.earthOrientationParameters =
   EarthOrientationParameters.NONE;
@@ -196,7 +198,7 @@ const j2000ttDays = 2451545.0;
  *
  * @example
  * const interval = new Cesium.TimeInterval(...);
- * await Cesium.CelestialFrameTransforms.preloadIcrfFixed(interval));
+ * await Cesium.CelestialFrameTransforms.preloadIcrfFixed(interval);
  * // the data is now loaded
  *
  * @see CelestialFrameTransforms.computeIcrfToFixedMatrix

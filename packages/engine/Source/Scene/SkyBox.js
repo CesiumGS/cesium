@@ -31,7 +31,7 @@ import SceneMode from "./SceneMode.js";
  * });
  *
  * @see Scene#skyBox
- * @see Transforms.computeTemeToPseudoFixedMatrix
+ * @see CelestialFrameTransforms.computeTemeToPseudoFixedMatrix
  */
 function SkyBox(options) {
   this._sources = options.sources;

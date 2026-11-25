@@ -20,10 +20,16 @@ function getMoonDirection(result) {
   const date = viewer.clock.currentTime;
   if (
     !Cesium.defined(
-      Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed),
+      Cesium.CelestialFrameTransforms.computeIcrfToFixedMatrix(
+        date,
+        icrfToFixed,
+      ),
     )
   ) {
-    Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
+    Cesium.CelestialFrameTransforms.computeTemeToPseudoFixedMatrix(
+      date,
+      icrfToFixed,
+    );
   }
   const moonPosition =
     Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(

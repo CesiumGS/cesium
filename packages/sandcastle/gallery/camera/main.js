@@ -135,7 +135,8 @@ function icrf(scene, time) {
     return;
   }
 
-  const icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
+  const icrfToFixed =
+    Cesium.CelestialFrameTransforms.computeIcrfToFixedMatrix(time);
   if (Cesium.defined(icrfToFixed)) {
     const camera = viewer.camera;
     const offset = Cesium.Cartesian3.clone(camera.position);
