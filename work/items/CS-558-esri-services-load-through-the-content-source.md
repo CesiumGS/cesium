@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-16
 project: CS-191
-needs: [CS-552, CS-555, CS-557]
+needs: [CS-552, CS-555, CS-261, CS-1334]
 touches: [packages/next/src/**]
 tier_override: 1
 ---
@@ -27,3 +27,5 @@ In the design's order: map and tile services, feature services, I3S scene layers
 ## Note (2026-11-23)
 
 `docs/design/styling-runtime.md` (section 13): a feature service's fields bind as feature-rate inputs through its schema, and an elevation service becomes a provider of the terrain-height input. The scope here is unchanged.
+
+2026-11-24, from CS-258's plan (`docs/superpowers/plans/2026-11-24-vector-drawing.md`, section 4, on CS-258's branch until it merges): this item needs the vector path (CS-261) and vector draping (CS-1334) in place of CS-557; Esri feature services don't need MVT. (A chief-of-staff call, reversible: put CS-557 back if Esri's vector tile services are in this item's scope.)

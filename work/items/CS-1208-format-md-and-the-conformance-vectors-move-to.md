@@ -5,6 +5,7 @@ kind: work
 state: proposed
 created: 2026-11-23
 project: CS-10
+needs: [CS-1324]
 touches: [packages/core/src/ir/FORMAT.md, packages/core/test/**, test/**]
 ---
 
@@ -14,3 +15,5 @@ touches: [packages/core/src/ir/FORMAT.md, packages/core/test/**, test/**]
 
 - `FORMAT.md` and the conformance vectors live in the IR crate, and this repository keeps a pointer, not a copy.
 - 2.0 pins one version of the vectors and runs them in its tests; a version change is a deliberate commit.
+
+2026-11-24, from CS-258's plan (`docs/superpowers/plans/2026-11-24-vector-drawing.md`, section 4, on CS-258's branch until it merges): this item needs the runtime's workspace (CS-1324), where the IR crate lives.

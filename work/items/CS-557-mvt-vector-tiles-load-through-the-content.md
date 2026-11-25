@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-16
 project: CS-191
-needs: [CS-552, CS-554, CS-261]
+needs: [CS-552, CS-554, CS-261, CS-259, CS-1334]
 touches: [packages/next/src/**]
 tier_override: 1
 ---
@@ -25,3 +25,5 @@ Mapbox Vector Tiles (MVT) load as a source through the seam. Related: CS-261 (wi
 ## Note (2026-11-23)
 
 `docs/design/styling-runtime.md` (section 13). The owner decided the MapLibre question (CS-1169 A): MapLibre expressions now, as a front end lowering to Cesium IR (CS-1170), and whole style documents later (CS-1171). A label that straddles a tile edge appears once through the runtime's label placement, keyed by the feature's key (section 7, CS-1137).
+
+2026-11-24, from CS-258's plan (`docs/superpowers/plans/2026-11-24-vector-drawing.md`, section 4, on CS-258's branch until it merges): MVT styles draw labels and draped fills, so this item needs labels (CS-259) and vector draping (CS-1334).
