@@ -2,10 +2,14 @@
 id: CS-1276
 title: Merge CS-363, packaging for pages without a build step
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-199
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The three public names go to the API review."
+answered_at: 2026-11-25T02:57:07.392Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

@@ -2,10 +2,14 @@
 id: CS-616
 title: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
 kind: decision
-state: planned
+state: done
 created: 2026-11-17
 project: CS-615
 decider: owner
+answer: "`@cesium/core` and `@cesium/gltf`"
+answered_at: 2026-11-25T02:57:17.562Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -26,4 +30,4 @@ The owner, 2026-11-21: the StrataKit widgets package is `@cesium/ui`. Adapters t
 
 ## Answer
 
-Open.
+The owner, 2026-11-24, in the question tool: "Use @cesium/gltf too", with the description "2.0 also takes `@cesium/gltf` (1.x's is at 0.1.1), on the same two-version-line plan as `@cesium/core`." That option was offered beside the chief of staff's proposed answer: `cesium@2.0.0`, `@cesium/core` and fresh names for the rest (`@cesium/time`, `@cesium/frames`, `@cesium/crs`, `@cesium/crs-proj`, `@cesium/measure` and `@cesium/ui`, all unpublished on npm on 2026-11-24); never `@cesium/engine` or `@cesium/widgets`; adapter names later from CS-834's package map, reviewed with the API review. The owner is the 1.x team (CS-880), so the handover this option needs is given.

@@ -2,10 +2,14 @@
 id: CS-1266
 title: Merge CS-969, content workers bound what a file states
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. CS-145 (the fetch layer) can then start, and the follow-ups are filed."
+answered_at: 2026-11-25T02:56:42.806Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

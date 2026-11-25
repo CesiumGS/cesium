@@ -2,10 +2,14 @@
 id: CS-1219
 title: Merge CS-577, the subdivision spike
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-193
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The spike and its README are in the repository for the subdivision decision."
+answered_at: 2026-11-25T02:57:01.864Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

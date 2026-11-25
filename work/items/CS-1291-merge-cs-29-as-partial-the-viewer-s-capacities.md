@@ -2,10 +2,14 @@
 id: CS-1291
 title: Merge CS-29 as partial, the Viewer's capacities from the engine
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-8
 decider: owner
+answer: "A. A. Merge it as partial: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The item stays in progress for the default-look question."
+answered_at: 2026-11-25T02:57:10.026Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

@@ -2,10 +2,14 @@
 id: CS-1196
 title: Merge CS-955, the df64 route-center pass measured, with a CPU fallback
 kind: decision
-state: planned
+state: done
 created: 2026-11-23
 project: CS-10
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. CS-941 can then start."
+answered_at: 2026-11-25T02:56:50.424Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

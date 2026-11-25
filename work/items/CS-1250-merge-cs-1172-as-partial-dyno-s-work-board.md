@@ -2,10 +2,14 @@
 id: CS-1250
 title: Merge CS-1172 as partial, Dyno's Work board reads cheaply and pauses for measurements
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-389
 decider: owner
+answer: "A. A. Merge it as partial: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`. The item stays in progress until part 5's measurement, after CS-1179."
+answered_at: 2026-11-25T02:57:03.559Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

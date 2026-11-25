@@ -2,10 +2,14 @@
 id: CS-1210
 title: Merge CS-1117, the camera record carries a general projective transform
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes (dish-tracks compared with main), the orchestrator merges it with `merge-item.sh`. CS-218 can then start."
+answered_at: 2026-11-25T02:56:53.805Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

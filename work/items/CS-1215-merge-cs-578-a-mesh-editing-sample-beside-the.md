@@ -2,10 +2,14 @@
 id: CS-1215
 title: Merge CS-578, a mesh editing sample beside the CSG sample
 kind: decision
-state: planned
+state: done
 created: 2026-11-24
 project: CS-579
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with `merge-item.sh`."
+answered_at: 2026-11-25T02:56:59.740Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
