@@ -1,6 +1,11 @@
+// @ts-check
+
 import Check from "./Check.js";
 import DeveloperError from "./DeveloperError.js";
 import Spline from "./Spline.js";
+
+/** @import Cartesian3 from "./Cartesian3.js"; */
+/** @import Quaternion from "./Quaternion.js"; */
 
 /**
  * A spline that evaluates to a constant value. Although this follows the {@link Spline} interface,
