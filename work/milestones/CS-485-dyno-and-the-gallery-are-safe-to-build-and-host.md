@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-199
 outcome: "The dev server and bench suite have no open Snyk findings, share keys and ion tokens stay out of builds, and the built gallery runs from static hosting."
-constraints: [CS-358 c?, CS-359 c?, CS-360 c?, CS-413 c?, CS-544 c?]
+constraints: [CS-358 c?, CS-359 c?, CS-360 c?, CS-413 c?, CS-544 c?, CS-1127 c?]
 ---
 
 ## Done when
@@ -16,3 +16,5 @@ To shape: clauses (c1, c2…), each checkable, and the independent check.
 ## Notes
 
 Proposed on 2026-11-15 for items no milestone held, and applied on the owner's answer. Its 4 items are constraints marked `c?` until shaping links each to a clause.
+
+On 2026-11-24, CS-1127 joined: it was planned in no milestone, and alpha.1 already needs it through CS-359.
