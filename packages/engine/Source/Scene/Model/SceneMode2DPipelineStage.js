@@ -207,6 +207,41 @@ function dequantizePositionsTypedArray(typedArray, quantization) {
   return dequantizedArray;
 }
 
+function normalizeIntegerValue(value, typedArray) {
+  // Applies the glTF rules for normalized integers (KHR_mesh_quantization).
+  if (typedArray instanceof Int8Array) {
+    return Math.max(value / 127.0, -1.0);
+  }
+  if (typedArray instanceof Int16Array) {
+    return Math.max(value / 32767.0, -1.0);
+  }
+  if (typedArray instanceof Uint8Array) {
+    return value / 255.0;
+  }
+  return value / 65535.0;
+}
+
+function packPositionsTypedArray(attribute) {
+  // Positions stored with an integer component type (KHR_mesh_quantization)
+  // cannot hold projected coordinates. Convert them to tightly packed floats.
+  const typedArray = attribute.typedArray;
+  const normalized = attribute.normalized === true;
+
+  const count = attribute.count;
+  const packed = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    for (let j = 0; j < 3; j++) {
+      // The loader already delivers a tightly packed array, so the GPU
+      // byteOffset/byteStride must not be applied again.
+      const value = typedArray[i * 3 + j];
+      packed[i * 3 + j] = normalized
+        ? normalizeIntegerValue(value, typedArray)
+        : value;
+    }
+  }
+  return packed;
+}
+
 function createPositionsTypedArrayFor2D(
   attribute,
   modelMatrix,
@@ -220,15 +255,22 @@ function createPositionsTypedArrayFor2D(
       attribute.typedArray,
       attribute.quantization,
     );
-  } else {
+  } else if (attribute.typedArray instanceof Float32Array) {
     result = attribute.typedArray.slice();
+  } else {
+    result = packPositionsTypedArray(attribute);
   }
 
-  const startIndex = attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
+  // Converted (packed) arrays start at 0 and have no stride.
+  const isPacked = !(attribute.typedArray instanceof Float32Array);
+  const startIndex = isPacked
+    ? 0
+    : attribute.byteOffset / Float32Array.BYTES_PER_ELEMENT;
   const length = result.length;
-  const stride = defined(attribute.byteStride)
-    ? attribute.byteStride / Float32Array.BYTES_PER_ELEMENT
-    : 3;
+  const stride =
+    !isPacked && defined(attribute.byteStride)
+      ? attribute.byteStride / Float32Array.BYTES_PER_ELEMENT
+      : 3;
 
   for (let i = startIndex; i < length; i += stride) {
     const initialPosition = Cartesian3.fromArray(result, i, scratchPosition);
