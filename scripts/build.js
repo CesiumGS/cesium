@@ -2,7 +2,6 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { globSync, mkdirSync, rmSync } from "node:fs";
-import { EOL } from "node:os";
 import path from "node:path";
 
 import esbuild from "esbuild";
@@ -19,6 +18,7 @@ import {
   inlineWorkerPath,
   stripPragmaPlugin,
 } from "./build-utilities.js";
+import { readNeedsShimList } from "./readNeedsShimList.js";
 import { copyEngineAssets } from "../packages/engine/scripts/build.js";
 import { copyWidgetsAssets } from "../packages/widgets/scripts/build.js";
 
@@ -29,35 +29,50 @@ import { copyWidgetsAssets } from "../packages/widgets/scripts/build.js";
 const scope = "cesium";
 
 /**
- * Source and spec files, relative to each workspace directory, for each workspace bundled into the combined CesiumJS build.
- * @returns {Promise<{sourceFiles: Partial<Record<Workspace, string[]>>, specFiles: Partial<Record<Workspace, string[]>>}>}
+ * Spec files, relative to each workspace directory, for each workspace bundled into the combined CesiumJS build.
+ * @returns {Promise<{specFiles: Partial<Record<Workspace, string[]>>}>}
  */
 async function getCombinedWorkspaceFiles() {
   const directories = getWorkspaces(true);
 
   /** @type {Partial<Record<Workspace, string[]>>} */
-  const sourceFiles = {};
-  /** @type {Partial<Record<Workspace, string[]>>} */
   const specFiles = {};
   for (const directory of directories) {
-    // A workspace's build.js may export combinedSourceGlobs to use a different
-    // file set for the combined CesiumJS build than for its own package bundle.
-    const { sourceGlobs, combinedSourceGlobs, specGlobs } = await import(
+    const { specGlobs } = await import(
       `../packages/${directory}/scripts/build.js`
     );
-    const sourceGlobsForCombined = combinedSourceGlobs ?? sourceGlobs;
     const cwd = `packages/${directory}`;
-    sourceFiles[/** @type {Workspace} */ (directory)] = globSync(
-      sourceGlobsForCombined.patterns,
-      { cwd: cwd, exclude: sourceGlobsForCombined.exclude },
-    );
     specFiles[/** @type {Workspace} */ (directory)] = globSync(
       specGlobs.patterns,
       { cwd: cwd, exclude: specGlobs.exclude },
     );
   }
 
-  return { sourceFiles, specFiles };
+  return { specFiles };
+}
+
+/**
+ * Re-exports every published workspace. Names that @cesium/engine also exports as deprecated
+ * shims are re-exported explicitly from @cesium/core, since <code>export *</code> drops names
+ * that two modules export.
+ * @returns {string} The export statements.
+ */
+export function getCesiumReexports() {
+  let contents = "";
+  for (const workspace of getWorkspaces(true)) {
+    contents += `export * from "@${scope}/${workspace}";\n`;
+  }
+
+  const shimNames = readNeedsShimList(
+    "scripts/core-reexport-shim-candidates.txt",
+  );
+  contents += "export {\n";
+  for (const name of shimNames) {
+    contents += `  ${name},\n`;
+  }
+  contents += `} from "@${scope}/core";\n`;
+
+  return contents;
 }
 
 /**
@@ -175,46 +190,12 @@ export async function bundleCesiumJs(options) {
 }
 
 /**
- * Generates export declaration from a file from a workspace.
- *
- * @param {string} workspace The workspace the file belongs to.
- * @param {string} file The file.
- * @returns {string} The export declaration.
- */
-function generateDeclaration(workspace, file) {
-  let assignmentName = path.basename(file, path.extname(file));
-
-  let moduleId = file;
-  moduleId = filePathToModuleId(moduleId);
-
-  if (moduleId.indexOf("Source/Shaders") > -1) {
-    assignmentName = `_shaders${assignmentName}`;
-  }
-  assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-  return `export { ${assignmentName} } from '@${scope}/${workspace}';`;
-}
-
-/**
- * Creates a single entry point file, Cesium.js, which imports all individual modules exported from the Cesium API.
+ * Creates a single entry point file, Cesium.js, which re-exports every published workspace.
  * @returns {Promise<string>} contents
  */
 export async function createCesiumJs() {
   const version = await getVersion();
-  let contents = `export const VERSION = '${version}';\n`;
-
-  // Iterate over each workspace and generate declarations for each file.
-  const { sourceFiles } = await getCombinedWorkspaceFiles();
-  for (const workspace of Object.keys(sourceFiles)) {
-    const files = sourceFiles[/** @type {Workspace} */ (workspace)];
-    if (!files) {
-      continue;
-    }
-    const declarations = files.map((file) =>
-      generateDeclaration(workspace, file),
-    );
-    contents += declarations.join(`${EOL}`);
-    contents += "\n";
-  }
+  const contents = `export const VERSION = '${version}';\n${getCesiumReexports()}`;
   await writeFile("Source/Cesium.js", contents, { encoding: "utf-8" });
 
   return contents;

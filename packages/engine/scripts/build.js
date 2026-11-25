@@ -27,12 +27,6 @@ export const sourceGlobs = {
   ],
 };
 
-// Excludes Deprecated/ shims from the combined CesiumJS build, since @cesium/core already exports those same names.
-export const combinedSourceGlobs = {
-  patterns: sourceGlobs.patterns,
-  exclude: [...sourceGlobs.exclude, "Source/Core/Deprecated/**"],
-};
-
 export const specGlobs = { patterns: ["Specs/**/*Spec.js"] };
 
 /** Karma file patterns for runtime assets (workers, static assets, ThirdParty files, widget CSS). */

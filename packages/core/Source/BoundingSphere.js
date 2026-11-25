@@ -1038,14 +1038,14 @@ class BoundingSphere {
   }
 
   /**
-   * Determines which side of a plane a sphere is located.
+   * Determines which side of a plane a sphere is located:
+   * {@link Intersect.INSIDE} if the entire sphere is on the side the plane's normal points to,
+   * {@link Intersect.OUTSIDE} if the entire sphere is on the opposite side, or
+   * {@link Intersect.INTERSECTING} if the sphere intersects the plane.
    *
    * @param {BoundingSphere} sphere The bounding sphere to test.
    * @param {Plane} plane The plane to test against.
-   * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
-   *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
-   *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
-   *                      intersects the plane.
+   * @returns {Intersect} The side of the plane the sphere is on.
    */
   static intersectPlane(sphere, plane) {
     //>>includeStart('debug', pragmas.debug);
@@ -1350,13 +1350,13 @@ class BoundingSphere {
   }
 
   /**
-   * Determines which side of a plane the sphere is located.
+   * Determines which side of a plane the sphere is located:
+   * {@link Intersect.INSIDE} if the entire sphere is on the side the plane's normal points to,
+   * {@link Intersect.OUTSIDE} if the entire sphere is on the opposite side, or
+   * {@link Intersect.INTERSECTING} if the sphere intersects the plane.
    *
    * @param {Plane} plane The plane to test against.
-   * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
-   *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
-   *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
-   *                      intersects the plane.
+   * @returns {Intersect} The side of the plane the sphere is on.
    */
   intersectPlane(plane) {
     return BoundingSphere.intersectPlane(this, plane);

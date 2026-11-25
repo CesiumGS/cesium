@@ -55,14 +55,24 @@ export default defineConfig(({ command }) => {
     { src: join(__dirname, `${cesiumSource}/Workers`), dest: "" },
     { src: join(__dirname, `${cesiumSource}/Assets`), dest: "" },
     { src: join(__dirname, `${cesiumSource}/Widgets`), dest: "" },
-    { src: join(__dirname, `${cesiumSource}/*.(js|cjs)`), dest: "" },
+    { src: join(__dirname, `${cesiumSource}/*.{js,cjs}`), dest: "" },
     { src: join(__dirname, "../../Apps/SampleData"), dest: "" },
     {
       src: join(__dirname, "../../Apps/SampleData"),
       dest: "",
       rename: { stripBase: 1 },
     },
-    { src: join(__dirname, `../../Source/Cesium.(d.ts|js)`), dest: "" },
+    { src: join(__dirname, `../../Source/Cesium.{d.ts,js}`), dest: "" },
+    { src: join(__dirname, `../core/index.d.ts`), dest: "packages" },
+    {
+      src: join(__dirname, `../core/Build/Unminified/index.js`),
+      dest: "packages",
+    },
+    { src: join(__dirname, `../gltf/index.d.ts`), dest: "packages" },
+    {
+      src: join(__dirname, `../gltf/Build/Unminified/index.js`),
+      dest: "packages",
+    },
     { src: join(__dirname, `../engine/index.d.ts`), dest: "packages" },
     {
       src: join(__dirname, `../engine/Build/Unminified/index.js`),

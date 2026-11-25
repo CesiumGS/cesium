@@ -6,6 +6,7 @@ import {
   readFileSync,
   existsSync,
   globSync,
+  mkdirSync,
 } from "fs";
 import { readFile, rm, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
@@ -19,6 +20,7 @@ import karma from "karma";
 import yargs from "yargs";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
+import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
 
 import { buildCore } from "./packages/core/scripts/build.js";
 import { buildGltf } from "./packages/gltf/scripts/build.js";
@@ -36,6 +38,7 @@ import {
   buildCesium,
   bundleTestWorkers,
   createCombinedSpecList,
+  getCesiumReexports,
 } from "./scripts/build.js";
 import { readNeedsShimList } from "./scripts/readNeedsShimList.js";
 
@@ -317,8 +320,6 @@ export async function buildTs() {
       `packages/${directory}/tsd-conf.json`,
       // The engine package needs its own Viewer circular-dependency workaround.
       directory === "engine" ? processEngineSource : undefined,
-      // Add Math, which parseWorkspaceExports misses in core.
-      directory === "core" ? addMathExport : undefined,
       dependencyExports,
     );
     dependencyExports[directory] = workspaceExports;
@@ -1040,7 +1041,7 @@ export async function test() {
 /**
  * Fix the typescript definitions output to match what we need.
  *
- * - Change declare => export since we are wrapping everything in a namespace
+ * - Change declare => export so each declaration is exported
  * - Change CesiumMath => Math to help avoid conflicts with the native Math class
  * - Fix up the WebGLConstants aliasing by simply unquoting the strings.
 
@@ -1100,8 +1101,7 @@ function fixTypeScriptDefinitionsSource(source, includeKnockout) {
  * @param {string} workspaceName The workspace directory name, e.g. "core".
  * @param {string} definitionsPath The path of the .d.ts file to generate.
  * @param {string} configurationPath The path of the JSDoc configuration file that runs tsd-jsdoc for this workspace.
- * @param {function(string): string} [processSourceFunc] Transforms the generated source before its exports are collected. Receives the source and returns the new source.
- * @param {function(Set<string>): Set<string>} [processExportsFunc] Adjusts the collected export names, and returns the adjusted set.
+ * @param {function(string): string} [processSourceFunc] Transforms the source after fixTypeScriptDefinitionsSource, before its exports are collected. Receives the source and returns the new source.
  * @param {Object<string, Set<string>>} [dependencyExports] The export names of earlier workspaces, keyed by workspace directory name, used to generate this workspace's imports from them.
  * @returns {Promise<Set<string>>} The names this workspace exports.
  */
@@ -1110,7 +1110,6 @@ function generateWorkspaceTypeScriptDefinitions(
   definitionsPath,
   configurationPath,
   processSourceFunc,
-  processExportsFunc,
   dependencyExports,
 ) {
   // Run JSDoc with tsd-jsdoc to generate an initial definition file.
@@ -1120,18 +1119,14 @@ function generateWorkspaceTypeScriptDefinitions(
 
   let source = readFileSync(definitionsPath).toString();
 
+  source = fixTypeScriptDefinitionsSource(source, workspaceName === "widgets");
+
   if (processSourceFunc) {
     source = processSourceFunc(source);
   }
 
   // Collect the names this workspace exports, so that later workspaces can import them.
-  let workspaceExports = parseWorkspaceExports(source);
-
-  if (processExportsFunc) {
-    workspaceExports = processExportsFunc(workspaceExports);
-  }
-
-  source = fixTypeScriptDefinitionsSource(source, workspaceName === "widgets");
+  const workspaceExports = parseWorkspaceExports(source);
 
   if (dependencyExports) {
     let imports = "";
@@ -1148,13 +1143,6 @@ function generateWorkspaceTypeScriptDefinitions(
     });
     source = imports + source;
   }
-
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "@${scope}/${workspaceName}" {
-${source}
-}
-`;
 
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
@@ -1204,18 +1192,6 @@ function readWorkspaceExports(workspaceName) {
 }
 
 /**
- * @param {Set<string>} exportNames The names exported by the core workspace.
- * @returns {Set<string>} The same set, with "Math" added.
- */
-function addMathExport(exportNames) {
-  // Math.js documents CesiumMath with @exports and @alias Math, so tsd-jsdoc emits it
-  // as `declare module "Math"`, which parseWorkspaceExports doesn't match. Add the
-  // name directly so later workspaces can import it.
-  exportNames.add("Math");
-  return exportNames;
-}
-
-/**
  * @param {string} source The engine definitions source.
  * @returns {string} The source, with the Viewer and Transforms workarounds added.
  */
@@ -1233,17 +1209,19 @@ function processEngineSource(source) {
   `;
 
   // The @borrows tags in Transforms.js can't resolve FixedFrameTransforms from another package.
-  // Declare Transforms as the combined type.
-  const transformsNamespace =
-    /(\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*)?declare namespace Transforms \{/;
-  const transformsDoc = newSource.match(transformsNamespace)?.[1] ?? "";
+  // Copy its members from core's declarations into the Transforms namespace.
+  const fixedFrameMembers = readFileSync("packages/core/index.d.ts")
+    .toString()
+    .match(/^export namespace FixedFrameTransforms \{\n([\s\S]*?)^\}$/m)?.[1];
+  if (!fixedFrameMembers) {
+    throw new Error(
+      "Could not find the FixedFrameTransforms namespace in packages/core/index.d.ts",
+    );
+  }
   newSource = newSource.replace(
-    transformsNamespace,
-    "declare namespace _CelestialFrameTransforms {",
+    "export namespace Transforms {\n",
+    `export namespace Transforms {\n${fixedFrameMembers}`,
   );
-  newSource += `
-${transformsDoc}declare const Transforms: typeof FixedFrameTransforms & typeof _CelestialFrameTransforms;
-`;
 
   // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
   // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
@@ -1268,30 +1246,50 @@ ${transformsDoc}declare const Transforms: typeof FixedFrameTransforms & typeof _
 }
 
 function generateCesiumTypeScriptDefinitions() {
-  // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
-  // @internal symbols must stay out of the combined "cesium" package's API.
-  execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
-    stdio: "inherit",
-    env: { ...process.env, CESIUM_HIDE_INTERNAL: "true" },
-  });
+  // Engine's Viewer type stand-in collides with widgets' Viewer under export *,
+  // which drops names exported by two modules, so name widgets' Viewer explicitly.
+  mkdirSync("Build/Types", { recursive: true });
+  writeFileSync(
+    "Build/Types/Cesium.entry.d.ts",
+    `${getCesiumReexports()}export { Viewer } from "@${scope}/widgets";\n`,
+  );
 
+  const extractorResult = Extractor.invoke(
+    ExtractorConfig.loadFileAndPrepare("api-extractor.json"),
+    { localBuild: true },
+  );
+  if (!extractorResult.succeeded) {
+    throw new Error(
+      `API Extractor failed with ${extractorResult.errorCount} errors and ${extractorResult.warningCount} warnings`,
+    );
+  }
+
+  // API Extractor adds a _2 suffix to declarations whose names match a global, such as
+  // DOM's Event, and exports them as `export { Event_2 as Event }`. Restore the names
+  // so hovers and error messages show them, unless the file refers to the global too.
   let source = readFileSync("Source/Cesium.d.ts").toString();
-
-  source = fixTypeScriptDefinitionsSource(source, true);
-
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "cesium" {
-${source}
-}
-
-`;
-
-  // Write the final source file back out
+  const renamedExports = Array.from(
+    source.matchAll(/^export \{ (\w+)_2 as \1 \};?$/gm),
+  );
+  const codeLines = source
+    .split("\n")
+    .filter((line) => !/^\s*(\*|\/\*\*|\/\/)/.test(line));
+  for (const [exportLine, name] of renamedExports) {
+    const reference = new RegExp(`(^|[^\\w.$])${name}\\b`);
+    const otherReference = codeLines.find(
+      (line) => line !== exportLine && reference.test(line),
+    );
+    if (otherReference) {
+      throw new Error(
+        `Cannot restore the name ${name} in Source/Cesium.d.ts, which also refers to the global ${name}: ${otherReference}`,
+      );
+    }
+    source = source.replace(new RegExp(`\\b${name}_2\\b`, "g"), name);
+  }
   writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+  execSync("npx tsc -p tsconfig.types.json", {
     stdio: "inherit",
   });
 

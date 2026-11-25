@@ -69,7 +69,7 @@ KmlTourFlyTo.prototype.stop = function () {
  * depends on this.view type.
  *
  * @param {object} cameraOptions options to merge with generated. See {@link Camera#flyTo}
- * @returns {object} {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere} options
+ * @returns {object} The camera options.
  */
 KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
   let options = {

@@ -12,6 +12,7 @@
   "plugins": [
     "./Tools/jsdoc/cesiumTags",
     "./Tools/jsdoc/ignoreLocalDoclets",
+    "./Tools/jsdoc/keepInternalTag",
     "tsd-jsdoc/dist/plugin"
   ],
   "templates": {

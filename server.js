@@ -18,14 +18,10 @@ import {
   createIndexJs,
   getWorkspaces,
 } from "./scripts/build-utilities.js";
-import {
-  createCesiumJs,
-  createCombinedSpecList,
-  buildCesium,
-} from "./scripts/build.js";
+import { createCombinedSpecList, buildCesium } from "./scripts/build.js";
 
 /** @import {BuildContext} from "esbuild"; */
-/** @import {CesiumBundles, Workspace} from "./scripts/build-utilities.js"; */
+/** @import {CesiumBundles, FileGlobs, Workspace} from "./scripts/build-utilities.js"; */
 
 const argv = await yargs(process.argv)
   .options({
@@ -77,7 +73,7 @@ function formatTimeSinceInSeconds(start) {
  * @property {BuildContext} specs
  * @property {BuildContext} testWorkers
  * @property {Record<string, CesiumBundles>} packages Bundles for each published workspace package, keyed by workspace name.
- * @property {Record<string, string[]>} packageSourceGlobs Each published workspace's Source globs, keyed by workspace name.
+ * @property {Record<string, FileGlobs>} packageSourceGlobs Each published workspace's Source globs, keyed by workspace name.
  */
 
 /**
@@ -92,7 +88,7 @@ async function generateDevelopmentBuild() {
 
   /** @type {Record<string, CesiumBundles>} */
   const packageContexts = {};
-  /** @type {Record<string, string[]>} */
+  /** @type {Record<string, FileGlobs>} */
   const packageSourceGlobs = {};
   for (let i = 0; i < workspaces.length; i++) {
     const workspace = workspaces[i];
@@ -356,7 +352,6 @@ const throttle = (callback) => {
           /** @type {Workspace} */ (workspace),
           contexts.packageSourceGlobs[workspace],
         );
-        await createCesiumJs();
       });
     }
 
