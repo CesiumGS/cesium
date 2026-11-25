@@ -6,7 +6,7 @@ import Sandcastle from "Sandcastle";
 // Generate a share key for access to an iTwin without OAuth
 // https://developer.bentley.com/apis/access-control-v2/operations/create-itwin-share/
 Cesium.ITwinPlatform.defaultShareKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiMDRiYTcyNWYtZjNjMC00ZjMwLTgwMTQtYTQ0ODhjYmQ2MTJkIiwiaWQiOiJkNzBiNWJmZi05ZTk0LTQzMzctYTZhZi05MjA1MWUwNDRhMGYiLCJleHAiOjE3OTg3ODAzMjR9.UhAMzHh1zlE6fjAPXISizai4L8FKjM2PcVMaExuWUvQ";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpVHdpbklkIjoiMDRiYTcyNWYtZjNjMC00ZjMwLTgwMTQtYTQ0ODhjYmQ2MTJkIiwiaWQiOiIwYWJmMTE5NC03N2RlLTRhZjUtOWU4OC00ODk5ZWNkN2Q5MDciLCJleHAiOjE4MDE0NTg1NTF9.5pl649B1rpYUIhffLT3R7pXR00D-7RIIe0uNho_bVnY";
 
 // For alternative forms of authentication you can use, visit https://developer.bentley.com/apis/overview/authorization/. Then set your access token like this:
 // Cesium.ITwinPlatform.defaultAccessToken = 'your token'
