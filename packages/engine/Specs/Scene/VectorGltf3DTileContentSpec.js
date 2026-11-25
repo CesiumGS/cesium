@@ -18,6 +18,7 @@ import {
   BufferPolygonMaterial,
   Cesium3DTileStyle,
   Cesium3DTileVectorFeature,
+  CircleSymbolizer,
   FeatureLayer,
   GeographicTilingScheme,
   HeightReference,
@@ -25,6 +26,8 @@ import {
   SceneMode,
   VectorGltf3DTileContent,
   VectorProvider,
+  VectorStyle,
+  VectorStyleRule,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createContext from "../../../../Specs/createContext.js";
@@ -347,6 +350,124 @@ describe("Scene/VectorGltf3DTileContent", () => {
     roadsLayer.show = true;
     content.update(tileset, frameState);
     expect(roadsUpdate).toHaveBeenCalled();
+  });
+
+  it("update draws collections of a compiled feature layer with the style", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const points = createBufferPointCollection();
+    const layer = new FeatureLayer({ name: "poi" });
+    content._collections = [points];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+    content._collectionFeatureLayers = new Map([[points, layer]]);
+    const style = new VectorStyle({
+      rules: [new VectorStyleRule({ symbolizers: [new CircleSymbolizer()] })],
+    });
+    const group = style.compile(layer);
+    const pointsUpdate = spyOn(points, "update");
+
+    content.update(tileset, { mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(pointsUpdate).not.toHaveBeenCalled();
+    const primitives = content._styledPrimitives.get(group).get(points);
+    expect(primitives.flatten().length).toBe(1);
+    expect(primitives.flatten()[0].collection).toBe(points);
+
+    group.destroy();
+    content.destroy();
+  });
+
+  it("update keeps the default appearance of collections no symbolizer applies to", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const lines = createBufferPolylineCollection();
+    const layer = new FeatureLayer({ name: "roads" });
+    content._collections = [lines];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+    content._collectionFeatureLayers = new Map([[lines, layer]]);
+    const style = new VectorStyle({
+      rules: [new VectorStyleRule({ symbolizers: [new CircleSymbolizer()] })],
+    });
+    const group = style.compile(layer);
+    const linesUpdate = spyOn(lines, "update");
+
+    content.update(tileset, { mode: SceneMode.SCENE3D, passes: {} });
+
+    expect(linesUpdate).toHaveBeenCalled();
+
+    group.destroy();
+    content.destroy();
+  });
+
+  it("update restores the default appearance after the compiled group is destroyed", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const points = createBufferPointCollection();
+    const layer = new FeatureLayer({ name: "poi" });
+    content._collections = [points];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+    content._collectionFeatureLayers = new Map([[points, layer]]);
+    const style = new VectorStyle({
+      rules: [new VectorStyleRule({ symbolizers: [new CircleSymbolizer()] })],
+    });
+    const group = style.compile(layer);
+    const frameState = { mode: SceneMode.SCENE3D, passes: {} };
+    content.update(tileset, frameState);
+    const primitive = content._styledPrimitives
+      .get(group)
+      .get(points)
+      .flatten()[0];
+    const pointsUpdate = spyOn(points, "update");
+
+    group.destroy();
+
+    expect(primitive.isDestroyed()).toBe(true);
+    expect(content._styledPrimitives.size).toBe(0);
+
+    content.update(tileset, frameState);
+
+    expect(pointsUpdate).toHaveBeenCalled();
+
+    content.destroy();
+  });
+
+  it("destroys the primitives of compiled groups", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const points = createBufferPointCollection();
+    const layer = new FeatureLayer({ name: "poi" });
+    content._collections = [points];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+    content._collectionFeatureLayers = new Map([[points, layer]]);
+    const style = new VectorStyle({
+      rules: [new VectorStyleRule({ symbolizers: [new CircleSymbolizer()] })],
+    });
+    const group = style.compile(layer);
+    content.update(tileset, { mode: SceneMode.SCENE3D, passes: {} });
+    const primitive = content._styledPrimitives
+      .get(group)
+      .get(points)
+      .flatten()[0];
+
+    content.destroy();
+
+    expect(primitive.isDestroyed()).toBe(true);
+    expect(group.isDestroyed()).toBe(false);
+    expect(group._contents.has(content)).toBe(false);
+
+    group.destroy();
   });
 
   it("gives features the feature layer of their collection", () => {

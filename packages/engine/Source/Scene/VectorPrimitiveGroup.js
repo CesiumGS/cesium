@@ -3,7 +3,12 @@
 import { destroyObject } from "@cesium/core";
 import VectorPrimitive from "./VectorPrimitive.js";
 
+/** @import BufferPrimitive from "./BufferPrimitive.js"; */
+/** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 /** @import FrameState from "./FrameState.js"; */
+/** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
+/** @import VectorStyle from "./VectorStyle.js"; */
 
 /**
  * @typedef {object} VectorPrimitiveGroupOptions
@@ -50,6 +55,35 @@ class VectorPrimitiveGroup {
      * @default true
      */
     this.show = options.show ?? true;
+
+    /**
+     * The style that tile contents draw the feature layer with, for a group
+     * returned by {@link VectorStyle#compile}.
+     * @type {VectorStyle|undefined}
+     * @ignore
+     */
+    this._style = undefined;
+
+    /**
+     * The feature layer of a group returned by {@link VectorStyle#compile}.
+     * @type {FeatureLayer|undefined}
+     * @ignore
+     */
+    this._featureLayer = undefined;
+
+    /**
+     * Collections owned by the group and destroyed with it.
+     * @type {Array<BufferPrimitiveCollection<BufferPrimitive>>}
+     * @ignore
+     */
+    this._collections = [];
+
+    /**
+     * Tile contents holding primitives for the group, released when it is destroyed.
+     * @type {Set<VectorGltf3DTileContent>}
+     * @ignore
+     */
+    this._contents = new Set();
   }
 
   /**
@@ -118,7 +152,7 @@ class VectorPrimitiveGroup {
    * @ignore
    */
   update(frameState) {
-    if (!this.show) {
+    if (!this.show || this._featureLayer?.show === false) {
       return;
     }
 
@@ -140,10 +174,19 @@ class VectorPrimitiveGroup {
    * Destroys the members of the group.
    */
   destroy() {
+    this._featureLayer?._vectorPrimitiveGroups.delete(this);
+    for (const content of this._contents) {
+      content._removeStyledPrimitives(this);
+    }
+    this._contents.clear();
     for (const primitive of this._primitives) {
       primitive.destroy();
     }
     this._primitives.length = 0;
+    for (const collection of this._collections) {
+      collection.destroy();
+    }
+    this._collections.length = 0;
     return destroyObject(this);
   }
 }
