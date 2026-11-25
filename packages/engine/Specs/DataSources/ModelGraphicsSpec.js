@@ -396,6 +396,22 @@ describe("DataSources/ModelGraphics", function () {
     expect(result.articulations).toEqual(source.articulations);
   });
 
+  it("clone with result parameter works", function () {
+    const source = new ModelGraphics();
+    source.uri = new ConstantProperty("");
+    source.shadows = new ConstantProperty(ShadowMode.DISABLED);
+    source.heightReference = new ConstantProperty(
+      HeightReference.CLAMP_TO_GROUND,
+    );
+
+    const result = new ModelGraphics();
+    const returnedResult = source.clone(result);
+    expect(returnedResult).toBe(result);
+    expect(result.uri).toBe(source.uri);
+    expect(result.shadows).toBe(source.shadows);
+    expect(result.heightReference).toBe(source.heightReference);
+  });
+
   it("merge throws if source undefined", function () {
     const target = new ModelGraphics();
     expect(function () {
