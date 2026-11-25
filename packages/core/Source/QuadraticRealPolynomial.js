@@ -1,3 +1,5 @@
+// @ts-check
+
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 
@@ -33,6 +35,13 @@ QuadraticRealPolynomial.computeDiscriminant = function (a, b, c) {
   return discriminant;
 };
 
+/**
+ * @param {number} left
+ * @param {number} right
+ * @param {number} tolerance
+ * @returns {number}
+ * @private
+ */
 function addWithCancellationCheck(left, right, tolerance) {
   const difference = left + right;
   if (

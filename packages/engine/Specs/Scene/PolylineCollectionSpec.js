@@ -1,10 +1,13 @@
 import {
   BoundingSphere,
   Cartesian3,
+  Cartesian4,
   Color,
   DistanceDisplayCondition,
+  EncodedCartesian3,
   HeadingPitchRange,
   Math as CesiumMath,
+  Matrix3,
   Matrix4,
 } from "@cesium/core";
 import {
@@ -1615,6 +1618,145 @@ describe(
         polylines.modelMatrix,
       );
       expect(scene).notToRender([0, 0, 0, 255]);
+    });
+
+    it("does not recreate vertex arrays when only the model matrix changes in 3D", function () {
+      const line = polylines.add({
+        positions: [
+          new Cartesian3(0.0, 0.0, 0.0),
+          new Cartesian3(0.0, 1.0, 0.0),
+        ],
+      });
+      scene.primitives.add(polylines);
+      scene.renderForSpecs();
+      const vertexArray = polylines._vertexArrays[0].va;
+
+      polylines.modelMatrix = Matrix4.fromTranslation(
+        new Cartesian3(1000.0, 2000.0, 3000.0),
+      );
+      scene.renderForSpecs();
+
+      expect(polylines._vertexArrays[0].va).toBe(vertexArray);
+      const expected = BoundingSphere.transform(
+        line._boundingVolume,
+        polylines.modelMatrix,
+        new BoundingSphere(),
+      );
+      expect(line._boundingVolumeWC).toEqual(expected);
+      expect(scene.frameState.commandList[0].boundingVolume).toEqual(expected);
+    });
+
+    it("updates distance display condition centers when the model matrix changes in 3D", function () {
+      const line = polylines.add({
+        positions: [
+          new Cartesian3(0.0, -10.0, 0.0),
+          new Cartesian3(0.0, 10.0, 0.0),
+        ],
+        distanceDisplayCondition: new DistanceDisplayCondition(0.0, 1000.0),
+      });
+      scene.primitives.add(polylines);
+      scene.renderForSpecs();
+
+      polylines.modelMatrix = Matrix4.fromTranslation(
+        new Cartesian3(1.0e6, 2.0e6, 3.0e6),
+      );
+      scene.renderForSpecs();
+
+      const encoded = EncodedCartesian3.fromCartesian(
+        line._boundingVolumeWC.center,
+      );
+      const batchTable = polylines._batchTable;
+      expect(
+        batchTable.getBatchedAttribute(line._index, 2, new Cartesian3()),
+      ).toEqual(encoded.high);
+      const lowAndRadius = batchTable.getBatchedAttribute(
+        line._index,
+        3,
+        new Cartesian4(),
+      );
+      expect(Cartesian3.fromCartesian4(lowAndRadius)).toEqualEpsilon(
+        encoded.low,
+        CesiumMath.EPSILON7,
+      );
+      expect(lowAndRadius.w).toEqualEpsilon(
+        line._boundingVolumeWC.radius,
+        CesiumMath.EPSILON7,
+      );
+    });
+
+    it("recreates vertex arrays when the model matrix changes in 2D", function () {
+      scene.mode = SceneMode.SCENE2D;
+      polylines.add({
+        positions: Cartesian3.fromDegreesArray([-50.0, -50.0, 50.0, -50.0]),
+      });
+      scene.primitives.add(polylines);
+      scene.renderForSpecs();
+      const vertexArray = polylines._vertexArrays[0].va;
+
+      polylines.modelMatrix = Matrix4.fromUniformScale(2.0);
+      scene.renderForSpecs();
+
+      expect(polylines._vertexArrays[0].va).not.toBe(vertexArray);
+    });
+
+    it("recreates vertex arrays when switching modes after a model matrix change in 3D", function () {
+      const line = polylines.add({
+        positions: Cartesian3.fromDegreesArray([-50.0, -50.0, 50.0, -50.0]),
+      });
+      scene.primitives.add(polylines);
+      scene.renderForSpecs();
+
+      polylines.modelMatrix = Matrix4.fromUniformScale(2.0);
+      scene.renderForSpecs();
+      const vertexArray = polylines._vertexArrays[0].va;
+
+      scene.mode = SceneMode.SCENE2D;
+      scene.renderForSpecs();
+
+      expect(polylines._vertexArrays[0].va).not.toBe(vertexArray);
+      expect(line._modelMatrix).toEqual(polylines.modelMatrix);
+    });
+
+    it("does not recreate vertex arrays in 3D when wrapped segments change but the number of positions does not", function () {
+      const positions = Cartesian3.fromDegreesArray([170.0, 0.0, -170.0, 0.0]);
+      const line = polylines.add({ positions: positions });
+      scene.primitives.add(polylines);
+      scene.renderForSpecs();
+      // The first position update switches the buffer to stream usage, which recreates the vertex arrays once.
+      line.positions = positions.slice();
+      scene.renderForSpecs();
+      const segmentCount = line._segments.lengths.length;
+      const vertexArray = polylines._vertexArrays[0].va;
+
+      polylines.modelMatrix = Matrix4.fromRotation(
+        Matrix3.fromRotationZ(CesiumMath.PI),
+      );
+      line.positions = positions.slice();
+      scene.renderForSpecs();
+
+      expect(line._segments.lengths.length).not.toEqual(segmentCount);
+      expect(polylines._vertexArrays[0].va).toBe(vertexArray);
+    });
+
+    it("recreates vertex arrays in 2D when wrapped segments change", function () {
+      scene.mode = SceneMode.SCENE2D;
+      const positions = Cartesian3.fromDegreesArray([170.0, 0.0, -170.0, 0.0]);
+      const line = polylines.add({ positions: positions });
+      scene.primitives.add(polylines);
+      scene.renderForSpecs();
+      line.positions = positions.slice();
+      scene.renderForSpecs();
+      const segmentCount = line._segments.lengths.length;
+      const vertexArray = polylines._vertexArrays[0].va;
+
+      polylines.modelMatrix = Matrix4.fromRotation(
+        Matrix3.fromRotationZ(CesiumMath.PI),
+      );
+      line.positions = positions.slice();
+      scene.renderForSpecs();
+
+      expect(line._segments.lengths.length).not.toEqual(segmentCount);
+      expect(polylines._vertexArrays[0].va).not.toBe(vertexArray);
     });
 
     it("is picked", function () {
