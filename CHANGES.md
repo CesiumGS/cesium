@@ -25,7 +25,7 @@
 - Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
 - Added experimental `VectorStyle`, `VectorStyleRule`, and `CircleSymbolizer` for styling vector data with rules written in the 3D Tiles Styling language. [#14058](https://github.com/CesiumGS/cesium/pull/14058)
-- Added experimental `SymbologyLayer`, `SymbologyLayerCollection`, and `VectorPrimitiveGroup`. A `VectorStyleRule` draws its features with one or more symbology layers, ordered across the style by `SymbologyLayer.zIndex`, and `VectorStyle.createPrimitives` returns a `VectorPrimitiveGroup`.
+- Added experimental `SymbologyLayer`, `SymbologyLayerCollection`, and `VectorPrimitiveGroup`. A `VectorStyleRule` draws its features with one or more symbology layers, ordered across the style by `SymbologyLayer.zIndex`, and `VectorStyle.createPrimitives` returns a `VectorPrimitiveGroup`. [#14120](https://github.com/CesiumGS/cesium/pull/14120)
 
 #### Fixes :wrench:
 
