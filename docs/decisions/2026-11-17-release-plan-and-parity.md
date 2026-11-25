@@ -108,3 +108,13 @@ As human-in-the-lead matures, its own evals help along the way.
 ## Amendment (2026-11-22)
 
 The owner kept the harness milestones, the spike and the sample as alpha.1 gates (CS-953 A): CS-506, CS-519, CS-561, CS-751, CS-722, CS-857 and CS-858. alpha.1 waits on them, alongside the milestones approved on 2026-11-17.
+
+## Amendment (2026-11-24)
+
+The owner, on 2026-11-24: "the beta is for fixing bugs, feature complete should be through the alpha releases." Vector drawing may land in any alpha, but not in beta.1. This replaces the ladder above where they differ, and records the alpha series the owner chose on 2026-11-23 (CS-1157 A).
+
+- **alpha.1 to alpha.5** (CS-530, CS-1163 to CS-1166) carry every feature, the experimental modules among them. Each alpha needs nothing from a later one. Which milestone goes in which alpha is the chief of staff's call, and cheap to change.
+- **beta.1** (CS-531) adds no features. It needs the last alpha, the final API review and freeze (CS-1167), the follow-ups for other teams (CS-505), and the fixes the alphas turn up (CS-1162). After it, the API changes only through a review the owner approves.
+- **Between beta.1 and 2.0.0:** fixes, performance tuning, the trust and evals track, the Sandcastle migration, the docs and outside validation, as above.
+- The beta.1 bullet above, and "a module that arrives after beta.1 ships in the experimental tier", no longer hold. An experimental module still ships in the experimental tier, but it arrives in an alpha.
+- So that the tracker matches: WebGL 2 parity (CS-416), the experimental modules (CS-674), physics representations (CS-676) and GPU rays (CS-535) moved from rc.1 and 2.0.0 into alpha.5 (CS-1166). Vector drawing (CS-499) is in alpha.3 (CS-1164). MVT tiles (CS-557) stay in alpha.1, drawn without labels; labels come with CS-499.

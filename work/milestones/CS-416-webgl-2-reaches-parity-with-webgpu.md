@@ -22,3 +22,5 @@ Renamed on 2026-11-14 from "Parity steps" to its outcome, since HITLd names mile
 CS-46 joined this milestone on 2026-11-15, on the owner's answer: the probe runs need the test devices it asks about.
 
 CS-39 (styles and warps through Cesium IR) moved to CS-417 on 2026-11-18 (owner, 2026-11-18, fixing the release crossings CS-685 found): beta.1 needs it through live shader swaps.
+
+Moved to alpha.5 (CS-1166) from rc.1 on 2026-11-24, after the owner, 2026-11-24: "the beta is for fixing bugs, feature complete should be through the alpha releases" (`docs/decisions/2026-11-17-release-plan-and-parity.md`, amendment of 2026-11-24). The alpha it lands in is the chief of staff's call, and cheap to change.

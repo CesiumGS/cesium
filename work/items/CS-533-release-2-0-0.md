@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-529, CS-532, CS-608, CS-678, CS-428, CS-429, CS-477, CS-496, CS-674, CS-676, CS-535]
+needs: [CS-529, CS-532, CS-608, CS-678, CS-428, CS-429, CS-477, CS-496]
 release: 2.0.0
 ---
 
@@ -26,3 +26,5 @@ CS-495 (USD B-reps stream as 3D Tiles), CS-496 (the CSG sample edits locally) an
 CS-676 (geometry has physics representations), CS-534 (infrastructure and geoscience data shows in 2.0, committed from proposed) and CS-535 (rays query the scene on the GPU, committed from proposed) joined on 2026-11-21, in the same sweep. The owner chose 2.0.0 over a later release for all three.
 
 CS-495 and CS-534 moved to beta.1 on 2026-11-21, with six other milestones that change or add public API (see CS-531).
+
+CS-674, CS-676 and CS-535 moved to alpha.5 on 2026-11-24, after the owner, 2026-11-24: "the beta is for fixing bugs, feature complete should be through the alpha releases" (`docs/decisions/2026-11-17-release-plan-and-parity.md`, amendment of 2026-11-24). The showcases (CS-428, CS-429, CS-477, CS-496) stay here, on the owner's word of 2026-11-21.

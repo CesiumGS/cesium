@@ -30,3 +30,5 @@ CS-830 (2.0's examples show its seams in use) joined on 2026-11-21, on the owner
 CS-657 moved to alpha.1 on 2026-11-21.
 
 On 2026-11-23 the owner chose a series of alphas (CS-1157 A): beta.1's feature milestones moved into alpha.2 to alpha.5, and beta.1 became the feature and API freeze. It needs the last alpha, the final API review and freeze (CS-1167; the first review, CS-420 and CS-457, moved to alpha.2, since worker mode builds on it), the follow-ups for other teams (CS-505), and the fixes the alphas turn up (CS-1162). Its loose work items joined milestones.
+
+On 2026-11-24, the owner, 2026-11-24: "the beta is for fixing bugs, feature complete should be through the alpha releases" (`docs/decisions/2026-11-17-release-plan-and-parity.md`, amendment of 2026-11-24). beta.1 adds no features: no feature milestone may join its needs. A feature found missing goes into an alpha.
