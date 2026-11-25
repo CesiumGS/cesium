@@ -9,6 +9,7 @@
     "extensions": {
         "EXT_structural_metadata": {
             "schema": {
+                "id": "BoxTexturedWithPropertyAttributesSchemaId",
                 "classes": {
                     "warpedBox": {
                         "properties": {

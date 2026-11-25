@@ -2,6 +2,7 @@
   "extensions": {
     "EXT_structural_metadata": {
       "schema": {
+        "id": "SimplePropertyTextureSchemaId",
         "classes": {
           "buildingComponents": {
             "name": "Building properties",

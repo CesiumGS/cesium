@@ -136,6 +136,7 @@ export default [
   },
   {
     // The core rule reports parameter names in function types as unused.
+    // The core rule also reports interfaces and namespaces that share a name.
     files: ["packages/gltf/**/*.ts"],
     rules: {
       "no-unused-vars": "off",
@@ -143,6 +144,8 @@ export default [
         "error",
         { vars: "all", args: "none", caughtErrors: "none" },
       ],
+      "no-redeclare": "off",
+      "@typescript-eslint/no-redeclare": "error",
     },
   },
   {

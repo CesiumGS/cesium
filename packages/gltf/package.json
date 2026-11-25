@@ -33,6 +33,8 @@
     "build": "gulp build --workspace @cesium/gltf",
     "build-ts": "node scripts/buildTs.js",
     "coverage": "gulp coverage --workspace @cesium/gltf",
+    "download-schemas": "node scripts/downloadGltfSchemas.js",
+    "generate-types": "node scripts/generateGltfTypes.js",
     "tsc": "gulp tsc --workspace @cesium/gltf",
     "test": "gulp test --workspace @cesium/gltf",
     "postversion": "gulp postversion --workspace @cesium/gltf"

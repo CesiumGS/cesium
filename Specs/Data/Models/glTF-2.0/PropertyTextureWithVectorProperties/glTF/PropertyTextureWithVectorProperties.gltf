@@ -2,6 +2,7 @@
   "extensions": {
     "EXT_structural_metadata": {
       "schema": {
+        "id": "PropertyTextureWithVectorPropertiesSchemaId",
         "classes": {
           "test": {
             "name": "Test Cases",
