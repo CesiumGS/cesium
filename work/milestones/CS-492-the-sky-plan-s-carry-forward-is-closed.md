@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-192
 outcome: "The sky and observer plan's carried-forward items are done, East Antarctica draws as land from far out, and emission layers no longer halve what the exact lists hold."
-constraints: [CS-283 c?, CS-284 c?, CS-442 c?, CS-296 c?]
+constraints: [CS-283 c?, CS-284 c?, CS-442 c?]
 ---
 
 ## Done when
@@ -17,4 +17,4 @@ To shape: clauses (c1, c2…), each checkable, and the independent check.
 
 Proposed on 2026-11-15 for items no milestone held, and applied on the owner's answer. Its 3 items are constraints marked `c?` until shaping links each to a clause.
 
-On 2026-11-24, CS-296 joined. It was planned outside every release, and the owner asked that no planned work sit outside the release chain.
+On 2026-11-24, CS-296 joined, then moved to CS-535 the same day at the owner's word.

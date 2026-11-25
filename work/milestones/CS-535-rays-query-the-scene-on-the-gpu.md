@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-197
 outcome: Rays query the scene on the GPU, from user code too, for a viewshed, a near-field terrain trace and a progressive path-traced view.
-constraints: [CS-344 c?, CS-345 c?, CS-346 c?, CS-347 c?, CS-348 c?, CS-349 c?, CS-1125 c?, CS-351 c?]
+constraints: [CS-344 c?, CS-345 c?, CS-346 c?, CS-347 c?, CS-348 c?, CS-349 c?, CS-1125 c?, CS-351 c?, CS-296 c?]
 ---
 
 ## Notes
@@ -16,3 +16,7 @@ Proposed on 2026-11-15 so that the long outcome CS-1 reaches this project again:
 Moved to alpha.5 (CS-1166) from 2.0.0 on 2026-11-24, after the owner, 2026-11-24: "the beta is for fixing bugs, feature complete should be through the alpha releases" (`docs/decisions/2026-11-17-release-plan-and-parity.md`, amendment of 2026-11-24). The alpha it lands in is the chief of staff's call, and cheap to change.
 
 On 2026-11-24, CS-1125 and CS-351 joined. They were planned outside every release, and the owner asked that no planned work sit outside the release chain.
+
+## Note (2026-11-24, CS-296)
+
+CS-296 (black hole visualization: how much physics, engine feature or gallery example) moved here from CS-492 at the owner's word: the ray-marching pass its note recommends lives with the ray work.
