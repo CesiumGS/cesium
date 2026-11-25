@@ -826,18 +826,26 @@ function getStepAnchor(intervalStart, availability) {
 // which portion of the path is visible.
 function addStepSplitTimes(stepStart, rangeStart, rangeStop, step, splitTimes) {
   const offset = JulianDate.secondsDifference(rangeStart, stepStart);
+  let previousSplitTime;
   for (let i = Math.floor(offset / step) + 1; ; i++) {
     const splitTime = JulianDate.addSeconds(
       stepStart,
       i * step,
       new JulianDate(),
     );
-    if (!JulianDate.lessThan(splitTime, rangeStop)) {
+    // Also stop once floating-point precision can no longer advance the split time, which
+    // happens when step is tiny compared to the distance from stepStart.
+    if (
+      !JulianDate.lessThan(splitTime, rangeStop) ||
+      (defined(previousSplitTime) &&
+        !JulianDate.greaterThan(splitTime, previousSplitTime))
+    ) {
       return;
     }
     if (JulianDate.greaterThan(splitTime, rangeStart)) {
       splitTimes.push(splitTime);
     }
+    previousSplitTime = splitTime;
   }
 }
 

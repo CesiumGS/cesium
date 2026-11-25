@@ -2143,6 +2143,41 @@ describe(
       expect(getShownPolylines(scene).length).toBeGreaterThan(0);
     });
 
+    it("does not hang when the resolution is too small to step from the anchor in PORTIONS materialMode", function () {
+      // Far from the J2000 default step anchor, a 1e-8 second resolution is below the
+      // floating-point precision of the step index and split times.
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        Color.RED,
+      );
+      sampledColor.addSample(
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+        Color.BLUE,
+      );
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      // A constant position keeps position subsampling from stepping at the tiny resolution.
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantPositionProperty(
+        new Cartesian3(1234, 5678, 9101112),
+      );
+
+      const path = (testObject.path = new PathGraphics());
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.resolution = new ConstantProperty(1e-8);
+      path.leadTime = new ConstantProperty(5e-7);
+      path.trailTime = new ConstantProperty(5e-7);
+      path.material = new ColorMaterialProperty(sampledColor);
+
+      expect(function () {
+        visualizer.update(updateTime);
+      }).not.toThrow();
+    });
+
     it("shows only colors in the active lead/trail window", function () {
       const times = [
         JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
