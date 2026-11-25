@@ -250,6 +250,23 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
+  it("listElements omits includeProperties when given an empty array", async function () {
+    const getFetchedResource = mockFetchJson({
+      items: [],
+      total: 0,
+    });
+
+    await service.listElements({
+      includeProperties: [],
+    });
+
+    const resource = getFetchedResource();
+    expect(resource.queryParameters).toEqual({
+      top: 100,
+    });
+    expect(resource.queryParameters.includeProperties).toBeUndefined();
+  });
+
   it("listElements validates includeProperties", async function () {
     await expectAsync(
       service.listElements({ includeProperties: "Dimensions.Height" }),
