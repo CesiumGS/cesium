@@ -431,7 +431,7 @@ class IonAssetElementService extends ElementService {
    * @param {object} options Object with the following properties:
    * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
    * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsAggregate">Aggregate elements</a> ion REST API documentation for the supported structure.
-   * @returns {Promise<{aggregations: IonAssetElementService.Aggregation[], total?: number}>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @returns {Promise<{aggregations: IonAssetElementService.Aggregation[], total: (number|undefined)}>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
    * @exception {DeveloperError} <code>options.propertyKeys</code> must be a non-empty array of strings.
    *
    * @example

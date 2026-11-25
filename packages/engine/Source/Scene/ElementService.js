@@ -101,7 +101,7 @@ class ElementService {
    * Computes aggregate statistics for element properties.
    *
    * @param {object} options Provider-specific aggregation options.
-   * @returns {Promise<{aggregations: ElementService.Aggregation[], total?: number}>} A promise that resolves to the aggregate statistics.
+   * @returns {Promise<{aggregations: ElementService.Aggregation[], total: (number|undefined)}>} A promise that resolves to the aggregate statistics.
    */
   async aggregate(options) {
     DeveloperError.throwInstantiationError();
