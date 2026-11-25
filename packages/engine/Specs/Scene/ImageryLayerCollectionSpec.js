@@ -469,6 +469,47 @@ describe(
         expect(featuresPromise).toBeUndefined();
       });
 
+      describe("when the globe pick misses", function () {
+        afterEach(function () {
+          scene.morphTo3D(0);
+        });
+
+        it("does not use 3D ray picking in 2D", function () {
+          scene.morphTo2D(0);
+          spyOn(globe, "pick").and.returnValue(undefined);
+          spyOn(scene, "pickFromRay").and.callThrough();
+
+          const ray = new Ray(camera.positionWC, camera.directionWC);
+          expect(
+            scene.imageryLayers.pickImageryLayerFeatures(ray, scene),
+          ).toBeUndefined();
+          expect(scene.pickFromRay).not.toHaveBeenCalled();
+        });
+
+        it("does not use 3D ray picking in Columbus view", function () {
+          scene.morphToColumbusView(0);
+          spyOn(globe, "pick").and.returnValue(undefined);
+          spyOn(scene, "pickFromRay").and.callThrough();
+
+          const ray = new Ray(camera.positionWC, camera.directionWC);
+          expect(
+            scene.imageryLayers.pickImageryLayerFeatures(ray, scene),
+          ).toBeUndefined();
+          expect(scene.pickFromRay).not.toHaveBeenCalled();
+        });
+
+        it("still uses ray picking in 3D", function () {
+          spyOn(globe, "pick").and.returnValue(undefined);
+          spyOn(scene, "pickFromRay").and.returnValue(undefined);
+
+          const ray = new Ray(camera.positionWC, camera.directionWC);
+          expect(
+            scene.imageryLayers.pickImageryLayerFeatures(ray, scene),
+          ).toBeUndefined();
+          expect(scene.pickFromRay).toHaveBeenCalledWith(ray);
+        });
+      });
+
       it("returns undefined when globe has no pickable layers", function () {
         const ellipsoid = Ellipsoid.WGS84;
         camera.lookAt(

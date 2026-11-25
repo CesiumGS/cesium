@@ -11,6 +11,7 @@ import {
 } from "@cesium/core";
 import ImageryLayer from "./ImageryLayer.js";
 import ImageryState from "./ImageryState.js";
+import SceneMode from "./SceneMode.js";
 
 /**
  * An ordered collection of imagery layers for rendering raster imagery on a {@link Globe} or {@link Cesium3DTileset}.
@@ -646,6 +647,12 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   let pickedModel;
 
   if (!defined(pickedPosition)) {
+    // Model ray picking is only supported in 3D. A missed globe pick in
+    // 2D or Columbus view has no imagery features to query.
+    if (scene.mode !== SceneMode.SCENE3D) {
+      return undefined;
+    }
+
     const result = scene.pickFromRay(ray);
 
     if (!defined(result)) {
