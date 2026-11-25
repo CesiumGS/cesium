@@ -26,6 +26,7 @@
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
 - Added experimental `VectorStyle`, `VectorStyleRule`, and `CircleSymbolizer` for styling vector data with rules written in the 3D Tiles Styling language. [#14058](https://github.com/CesiumGS/cesium/pull/14058)
 - Added experimental `SymbologyLayer`, `SymbologyLayerCollection`, and `VectorPrimitiveGroup`. A `VectorStyleRule` draws its features with one or more symbology layers, ordered across the style by `SymbologyLayer.zIndex`, and `VectorStyle.createPrimitives` returns a `VectorPrimitiveGroup`.
+- Added experimental `VectorStyle.compile`, which draws a feature layer from a tileset, `MVTDataProvider`, or `GeoJsonFeatureLayerProvider` with the style.
 
 #### Fixes :wrench:
 
