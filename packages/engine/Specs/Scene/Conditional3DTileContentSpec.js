@@ -2,9 +2,7 @@ import { Cartesian3, Math as CesiumMath, Matrix4 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-
-// These are not written into the index.js. See "build.js".
-import { LRUCache } from "../../Source/Scene/Conditional3DTileContent.js";
+import LRUCache from "../../Source/Scene/LRUCache.js";
 
 /**
  * Move the camera to look at the spec tileset.
