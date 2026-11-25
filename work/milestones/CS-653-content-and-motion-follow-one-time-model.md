@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-17
 project: CS-647
 outcome: Features, tiles, imagery and models change with time through one conditional-content model, and everything that moves shares one motion model.
-constraints: [CS-648 c?, CS-649 c?, CS-650 c?, CS-651 c?, CS-652 c?, CS-278 c?, CS-965 c?]
+constraints: [CS-648 c?, CS-649 c?, CS-650 c?, CS-651 c?, CS-652 c?, CS-278 c?, CS-965 c?, CS-1247 c?]
 ---
 
 ## Done when
@@ -16,3 +16,5 @@ To shape: clauses (c1, c2…), each checkable, and the independent check.
 ## Notes
 
 From the owner's release planning on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`). Release: beta.1. Its items are constraints marked `c?` until shaping links each to a clause.
+
+On 2026-11-24, CS-1247 joined. It was planned outside every release, and the owner asked that no planned work sit outside the release chain.

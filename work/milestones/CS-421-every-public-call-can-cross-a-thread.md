@@ -12,7 +12,7 @@ done_when:
   - "c3: Every function the engine runs on its own thread (warps, smooth edges, frame resolvers, standing queries, tick compute) is passed as a module by URL or as a Cesium IR program; a closure passed there is refused in both modes with a diagnostic naming the captured variable, while callbacks that run on the page still take closures."
   - "c4: The main entry exports nothing that can't cross a thread; GPU internals are reachable only through `@cesium/next/gpu`, and the night-sky and translucency examples still run."
   - "c5: Content is placed by its declared CRS's type, with no placement mode: the 3D Tiles draft's `EXT_geospatial_crs` and node `EXT_georeference` are read, and the design globe draws on the warp path."
-constraints: [CS-103 c1, CS-104 c2, CS-105 c3, CS-106 c3, CS-107 c4, CS-378 c5, CS-55 c3, CS-56 c3, CS-58 c3, CS-57 c3, CS-61 c3]
+constraints: [CS-103 c1, CS-104 c2, CS-105 c3, CS-106 c3, CS-107 c4, CS-378 c5, CS-55 c3, CS-56 c3, CS-58 c3, CS-57 c3, CS-61 c3, CS-1243 c?, CS-1245 c?]
 check: "integration-test test/threadProtocol.test.ts"
 ---
 
@@ -37,3 +37,5 @@ Renamed on 2026-11-14 from "Reshape" to its outcome, since HITLd names milestone
 CS-378 joined this milestone on 2026-11-15, on the owner's answer: placement modes go in the reshaping, once the review approves.
 
 On 2026-11-24, CS-55, CS-56, CS-57, CS-58 and CS-61 joined from CS-417 and CS-418 (alpha.4) under c3, since CS-106 needs them and alpha.2 already needed them through it. The Health tab showed them as release crossings.
+
+On 2026-11-24, CS-1243 and CS-1245 joined. They were planned outside every release, and the owner asked that no planned work sit outside the release chain.

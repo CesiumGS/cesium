@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-14
 project: CS-437
 outcome: "Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make."
-constraints: [CS-101 c?, CS-102 c?, CS-430 c?, CS-431 c?, CS-432 c?, CS-433 c?, CS-438 c?, CS-454 c?, CS-572 c?, CS-567 c?, CS-985 c?, CS-1205 c?, CS-1206 c?]
+constraints: [CS-101 c?, CS-102 c?, CS-430 c?, CS-431 c?, CS-432 c?, CS-433 c?, CS-438 c?, CS-454 c?, CS-572 c?, CS-567 c?, CS-985 c?, CS-1205 c?, CS-1206 c?, CS-1338 c?, CS-1244 c?, CS-1246 c?]
 ---
 
 ## Done when
@@ -28,3 +28,5 @@ CS-454 joined this milestone on 2026-11-15, on the owner's answer: the review (C
 CS-567 joined on 2026-11-18 (owner, placing committed work that sat in no milestone).
 
 On 2026-11-24, CS-1205 and CS-1206 joined: they were planned in no milestone, and the API review (CS-102) needs them.
+
+On 2026-11-24, CS-1338, CS-1244 and CS-1246 joined. They were planned outside every release, and the owner asked that no planned work sit outside the release chain.

@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-14
 project: CS-10
 outcome: "Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today."
-constraints: [CS-48 c?, CS-49 c?, CS-50 c?, CS-51 c?, CS-52 c?, CS-53 c?, CS-54 c?, CS-371 c?, CS-39 c?, CS-837 c?, CS-794 c?, CS-989 c?]
+constraints: [CS-48 c?, CS-49 c?, CS-50 c?, CS-51 c?, CS-52 c?, CS-53 c?, CS-54 c?, CS-371 c?, CS-39 c?, CS-837 c?, CS-794 c?, CS-989 c?, CS-941 c?]
 ---
 
 ## Done when
@@ -28,3 +28,5 @@ CS-837 (the IR's JSON format is experimental at 0.x) joined on 2026-11-21, from 
 CS-794 (the transform passes load Cesium IR lazily) joined on 2026-11-21, from the owner's review of the Health view's exceptions.
 
 On 2026-11-24, CS-55, CS-56, CS-61, CS-58 and CS-57 moved to CS-421 (alpha.2), since alpha.2 already needs them through CS-106 (functions as Cesium IR programs). The Health tab showed them as release crossings.
+
+On 2026-11-24, CS-941 joined. It was planned outside every release, and the owner asked that no planned work sit outside the release chain.

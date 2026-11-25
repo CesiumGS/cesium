@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-16
 project: CS-191
 outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
-constraints: [CS-552 c?, CS-554 c?, CS-555 c?, CS-556 c?, CS-557 c?, CS-1170 c?, CS-558 c?, CS-559 c?, CS-553 c?, CS-808 c?, CS-809 c?, CS-810 c?, CS-811 c?, CS-831 c?, CS-847 c?, CS-848 c?, CS-849 c?, CS-903 c?, CS-904 c?, CS-906 c?, CS-898 c?, CS-1334 c?]
+constraints: [CS-552 c?, CS-554 c?, CS-555 c?, CS-556 c?, CS-557 c?, CS-1170 c?, CS-558 c?, CS-559 c?, CS-553 c?, CS-808 c?, CS-809 c?, CS-810 c?, CS-811 c?, CS-831 c?, CS-847 c?, CS-848 c?, CS-849 c?, CS-903 c?, CS-904 c?, CS-906 c?, CS-898 c?, CS-1334 c?, CS-902 c?, CS-914 c?]
 ---
 
 ## Notes
@@ -20,3 +20,5 @@ CS-831 (a design for editing back through the seams) joined on 2026-11-21, so th
 CS-847 (the seam's core), CS-848 (render features, public from alpha.1) and CS-849 (streams for push sources) joined on 2026-11-21, from CS-552's plan.
 
 On 2026-11-24, CS-1334 joined: it was planned in no milestone, and alpha.1 already needs it through CS-557 and CS-558.
+
+On 2026-11-24, CS-902 and CS-914 joined. They were planned outside every release, and the owner asked that no planned work sit outside the release chain.

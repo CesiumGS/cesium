@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-389
 outcome: Dyno's rail switches between two spaces, the engine and the work, each with its own pages, so the agent system's pages can grow without crowding the engine's.
-constraints: [CS-517 c?, CS-518 c?]
+constraints: [CS-517 c?, CS-518 c?, CS-1145 c?]
 ---
 
 ## Why
@@ -16,3 +16,5 @@ Dyno answers questions about two systems, the engine and the work. Today the wor
 ## Done when
 
 To shape: clauses (c1, c2…), each checkable, and the independent check.
+
+On 2026-11-24, CS-1145 joined. It was planned outside every release, and the owner asked that no planned work sit outside the release chain.
