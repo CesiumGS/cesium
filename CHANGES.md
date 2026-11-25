@@ -27,7 +27,7 @@
 - Added an `includeProperties` option to `IonAssetElementService.listElements` to return selected properties with each element. [#14072](https://github.com/CesiumGS/cesium/pull/14072)
 - Added experimental `VectorStyle`, `VectorStyleRule`, and `CircleSymbolizer` for styling vector data with rules written in the 3D Tiles Styling language. [#14058](https://github.com/CesiumGS/cesium/pull/14058)
 - Added experimental `SymbologyLayer`, `SymbologyLayerCollection`, and `VectorPrimitiveGroup`. A `VectorStyleRule` draws its features with one or more symbology layers, ordered across the style by `SymbologyLayer.zIndex`, and `VectorStyle.createPrimitives` returns a `VectorPrimitiveGroup`. [#14120](https://github.com/CesiumGS/cesium/pull/14120)
-- Added experimental `VectorStyle.compile`, which draws a feature layer from a tileset, `MVTDataProvider`, or `GeoJsonFeatureLayerProvider` with the style.
+- Added experimental `VectorStyle.compile`, which draws a feature layer from a tileset, `MVTDataProvider`, or `GeoJsonFeatureLayerProvider` with the style. [#14122](https://github.com/CesiumGS/cesium/pull/14122)
 
 #### Fixes :wrench:
 
