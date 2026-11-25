@@ -2,7 +2,7 @@
 id: CS-1334
 title: Vector strokes and fills draped on terrain, through CS-654's chosen mechanism
 kind: work
-state: proposed
+state: planned
 created: 2026-11-24
 project: CS-190
 needs: [CS-654, CS-261]
@@ -17,3 +17,7 @@ needs: [CS-654, CS-261]
 - A pick on a draped mark returns the feature's stable ID.
 - A Dyno measurement of an in-memory layer the size of a city's streets and blocks, draped on terrain, with run IDs cited.
 - The handbook's vector tab says what's built.
+
+## Notes
+
+Planned by the owner on 2026-11-24 ("Plan CS-1334"). It is on alpha.1's path: CS-557 (MVT) needs it, and CS-560 needs CS-557. It starts once CS-654 (the surface-projection design) has chosen the draping mechanism.
