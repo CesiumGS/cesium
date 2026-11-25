@@ -59,7 +59,7 @@ Heavy work takes a hitld lock that every project on this machine shares, so two 
 - `cpu-heavy`: a full suite, `test:data`, a build, an install, `checkBundle`, a check across the whole repository.
 - `gpu`: `dyno lab`, and any browser run that creates a WebGPU or WebGL device.
 - Both: `cpu-heavy` first, then `gpu`; release in reverse.
-- No lock: focused tests, one package's type check, lint on changed files, and Dyno measurements, which queue for quiet on their own. Lock takers wait while `dyno status` says `busy` or `waiting-for-quiet`.
+- No lock: a new executor worktree's offline install from the local store (`pnpm install --frozen-lockfile --ignore-scripts --prefer-offline`; owner, 2026-11-24), focused tests, one package's type check, lint on changed files, and Dyno measurements, which queue for quiet on their own. Lock takers wait while `dyno status` says `busy` or `waiting-for-quiet`.
 - Lock each step, not a chain. Pass `--pid` so a dead job's lock goes stale, and a TTL longer than the step. Never break a lock; `npx hitld env status` shows its holder.
 
 Run the lock, the step and the unlock in one command, for example:
