@@ -28,3 +28,7 @@ If unanswered by 2026-11-27T12:00:00Z: B. Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+## Note (orch-11, 2026-11-25)
+
+The replay now carries the owner's CS-733 answer, "Include hardware": reuseKey is the device ID, hardwareKey and configKey, and a test shows a hardware change stops reuse (replay 7d83a8054b, one more commit on the branch, 8faec7e3fe).
