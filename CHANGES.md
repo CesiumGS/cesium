@@ -16,6 +16,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- The experimental `ElementService` and `IonAssetElementService` now use `undefined` instead of `null` for missing values, including `total`, aggregation `min`, `max`, and `avg`, and element `label`, `displayValue`, and `units`. Raw property `value`s are unchanged.
+
 #### Additions :tada:
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
