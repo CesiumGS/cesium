@@ -24,6 +24,7 @@
 - `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
 - Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
+- Added an `includeProperties` option to `IonAssetElementService.listElements` to return selected properties with each element. [#14072](https://github.com/CesiumGS/cesium/pull/14072)
 - Added experimental `VectorStyle`, `VectorStyleRule`, and `CircleSymbolizer` for styling vector data with rules written in the 3D Tiles Styling language. [#14058](https://github.com/CesiumGS/cesium/pull/14058)
 
 #### Fixes :wrench:
@@ -38,12 +39,16 @@
 - Fixed the page hanging, or polylines being drawn with the wrong translucency, when the color of polylines with different depth fail materials changed between opaque and translucent. [#13952](https://github.com/CesiumGS/cesium/issues/13952)
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
 - Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
+- Improved error reporting for problems with the metadata schema in a voxel tileset. [#13559](https://github.com/CesiumGS/cesium/issues/13559)
 - Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds. [#13964](https://github.com/CesiumGS/cesium/pull/13694)
 - Fixed GPX loading failing when descriptive fields contain URLs by using the current Autolinker replacement callback signature. [#13944](https://github.com/CesiumGS/cesium/pull/13944)
 - Fixed WebGL contexts not being released when a `Viewer` or `CesiumWidget` is destroyed. [#11533](https://github.com/CesiumGS/cesium/issues/11533)
 - Fixed tiles failing to load when their tile or content metadata uses a class missing from the root tileset's schema. The metadata is now ignored with a warning. [#14050](https://github.com/CesiumGS/cesium/pull/14050)
 - Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
 - Fixed `BufferPrimitiveCollection` rendering nothing after `destroy()`. [#13895](https://github.com/CesiumGS/cesium/pull/13895)
+- Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
+- Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
+- Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
 
 ## 1.147 - 2026-11-02
 

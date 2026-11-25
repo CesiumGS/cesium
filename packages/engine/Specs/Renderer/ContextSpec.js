@@ -37,6 +37,31 @@ describe(
       expect(context.stencilBits).toBeGreaterThanOrEqual(0);
     });
 
+    it("detects ETC2 support from WEBGL_compressed_texture_etc", function () {
+      if (webglStub) {
+        return;
+      }
+
+      const fakeExtension = {};
+      const prototypes = [WebGLRenderingContext.prototype];
+      if (typeof WebGL2RenderingContext !== "undefined") {
+        prototypes.push(WebGL2RenderingContext.prototype);
+      }
+      for (const prototype of prototypes) {
+        const getExtension = prototype.getExtension;
+        spyOn(prototype, "getExtension").and.callFake(function (name) {
+          if (name === "WEBGL_compressed_texture_etc") {
+            return fakeExtension;
+          }
+          return getExtension.call(this, name);
+        });
+      }
+
+      const c = createContext();
+      expect(c.etc).toBe(true);
+      c.destroyForSpecs();
+    });
+
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
         ContextLimits.maximumCombinedTextureImageUnits,
