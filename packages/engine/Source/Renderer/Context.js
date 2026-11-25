@@ -183,7 +183,7 @@ function Context(canvas, options) {
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
   this._astc = !!getExtension(gl, ["WEBGL_compressed_texture_astc"]);
-  this._etc = !!getExtension(gl, ["WEBG_compressed_texture_etc"]);
+  this._etc = !!getExtension(gl, ["WEBGL_compressed_texture_etc"]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
   this._bc7 = !!getExtension(gl, ["EXT_texture_compression_bptc"]);
 

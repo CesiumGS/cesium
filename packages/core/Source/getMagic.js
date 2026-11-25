@@ -1,6 +1,11 @@
+// @ts-check
+
 import getStringFromTypedArray from "./getStringFromTypedArray.js";
 
 /**
+ * @param {Uint8Array} uint8Array
+ * @param {number} [byteOffset=0]
+ * @returns {string}
  * @internal
  */
 function getMagic(uint8Array, byteOffset) {

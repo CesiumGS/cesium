@@ -1,3 +1,5 @@
+// @ts-check
+
 import CesiumMath from "./Math.js";
 
 /**
@@ -6,6 +8,12 @@ import CesiumMath from "./Math.js";
 const CylinderGeometryLibrary = {};
 
 /**
+ * @param {number} length
+ * @param {number} topRadius
+ * @param {number} bottomRadius
+ * @param {number} slices
+ * @param {boolean} fill
+ * @returns {Float64Array}
  * @private
  */
 CylinderGeometryLibrary.computePositions = function (
