@@ -1,3 +1,5 @@
+// @ts-check
+
 import CubicRealPolynomial from "./CubicRealPolynomial.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
@@ -72,6 +74,14 @@ QuarticRealPolynomial.computeDiscriminant = function (a, b, c, d, e) {
   return discriminant;
 };
 
+/**
+ * @param {number} a3
+ * @param {number} a2
+ * @param {number} a1
+ * @param {number} a0
+ * @returns {number[]}
+ * @private
+ */
 function original(a3, a2, a1, a0) {
   const a3Squared = a3 * a3;
 
@@ -166,6 +176,14 @@ function original(a3, a2, a1, a0) {
   return [];
 }
 
+/**
+ * @param {number} a3
+ * @param {number} a2
+ * @param {number} a1
+ * @param {number} a0
+ * @returns {number[]}
+ * @private
+ */
 function neumark(a3, a2, a1, a0) {
   const a1Squared = a1 * a1;
   const a2Squared = a2 * a2;

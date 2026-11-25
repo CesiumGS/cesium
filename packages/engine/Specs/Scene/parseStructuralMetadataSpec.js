@@ -673,6 +673,7 @@ describe(
           createdTextureOptions = options;
           return new Texture(options);
         });
+        spyOn(parseStructuralMetadata, "_oneTimeWarning");
 
         structuralMetadata = parseStructuralMetadata({
           extension: extension,
@@ -694,6 +695,17 @@ describe(
           0x02, 0x01, 0, 0, 0x04, 0x03, 0, 0, 0x06, 0x05, 0, 0,
         ];
         expect(Array.from(packed)).toEqual(expected);
+        expect(parseStructuralMetadata._oneTimeWarning).toHaveBeenCalledTimes(
+          2,
+        );
+        expect(parseStructuralMetadata._oneTimeWarning).toHaveBeenCalledWith(
+          "PropertyTableBufferViewHasExcessBytes",
+          'Property "a" buffer view has byteLength 8, which exceeds the required 3 bytes for 3 features. Ignoring trailing bytes.',
+        );
+        expect(parseStructuralMetadata._oneTimeWarning).toHaveBeenCalledWith(
+          "PropertyTableBufferViewHasExcessBytes",
+          'Property "b" buffer view has byteLength 8, which exceeds the required 6 bytes for 3 features. Ignoring trailing bytes.',
+        );
       });
 
       it("throws an error if a property's buffer view is shorter than the number of features", function () {

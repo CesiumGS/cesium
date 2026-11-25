@@ -17,6 +17,8 @@ import {
   BufferPolygonCollection,
   BufferPolygonMaterial,
   Cesium3DTileStyle,
+  Cesium3DTileVectorFeature,
+  FeatureLayer,
   GeographicTilingScheme,
   HeightReference,
   Model3DTileContent,
@@ -118,10 +120,14 @@ describe("Scene/VectorGltf3DTileContent", () => {
   });
 
   it("batchTableByteLength", () => {
+    content._model.statistics = {
+      propertyTablesByteLength: 0,
+      batchTexturesByteLength: 0,
+    };
     expect(content.batchTableByteLength).toBe(0);
 
-    content._model._featureTables.push({ batchTableByteLength: 100 });
-    content._model._featureTables.push({ batchTableByteLength: 156 });
+    content._model.statistics.propertyTablesByteLength = 100;
+    content._model.statistics.batchTexturesByteLength = 156;
 
     expect(content.batchTableByteLength).toBe(256);
   });
@@ -314,6 +320,47 @@ describe("Scene/VectorGltf3DTileContent", () => {
     expect(points.blendOption).toBe(BlendOption.TRANSLUCENT);
   });
 
+  it("update skips collections of hidden feature layers", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const roads = createBufferPointCollection();
+    const water = createBufferPointCollection();
+    const roadsLayer = new FeatureLayer({ name: "roads" });
+    content._collections = [roads, water];
+    content._collectionLocalMatrices = [
+      Matrix4.clone(Matrix4.IDENTITY),
+      Matrix4.clone(Matrix4.IDENTITY),
+    ];
+    content._collectionFeatureLayers = new Map([[roads, roadsLayer]]);
+    const roadsUpdate = spyOn(roads, "update");
+    const waterUpdate = spyOn(water, "update");
+
+    const frameState = { mode: SceneMode.SCENE3D, passes: {}, frameNumber: 0 };
+    roadsLayer.show = false;
+    content.update(tileset, frameState);
+    expect(roadsUpdate).not.toHaveBeenCalled();
+    expect(waterUpdate).toHaveBeenCalled();
+
+    roadsLayer.show = true;
+    content.update(tileset, frameState);
+    expect(roadsUpdate).toHaveBeenCalled();
+  });
+
+  it("gives features the feature layer of their collection", () => {
+    const roads = createBufferPointCollection();
+    const water = createBufferPointCollection();
+    const waterLayer = new FeatureLayer({ name: "water" });
+    content._collections = [roads, water];
+    content._collectionFeatureLayers = new Map([[water, waterLayer]]);
+
+    const feature = new Cesium3DTileVectorFeature(content, 0, 0);
+    feature.addPrimitiveByCollection(1, 0);
+    expect(feature.featureLayer).toBe(waterLayer);
+  });
+
   it("update assigns pick IDs to draped collections", () => {
     const context = createContext();
     const vectorProvider = new VectorProvider({
@@ -357,6 +404,59 @@ describe("Scene/VectorGltf3DTileContent", () => {
       jasmine.objectContaining({ collection: lines, index: 0 }),
     );
     expect(lines._renderContext).toBeNull();
+
+    context.destroyForSpecs();
+  });
+
+  it("update stops draping collections of hidden feature layers in the next frame", () => {
+    const context = createContext();
+    const vectorProvider = new VectorProvider({
+      tilingScheme: new GeographicTilingScheme(),
+    });
+    const tileset = {
+      _vectorBlendOption: BlendOption.OPAQUE,
+      _heightReference: HeightReference.CLAMP_TO_GROUND,
+      _scene: { vectorProvider },
+    };
+    const tile = {
+      computedTransform: Matrix4.clone(Matrix4.IDENTITY),
+      _selectedFrame: 0,
+    };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const lines = new BufferPolylineCollection({ allowPicking: true });
+    lines.add(
+      {
+        positions: new Float64Array([
+          ...Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), []),
+          ...Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 40.0), []),
+        ]),
+      },
+      scratchPolyline,
+    );
+    const roadsLayer = new FeatureLayer({ name: "roads" });
+    content._collections = [lines];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+    content._collectionFeatureLayers = new Map([[lines, roadsLayer]]);
+    const frameState = {
+      mode: SceneMode.SCENE3D,
+      passes: { render: true },
+      frameNumber: 0,
+      context,
+    };
+
+    content.update(tileset, frameState);
+    expect(vectorProvider.has(lines)).toBe(true);
+
+    vectorProvider.update(1);
+    tile._selectedFrame = 1;
+    roadsLayer.show = false;
+    content.update(tileset, { ...frameState, frameNumber: 1 });
+    expect(vectorProvider.changedDuringFrame(1)).toBe(true);
+
+    vectorProvider.update(2);
+    expect(vectorProvider.has(lines)).toBe(false);
 
     context.destroyForSpecs();
   });
@@ -416,6 +516,14 @@ describe("Scene/VectorGltf3DTileContent", () => {
       expect(content._collections[2]).toBeInstanceOf(BufferPolygonCollection);
       expect(content.pointsLength).toBe(2);
       expect(content.featuresLength).toBe(3);
+
+      content.destroy();
+    });
+
+    it("batchTableByteLength", () => {
+      content = VectorGltf3DTileContent.fromGeoJson({}, {}, {}, geoJson);
+
+      expect(content.batchTableByteLength).toBe(0);
 
       content.destroy();
     });

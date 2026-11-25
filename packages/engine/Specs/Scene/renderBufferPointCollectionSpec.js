@@ -125,6 +125,25 @@ describe(
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
+    it("renders points after GPU resources are destroyed", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const point = new BufferPoint();
+      const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.destroy();
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
     it("renders points with sort order", function () {
       collection = new BufferPointCollection({
         blendOption: BlendOption.OPAQUE,
@@ -160,6 +179,34 @@ describe(
 
       Matrix4.fromUniformScale(0.0, collection.modelMatrix);
       expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it("draws a nearer translucent point over a farther one without OIT", function () {
+      const sceneWithoutOIT = createScene({
+        orderIndependentTranslucency: false,
+      });
+      sceneWithoutOIT.camera.position = new Cartesian3(10.0, 0.0, 0.0);
+      sceneWithoutOIT.camera.direction = new Cartesian3(-1.0, 0.0, 0.0);
+      sceneWithoutOIT.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+
+      collection = new BufferPointCollection();
+      const point = new BufferPoint();
+      const near = new BufferPointMaterial({ color: Color.RED, size: 16 });
+      const far = new BufferPointMaterial({ color: Color.LIME, size: 16 });
+      collection.add(
+        { position: new Cartesian3(5, 0, 0), material: near },
+        point,
+      );
+      collection.add(
+        { position: new Cartesian3(-5, 0, 0), material: far },
+        point,
+      );
+      sceneWithoutOIT.primitives.add(collection);
+
+      expect(sceneWithoutOIT).toRender([255, 0, 0, 255]);
+
+      sceneWithoutOIT.primitives.removeAll();
+      sceneWithoutOIT.destroyForSpecs();
     });
 
     it("does not render if empty", function () {

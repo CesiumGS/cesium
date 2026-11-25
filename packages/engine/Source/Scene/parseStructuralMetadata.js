@@ -182,7 +182,7 @@ function createTextureForPropertyTable(
   const textureHeight = Math.ceil(totalTexels / textureWidth);
 
   if (textureHeight > maxTextureSize) {
-    oneTimeWarning(
+    parseStructuralMetadata._oneTimeWarning(
       "PropertyTableTextureExceedsMaximumSize",
       `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${ContextLimits.maximumTextureSize}.`,
     );
@@ -251,6 +251,10 @@ function collectGpuCompatiblePropertyInfo(
     }
     // Ignore trailing bytes, as MetadataTableProperty does on the CPU.
     if (bufferView.length > requiredByteLength) {
+      parseStructuralMetadata._oneTimeWarning(
+        "PropertyTableBufferViewHasExcessBytes",
+        `Property "${propertyId}" buffer view has byteLength ${bufferView.length}, which exceeds the required ${requiredByteLength} bytes for ${numFeatures} features. Ignoring trailing bytes.`,
+      );
       bufferView = bufferView.subarray(0, requiredByteLength);
     }
 
@@ -434,4 +438,6 @@ function downcastAndPackProperty(
   }
 }
 
+// Exposed for testing
+parseStructuralMetadata._oneTimeWarning = oneTimeWarning;
 export default parseStructuralMetadata;

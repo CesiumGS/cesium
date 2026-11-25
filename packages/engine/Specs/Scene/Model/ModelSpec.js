@@ -887,6 +887,121 @@ describe(
       });
     });
 
+    it("renders custom shader reading a property table with a padded buffer view", async function () {
+      if (!scene.context.webgl2) {
+        return;
+      }
+
+      // 3 VEC3 float32 positions (36 bytes) + 3 UINT16 values (6 bytes) stored
+      // in an 8-byte-padded bufferView.
+      const buffer = new ArrayBuffer(48);
+      new Float32Array(buffer, 0, 9).set([
+        -0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0,
+      ]);
+      new Uint16Array(buffer, 40, 4).set([40000, 40000, 40000, 0]);
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+
+      const gltf = {
+        asset: { version: "2.0" },
+        extensionsUsed: ["EXT_mesh_features", "EXT_structural_metadata"],
+        scenes: [{ nodes: [0] }],
+        nodes: [{ mesh: 0 }],
+        meshes: [
+          {
+            primitives: [
+              {
+                mode: 0,
+                attributes: { POSITION: 0 },
+                extensions: {
+                  EXT_mesh_features: {
+                    featureIds: [{ featureCount: 3, propertyTable: 0 }],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        accessors: [
+          {
+            bufferView: 0,
+            componentType: 5126,
+            count: 3,
+            type: "VEC3",
+            min: [-0.01, 0.0, 0.0],
+            max: [0.01, 0.0, 0.0],
+          },
+        ],
+        bufferViews: [
+          { buffer: 0, byteOffset: 0, byteLength: 36, target: 34962 },
+          { buffer: 0, byteOffset: 40, byteLength: 8 },
+        ],
+        buffers: [
+          {
+            byteLength: 48,
+            uri: `data:application/octet-stream;base64,${base64}`,
+          },
+        ],
+        extensions: {
+          EXT_structural_metadata: {
+            schema: {
+              id: "padded_schema",
+              classes: {
+                point: {
+                  properties: {
+                    intensity: { type: "SCALAR", componentType: "UINT16" },
+                  },
+                },
+              },
+            },
+            propertyTables: [
+              {
+                name: "points",
+                class: "point",
+                count: 3,
+                properties: {
+                  intensity: { values: 1 },
+                },
+              },
+            ],
+          },
+        },
+      };
+
+      const customShader = new CustomShader({
+        vertexShaderText: `
+          void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput)
+          {
+            vsOutput.pointSize = 16.0;
+          }
+        `,
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+          {
+            material.diffuse = (fsInput.metadata.intensity == 40000u)
+              ? vec3(0.0, 1.0, 0.0)
+              : vec3(1.0, 0.0, 0.0);
+          }
+        `,
+      });
+
+      await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          customShader: customShader,
+        },
+        scene,
+      );
+
+      expect({
+        scene: scene,
+        time: defaultDate,
+      }).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toEqual(0);
+        expect(rgba[1]).toBeGreaterThan(200);
+        expect(rgba[2]).toEqual(0);
+      });
+    });
+
     it("renders model with morph targets", async function () {
       // This model gets clipped if log depth is disabled, so zoom out
       // the camera just a little
