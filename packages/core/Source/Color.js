@@ -1,11 +1,20 @@
+// @ts-check
+
 import Check from "./Check.js";
 import Frozen from "./Frozen.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 
+/** @import Cartesian4 from "./Cartesian4.js"; */
 /** @import {TypedArray} from "./typedArrayTypes.js"; */
 
-/** @ignore */
+/**
+ * @param {number} m1
+ * @param {number} m2
+ * @param {number} h
+ * @returns {number}
+ * @ignore
+ */
 function hue2rgb(m1, m2, h) {
   if (h < 0) {
     h += 1;
@@ -371,7 +380,8 @@ class Color {
     // Remove all surrounding whitespaces from the color string
     color = color.trim();
 
-    const namedColor = Color[color.toUpperCase()];
+    // @ts-expect-error TODO(tsd-jsdoc): Requires index signature support.
+    const namedColor = /** @type {Color} */ (Color[color.toUpperCase()]);
     if (defined(namedColor)) {
       Color.clone(namedColor, result);
       return result;
@@ -672,6 +682,10 @@ class Color {
    * Converts RGBA values in bytes to a single numeric unsigned 32-bit RGBA value, using the endianness
    * of the system.
    *
+   * @param {number} red
+   * @param {number} green
+   * @param {number} blue
+   * @param {number} alpha
    * @returns {number} A single numeric unsigned 32-bit RGBA value.
    *
    * @see Color.toRgba
