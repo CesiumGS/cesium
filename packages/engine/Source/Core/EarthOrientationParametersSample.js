@@ -10,7 +10,7 @@
  * @param {number} yPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the Y axis, in radians.
  * @param {number} ut1MinusUtc The difference in time standards, UT1 - UTC, in seconds.
  *
- * @see EarthOrientationParameters#compute
+ * @private
  */
 function EarthOrientationParametersSample(
   xPoleWander,

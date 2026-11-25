@@ -163,7 +163,7 @@ EarthOrientationParameters.NONE = Object.freeze(
  * @returns {EarthOrientationParametersSample|undefined} The EOP evaluated at the given date, or
  *          undefined if the EOP data is not available.
  *
- * @see EarthOrientationParameters.fromUrl
+ * @private
  */
 EarthOrientationParameters.prototype.compute = function (date, result) {
   // We cannot compute until the samples are available.
