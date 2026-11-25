@@ -1,36 +1,69 @@
 // @ts-check
 
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import {
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { join, posix, sep } from "node:path";
 import { format, resolveConfig } from "prettier";
 
 /**
- * @typedef {object} JsonSchema
+ * The keywords of the glTF JSON schemas that this generator reads.
+ *
+ * @typedef {object} SchemaKeywords
  * @property {string} [$ref]
  * @property {string} [title]
  * @property {string} [description]
  * @property {string} [gltf_detailedDescription]
  * @property {string[]} [gltf_enumNames]
  * @property {string | string[]} [type]
- * @property {Record<string, JsonSchema>} [properties]
+ * @property {Record<string, SchemaKeywords>} [properties]
  * @property {string[]} [required]
- * @property {JsonSchema | boolean} [additionalProperties]
- * @property {JsonSchema[]} [allOf]
- * @property {JsonSchema[]} [anyOf]
- * @property {JsonSchema[]} [oneOf]
+ * @property {SchemaKeywords | boolean} [additionalProperties]
+ * @property {SchemaKeywords[]} [allOf]
+ * @property {SchemaKeywords[]} [anyOf]
+ * @property {SchemaKeywords[]} [oneOf]
  * @property {unknown[]} [enum]
  * @property {unknown} [const]
- * @property {JsonSchema} [items]
+ * @property {SchemaKeywords} [items]
  * @property {number} [minItems]
  * @property {number} [maxItems]
  * @property {unknown} [default]
  */
 
 /**
+ * The schemas of one generated file.
+ *
  * @typedef {object} SchemaSet
  * @property {string} rootName The name of the root interface and namespace.
- * @property {Map<string, JsonSchema>} schemas The schemas, keyed by file name.
- * @property {Map<string, JsonSchema>} [baseline] The glTF 2.0 schemas, used to mark additions in glTF 2.1.
+ * @property {string} modulePath Path in `SchemaTypes`, without an extension.
+ * @property {Map<string, SchemaKeywords>} schemas Keyed by path in the schema directory.
+ * @property {Map<string, SchemaKeywords>} [baseline] The glTF 2.0 schemas, to mark glTF 2.1 additions.
+ * @property {string} [extensionName]
+ * @property {SchemaSet} [core] The core schemas an extension's references resolve against.
+ * @property {Map<string, Attachment[]>} extensionsByFile Each object's extensions, keyed by its schema's path.
+ * @property {Set<SchemaSet>} imports The schema sets the generated file refers to.
+ */
+
+/**
+ * A schema found by a reference, in the schema set that holds it.
+ *
+ * @typedef {object} SchemaTarget
+ * @property {SchemaSet} schemaSet
+ * @property {string} fileName
+ * @property {SchemaKeywords} schema
+ */
+
+/**
+ * An extension that an object can have in its `extensions`.
+ *
+ * @typedef {object} Attachment
+ * @property {string} name
+ * @property {SchemaTarget} target The extension's schema for that object.
+ * @property {boolean} isGltf21 Whether the extension needs glTF 2.1.
  */
 
 /**
@@ -52,64 +85,181 @@ import { format, resolveConfig } from "prettier";
  * @property {string} schemaDirectory
  */
 
+/**
+ * @typedef {object} ExtensionSource
+ * @property {string} repository
+ * @property {string} commit
+ * @property {string} schemaDirectory
+ * @property {string[]} core
+ * @property {Record<string, string[]>} extends
+ */
+
 const packageDirectory = join(import.meta.dirname, "..");
 const schemasDirectory = join(packageDirectory, "Build/Schemas");
 const outputDirectory = join(packageDirectory, "SchemaTypes");
+const propertySchema = "glTFProperty.schema.json";
 
-/** @type {{core: Record<string, SchemaSource>}} */
+/** @type {{core: Record<string, SchemaSource>, extensions: Record<string, ExtensionSource | {core: string[]}>}} */
 const sources = JSON.parse(
   readFileSync(join(import.meta.dirname, "gltfSchemaSources.json"), "utf8"),
 );
 
-/** @type {SchemaSet} */
-const gltf1 = { rootName: "Gltf1", schemas: loadSchemas("1.0") };
-/** @type {SchemaSet} */
-const gltf2 = {
-  rootName: "Gltf2",
-  schemas: loadSchemas("2.1"),
-  baseline: loadSchemas("2.0"),
-};
+const gltf1 = createSchemaSet("Gltf1", "Gltf1", "1.0");
+const gltf2 = createSchemaSet("Gltf2", "Gltf2", "2.1");
+gltf2.baseline = loadSchemas("2.0");
 
-mkdirSync(outputDirectory, { recursive: true });
-await writeTypeScript(
-  "Gltf1.ts",
-  `${getHeader(["1.0"])}${generateTypes(gltf1)}`,
-);
-await writeTypeScript(
-  "Gltf2.ts",
-  `${getHeader(["2.0", "2.1"])}${generateTypes(gltf2)}`,
-);
-await writeTypeScript(
-  "index.ts",
-  `${getHeader([])}export type * from "./Gltf1.js";\nexport type * from "./Gltf2.js";\n`,
-);
+/** @type {Map<string, SchemaSet>} */
+const extensionSets = new Map();
+for (const [name, source] of Object.entries(sources.extensions)) {
+  if (!("schemaDirectory" in source)) {
+    continue;
+  }
+  let rootName = name;
+  if (/^\d/.test(name)) {
+    rootName = `_${name}`;
+  }
+  const extensionSet = createSchemaSet(
+    rootName,
+    `Extensions/${name}`,
+    `Extensions/${name}`,
+  );
+  extensionSet.extensionName = name;
+  extensionSet.core = gltf2;
+  if (source.core.every((version) => version === "1.0")) {
+    extensionSet.core = gltf1;
+  }
+  extensionSets.set(name, extensionSet);
+}
+attachExtensions();
+
+rmSync(join(outputDirectory, "Extensions"), { recursive: true, force: true });
+mkdirSync(join(outputDirectory, "Extensions"), { recursive: true });
+await writeSchemaSet(gltf1, [sources.core["1.0"]]);
+await writeSchemaSet(gltf2, [sources.core["2.0"], sources.core["2.1"]]);
+let indexCode = `${getHeader([])}export type * from "./Gltf1.js";\nexport type * from "./Gltf2.js";\n`;
+for (const [name, extensionSet] of extensionSets) {
+  const source = /** @type {ExtensionSource} */ (sources.extensions[name]);
+  await writeSchemaSet(extensionSet, [source]);
+  indexCode += `export type * from "./${extensionSet.modulePath}.js";\n`;
+}
+await writeTypeScript("index.ts", indexCode);
 
 /**
- * @param {string} version
- * @returns {Map<string, JsonSchema>}
+ * @param {string} rootName
+ * @param {string} modulePath
+ * @param {string} directory The schema directory, in `Build/Schemas`.
+ * @returns {SchemaSet}
  */
-function loadSchemas(version) {
-  const directory = join(schemasDirectory, version);
+function createSchemaSet(rootName, modulePath, directory) {
+  /** @type {Map<string, Attachment[]>} */
+  const extensionsByFile = new Map();
+  // Every core object inherits the extensions of glTFProperty.
+  if (!directory.startsWith("Extensions/")) {
+    extensionsByFile.set(propertySchema, []);
+  }
+  return {
+    rootName: rootName,
+    modulePath: modulePath,
+    schemas: loadSchemas(directory),
+    extensionsByFile: extensionsByFile,
+    imports: new Set(),
+  };
+}
+
+/**
+ * Loads the schemas in a directory and its subdirectories.
+ *
+ * @param {string} directory The schema directory, in `Build/Schemas`.
+ * @returns {Map<string, SchemaKeywords>}
+ */
+function loadSchemas(directory) {
+  const fullDirectory = join(schemasDirectory, directory);
+  const fileNames = readdirSync(fullDirectory, {
+    recursive: true,
+    encoding: "utf8",
+  })
+    .filter((fileName) => fileName.endsWith(".schema.json"))
+    .map((fileName) => fileName.split(sep).join("/"))
+    .sort();
+  /** @type {Map<string, SchemaKeywords>} */
   const schemas = new Map();
-  for (const fileName of readdirSync(directory).sort()) {
+  for (const fileName of fileNames) {
     schemas.set(
       fileName,
-      JSON.parse(readFileSync(join(directory, fileName), "utf8")),
+      JSON.parse(readFileSync(join(fullDirectory, fileName), "utf8")),
     );
   }
   return schemas;
 }
 
 /**
- * @param {string[]} versions
+ * Records the objects that each extension in `gltfSchemaSources.json` extends.
+ */
+function attachExtensions() {
+  for (const [name, extensionSet] of extensionSets) {
+    const source = /** @type {ExtensionSource} */ (sources.extensions[name]);
+    const isGltf21 = source.core.includes("2.1");
+    for (const [fileName, objects] of Object.entries(source.extends)) {
+      const target = {
+        schemaSet: extensionSet,
+        fileName: fileName,
+        schema: getSchema(extensionSet, fileName),
+      };
+      for (const object of objects) {
+        for (const owner of getExtendedObjects(source, object)) {
+          let attachments = owner.schemaSet.extensionsByFile.get(
+            owner.fileName,
+          );
+          if (attachments === undefined) {
+            attachments = [];
+            owner.schemaSet.extensionsByFile.set(owner.fileName, attachments);
+          }
+          attachments.push({ name: name, target: target, isGltf21: isGltf21 });
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Returns the objects that an `extends` entry names: a core object, `*` for
+ * any object, or `<NAME>/<object>` for an object of another extension.
+ *
+ * @param {ExtensionSource} source
+ * @param {string} object
+ * @returns {{schemaSet: SchemaSet, fileName: string}[]}
+ */
+function getExtendedObjects(source, object) {
+  if (object.includes("/")) {
+    const [extensionName, objectName] = object.split("/");
+    const extensionSet = /** @type {SchemaSet} */ (
+      extensionSets.get(extensionName)
+    );
+    return [{ schemaSet: extensionSet, fileName: `${objectName}.schema.json` }];
+  }
+
+  let fileName = `${object}.schema.json`;
+  if (object === "*") {
+    fileName = propertySchema;
+  }
+  return source.core.map((version) => {
+    let coreSet = gltf2;
+    if (version === "1.0") {
+      coreSet = gltf1;
+    }
+    return { schemaSet: coreSet, fileName: fileName };
+  });
+}
+
+/**
+ * @param {SchemaSource[]} schemaSources
  * @returns {string}
  */
-function getHeader(versions) {
+function getHeader(schemaSources) {
   const lines = [];
-  if (versions.length > 0) {
+  if (schemaSources.length > 0) {
     lines.push("// Generated from the glTF JSON schemas at:");
-    for (const version of versions) {
-      const { repository, commit, schemaDirectory } = sources.core[version];
+    for (const { repository, commit, schemaDirectory } of schemaSources) {
       lines.push(
         `//   https://github.com/${repository}/tree/${commit}/${schemaDirectory}`,
       );
@@ -119,6 +269,31 @@ function getHeader(versions) {
     "// Do not edit; rerun `npm run generate-types -w @cesium/gltf` instead.",
   );
   return `${lines.join("\n")}\n\n`;
+}
+
+/**
+ * Writes a schema set's types, with imports of the schema sets they use.
+ *
+ * @param {SchemaSet} schemaSet
+ * @param {SchemaSource[]} schemaSources
+ */
+async function writeSchemaSet(schemaSet, schemaSources) {
+  const types = generateTypes(schemaSet);
+  const imported = [...schemaSet.imports].sort((left, right) =>
+    left.modulePath.localeCompare(right.modulePath, "en"),
+  );
+  let imports = "";
+  for (const { rootName, modulePath } of imported) {
+    let path = posix.relative(posix.dirname(schemaSet.modulePath), modulePath);
+    if (!path.startsWith(".")) {
+      path = `./${path}`;
+    }
+    imports += `import type { ${rootName} } from "${path}.js";\n`;
+  }
+  await writeTypeScript(
+    `${schemaSet.modulePath}.ts`,
+    `${getHeader(schemaSources)}${imports}\n${types}`,
+  );
 }
 
 /**
@@ -136,8 +311,7 @@ async function writeTypeScript(fileName, code) {
 }
 
 /**
- * Wraps each multi-line doc comment to the print width by formatting its
- * text as markdown, since prettier leaves TypeScript comments as they are.
+ * Wraps doc comments to the print width; prettier leaves comments as they are.
  *
  * @param {string} code
  * @param {number} width
@@ -177,8 +351,7 @@ async function wrapDocComments(code, width) {
 }
 
 /**
- * Generates the root interface and its namespace, with an interface for each
- * schema that has properties, nested by the dotted parts of its file name.
+ * Generates the root interface and namespace of a schema set.
  *
  * @param {SchemaSet} schemaSet
  * @returns {string}
@@ -190,7 +363,7 @@ function generateTypes(schemaSet) {
     if (!hasInterface(schema)) {
       continue;
     }
-    const nameParts = getNameParts(fileName);
+    const nameParts = getNameParts(schemaSet, fileName);
     let node = root;
     for (const part of nameParts) {
       let child = node.children.get(part);
@@ -207,6 +380,12 @@ function generateTypes(schemaSet) {
       nameParts.at(-1) ?? schemaSet.rootName,
       nameParts.length === 0,
     );
+    if (schemaSet.extensionsByFile.has(fileName)) {
+      node.children.set("Extensions", {
+        interfaceCode: generateExtensions(schemaSet, fileName, schema),
+        children: new Map(),
+      });
+    }
   }
   return generateNode(schemaSet.rootName, root, true);
 }
@@ -235,7 +414,7 @@ function generateNode(name, node, isRoot) {
 /**
  * @param {SchemaSet} schemaSet
  * @param {string} fileName
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @param {string} name
  * @param {boolean} isRoot
  * @returns {string}
@@ -252,22 +431,84 @@ function generateInterface(schemaSet, fileName, schema, name, isRoot) {
   let heritage = "";
   const reference = getReference(schema);
   if (reference !== undefined) {
-    heritage = ` extends ${getQualifiedName(schemaSet, reference)}`;
+    const base = resolveReference(schemaSet, reference);
+    heritage = ` extends ${getTypeName(schemaSet, base)}`;
   }
-  return `${formatDoc(docLines)}export interface ${name}${heritage} {\n${generateProperties(schemaSet, schema, fileName)}}\n`;
+
+  let extensionsType;
+  if (schemaSet.extensionsByFile.has(fileName)) {
+    const self = { schemaSet: schemaSet, fileName: fileName, schema: schema };
+    extensionsType = `${getTypeName(schemaSet, self)}.Extensions`;
+  }
+  return `${formatDoc(docLines)}export interface ${name}${heritage} {\n${generateProperties(schemaSet, schema, fileName, extensionsType)}}\n`;
 }
 
 /**
- * Generates the properties of an object schema. A property with an empty
- * schema only marks a property inherited from a base interface, so it's
- * skipped.
+ * Generates an object's `Extensions` interface, which accepts any other
+ * extension unless it extends another `Extensions` interface.
  *
  * @param {SchemaSet} schemaSet
- * @param {JsonSchema} schema
- * @param {string} [fileName] The schema's file name, if it isn't an inline object schema.
+ * @param {string} fileName
+ * @param {SchemaKeywords} schema
  * @returns {string}
  */
-function generateProperties(schemaSet, schema, fileName) {
+function generateExtensions(schemaSet, fileName, schema) {
+  const baseName = getBaseExtensionsName(schemaSet, schema);
+  let heritage = "";
+  if (baseName !== undefined) {
+    heritage = ` extends ${baseName}`;
+  }
+
+  const attachments = [
+    ...(schemaSet.extensionsByFile.get(fileName) ?? []),
+  ].sort((left, right) => left.name.localeCompare(right.name, "en"));
+  let code = `export interface Extensions${heritage} {\n`;
+  for (const { name, target, isGltf21 } of attachments) {
+    const docLines = getDescriptionLines(target.schema);
+    if (isGltf21) {
+      appendGltf21Marker(docLines);
+    }
+    const type = getTypeName(schemaSet, target);
+    code += `${formatDoc(docLines)}${formatPropertyName(name)}?: ${type};\n`;
+  }
+  if (baseName === undefined) {
+    code += "[name: string]: unknown;\n";
+  }
+  return `${code}}\n`;
+}
+
+/**
+ * Returns the `Extensions` interface of the nearest base object that has one.
+ *
+ * @param {SchemaSet} schemaSet
+ * @param {SchemaKeywords} schema
+ * @returns {string | undefined}
+ */
+function getBaseExtensionsName(schemaSet, schema) {
+  let lookupSet = schemaSet;
+  let reference = getReference(schema);
+  while (reference !== undefined) {
+    const base = resolveReference(lookupSet, reference);
+    if (base.schemaSet.extensionsByFile.has(base.fileName)) {
+      return `${getTypeName(schemaSet, base)}.Extensions`;
+    }
+    lookupSet = base.schemaSet;
+    reference = getReference(base.schema);
+  }
+  return undefined;
+}
+
+/**
+ * Generates an object schema's properties, skipping empty ones, which only
+ * mark inherited properties.
+ *
+ * @param {SchemaSet} schemaSet
+ * @param {SchemaKeywords} schema
+ * @param {string} [fileName] The schema's file name, if it isn't an inline object schema.
+ * @param {string} [extensionsType] The type of `extensions`, if the object has its own `Extensions`.
+ * @returns {string}
+ */
+function generateProperties(schemaSet, schema, fileName, extensionsType) {
   const required = schema.required ?? [];
   let baselineProperties;
   if (schemaSet.baseline !== undefined && fileName !== undefined) {
@@ -279,12 +520,11 @@ function generateProperties(schemaSet, schema, fileName) {
     if (Object.keys(property).length === 0) {
       continue;
     }
-    const baselineProperty = baselineProperties?.[name];
-    let docLines = getDescriptionLines(property);
-    const reference = getReference(property);
-    if (docLines.length === 0 && reference !== undefined) {
-      docLines = getDescriptionLines(getSchema(schemaSet, reference));
+    if (name === "extensions" && extensionsType !== undefined) {
+      continue;
     }
+    const baselineProperty = baselineProperties?.[name];
+    const docLines = getPropertyDocLines(schemaSet, property);
     if (baselineProperties !== undefined && baselineProperty === undefined) {
       appendGltf21Marker(docLines);
     }
@@ -299,27 +539,49 @@ function generateProperties(schemaSet, schema, fileName) {
     }
     code += `${formatDoc(docLines)}${formatPropertyName(name)}${optional}: ${resolveType(schemaSet, property)};\n`;
   }
+
+  if (extensionsType !== undefined) {
+    const coreSet = schemaSet.core ?? schemaSet;
+    const coreProperties = getSchema(coreSet, propertySchema).properties ?? {};
+    const docLines = getPropertyDocLines(coreSet, coreProperties.extensions);
+    code += `${formatDoc(docLines)}extensions?: ${extensionsType};\n`;
+  }
   return code;
 }
 
 /**
- * Resolves the TypeScript type of a schema. A referenced schema with
- * properties is typed by its interface, and any other referenced schema is
- * inlined.
+ * Returns a property's description, or else that of the schema it refers to.
  *
  * @param {SchemaSet} schemaSet
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} property
+ * @returns {string[]}
+ */
+function getPropertyDocLines(schemaSet, property) {
+  const docLines = getDescriptionLines(property);
+  const reference = getReference(property);
+  if (docLines.length === 0 && reference !== undefined) {
+    return getDescriptionLines(resolveReference(schemaSet, reference).schema);
+  }
+  return docLines;
+}
+
+/**
+ * Resolves a schema's TypeScript type, inlining referenced schemas that have
+ * no interface.
+ *
+ * @param {SchemaSet} schemaSet
+ * @param {SchemaKeywords} schema
  * @returns {string}
  */
 function resolveType(schemaSet, schema) {
   const reference = getReference(schema);
   if (reference !== undefined) {
-    const target = getSchema(schemaSet, reference);
+    const target = resolveReference(schemaSet, reference);
     let referenceType;
-    if (hasInterface(target)) {
-      referenceType = getQualifiedName(schemaSet, reference);
+    if (hasInterface(target.schema)) {
+      referenceType = getTypeName(schemaSet, target);
     } else {
-      referenceType = resolveType(schemaSet, target);
+      referenceType = resolveType(schemaSet, target.schema);
     }
     if (schema.properties !== undefined) {
       return `${referenceType} & {\n${generateProperties(schemaSet, schema)}}`;
@@ -370,15 +632,18 @@ function resolveType(schemaSet, schema) {
 }
 
 /**
- * Resolves an array schema's type, as a tuple when it has a fixed length of
- * at most 4 and items that aren't enum-valued.
+ * Resolves an array schema's type, as a tuple if its length is fixed at 4 or
+ * less and its items aren't enum-valued.
  *
  * @param {SchemaSet} schemaSet
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @returns {string}
  */
 function resolveArrayType(schemaSet, schema) {
-  const items = /** @type {JsonSchema} */ (schema.items);
+  const items = schema.items;
+  if (items === undefined) {
+    return "unknown[]";
+  }
   const itemType = resolveType(schemaSet, items);
   const length = schema.minItems;
   if (
@@ -394,7 +659,7 @@ function resolveArrayType(schemaSet, schema) {
 
 /**
  * @param {SchemaSet} schemaSet
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @returns {string}
  */
 function resolveObjectType(schemaSet, schema) {
@@ -409,7 +674,7 @@ function resolveObjectType(schemaSet, schema) {
 }
 
 /**
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @returns {boolean}
  */
 function hasInterface(schema) {
@@ -420,48 +685,121 @@ function hasInterface(schema) {
 
 /**
  * @param {SchemaSet} schemaSet
- * @param {string} reference
- * @returns {JsonSchema}
+ * @param {string} fileName
+ * @returns {SchemaKeywords}
  */
-function getSchema(schemaSet, reference) {
-  const schema = schemaSet.schemas.get(reference);
+function getSchema(schemaSet, fileName) {
+  const schema = schemaSet.schemas.get(fileName);
   if (schema === undefined) {
-    throw new Error(`${schemaSet.rootName}: unknown schema ${reference}`);
+    throw new Error(`${schemaSet.rootName}: unknown schema ${fileName}`);
   }
   return schema;
 }
 
 /**
- * Returns the PascalCase dotted parts of a schema file name, without any
- * leading `glTF`, e.g. `accessor.sparse.indices.schema.json` gives
- * `["Accessor", "Sparse", "Indices"]` and `glTF.schema.json` gives `[]`.
+ * Finds the schema a reference names. An extension's reference to a schema it
+ * lacks names a core schema, by its name or the end of its name:
+ * `textureInfo.schema.json` names `material.textureInfo.schema.json`.
  *
+ * @param {SchemaSet} schemaSet
+ * @param {string} reference
+ * @returns {SchemaTarget}
+ */
+function resolveReference(schemaSet, reference) {
+  const [path, pointer] = reference.split("#");
+  // A schema in a subdirectory refers to the schemas above it with `../`.
+  const fileName = path.replace(/^(\.\.\/)+/, "");
+  let target = {
+    schemaSet: schemaSet,
+    fileName: fileName,
+    schema: schemaSet.schemas.get(fileName),
+  };
+  const core = schemaSet.core;
+  if (target.schema === undefined && core !== undefined) {
+    let coreFileName = fileName;
+    if (!core.schemas.has(fileName)) {
+      const matches = [...core.schemas.keys()].filter((name) =>
+        name.endsWith(`.${fileName}`),
+      );
+      if (matches.length !== 1) {
+        throw new Error(
+          `${schemaSet.rootName}: ${reference} matches ${matches.length} core schemas`,
+        );
+      }
+      coreFileName = matches[0];
+    }
+    target = {
+      schemaSet: core,
+      fileName: coreFileName,
+      schema: core.schemas.get(coreFileName),
+    };
+  }
+
+  let schema = target.schema;
+  if (schema === undefined) {
+    throw new Error(`${schemaSet.rootName}: unknown schema ${reference}`);
+  }
+  for (const key of (pointer ?? "").split("/")) {
+    if (key !== "") {
+      schema = /** @type {Record<string, SchemaKeywords>} */ (schema)[key];
+    }
+  }
+  return {
+    schemaSet: target.schemaSet,
+    fileName: target.fileName,
+    schema: schema,
+  };
+}
+
+/**
+ * Returns the parts of a schema's type name, from the parts of its file name:
+ * `material.textureInfo.schema.json` gives `["Material", "TextureInfo"]`, and
+ * `glTF.EXT_structural_metadata.schema.json` gives `["Gltf"]`.
+ *
+ * @param {SchemaSet} schemaSet
  * @param {string} fileName
  * @returns {string[]}
  */
-function getNameParts(fileName) {
-  const parts = fileName.replace(/\.schema\.json$/, "").split(".");
-  parts[0] = parts[0].replace(/^glTF/, "");
-  if (parts[0] === "") {
-    parts.shift();
+function getNameParts(schemaSet, fileName) {
+  let parts = fileName.replace(/\.schema\.json$/, "").split(/[./]/);
+  if (schemaSet.extensionName === undefined) {
+    parts[0] = parts[0].replace(/^glTF/, "");
+    if (parts[0] === "") {
+      parts.shift();
+    }
+  } else {
+    parts = parts.filter((part) => part !== schemaSet.extensionName);
   }
-  return parts.map((part) => part[0].toUpperCase() + part.slice(1));
+  return parts.map((part) => {
+    if (part === "glTF" || part === "gltf") {
+      return "Gltf";
+    }
+    return part[0].toUpperCase() + part.slice(1);
+  });
 }
 
 /**
- * @param {SchemaSet} schemaSet
- * @param {string} fileName
+ * Returns the qualified name of a schema's interface, recording the import it
+ * needs.
+ *
+ * @param {SchemaSet} schemaSet The schema set of the file that uses the name.
+ * @param {SchemaTarget} target
  * @returns {string}
  */
-function getQualifiedName(schemaSet, fileName) {
-  return [schemaSet.rootName, ...getNameParts(fileName)].join(".");
+function getTypeName(schemaSet, target) {
+  if (target.schemaSet !== schemaSet) {
+    schemaSet.imports.add(target.schemaSet);
+  }
+  return [
+    target.schemaSet.rootName,
+    ...getNameParts(target.schemaSet, target.fileName),
+  ].join(".");
 }
 
 /**
- * Returns the schema a schema refers to through `$ref` or `allOf`: the base
- * of an object schema's interface, or the type of a property schema.
+ * Returns a schema's `$ref`, directly or through `allOf`.
  *
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @returns {string | undefined}
  */
 function getReference(schema) {
@@ -472,7 +810,7 @@ function getReference(schema) {
  * Returns the values of an enum-valued schema: the `const` members of its
  * `anyOf`, or its `enum` values described by `gltf_enumNames`.
  *
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @returns {EnumValue[] | undefined}
  */
 function getEnumValues(schema) {
@@ -494,7 +832,7 @@ function getEnumValues(schema) {
 }
 
 /**
- * @param {JsonSchema} schema
+ * @param {SchemaKeywords} schema
  * @returns {string[]}
  */
 function getDescriptionLines(schema) {
@@ -517,12 +855,11 @@ function appendGltf21Marker(docLines) {
 }
 
 /**
- * Lists each allowed value of an enum-valued property, or of an array
- * property's enum-valued items, with its description, marking values absent
- * from glTF 2.0.
+ * Lists the allowed values of an enum property or of its array items,
+ * marking those absent from glTF 2.0.
  *
- * @param {JsonSchema} property
- * @param {JsonSchema} [baselineProperty]
+ * @param {SchemaKeywords} property
+ * @param {SchemaKeywords} [baselineProperty]
  * @returns {string[]}
  */
 function getEnumDocLines(property, baselineProperty) {
