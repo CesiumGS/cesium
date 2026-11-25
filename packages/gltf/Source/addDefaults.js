@@ -61,58 +61,12 @@ function addDefaults(gltf) {
 
   ForEach.material(gltf, function (material) {
     const extensions = material.extensions ?? {};
-    const materialsCommon = extensions.KHR_materials_common;
-    if (defined(materialsCommon)) {
-      const technique = materialsCommon.technique;
-      const values = defined(materialsCommon.values)
-        ? materialsCommon.values
-        : {};
-      materialsCommon.values = values;
-
-      values.ambient = defined(values.ambient)
-        ? values.ambient
-        : [0.0, 0.0, 0.0, 1.0];
-      values.emission = defined(values.emission)
-        ? values.emission
-        : [0.0, 0.0, 0.0, 1.0];
-
-      values.transparency = values.transparency ?? 1.0;
-
-      if (technique !== "CONSTANT") {
-        values.diffuse = defined(values.diffuse)
-          ? values.diffuse
-          : [0.0, 0.0, 0.0, 1.0];
-        if (technique !== "LAMBERT") {
-          values.specular = defined(values.specular)
-            ? values.specular
-            : [0.0, 0.0, 0.0, 1.0];
-          values.shininess = values.shininess ?? 0.0;
-        }
-      }
-
-      // These actually exist on the extension object, not the values object despite what's shown in the spec
-      materialsCommon.transparent = materialsCommon.transparent ?? false;
-      materialsCommon.doubleSided = materialsCommon.doubleSided ?? false;
-
-      return;
-    }
-
     material.emissiveFactor = material.emissiveFactor ?? [0.0, 0.0, 0.0];
     material.alphaMode = material.alphaMode ?? "OPAQUE";
     material.doubleSided = material.doubleSided ?? false;
 
     if (material.alphaMode === "MASK") {
       material.alphaCutoff = material.alphaCutoff ?? 0.5;
-    }
-
-    const techniquesExtension = extensions.KHR_techniques_webgl;
-    if (defined(techniquesExtension)) {
-      ForEach.materialValue(material, function (materialValue) {
-        // Check if material value is a TextureInfo object
-        if (defined(materialValue.index)) {
-          addTextureDefaults(materialValue);
-        }
-      });
     }
 
     addTextureDefaults(material.emissiveTexture);

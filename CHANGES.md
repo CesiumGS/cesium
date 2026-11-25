@@ -26,6 +26,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- glTF models listing `KHR_blend` in `extensionsRequired` now fail to load. Its blend functions have been ignored since CesiumJS 1.97. [#14114](https://github.com/CesiumGS/cesium/pull/14114)
+
 #### Additions :tada:
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)

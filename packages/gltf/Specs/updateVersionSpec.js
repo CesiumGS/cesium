@@ -77,10 +77,8 @@ async function loadGltf(url) {
 describe("updateVersion", function () {
   it("defaults to 1.0 if gltf has no version", function () {
     const gltf = {};
-    updateVersion(gltf, {
-      targetVersion: "1.0",
-    });
-    expect(gltf.asset.version).toEqual("1.0");
+    updateVersion(gltf);
+    expect(gltf.asset.version).toEqual("2.0");
   });
 
   it("updates empty glTF with version from 0.8 to 2.0", function () {
@@ -112,7 +110,17 @@ describe("updateVersion", function () {
     expect(gltf.asset.version).toEqual("2.0");
   });
 
-  it("updates glTF from 0.8 to 1.0", function () {
+  it("does not update a glTF with an unknown version", function () {
+    const gltf = {
+      asset: {
+        version: "3.0",
+      },
+    };
+    updateVersion(gltf);
+    expect(gltf.asset.version).toEqual("3.0");
+  });
+
+  it("updates glTF from 0.8 to 2.0", function () {
     const times = [0.0, 1.0];
     const axisA = new Cartesian3(0.0, 0.0, 1.0);
     const axisB = new Cartesian3(0.0, 1.0, 0.0);
@@ -251,7 +259,7 @@ describe("updateVersion", function () {
           instanceTechnique: {
             technique: "technique",
             values: {
-              ambient: [0.0, 0.0, 0.0, 1.0],
+              diffuse: [0.0, 0.0, 0.0, 0.5],
             },
           },
         },
@@ -260,6 +268,7 @@ describe("updateVersion", function () {
         mesh: {
           primitives: [
             {
+              attributes: {},
               primitive: WebGLConstants.TRIANGLES,
             },
           ],
@@ -277,87 +286,107 @@ describe("updateVersion", function () {
         nodeOther: {
           rotation: [0.0, 0.0, 1.0, 0.0],
         },
+        skeleton: {
+          jointName: "skeleton",
+        },
+      },
+      programs: {
+        program: {
+          fragmentShader: "fs",
+          vertexShader: "vs",
+        },
+      },
+      shaders: {
+        fs: {
+          type: WebGLConstants.FRAGMENT_SHADER,
+          uri: "data:,",
+        },
+        vs: {
+          type: WebGLConstants.VERTEX_SHADER,
+          uri: "data:,",
+        },
+      },
+      skins: {
+        skin: {},
       },
       techniques: {
         technique: {
+          parameters: {
+            position: {
+              semantic: "POSITION",
+            },
+            diffuse: {
+              type: WebGLConstants.FLOAT_VEC4,
+            },
+          },
           pass: "pass",
           passes: {
             pass: {
               instanceProgram: {
                 attributes: {
-                  attribute: "TEST_ATTRIBUTE",
+                  a_position: "position",
                 },
                 program: "program",
                 uniforms: {
-                  uniform: "TEST_UNIFORM",
+                  u_diffuse: "diffuse",
                 },
               },
-              states: ["TEST_STATE"],
+              states: {
+                enable: [WebGLConstants.BLEND],
+              },
             },
           },
         },
       },
     };
 
-    updateVersion(gltf, {
-      targetVersion: "1.0",
-      keepLegacyExtensions: true,
-    });
+    updateVersion(gltf);
 
-    // Asset updates: version set to 1.0, profile split into object
-    expect(gltf.asset.version).toEqual("1.0");
-    expect(gltf.asset.profile).toEqual({
-      api: "WebGL",
-      version: "1.0",
-    });
+    // Asset updates: version set to 2.0, profile removed
+    expect(gltf.asset.version).toEqual("2.0");
+    expect(gltf.asset.profile).toBeUndefined();
 
     // Top-level version removed
     expect(gltf.version).toBeUndefined();
 
     // allExtensions renamed to extensionsUsed
-    // gltf.lights moved to KHR_materials_common extension
-    expect(gltf.extensionsUsed).toEqual(["extension", "KHR_materials_common"]);
+    expect(gltf.extensionsUsed).toEqual(["extension"]);
     expect(gltf.allExtensions).toBeUndefined();
-    expect(gltf.extensions.KHR_materials_common.lights).toEqual({
-      someLight: true,
-    });
 
-    // material.instanceTechnique properties moved onto the material directly
-    const { material } = gltf.materials;
-    expect(material.technique).toEqual("technique");
-    expect(material.values).toEqual({
-      ambient: [0.0, 0.0, 0.0, 1.0],
-    });
+    // gltf.lights removed
+    expect(gltf.lights).toBeUndefined();
+    expect(gltf.extensions).toBeUndefined();
+
+    // material.instanceTechnique and technique pass converted to a PBR material
+    const material = gltf.materials[0];
+    expect(material.instanceTechnique).toBeUndefined();
+    expect(material.technique).toBeUndefined();
+    expect(material.values).toBeUndefined();
+    expect(material.pbrMetallicRoughness.baseColorFactor).toEqual([
+      0.0, 0.0, 0.0, 0.5,
+    ]);
+    expect(material.alphaMode).toBe("BLEND");
+    expect(material.doubleSided).toBe(true);
+    expect(gltf.techniques).toBeUndefined();
 
     // primitive.primitive renamed to primitive.mode
-    const primitive = gltf.meshes.mesh.primitives[0];
+    const primitive = gltf.meshes[0].primitives[0];
     expect(primitive.primitive).toBeUndefined();
     expect(primitive.mode).toEqual(WebGLConstants.TRIANGLES);
 
-    // node.instanceSkin is split into node.skeletons, node.skin, and node.meshes
-    const { node } = gltf.nodes;
-    expect(node.skeletons).toEqual(["skeleton"]);
-    expect(node.skin).toEqual("skin");
-    expect(node.meshes).toEqual(["mesh"]);
+    // node.instanceSkin is split into node.skin, node.mesh, and skin.skeleton
+    const node = getNodeByName(gltf, "node");
+    const skeleton = getNodeByName(gltf, "skeleton");
+    expect(node.instanceSkin).toBeUndefined();
+    expect(node.mesh).toBe(0);
+    expect(node.skin).toBe(0);
+    expect(gltf.skins[0].skeleton).toBe(gltf.nodes.indexOf(skeleton));
 
     // Node rotation converted from axis-angle to quaternion
     expect(node.rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
-    // Technique pass and passes removed
-    const { technique } = gltf.techniques;
-    expect(technique.pass).toBeUndefined();
-    expect(technique.passes).toBeUndefined();
-    expect(technique.attributes).toEqual({
-      attribute: "TEST_ATTRIBUTE",
-    });
-    expect(technique.program).toEqual("program");
-    expect(technique.uniforms).toEqual({
-      uniform: "TEST_UNIFORM",
-    });
-    expect(technique.states).toEqual(["TEST_STATE"]);
-
     // Animation rotations converted from axis-angle to quaternion
-    const { source } = gltf.buffers.buffer.extras._pipeline;
+    const { source } = gltf.buffers[0].extras._pipeline;
     expect(source).toEqual(expectedBuffer);
   });
 
@@ -454,6 +483,7 @@ describe("updateVersion", function () {
           technique: "technique",
           values: {
             lightAttenuation: 2.0,
+            diffuse: [0.0, 0.0, 0.0, 0.5],
           },
         },
       },
@@ -482,6 +512,7 @@ describe("updateVersion", function () {
           },
           uniforms: {
             u_lightAttenuation: "lightAttenuation",
+            u_diffuse: "diffuse",
             u_texcoord: "texcoord",
             u_color: "color",
             u_application: "application",
@@ -490,6 +521,9 @@ describe("updateVersion", function () {
           parameters: {
             lightAttenuation: {
               value: 1.0,
+            },
+            diffuse: {
+              type: WebGLConstants.FLOAT_VEC4,
             },
             texcoord: {
               semantic: "TEXCOORD",
@@ -681,9 +715,7 @@ describe("updateVersion", function () {
       glExtensionsUsed: ["OES_element_index_uint"],
     };
 
-    updateVersion(gltf, {
-      keepLegacyExtensions: true,
-    });
+    updateVersion(gltf);
 
     // Asset updates: version set to 2.0, profile removed
     expect(gltf.asset.version).toEqual("2.0");
@@ -692,18 +724,11 @@ describe("updateVersion", function () {
     // Extensions used become extensions required
     const extensionsUsed = gltf.extensionsUsed;
     expect(extensionsUsed).toEqual([
-      "KHR_materials_common",
       "WEB3D_quantized_attributes",
       "UNKOWN_EXTENSION",
-      "KHR_blend",
-      "KHR_techniques_webgl",
     ]);
     const extensionsRequired = gltf.extensionsRequired;
-    expect(extensionsRequired).toEqual([
-      "KHR_materials_common",
-      "WEB3D_quantized_attributes",
-      "KHR_techniques_webgl",
-    ]);
+    expect(extensionsRequired).toEqual(["WEB3D_quantized_attributes"]);
 
     // animation.parameters removed
     const animation = gltf.animations[0];
@@ -724,56 +749,35 @@ describe("updateVersion", function () {
     expect(getNodeByName(gltf, "lightNode")).toBeDefined();
     expect(gltf.scenes[0].nodes.length).toBe(2);
 
-    // Expect material values to be moved to material KHR_techniques_webgl extension
+    // Technique converted to a PBR material, using uniform names to find the base color
     const material = gltf.materials[0];
-    expect(
-      material.extensions.KHR_techniques_webgl.values.u_lightAttenuation,
-    ).toEqual(2);
-
-    // Expect material parameters to be updated
+    expect(material.technique).toBeUndefined();
+    expect(material.values).toBeUndefined();
+    expect(material.extensions).toBeUndefined();
+    expect(material.pbrMetallicRoughness.baseColorFactor).toEqual([
+      0.0, 0.0, 0.0, 0.5,
+    ]);
     expect(material.doubleSided).toBeUndefined();
     expect(material.alphaMode).toBe("BLEND");
-
-    // Expect technique blending to be moved to material KHR_blend extension
-    const materialBlending = material.extensions.KHR_blend;
-    expect(materialBlending).toBeDefined();
-    expect(materialBlending.blendEquation).toEqual([
-      WebGLConstants.FUNC_SUBTRACT,
-      WebGLConstants.FUNC_SUBTRACT,
-    ]);
-    expect(materialBlending.blendFactors).toEqual([
-      WebGLConstants.ONE,
-      WebGLConstants.ZERO,
-      WebGLConstants.ONE,
-      WebGLConstants.ZERO,
-    ]);
-
-    // Expect techniques to be moved to asset KHR_techniques_webgl extension
-    const technique = gltf.extensions.KHR_techniques_webgl.techniques[0];
-    expect(technique.uniforms.u_lightAttenuation.value).toEqual(1.0);
-    expect(technique.attributes.a_application.value).toBeUndefined();
+    expect(gltf.techniques).toBeUndefined();
+    expect(gltf.programs).toBeUndefined();
+    expect(gltf.shaders).toBeUndefined();
+    expect(gltf.extensions).toBeUndefined();
 
     // TEXCOORD and COLOR are now TEXCOORD_0 and COLOR_0
     const primitive = gltf.meshes[0].primitives[0];
-    expect(technique.uniforms.u_texcoord.semantic).toEqual("TEXCOORD_0");
-    expect(technique.uniforms.u_color.semantic).toEqual("COLOR_0");
     expect(primitive.attributes.TEXCOORD).toBeUndefined();
     expect(primitive.attributes.TEXCOORD_0).toEqual(6);
     expect(primitive.attributes.COLOR).toBeUndefined();
     expect(primitive.attributes.COLOR_0).toEqual(7);
 
     // JOINT is now JOINTS_0 and WEIGHT is not WEIGHTS_0
-    expect(technique.attributes.a_joints.semantic).toEqual("JOINTS_0");
-    expect(technique.attributes.a_weights.semantic).toEqual("WEIGHTS_0");
     expect(primitive.attributes.JOINT).toBeUndefined();
     expect(primitive.attributes.JOINTS_0).toEqual(8);
     expect(primitive.attributes.WEIGHT).toBeUndefined();
     expect(primitive.attributes.WEIGHTS_0).toEqual(9);
 
     // Underscore added to application specific attributes
-    expect(technique.attributes.a_application.semantic).toEqual(
-      "_APPLICATIONSPECIFIC",
-    );
     expect(primitive.attributes.APPLICATIONSPECIFIC).toBeUndefined();
     expect(primitive.attributes._APPLICATIONSPECIFIC).toEqual(0);
     expect(primitive.attributes._TEMPERATURE).toEqual(10);
@@ -839,9 +843,56 @@ describe("updateVersion", function () {
 
     // glExtensionsUsed removed
     expect(gltf.glExtensionsUsed).toBeUndefined();
-    expect(
-      gltf.extensions.KHR_techniques_webgl.programs[0].glExtensions,
-    ).toEqual(["OES_element_index_uint"]);
+  });
+
+  function createTechniqueGltf(states) {
+    return {
+      asset: {
+        version: "1.0",
+      },
+      materials: {
+        material: {
+          technique: "technique",
+        },
+      },
+      techniques: {
+        technique: {
+          states: states,
+        },
+      },
+    };
+  }
+
+  it("sets material.doubleSided if a glTF 1.0 technique does not enable CULL_FACE", function () {
+    let gltf = createTechniqueGltf({
+      enable: [WebGLConstants.DEPTH_TEST, WebGLConstants.CULL_FACE],
+    });
+    updateVersion(gltf);
+    expect(gltf.materials[0].doubleSided).toBeUndefined();
+
+    gltf = createTechniqueGltf({
+      enable: [WebGLConstants.DEPTH_TEST],
+    });
+    updateVersion(gltf);
+    expect(gltf.materials[0].doubleSided).toBe(true);
+
+    gltf = createTechniqueGltf(undefined);
+    updateVersion(gltf);
+    expect(gltf.materials[0].doubleSided).toBeUndefined();
+  });
+
+  it("sets material.alphaMode if a glTF 1.0 technique enables BLEND", function () {
+    let gltf = createTechniqueGltf({
+      enable: [WebGLConstants.DEPTH_TEST, WebGLConstants.BLEND],
+    });
+    updateVersion(gltf);
+    expect(gltf.materials[0].alphaMode).toBe("BLEND");
+
+    gltf = createTechniqueGltf({
+      enable: [WebGLConstants.DEPTH_TEST],
+    });
+    updateVersion(gltf);
+    expect(gltf.materials[0].alphaMode).toBeUndefined();
   });
 
   it("updates glTF 1.0 techniques to PBR materials", async function () {
@@ -980,40 +1031,14 @@ describe("updateVersion", function () {
     expect(material.extensions).toBeUndefined();
   });
 
-  it("creates a PBR material from KHR_techniques_webgl with a custom diffuse texture name", async function () {
+  it("keeps the version of glTF 2.1 with KHR_techniques_webgl and converts it to PBR materials", async function () {
     const gltf = await loadGltf(gltf2TechniquesTextured);
+    gltf.asset.version = "2.1";
+    updateVersion(gltf);
 
-    const options = {
-      baseColorTextureNames: ["u_diffuse"],
-    };
-    updateVersion(gltf, options);
-
-    expect(gltf.materials.length).toBe(1);
-
+    expect(gltf.asset.version).toEqual("2.1");
     const material = gltf.materials[0];
-    expect(material.pbrMetallicRoughness.roughnessFactor).toBe(1.0);
-    expect(material.pbrMetallicRoughness.metallicFactor).toBe(0.0);
     expect(material.pbrMetallicRoughness.baseColorTexture.index).toBe(0);
-
-    expect(gltf.extensionsRequired).toBeUndefined();
-    expect(gltf.extensionsUsed).toBeUndefined();
-  });
-
-  it("does not create a PBR material from KHR_techniques_webgl when the diffuse texture name is unknown", async function () {
-    const gltf = await loadGltf(gltf2TechniquesTextured);
-
-    const options = {
-      baseColorTextureNames: ["NOT_u_diffuse"],
-    };
-    updateVersion(gltf, options);
-
-    expect(gltf.materials.length).toBe(1);
-
-    const material = gltf.materials[0];
-    expect(material.pbrMetallicRoughness).toBeUndefined();
     expect(material.extensions).toBeUndefined();
-
-    expect(gltf.extensionsRequired).toBeUndefined();
-    expect(gltf.extensionsUsed).toBeUndefined();
   });
 });

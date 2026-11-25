@@ -2,7 +2,7 @@ import { defined } from "@cesium/core";
 import ForEach from "./ForEach.js";
 
 /**
- * Adds extras._pipeline to each object that can have extras in the glTF asset.
+ * Adds extras._pipeline to each buffer in the glTF asset, to hold the buffer's data.
  * This stage runs before updateVersion and handles both glTF 1.0 and glTF 2.0 assets.
  *
  * @param {object} gltf A javascript object containing a glTF asset.
@@ -11,17 +11,9 @@ import ForEach from "./ForEach.js";
  * @internal
  */
 function addPipelineExtras(gltf) {
-  ForEach.shader(gltf, function (shader) {
-    addExtras(shader);
-  });
   ForEach.buffer(gltf, function (buffer) {
     addExtras(buffer);
   });
-  ForEach.image(gltf, function (image) {
-    addExtras(image);
-  });
-
-  addExtras(gltf);
 
   return gltf;
 }
