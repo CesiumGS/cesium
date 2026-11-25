@@ -11,6 +11,7 @@ import {
   defined,
 } from "@cesium/core";
 import Material from "./Material.js";
+import SceneMode from "./SceneMode.js";
 
 /**
  * <div class="notice">
@@ -363,8 +364,9 @@ Object.defineProperties(Polyline.prototype, {
  */
 Polyline.prototype.update = function () {
   let modelMatrix = Matrix4.IDENTITY;
-  if (defined(this._polylineCollection)) {
-    modelMatrix = this._polylineCollection.modelMatrix;
+  const polylineCollection = this._polylineCollection;
+  if (defined(polylineCollection)) {
+    modelMatrix = polylineCollection.modelMatrix;
   }
 
   const segmentPositionsLength = this._segments.positions.length;
@@ -386,6 +388,16 @@ Polyline.prototype.update = function () {
   }
 
   this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
+
+  // _segments splits the line where it crosses the antimeridian, which only
+  // matters in 2D, Columbus view, and during morphs. 3D draws _actualPositions
+  // directly, so return early to avoid needlessly recreating the vertex arrays.
+  if (
+    defined(polylineCollection) &&
+    polylineCollection._mode === SceneMode.SCENE3D
+  ) {
+    return;
+  }
 
   if (this._segments.positions.length !== segmentPositionsLength) {
     // number of positions changed
