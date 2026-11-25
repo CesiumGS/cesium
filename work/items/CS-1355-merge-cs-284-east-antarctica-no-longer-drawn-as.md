@@ -2,10 +2,14 @@
 id: CS-1355
 title: Merge CS-284, East Antarctica no longer drawn as ocean from far out
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-192
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with merge-item.sh."
+answered_at: 2026-11-25T15:38:15.805Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

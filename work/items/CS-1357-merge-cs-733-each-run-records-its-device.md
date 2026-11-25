@@ -2,10 +2,14 @@
 id: CS-1357
 title: Merge CS-733, each run records its device, configuration and state
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-389
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with merge-item.sh. CS-734 to CS-740, toward CS-722, can then start."
+answered_at: 2026-11-25T15:38:23.589Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

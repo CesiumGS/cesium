@@ -2,10 +2,14 @@
 id: CS-1356
 title: Merge CS-810, the imagery and terrain provider seam
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with merge-item.sh. CS-279's providers and CS-555 can build on it, and alpha.1's wait on the adapters (CS-1296) shortens."
+answered_at: 2026-11-25T15:38:19.642Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

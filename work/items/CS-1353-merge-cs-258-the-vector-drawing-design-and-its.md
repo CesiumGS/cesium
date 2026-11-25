@@ -2,10 +2,14 @@
 id: CS-1353
 title: Merge CS-258, the vector drawing design and its plan
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-190
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with merge-item.sh. CS-261 and CS-654 can then build from it on main."
+answered_at: 2026-11-25T15:38:07.186Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

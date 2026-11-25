@@ -2,10 +2,14 @@
 id: CS-1359
 title: Merge CS-972, a render feature's context reaches the GPU only through the seams
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with merge-item.sh, then CS-848."
+answered_at: 2026-11-25T15:38:37.371Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

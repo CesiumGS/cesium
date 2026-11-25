@@ -2,10 +2,14 @@
 id: CS-1358
 title: Merge CS-556, glTF files load through the content-source seam
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-191
 decider: owner
+answer: "A. A. Merge it: It joins a batch after CS-1188's merge; once the batch's full suite passes, the orchestrator merges it with merge-item.sh, joining CS-1188's inlet list for the model sink."
+answered_at: 2026-11-25T15:38:31.570Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

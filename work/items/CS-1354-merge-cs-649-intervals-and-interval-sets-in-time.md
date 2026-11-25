@@ -2,10 +2,14 @@
 id: CS-1354
 title: Merge CS-649, intervals and interval sets in /time
 kind: decision
-state: planned
+state: done
 created: 2026-11-25
 project: CS-647
 decider: owner
+answer: "A. A. Merge it: It joins the next batch; once the batch's full suite passes, the orchestrator merges it with merge-item.sh. CS-1287 can start after it."
+answered_at: 2026-11-25T15:38:10.849Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
