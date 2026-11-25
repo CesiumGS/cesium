@@ -1,21 +1,24 @@
 // @ts-check
 
-import { Check, defined } from "@cesium/core";
+import { Check, DeveloperError, defined } from "@cesium/core";
 import Expression from "./Expression.js";
+import SymbologyLayer from "./SymbologyLayer.js";
+import SymbologyLayerCollection from "./SymbologyLayerCollection.js";
 
 /** @import CircleSymbolizer from "./CircleSymbolizer.js"; */
 
 /**
  * @typedef {object} VectorStyleRuleOptions
  * @property {string|boolean} [condition=true] An expression in the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language} that selects the features the rule applies to.
- * @property {CircleSymbolizer[]} symbolizers How the selected features are drawn, in drawing order.
+ * @property {SymbologyLayer[]} [symbologyLayers] How the selected features are drawn, one entry per drawing level.
+ * @property {CircleSymbolizer[]} [symbolizers] The symbolizers of a rule with a single {@link SymbologyLayer}. Must not be combined with <code>symbologyLayers</code>.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
 /**
- * A condition paired with the symbolizers that draw the features it selects.
- * Within a {@link SymbologyLayer}, each feature is drawn by the first rule
- * whose condition it matches.
+ * A condition paired with the {@link SymbologyLayer} instances that draw the
+ * features it selects. Within a {@link VectorStyle}, each feature is drawn by
+ * the first rule whose condition it matches.
  *
  * @example
  * const rule = new Cesium.VectorStyleRule({
@@ -35,7 +38,11 @@ class VectorStyleRule {
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options", options);
-    Check.defined("options.symbolizers", options.symbolizers);
+    if (defined(options.symbologyLayers) === defined(options.symbolizers)) {
+      throw new DeveloperError(
+        "Exactly one of options.symbologyLayers and options.symbolizers must be defined.",
+      );
+    }
     //>>includeEnd('debug');
 
     /**
@@ -54,10 +61,14 @@ class VectorStyleRule {
         : undefined;
 
     /**
-     * @type {CircleSymbolizer[]}
+     * @type {SymbologyLayerCollection}
      * @private
      */
-    this._symbolizers = [...options.symbolizers];
+    this._symbologyLayers = new SymbologyLayerCollection(
+      defined(options.symbolizers)
+        ? [new SymbologyLayer({ symbolizers: options.symbolizers })]
+        : options.symbologyLayers,
+    );
   }
 
   /**
@@ -72,13 +83,13 @@ class VectorStyleRule {
   }
 
   /**
-   * How the selected features are drawn, in drawing order.
+   * How the selected features are drawn, one entry per drawing level.
    *
-   * @type {CircleSymbolizer[]}
+   * @type {SymbologyLayerCollection}
    * @readonly
    */
-  get symbolizers() {
-    return this._symbolizers;
+  get symbologyLayers() {
+    return this._symbologyLayers;
   }
 
   /**

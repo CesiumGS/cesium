@@ -41,56 +41,45 @@ describe(
       collection.destroy();
     });
 
-    it("creates a single symbology layer from rules", function () {
-      const rule = new VectorStyleRule({ symbolizers: [] });
-      const style = new VectorStyle({ rules: [rule] });
+    it("keeps the rules in order", function () {
+      const first = new VectorStyleRule({ symbolizers: [] });
+      const second = new VectorStyleRule({ symbolizers: [] });
+      const style = new VectorStyle({ rules: [first, second] });
 
-      expect(style.symbologyLayers.length).toBe(1);
-      expect(style.symbologyLayers.get(0).rules).toEqual([rule]);
+      expect(style.rules).toEqual([first, second]);
     });
 
-    it("adds symbology layers in order", function () {
-      const first = new SymbologyLayer({ rules: [] });
-      const second = new SymbologyLayer({ rules: [] });
-      const style = new VectorStyle({ symbologyLayers: [first] });
-
-      style.symbologyLayers.add(second);
-
-      expect(style.symbologyLayers.length).toBe(2);
-      expect(style.symbologyLayers.get(0)).toBe(first);
-      expect(style.symbologyLayers.get(1)).toBe(second);
-    });
-
-    it("throws with both symbology layers and rules", function () {
-      expect(
-        () => new VectorStyle({ symbologyLayers: [], rules: [] }),
-      ).toThrowDeveloperError();
-    });
-
-    it("creates one group per symbology layer, with one primitive per symbolizer", function () {
+    it("creates one group per symbology layer, in zIndex then declaration order", function () {
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            name: "first",
-            rules: [
-              new VectorStyleRule({
-                condition: "${important}",
+        rules: [
+          new VectorStyleRule({
+            condition: "${important}",
+            symbologyLayers: [
+              new SymbologyLayer({
+                name: "poi-icon",
                 symbolizers: [
                   new CircleSymbolizer({ radius: 1 }),
                   new CircleSymbolizer({ radius: 2 }),
                 ],
               }),
-              new VectorStyleRule({
+              new SymbologyLayer({
+                name: "poi-label",
+                zIndex: 1,
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ radius: 3 })],
               }),
             ],
           }),
-          new SymbologyLayer({
-            name: "second",
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                name: "transit-icon",
                 symbolizers: [new CircleSymbolizer({ radius: 4 })],
+              }),
+              new SymbologyLayer({
+                name: "transit-label",
+                zIndex: 1,
+                symbolizers: [new CircleSymbolizer({ radius: 5 })],
               }),
             ],
           }),
@@ -99,21 +88,24 @@ describe(
 
       const group = style.createPrimitives(collection);
 
-      expect(group.length).toBe(2);
-      expect(group.get(0).name).toBe("first");
-      expect(group.get(0).length).toBe(3);
-      expect(group.get(1).name).toBe("second");
-      expect(group.get(1).length).toBe(1);
+      expect(group.length).toBe(4);
+      expect([0, 1, 2, 3].map((i) => group.get(i).name)).toEqual([
+        "poi-icon",
+        "transit-icon",
+        "poi-label",
+        "transit-label",
+      ]);
       const primitives = group.flatten();
       expect(primitives[0]).toBeInstanceOf(CircleVectorPrimitive);
       expect(primitives.map((primitive) => primitive.radius)).toEqual([
-        1, 2, 3, 4,
+        1, 2, 4, 3, 5,
       ]);
       expect(primitives.map((primitive) => primitive.blendOption)).toEqual([
         BlendOption.TRANSLUCENT,
         BlendOption.TRANSLUCENT,
         BlendOption.TRANSLUCENT,
         BlendOption.OPAQUE,
+        BlendOption.TRANSLUCENT,
       ]);
       expect(primitives.every((p) => p.collection === collection)).toBe(true);
 
@@ -147,15 +139,20 @@ describe(
         new BufferPoint(),
       );
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
-                condition: "${type} === 'school'",
+        rules: [
+          new VectorStyleRule({
+            condition: "${type} === 'school'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
               }),
-              new VectorStyleRule({
+            ],
+          }),
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.RED })],
               }),
             ],
@@ -180,15 +177,20 @@ describe(
         new BufferPoint(),
       );
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
-                condition: "${type} === 'school'",
+        rules: [
+          new VectorStyleRule({
+            condition: "${type} === 'school'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
               }),
-              new VectorStyleRule({
+            ],
+          }),
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.RED })],
               }),
             ],
@@ -213,12 +215,12 @@ describe(
         new BufferPoint(),
       );
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
-                condition: "${type} === 'school'",
+        rules: [
+          new VectorStyleRule({
+            condition: "${type} === 'school'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer()],
               }),
             ],
@@ -231,22 +233,18 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
-    it("draws a later symbology layer above an earlier one", function () {
+    it("draws a later symbology layer of a rule above an earlier one", function () {
       collection.add({ position }, new BufferPoint());
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+        rules: [
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.RED })],
               }),
-            ],
-          }),
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
               }),
             ],
@@ -259,23 +257,94 @@ describe(
       expect(scene).toRender([0, 255, 0, 255]);
     });
 
-    it("does not draw a hidden symbology layer", function () {
-      collection.add({ position }, new BufferPoint());
+    it("draws the symbology layers of a later rule above an earlier rule", function () {
+      collection.add(
+        { position, pickObject: { getPropertyInherited: () => "poi" } },
+        new BufferPoint(),
+      );
+      collection.add(
+        { position, pickObject: { getPropertyInherited: () => "transit" } },
+        new BufferPoint(),
+      );
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+        rules: [
+          new VectorStyleRule({
+            condition: "${type} === 'poi'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.RED })],
               }),
             ],
           }),
-          new SymbologyLayer({
-            name: "top",
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+          new VectorStyleRule({
+            condition: "${type} === 'transit'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
+                symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      scene.primitives.add(style.createPrimitives(collection));
+
+      expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it("draws a symbology layer with a higher zIndex above layers of later rules", function () {
+      collection.add(
+        { position, pickObject: { getPropertyInherited: () => "poi" } },
+        new BufferPoint(),
+      );
+      collection.add(
+        { position, pickObject: { getPropertyInherited: () => "transit" } },
+        new BufferPoint(),
+      );
+      const style = new VectorStyle({
+        rules: [
+          new VectorStyleRule({
+            condition: "${type} === 'poi'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                zIndex: 1,
+                blendOption: BlendOption.OPAQUE,
+                symbolizers: [new CircleSymbolizer({ color: Color.RED })],
+              }),
+            ],
+          }),
+          new VectorStyleRule({
+            condition: "${type} === 'transit'",
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
+                symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
+              }),
+            ],
+          }),
+        ],
+      });
+
+      scene.primitives.add(style.createPrimitives(collection));
+
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
+    it("does not draw a hidden symbology layer", function () {
+      collection.add({ position }, new BufferPoint());
+      const style = new VectorStyle({
+        rules: [
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
+                symbolizers: [new CircleSymbolizer({ color: Color.RED })],
+              }),
+              new SymbologyLayer({
+                name: "top",
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
               }),
             ],
@@ -301,11 +370,11 @@ describe(
         new BufferPoint(),
       );
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+        rules: [
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [
                   new CircleSymbolizer({ color: "color(${colorName})" }),
                 ],
@@ -331,11 +400,11 @@ describe(
         new BufferPoint(),
       );
       const style = new VectorStyle({
-        symbologyLayers: [
-          new SymbologyLayer({
-            blendOption: BlendOption.OPAQUE,
-            rules: [
-              new VectorStyleRule({
+        rules: [
+          new VectorStyleRule({
+            symbologyLayers: [
+              new SymbologyLayer({
+                blendOption: BlendOption.OPAQUE,
                 symbolizers: [
                   new CircleSymbolizer({
                     radius: "${size}",

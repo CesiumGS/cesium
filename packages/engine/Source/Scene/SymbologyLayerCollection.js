@@ -5,14 +5,15 @@ import { Check } from "@cesium/core";
 /** @import SymbologyLayer from "./SymbologyLayer.js"; */
 
 /**
- * The ordered {@link SymbologyLayer} instances of a {@link VectorStyle}. Later
- * layers are drawn above earlier ones.
+ * The {@link SymbologyLayer} instances of a {@link VectorStyleRule}, in
+ * declaration order.
  *
  * @example
- * style.symbologyLayers.add(
+ * rule.symbologyLayers.add(
  *   new Cesium.SymbologyLayer({
- *     name: "selection",
- *     rules: [selectionRule],
+ *     name: "labels",
+ *     symbolizers: [labelSymbolizer],
+ *     zIndex: 1,
  *   }),
  * );
  * const vectors = viewer.scene.primitives.add(style.createPrimitives(collection));
@@ -21,11 +22,11 @@ import { Check } from "@cesium/core";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see VectorStyle#symbologyLayers
+ * @see VectorStyleRule#symbologyLayers
  */
 class SymbologyLayerCollection {
   /**
-   * @privateParam {SymbologyLayer[]} [symbologyLayers] The layers, in drawing order.
+   * @privateParam {SymbologyLayer[]} [symbologyLayers] The layers, in declaration order.
    */
   constructor(/** @type {SymbologyLayer[]} */ symbologyLayers = []) {
     /**
@@ -46,7 +47,7 @@ class SymbologyLayerCollection {
   }
 
   /**
-   * Adds a layer above the existing layers. Primitives already created by the
+   * Adds a layer after the existing layers. Primitives already created by the
    * style are not affected.
    *
    * @param {SymbologyLayer} symbologyLayer The layer to add.

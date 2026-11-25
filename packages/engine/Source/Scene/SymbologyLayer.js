@@ -3,29 +3,40 @@
 import { Check } from "@cesium/core";
 import BlendOption from "./BlendOption.js";
 
-/** @import VectorStyleRule from "./VectorStyleRule.js"; */
+/** @import CircleSymbolizer from "./CircleSymbolizer.js"; */
 
 /**
  * @typedef {object} SymbologyLayerOptions
- * @property {VectorStyleRule[]} rules The rules of the layer, in order.
+ * @property {CircleSymbolizer[]} symbolizers How the features selected by the rule are drawn, in drawing order.
  * @property {string} [name] The name of the layer.
+ * @property {number} [zIndex=0] The drawing order of the layer within its {@link VectorStyle}. Layers with a higher zIndex are drawn above layers with a lower one; layers with the same zIndex are drawn in declaration order.
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how the layer is blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
 /**
- * An ordered list of {@link VectorStyleRule} instances drawn with the same
- * blending mode. Within a layer, each feature is drawn by the first rule whose
- * condition it matches. Within a {@link VectorStyle}, later layers are drawn
- * above earlier ones.
+ * The symbolizers of a {@link VectorStyleRule} drawn at one level of a
+ * {@link VectorStyle}. Layers of all rules are drawn in order of
+ * {@link SymbologyLayer#zIndex}, so related layers of different rules, such
+ * as icons and labels, can be ordered without reordering the rules.
  *
  * @example
- * const labels = new Cesium.SymbologyLayer({
- *   name: "labels",
- *   blendOption: Cesium.BlendOption.OPAQUE,
+ * // Labels of every rule are drawn above the icons of every rule.
+ * const style = new Cesium.VectorStyle({
  *   rules: [
  *     new Cesium.VectorStyleRule({
- *       symbolizers: [new Cesium.CircleSymbolizer({ color: Cesium.Color.RED })],
+ *       condition: "${type} === 'poi'",
+ *       symbologyLayers: [
+ *         new Cesium.SymbologyLayer({ symbolizers: [poiIcon] }),
+ *         new Cesium.SymbologyLayer({ symbolizers: [poiLabel], zIndex: 1 }),
+ *       ],
+ *     }),
+ *     new Cesium.VectorStyleRule({
+ *       condition: "${type} === 'transit'",
+ *       symbologyLayers: [
+ *         new Cesium.SymbologyLayer({ symbolizers: [transitIcon] }),
+ *         new Cesium.SymbologyLayer({ symbolizers: [transitLabel], zIndex: 1 }),
+ *       ],
  *     }),
  *   ],
  * });
@@ -42,20 +53,26 @@ class SymbologyLayer {
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options", options);
-    Check.defined("options.rules", options.rules);
+    Check.defined("options.symbolizers", options.symbolizers);
     //>>includeEnd('debug');
 
     /**
-     * @type {VectorStyleRule[]}
+     * @type {CircleSymbolizer[]}
      * @private
      */
-    this._rules = [...options.rules];
+    this._symbolizers = [...options.symbolizers];
 
     /**
      * @type {string|undefined}
      * @private
      */
     this._name = options.name;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    this._zIndex = options.zIndex ?? 0;
 
     /**
      * @type {BlendOption}
@@ -65,13 +82,13 @@ class SymbologyLayer {
   }
 
   /**
-   * The rules of the layer, in order.
+   * How the features selected by the rule are drawn, in drawing order.
    *
-   * @type {VectorStyleRule[]}
+   * @type {CircleSymbolizer[]}
    * @readonly
    */
-  get rules() {
-    return this._rules;
+  get symbolizers() {
+    return this._symbolizers;
   }
 
   /**
@@ -82,6 +99,17 @@ class SymbologyLayer {
    */
   get name() {
     return this._name;
+  }
+
+  /**
+   * The drawing order of the layer within its {@link VectorStyle}. Higher
+   * values are drawn above lower ones.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get zIndex() {
+    return this._zIndex;
   }
 
   /**

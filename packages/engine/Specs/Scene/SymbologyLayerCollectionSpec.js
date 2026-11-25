@@ -1,10 +1,10 @@
-import { SymbologyLayer, VectorStyle } from "../../index.js";
+import { SymbologyLayer, VectorStyleRule } from "../../index.js";
 
 describe("Scene/SymbologyLayerCollection", () => {
   it("adds layers in order", function () {
-    const first = new SymbologyLayer({ name: "first", rules: [] });
-    const second = new SymbologyLayer({ name: "second", rules: [] });
-    const layers = new VectorStyle({ symbologyLayers: [first] })
+    const first = new SymbologyLayer({ name: "first", symbolizers: [] });
+    const second = new SymbologyLayer({ name: "second", symbolizers: [] });
+    const layers = new VectorStyleRule({ symbologyLayers: [first] })
       .symbologyLayers;
 
     expect(layers.add(second)).toBe(second);
@@ -15,19 +15,21 @@ describe("Scene/SymbologyLayerCollection", () => {
   });
 
   it("checks whether it contains a layer", function () {
-    const layer = new SymbologyLayer({ rules: [] });
-    const layers = new VectorStyle({ symbologyLayers: [layer] })
+    const layer = new SymbologyLayer({ symbolizers: [] });
+    const layers = new VectorStyleRule({ symbologyLayers: [layer] })
       .symbologyLayers;
 
     expect(layers.contains(layer)).toBe(true);
-    expect(layers.contains(new SymbologyLayer({ rules: [] }))).toBe(false);
+    expect(layers.contains(new SymbologyLayer({ symbolizers: [] }))).toBe(
+      false,
+    );
   });
 
   it("gets layers by name", function () {
-    const first = new SymbologyLayer({ name: "labels", rules: [] });
-    const second = new SymbologyLayer({ name: "labels", rules: [] });
-    const layers = new VectorStyle({
-      symbologyLayers: [first, new SymbologyLayer({ rules: [] }), second],
+    const first = new SymbologyLayer({ name: "labels", symbolizers: [] });
+    const second = new SymbologyLayer({ name: "labels", symbolizers: [] });
+    const layers = new VectorStyleRule({
+      symbologyLayers: [first, new SymbologyLayer({ symbolizers: [] }), second],
     }).symbologyLayers;
 
     expect(layers.getByName("labels")).toEqual([first, second]);
@@ -35,7 +37,7 @@ describe("Scene/SymbologyLayerCollection", () => {
   });
 
   it("throws when adding without a layer", function () {
-    const layers = new VectorStyle().symbologyLayers;
+    const layers = new VectorStyleRule({ symbologyLayers: [] }).symbologyLayers;
 
     expect(() => layers.add(undefined)).toThrowDeveloperError();
   });
