@@ -182,7 +182,7 @@ function createTextureForPropertyTable(
   const textureHeight = Math.ceil(totalTexels / textureWidth);
 
   if (textureHeight > maxTextureSize) {
-    oneTimeWarning(
+    parseStructuralMetadata._oneTimeWarning(
       "PropertyTableTextureExceedsMaximumSize",
       `Cannot create a texture for the property table "${propertyTable.name}" because it exceeds the maximum texture size of ${ContextLimits.maximumTextureSize}.`,
     );
@@ -238,17 +238,24 @@ function collectGpuCompatiblePropertyInfo(
     }
 
     const property = properties[propertyId];
-    const bufferView = defined(property)
+    let bufferView = defined(property)
       ? bufferViews[property.values]
       : createNoDataBufferView(classProperty, numFeatures);
 
-    const bufferViewLength = bufferView.length;
     const bytesPerElement = classProperty.cpuBytesPerElement();
-    const numBufferElements = bufferViewLength / bytesPerElement;
-    if (numBufferElements !== numFeatures) {
+    const requiredByteLength = numFeatures * bytesPerElement;
+    if (bufferView.length < requiredByteLength) {
       throw new RuntimeError(
-        `Property with ID: "${propertyId}" has (${numBufferElements}), which does not match number of features in the property table: (${numFeatures}).`,
+        `Property with ID: "${propertyId}" has (${bufferView.length / bytesPerElement}), which does not match number of features in the property table: (${numFeatures}).`,
       );
+    }
+    // Ignore trailing bytes, as MetadataTableProperty does on the CPU.
+    if (bufferView.length > requiredByteLength) {
+      parseStructuralMetadata._oneTimeWarning(
+        "PropertyTableBufferViewHasExcessBytes",
+        `Property "${propertyId}" buffer view has byteLength ${bufferView.length}, which exceeds the required ${requiredByteLength} bytes for ${numFeatures} features. Ignoring trailing bytes.`,
+      );
+      bufferView = bufferView.subarray(0, requiredByteLength);
     }
 
     propertyInfos.push({
@@ -431,4 +438,6 @@ function downcastAndPackProperty(
   }
 }
 
+// Exposed for testing
+parseStructuralMetadata._oneTimeWarning = oneTimeWarning;
 export default parseStructuralMetadata;
