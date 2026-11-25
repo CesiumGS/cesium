@@ -32,3 +32,12 @@ CS-848's fix round (render features register passes in named slots) raised five 
 3. Passes restate their slot's reads and writes, which must match exactly. Recommended: derive them from the slot, or let a pass declare less.
 4. `RenderFeatureRayAdapter` is exported but no cast calls it, and `RenderFeatureRayHit` mixes `t` (a share of the segment) with accuracy in meters. Recommended: unexport it until casts call it (CS-1313), or settle the units now.
 5. The ground and overlay slots are exported and always refused. Recommended: keep them, documented as reserved (CS-1311, CS-1312).
+
+## Questions from CS-810 (2026-11-24)
+
+CS-810's review (the imagery and terrain provider seam) raised these for this review. The branch makes `ImageryProvider.tilingScheme` an object, a major change, and adds 10 exports per entry. The fix round settles only `TileRange`: its rows count from the north under a specific name, or it stays internal. The rest is this review's:
+
+1. `levelFor` and the parent rule make the engine's level heuristics public. Should they be?
+2. `TileMatrix` gives sizes and origin in "northing radians" (Web Mercator y over the WGS84 radius), an unusual public unit. Keep it, or state them in a named CRS's units?
+3. The quantized-mesh availability methods sit on the generic `TerrainProvider` interface. Move them to a quantized-mesh provider or a capability?
+4. The `"heightmap"` `TerrainTile` variant publishes a data layout before any decoder exists (CS-1319). Hold it back until CS-1319 lands?
