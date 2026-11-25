@@ -2,6 +2,10 @@
 //   https://github.com/KhronosGroup/glTF/tree/da88a3bbbe168cc728eddf71fa5e1915cc2c0629/specification/1.0/schema
 // Do not edit; rerun `npm run generate-types -w @cesium/gltf` instead.
 
+import type { CESIUM_RTC } from "./Extensions/CESIUM_RTC.js";
+import type { KHR_binary_glTF } from "./Extensions/KHR_binary_glTF.js";
+import type { WEB3D_quantized_attributes } from "./Extensions/WEB3D_quantized_attributes.js";
+
 /**
  * The root object for a glTF asset.
  *
@@ -147,6 +151,10 @@ export interface Gltf1 extends Gltf1.Property {
    * @default {}
    */
   textures?: Record<string, Gltf1.Texture>;
+  /**
+   * Dictionary object with extension-specific objects.
+   */
+  extensions?: Gltf1.Extensions;
 }
 /** @internal */
 export namespace Gltf1 {
@@ -220,6 +228,15 @@ export namespace Gltf1 {
      * by the value of the type property; it can be 1, 2, 3, 4, 9, or 16.
      */
     min?: number[];
+    /**
+     * Dictionary object with extension-specific objects.
+     */
+    extensions?: Gltf1.Accessor.Extensions;
+  }
+  export namespace Accessor {
+    export interface Extensions extends Gltf1.Property.Extensions {
+      WEB3D_quantized_attributes?: WEB3D_quantized_attributes.Accessor;
+    }
   }
   /**
    * A keyframe animation.
@@ -495,6 +512,12 @@ export namespace Gltf1 {
       znear: number;
     }
   }
+  export interface Extensions extends Gltf1.Property.Extensions {
+    /**
+     * glTF CESIUM_RTC extension.
+     */
+    CESIUM_RTC?: CESIUM_RTC;
+  }
   export interface ChildOfRootProperty extends Gltf1.Property {
     /**
      * The user-defined name of this object. This is not necessarily unique,
@@ -505,13 +528,18 @@ export namespace Gltf1 {
   }
   export interface Property {
     /**
-     * Dictionary object with extension-specific objects.
-     */
-    extensions?: Record<string, object>;
-    /**
      * Application-specific data.
      */
     extras?: unknown;
+    /**
+     * Dictionary object with extension-specific objects.
+     */
+    extensions?: Gltf1.Property.Extensions;
+  }
+  export namespace Property {
+    export interface Extensions {
+      [name: string]: unknown;
+    }
   }
   /**
    * Image data used to create a texture.
@@ -523,6 +551,15 @@ export namespace Gltf1 {
      * The image format must be jpg, png, bmp, or gif.
      */
     uri: string;
+    /**
+     * Dictionary object with extension-specific objects.
+     */
+    extensions?: Gltf1.Image.Extensions;
+  }
+  export namespace Image {
+    export interface Extensions extends Gltf1.Property.Extensions {
+      KHR_binary_glTF?: KHR_binary_glTF.Image;
+    }
   }
   /**
    * The material appearance of a primitive.
@@ -780,6 +817,15 @@ export namespace Gltf1 {
      * - `35633`: VERTEX_SHADER
      */
     type: 35632 | 35633;
+    /**
+     * Dictionary object with extension-specific objects.
+     */
+    extensions?: Gltf1.Shader.Extensions;
+  }
+  export namespace Shader {
+    export interface Extensions extends Gltf1.Property.Extensions {
+      KHR_binary_glTF?: KHR_binary_glTF.Shader;
+    }
   }
   /**
    * Joints and matrices defining a skin.

@@ -3,6 +3,49 @@
 //   https://github.com/KhronosGroup/glTF/tree/c330f9e5a324c9858145be183d2a1e63718fd3e8/specification/2.1/schema
 // Do not edit; rerun `npm run generate-types -w @cesium/gltf` instead.
 
+import type { _3DTILES_implicit_tiling } from "./Extensions/3DTILES_implicit_tiling.js";
+import type { _3DTILES_subtree } from "./Extensions/3DTILES_subtree.js";
+import type { _3DTILES_tileset } from "./Extensions/3DTILES_tileset.js";
+import type { _3DTILES_tileset_voxels } from "./Extensions/3DTILES_tileset_voxels.js";
+import type { AGI_articulations } from "./Extensions/AGI_articulations.js";
+import type { BENTLEY_materials_line_style } from "./Extensions/BENTLEY_materials_line_style.js";
+import type { BENTLEY_materials_planar_fill } from "./Extensions/BENTLEY_materials_planar_fill.js";
+import type { BENTLEY_materials_point_style } from "./Extensions/BENTLEY_materials_point_style.js";
+import type { CESIUM_primitive_outline } from "./Extensions/CESIUM_primitive_outline.js";
+import type { CESIUM_RTC } from "./Extensions/CESIUM_RTC.js";
+import type { CESIUM_tile_edges } from "./Extensions/CESIUM_tile_edges.js";
+import type { EXT_feature_metadata } from "./Extensions/EXT_feature_metadata.js";
+import type { EXT_geospatial_crs } from "./Extensions/EXT_geospatial_crs.js";
+import type { EXT_instance_features } from "./Extensions/EXT_instance_features.js";
+import type { EXT_mesh_features } from "./Extensions/EXT_mesh_features.js";
+import type { EXT_mesh_gpu_instancing } from "./Extensions/EXT_mesh_gpu_instancing.js";
+import type { EXT_mesh_polygon } from "./Extensions/EXT_mesh_polygon.js";
+import type { EXT_mesh_primitive_edge_visibility } from "./Extensions/EXT_mesh_primitive_edge_visibility.js";
+import type { EXT_mesh_primitive_restart } from "./Extensions/EXT_mesh_primitive_restart.js";
+import type { EXT_meshopt_compression } from "./Extensions/EXT_meshopt_compression.js";
+import type { EXT_primitive_voxels } from "./Extensions/EXT_primitive_voxels.js";
+import type { EXT_structural_metadata } from "./Extensions/EXT_structural_metadata.js";
+import type { EXT_texture_webp } from "./Extensions/EXT_texture_webp.js";
+import type { EXT_textureInfo_constant_lod } from "./Extensions/EXT_textureInfo_constant_lod.js";
+import type { EXT_voxels } from "./Extensions/EXT_voxels.js";
+import type { KHR_draco_mesh_compression } from "./Extensions/KHR_draco_mesh_compression.js";
+import type { KHR_gaussian_splatting } from "./Extensions/KHR_gaussian_splatting.js";
+import type { KHR_implicit_shapes } from "./Extensions/KHR_implicit_shapes.js";
+import type { KHR_materials_anisotropy } from "./Extensions/KHR_materials_anisotropy.js";
+import type { KHR_materials_clearcoat } from "./Extensions/KHR_materials_clearcoat.js";
+import type { KHR_materials_emissive_strength } from "./Extensions/KHR_materials_emissive_strength.js";
+import type { KHR_materials_pbrSpecularGlossiness } from "./Extensions/KHR_materials_pbrSpecularGlossiness.js";
+import type { KHR_materials_specular } from "./Extensions/KHR_materials_specular.js";
+import type { KHR_materials_transmission } from "./Extensions/KHR_materials_transmission.js";
+import type { KHR_materials_unlit } from "./Extensions/KHR_materials_unlit.js";
+import type { KHR_meshopt_compression } from "./Extensions/KHR_meshopt_compression.js";
+import type { KHR_node_visibility } from "./Extensions/KHR_node_visibility.js";
+import type { KHR_spz_gaussian_splats_compression } from "./Extensions/KHR_spz_gaussian_splats_compression.js";
+import type { KHR_techniques_webgl } from "./Extensions/KHR_techniques_webgl.js";
+import type { KHR_texture_basisu } from "./Extensions/KHR_texture_basisu.js";
+import type { KHR_texture_transform } from "./Extensions/KHR_texture_transform.js";
+import type { WEB3D_quantized_attributes } from "./Extensions/WEB3D_quantized_attributes.js";
+
 /**
  * The root object for a glTF asset.
  *
@@ -102,6 +145,11 @@ export interface Gltf2 extends Gltf2.Property {
       pointer: string;
     }
   >;
+  /**
+   * JSON object with extension objects. Property names correspond to glTF
+   * extension names and property values are extension-specific objects.
+   */
+  extensions?: Gltf2.Extensions;
 }
 /** @internal */
 export namespace Gltf2 {
@@ -185,8 +233,16 @@ export namespace Gltf2 {
      * - `"MAT4"`: 4x4 Matrix
      */
     type: string;
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Accessor.Extensions;
   }
   export namespace Accessor {
+    export interface Extensions extends Gltf2.Property.Extensions {
+      WEB3D_quantized_attributes?: WEB3D_quantized_attributes.Accessor;
+    }
     /**
      * The descriptor of sparsely-encoded accessor elements.
      */
@@ -377,6 +433,23 @@ export namespace Gltf2 {
      * The identifier used to retrieve the buffer data.
      */
     uri?: string;
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Buffer.Extensions;
+  }
+  export namespace Buffer {
+    export interface Extensions extends Gltf2.Property.Extensions {
+      /**
+       * Compressed data for bufferView.
+       */
+      EXT_meshopt_compression?: EXT_meshopt_compression.Buffer;
+      /**
+       * Compressed data for bufferView.
+       */
+      KHR_meshopt_compression?: KHR_meshopt_compression.Buffer;
+    }
   }
   /**
    * A span of bytes in a buffer.
@@ -409,6 +482,23 @@ export namespace Gltf2 {
      * - `34963`: The buffer view is used for vertex indices.
      */
     target?: number;
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.BufferView.Extensions;
+  }
+  export namespace BufferView {
+    export interface Extensions extends Gltf2.Property.Extensions {
+      /**
+       * Compressed data for bufferView.
+       */
+      EXT_meshopt_compression?: EXT_meshopt_compression.BufferView;
+      /**
+       * Compressed data for bufferView.
+       */
+      KHR_meshopt_compression?: KHR_meshopt_compression.BufferView;
+    }
   }
   /**
    * Camera's parameters.
@@ -538,6 +628,55 @@ export namespace Gltf2 {
       file: number;
     }
   }
+  export interface Extensions extends Gltf2.Property.Extensions {
+    /**
+     * An object describing the availability of tiles and content in a subtree,
+     * as well as availability of children subtrees. May also store attributes
+     * and application-specific properties for available tiles and contents.
+     * (glTF 2.1)
+     */
+    "3DTILES_subtree"?: _3DTILES_subtree.Gltf;
+    /**
+     * glTF-level 3DTILES_tileset extension. (glTF 2.1)
+     */
+    "3DTILES_tileset"?: _3DTILES_tileset.Gltf;
+    /**
+     * Voxels are stored as glTFs with the EXT_voxels extension and are paired
+     * with EXT_structural_metadata to unify the schema between a tileset and
+     * its tiles. This extension is paired with Implicit Tiling for efficient
+     * representation of massive sparse voxel datasets. This extension lets
+     * runtimes detect voxel content in advance to allocate necessary resources
+     * before tiles load. (glTF 2.1)
+     */
+    "3DTILES_tileset_voxels"?: _3DTILES_tileset_voxels.Gltf;
+    /**
+     * glTF Extension that defines metadata for applying external analysis or
+     * effects to a model.
+     */
+    AGI_articulations?: AGI_articulations.Gltf;
+    /**
+     * glTF CESIUM_RTC extension.
+     */
+    CESIUM_RTC?: CESIUM_RTC;
+    /**
+     * glTF extension that assigns metadata to features in a model.
+     */
+    EXT_feature_metadata?: EXT_feature_metadata.Gltf;
+    /**
+     * This extension declares the Coordinate Reference System (CRS) in which a
+     * glTF 2.1 asset was authored. (glTF 2.1)
+     */
+    EXT_geospatial_crs?: EXT_geospatial_crs;
+    /**
+     * glTF extension that provides structural metadata about vertices, texels,
+     * and features in a glTF asset.
+     */
+    EXT_structural_metadata?: EXT_structural_metadata.Gltf;
+    /**
+     * Top level implicit shapes.
+     */
+    KHR_implicit_shapes?: KHR_implicit_shapes.Gltf;
+  }
   /**
    * Common type for all glTF JSON objects that are elements of top-level
    * arrays.
@@ -554,14 +693,23 @@ export namespace Gltf2 {
    */
   export interface Property {
     /**
-     * JSON object with extension objects. Property names correspond to glTF
-     * extension names and property values are extension-specific objects.
-     */
-    extensions?: Record<string, object>;
-    /**
      * Application-specific data usually stored as a JSON object.
      */
     extras?: unknown;
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Property.Extensions;
+  }
+  export namespace Property {
+    export interface Extensions {
+      /**
+       * Structural metadata about a glTF element.
+       */
+      EXT_structural_metadata?: EXT_structural_metadata;
+      [name: string]: unknown;
+    }
   }
   /**
    * Reference to an image resource.
@@ -647,6 +795,11 @@ export namespace Gltf2 {
      * @default {}
      */
     pbrMetallicRoughness?: Gltf2.Material.PbrMetallicRoughness;
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Material.Extensions;
   }
   export namespace Material {
     /**
@@ -710,6 +863,55 @@ export namespace Gltf2 {
        */
       roughnessFactor?: number;
     }
+    export interface Extensions extends Gltf2.Property.Extensions {
+      /**
+       * glTF extension that specifies line width and a GPU-friendly dash
+       * pattern for CAD-style visualization.
+       */
+      BENTLEY_materials_line_style?: BENTLEY_materials_line_style.Material;
+      /**
+       * Specifies planar fill behavior for CAD-style visualization.
+       */
+      BENTLEY_materials_planar_fill?: BENTLEY_materials_planar_fill.Material;
+      /**
+       * Specifies point diameter for CAD-style visualization.
+       */
+      BENTLEY_materials_point_style?: BENTLEY_materials_point_style.Material;
+      /**
+       * glTF extension that defines anisotropy.
+       */
+      KHR_materials_anisotropy?: KHR_materials_anisotropy.Material;
+      /**
+       * glTF extension that defines the clearcoat material layer.
+       */
+      KHR_materials_clearcoat?: KHR_materials_clearcoat.Material;
+      /**
+       * glTF extension that adjusts the strength of emissive material
+       * properties.
+       */
+      KHR_materials_emissive_strength?: KHR_materials_emissive_strength.Material;
+      /**
+       * glTF extension that defines the specular-glossiness material model from
+       * Physically-Based Rendering (PBR) methodology.
+       */
+      KHR_materials_pbrSpecularGlossiness?: KHR_materials_pbrSpecularGlossiness.Gltf;
+      /**
+       * glTF extension that defines the strength of the specular reflection.
+       */
+      KHR_materials_specular?: KHR_materials_specular.Material;
+      /**
+       * glTF extension that defines the optical transmission of a material.
+       */
+      KHR_materials_transmission?: KHR_materials_transmission.Material;
+      /**
+       * glTF extension that defines the unlit material model.
+       */
+      KHR_materials_unlit?: KHR_materials_unlit.Material;
+      /**
+       * The technique to use for a material and any additional uniform values.
+       */
+      KHR_techniques_webgl?: KHR_techniques_webgl.Material;
+    }
     /**
      * Texture index and the index of the associated texture coordinate set.
      */
@@ -724,6 +926,25 @@ export namespace Gltf2 {
        * @default 0
        */
       texCoord?: number;
+      /**
+       * JSON object with extension objects. Property names correspond to glTF
+       * extension names and property values are extension-specific objects.
+       */
+      extensions?: Gltf2.Material.TextureInfo.Extensions;
+    }
+    export namespace TextureInfo {
+      export interface Extensions extends Gltf2.Property.Extensions {
+        /**
+         * Enables dynamically calculated UV coordinates to keep the texture
+         * near a constant level of detail
+         */
+        EXT_textureInfo_constant_lod?: EXT_textureInfo_constant_lod.TextureInfo;
+        /**
+         * glTF extension that enables shifting and scaling UV coordinates on a
+         * per-texture basis
+         */
+        KHR_texture_transform?: KHR_texture_transform.TextureInfo;
+      }
     }
   }
   /**
@@ -739,6 +960,11 @@ export namespace Gltf2 {
      * number of morph targets of the mesh.
      */
     weights?: number[];
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Mesh.Extensions;
   }
   export namespace Mesh {
     /**
@@ -779,6 +1005,72 @@ export namespace Gltf2 {
        * An array of morph targets.
        */
       targets?: Record<string, number>[];
+      /**
+       * JSON object with extension objects. Property names correspond to glTF
+       * extension names and property values are extension-specific objects.
+       */
+      extensions?: Gltf2.Mesh.Primitive.Extensions;
+    }
+    export namespace Primitive {
+      export interface Extensions extends Gltf2.Property.Extensions {
+        /**
+         * Indicates that a mesh primitive supplies the
+         * BENTLEY_materials_line_style cumulative distance attribute semantic.
+         */
+        BENTLEY_materials_line_style?: BENTLEY_materials_line_style.Mesh.Primitive;
+        /**
+         * glTF extension for indicating that some edges of a primitive's
+         * triangles should be outlined.
+         */
+        CESIUM_primitive_outline?: CESIUM_primitive_outline.Primitive;
+        /**
+         * `CESIUM_tile_edges` extension for a primitive in a glTF model.
+         */
+        CESIUM_tile_edges?: CESIUM_tile_edges.Mesh.Primitive;
+        /**
+         * `EXT_feature_metadata extension` for a primitive in a glTF model, to
+         * associate it with the root `EXT_feature_metadata` object.
+         */
+        EXT_feature_metadata?: EXT_feature_metadata.Mesh.Primitive;
+        /**
+         * An object describing feature IDs for a mesh primitive.
+         */
+        EXT_mesh_features?: EXT_mesh_features.Mesh.Primitive;
+        /**
+         * glTF extension adding an encoding of polygon primitive topology
+         */
+        EXT_mesh_polygon?: EXT_mesh_polygon;
+        /**
+         * glTF extension encoding the visibility of the edges of a triangles
+         * primitive
+         */
+        EXT_mesh_primitive_edge_visibility?: EXT_mesh_primitive_edge_visibility.Primitive;
+        /**
+         * `EXT_primitive_voxels` extension for a primitive in a glTF model to
+         * indicate voxel-based volumetric data
+         */
+        EXT_primitive_voxels?: EXT_primitive_voxels.Mesh.Primitive;
+        /**
+         * Structural metadata about a glTF primitive.
+         */
+        EXT_structural_metadata?: EXT_structural_metadata.Mesh.Primitive;
+        KHR_draco_mesh_compression?: KHR_draco_mesh_compression.Mesh.Primitive;
+        /**
+         * Data defining a 3D Gaussian Splat primitive.
+         */
+        KHR_gaussian_splatting?: KHR_gaussian_splatting.Mesh.Primitive;
+        /**
+         * Compressed data for SPZ primitive.
+         */
+        KHR_spz_gaussian_splats_compression?: KHR_spz_gaussian_splats_compression.Mesh.Primitive;
+      }
+    }
+    export interface Extensions extends Gltf2.Property.Extensions {
+      /**
+       * glTF extension enabling the use of primitive restart values in index
+       * buffers
+       */
+      EXT_mesh_primitive_restart?: EXT_mesh_primitive_restart;
     }
   }
   /**
@@ -842,6 +1134,11 @@ export namespace Gltf2 {
      * mesh.
      */
     weights?: number[];
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Node.Extensions;
   }
   export namespace Node {
     /**
@@ -873,6 +1170,39 @@ export namespace Gltf2 {
        * @default [0,0,0]
        */
       translation?: [number, number, number];
+    }
+    export interface Extensions extends Gltf2.Property.Extensions {
+      /**
+       * Implicit tiling defines a concise representation of quadtrees and
+       * octrees in 3D Tiles. (glTF 2.1)
+       */
+      "3DTILES_implicit_tiling"?: _3DTILES_implicit_tiling.Node;
+      /**
+       * Node-level 3DTILES_tileset extension. (glTF 2.1)
+       */
+      "3DTILES_tileset"?: _3DTILES_tileset.Node;
+      /**
+       * glTF Extension for an individual node in a glTF model, to associate it
+       * with the model's root AGI_articulations object.
+       */
+      AGI_articulations?: AGI_articulations.Node;
+      /**
+       * An object describing per-instance feature IDs.
+       */
+      EXT_instance_features?: EXT_instance_features.Node;
+      /**
+       * glTF extension defines instance attributes for a node with a mesh.
+       */
+      EXT_mesh_gpu_instancing?: EXT_mesh_gpu_instancing.Gltf;
+      /**
+       * `EXT_voxels` extension for a node in a glTF model to indicate
+       * voxel-based volumetric data (glTF 2.1)
+       */
+      EXT_voxels?: EXT_voxels.Node;
+      /**
+       * glTF extension that defines node's visibility.
+       */
+      KHR_node_visibility?: KHR_node_visibility.Node;
     }
   }
   /**
@@ -1143,5 +1473,23 @@ export namespace Gltf2 {
      * The index of the image.
      */
     source?: number;
+    /**
+     * JSON object with extension objects. Property names correspond to glTF
+     * extension names and property values are extension-specific objects.
+     */
+    extensions?: Gltf2.Texture.Extensions;
+  }
+  export namespace Texture {
+    export interface Extensions extends Gltf2.Property.Extensions {
+      /**
+       * glTF extension to specify textures using the WebP image format.
+       */
+      EXT_texture_webp?: EXT_texture_webp.Gltf;
+      /**
+       * glTF extension to specify textures using the KTX v2 images with Basis
+       * Universal supercompression.
+       */
+      KHR_texture_basisu?: KHR_texture_basisu.Texture;
+    }
   }
 }
