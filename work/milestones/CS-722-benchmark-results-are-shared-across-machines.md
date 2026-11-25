@@ -17,7 +17,7 @@ done_when:
   - "c8: the design `docs/design/benchmark-devices-and-sharing.md` is merged, and the filed items and clauses match it."
   - "c9: a study made with a kind and its instruments reads back with its verdict (CS-404). A study run on several devices pools them by hardware class, and each verdict lists, per class, measured or can't tell, never \"measured\" for a class without runs (CS-739)."
   - "c10: a sweep runs over several settings at once (CS-393), and `run --scenes` measures an example scene with the development metrics (CS-394). A verdict on one hardware class carries to another only when their work counters match within spread, the other class has a calibration study for that work, and both share a bottleneck; otherwise it says can't tell, naming the failed check and what to measure (CS-740)."
-constraints: [CS-390 c1, CS-721 c2, CS-724 c2, CS-733 c3, CS-734 c4, CS-735 c5, CS-736 c6, CS-737 c6, CS-738 c7, CS-717 c8, CS-404 c9, CS-739 c9, CS-393 c10, CS-394 c10, CS-740 c10]
+constraints: [CS-390 c1, CS-721 c2, CS-724 c2, CS-733 c3, CS-734 c4, CS-735 c5, CS-736 c6, CS-737 c6, CS-738 c7, CS-717 c8, CS-404 c9, CS-739 c9, CS-393 c10, CS-394 c10, CS-740 c10, CS-718 c?]
 check: "demo a baseline run on two devices, synced, read side by side in Trends and Overview"
 ---
 
@@ -33,3 +33,7 @@ The owner, 2026-11-19: "let's do the 717 design and then take the output from th
 - **Joined 2026-11-19:** CS-733 to CS-738, CS-717's build items. Decisions they wait on: CS-726 (where results live, and spend), CS-727 (keys and remote reading), CS-728 (default classification), CS-730 (bucket client or dependency), CS-731 (whether recordings upload).
 - **Studies join alpha.1** (the owner's answer to CS-732, B): CS-404 and CS-739 are in c9. CS-404 also stays in CS-480. CS-740 joins with CS-393 and CS-394, which it needs, in c10 (the owner, 2026-11-19: "Yes, pull them in"). CS-393 and CS-394 also stay in CS-479.
 - **Not in it:** CS-718, hitld's side, which is external and would hold alpha on another project.
+
+## Note (2026-11-24, CS-718)
+
+CS-718 (hitld cites Dyno's benchmark results by reference, through Dyno's commands) joined at the owner's word. It was planned outside every release. It sits nearest c2, Dyno's commands and their JSON; it stays `c?` until the next shaping links it.
