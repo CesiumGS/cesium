@@ -1,5 +1,8 @@
 import { JulianDate, RuntimeError, TimeStandard, defined } from "@cesium/core";
-import { EarthOrientationParameters } from "../../index.js";
+import {
+  EarthOrientationParameters,
+  EarthOrientationParametersSample,
+} from "../../index.js";
 
 describe("Core/EarthOrientationParameters", function () {
   let officialLeapSeconds;
@@ -10,6 +13,20 @@ describe("Core/EarthOrientationParameters", function () {
 
   afterEach(function () {
     JulianDate.leapSeconds = officialLeapSeconds.slice(0);
+  });
+
+  it("NONE is a frozen instance that returns zero for all values", function () {
+    const none = EarthOrientationParameters.NONE;
+    expect(none).toBeInstanceOf(EarthOrientationParameters);
+    expect(Object.isFrozen(none)).toBe(true);
+
+    const date = new JulianDate(2455745, 43200);
+    const expected = new EarthOrientationParametersSample(0, 0, 0, 0, 0);
+    expect(none.compute(date)).toEqual(expected);
+
+    const result = new EarthOrientationParametersSample(1, 2, 3, 4, 5);
+    expect(none.compute(date, result)).toBe(result);
+    expect(result).toEqual(expected);
   });
 
   it("adds leap seconds found in the data by default", function () {
