@@ -237,13 +237,13 @@ describe("Scene/IonAssetElementService", function () {
               units: "Units:M",
             },
             "Category.Name": {
-              displayValue: null,
+              displayValue: undefined,
               value: null,
-              units: null,
+              units: undefined,
             },
           },
         },
-        { id: "8796093022213", label: null, properties: {} },
+        { id: "8796093022213", label: undefined, properties: {} },
       ],
       total: 2,
       continuationToken: undefined,
@@ -362,6 +362,31 @@ describe("Scene/IonAssetElementService", function () {
         },
       ],
       total: 2,
+    });
+  });
+
+  it("aggregate converts null statistics to undefined", async function () {
+    mockFetchJson({
+      aggregations: [
+        { key: "Height", count: 0, min: null, max: null, avg: null, sum: 0 },
+      ],
+      total: null,
+    });
+
+    const result = await service.aggregate({ propertyKeys: ["Height"] });
+
+    expect(result).toEqual({
+      aggregations: [
+        {
+          propertyKey: "Height",
+          count: 0,
+          min: undefined,
+          max: undefined,
+          avg: undefined,
+          sum: 0,
+        },
+      ],
+      total: undefined,
     });
   });
 
