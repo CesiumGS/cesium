@@ -1,4 +1,9 @@
-import { Cartesian3, Color } from "@cesium/core";
+import {
+  Cartesian3,
+  Color,
+  HeadingPitchRange,
+  Math as CesiumMath,
+} from "@cesium/core";
 import {
   BlendOption,
   BufferPoint,
@@ -7,6 +12,8 @@ import {
   Camera,
   CircleSymbolizer,
   CircleVectorPrimitive,
+  FeatureLayer,
+  GeoJsonFeatureLayerProvider,
   SceneMode,
   SymbologyLayer,
   VectorStyle,
@@ -318,6 +325,106 @@ describe(
       scene.primitives.add(style.createPrimitives(collection));
 
       expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it("compiles a GeoJSON feature layer with feature properties", function () {
+      const provider = GeoJsonFeatureLayerProvider.fromGeoJson({
+        type: "Feature",
+        properties: { type: "school" },
+        geometry: { type: "Point", coordinates: [-75.0, 40.0] },
+      });
+      const style = new VectorStyle({
+        symbologyLayers: [
+          new SymbologyLayer({
+            blendOption: BlendOption.OPAQUE,
+            rules: [
+              new VectorStyleRule({
+                condition: "${type} === 'school'",
+                symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
+              }),
+              new VectorStyleRule({
+                symbolizers: [new CircleSymbolizer({ color: Color.RED })],
+              }),
+            ],
+          }),
+        ],
+      });
+      scene.camera.lookAt(
+        Cartesian3.fromDegrees(-75.0, 40.0),
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, 100000.0),
+      );
+
+      scene.primitives.add(style.compile(provider.featureLayers.get(0)));
+
+      expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it("stops drawing a compiled GeoJSON feature layer when it is hidden", function () {
+      const provider = GeoJsonFeatureLayerProvider.fromGeoJson({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [-75.0, 40.0] },
+      });
+      const style = new VectorStyle({
+        symbologyLayers: [
+          new SymbologyLayer({
+            blendOption: BlendOption.OPAQUE,
+            rules: [
+              new VectorStyleRule({
+                symbolizers: [new CircleSymbolizer({ color: Color.LIME })],
+              }),
+            ],
+          }),
+        ],
+      });
+      scene.camera.lookAt(
+        Cartesian3.fromDegrees(-75.0, 40.0),
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, 100000.0),
+      );
+      const featureLayer = provider.featureLayers.get(0);
+      scene.primitives.add(style.compile(featureLayer));
+      expect(scene).toRender([0, 255, 0, 255]);
+
+      featureLayer.show = false;
+
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it("destroys the collections of a compiled GeoJSON feature layer", function () {
+      const provider = GeoJsonFeatureLayerProvider.fromGeoJson({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [-75.0, 40.0] },
+      });
+      const style = new VectorStyle({
+        rules: [new VectorStyleRule({ symbolizers: [new CircleSymbolizer()] })],
+      });
+      const group = style.compile(provider.featureLayers.get(0));
+      const destroy = spyOn(
+        group.flatten()[0].collection,
+        "destroy",
+      ).and.callThrough();
+
+      group.destroy();
+
+      expect(destroy).toHaveBeenCalled();
+    });
+
+    it("compiles a tiled feature layer without creating primitives", function () {
+      const featureLayer = new FeatureLayer({ name: "roads" });
+      const style = new VectorStyle({
+        rules: [new VectorStyleRule({ symbolizers: [new CircleSymbolizer()] })],
+      });
+
+      const group = style.compile(featureLayer);
+
+      expect(group.name).toBe("roads");
+      expect(group.length).toBe(0);
+      expect(featureLayer._vectorPrimitiveGroups.has(group)).toBe(true);
+
+      group.destroy();
+
+      expect(featureLayer._vectorPrimitiveGroups.has(group)).toBe(false);
     });
 
     it("evaluates a number expression for each feature", function () {

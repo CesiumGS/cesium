@@ -7,6 +7,7 @@ import VectorPrimitiveGroup from "./VectorPrimitiveGroup.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 /** @import VectorPrimitive from "./VectorPrimitive.js"; */
 /** @import VectorStyleRule from "./VectorStyleRule.js"; */
 
@@ -138,6 +139,46 @@ class VectorStyle {
       );
     }
     return new VectorPrimitiveGroup({ primitives: layerGroups });
+  }
+
+  /**
+   * Draws the features of a {@link FeatureLayer} with this style. Features
+   * loaded in tiles, as in a {@link Cesium3DTileset} or an
+   * {@link MVTDataProvider}, are drawn as their tiles are selected. The style
+   * is applied when each collection is first drawn; later changes to the
+   * style are not applied.
+   * <p>
+   * Collections that no symbolizer applies to keep their default appearance.
+   * </p>
+   *
+   * @param {FeatureLayer} featureLayer The layer to draw.
+   * @returns {VectorPrimitiveGroup} The group to add to {@link Scene#primitives}. Destroying it restores the default appearance.
+   *
+   * @example
+   * const layer = tileset.featureLayers.getByName("Roads")[0];
+   * const vectors = viewer.scene.primitives.add(style.compile(layer));
+   * vectors.show = false;
+   */
+  compile(featureLayer) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("featureLayer", featureLayer);
+    //>>includeEnd('debug');
+
+    const createCollections = featureLayer._createCollections;
+    const collections = defined(createCollections) ? createCollections() : [];
+    const group = new VectorPrimitiveGroup({
+      name: featureLayer.name,
+      primitives: collections.map((collection) =>
+        this.createPrimitives(collection),
+      ),
+    });
+    group._style = this;
+    group._featureLayer = featureLayer;
+    group._collections = collections;
+    if (!defined(createCollections)) {
+      featureLayer._vectorPrimitiveGroups.add(group);
+    }
+    return group;
   }
 }
 
