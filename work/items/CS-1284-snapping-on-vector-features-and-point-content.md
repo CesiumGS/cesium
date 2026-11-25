@@ -5,7 +5,7 @@ kind: work
 state: proposed
 created: 2026-11-24
 project: CS-193
-needs: [CS-1283]
+needs: [CS-1283, CS-1338]
 ---
 
 > **Proposal.** Source: a host application's interaction design, relayed on 2026-11-24. The host is moving to one content-neutral interaction model: every content in a view is a source with declared capabilities, any feature is addressable as (content name, key), and one locate pipeline serves every tool. Related, already filed: CS-813 (render products), CS-338 (per-element overrides), CS-1116 (feature mask) and CS-669 (drill picks). Why now: a host's snapping tools must work on vector features and point content, not only tile triangles. Narrowed on 2026-11-24 with the owner's yes: snap kinds, priority, tolerance and lock-on are the host tool's policy; the engine gives located features and their geometry. CS-302 covers exact snapping on B-reps; CS-225 is the GPU snap pass. Size: small to medium. Decider: owner. Filed 2026-11-24.
@@ -16,3 +16,9 @@ needs: [CS-1283]
 - Each answer states how exact it is: exact source coordinates, or tessellated or quantized data with its error bound. A stated accuracy never claims more than the input supports.
 - Content that can't give source geometry says so through CS-1285's declarations, never with an empty answer.
 - Tests cover each content type, and one that refuses.
+
+2026-11-24, amended from a host application's needs (the owner's review that led to CS-1338):
+
+- Answers by ID are asynchronous and cancelable (an `AbortSignal`), and come in stages: a local answer with its stated exactness first, then the source's or the host server's, which upgrades it without a jump (CS-1338's second idea; CS-303).
+- When the content has an exact B-rep for the feature, the answer gives the B-rep, with its exactness, as well as the vertices and segments.
+- The shape follows CS-1338's design once it lands.
