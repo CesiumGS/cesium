@@ -5,6 +5,7 @@ import createBillboardPointCallback from "./createBillboardPointCallback.js";
 /** @import Billboard from "./Billboard.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 /** @import { DistanceDisplayCondition } from "@cesium/core"; */
 /** @import HorizontalOrigin from "./HorizontalOrigin.js"; */
 /** @import Label from "./Label.js"; */
@@ -529,6 +530,18 @@ class Cesium3DTilePointFeature {
    */
   get tileset() {
     return this._content.tileset;
+  }
+
+  /**
+   * Gets the feature layer containing the feature, if any.
+   *
+   * @type {FeatureLayer|undefined}
+   *
+   * @readonly
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  get featureLayer() {
+    return Cesium3DTileFeature.getFeatureLayer(this._content);
   }
 
   /**

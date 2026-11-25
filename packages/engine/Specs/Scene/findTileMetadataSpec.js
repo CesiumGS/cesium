@@ -61,6 +61,22 @@ describe("Scene/findTileMetadata", function () {
     expect(findTileMetadata._oneTimeWarning).toHaveBeenCalled();
   });
 
+  it("logs a warning and returns undefined if the class is missing from the schema", function () {
+    const tileHeader = {
+      boundingVolume: mockBoundingVolume,
+      geometricError: 64,
+      metadata: {
+        class: "missingClass",
+        properties: {},
+      },
+    };
+
+    spyOn(findTileMetadata, "_oneTimeWarning");
+    const metadata = findTileMetadata(mockTileset, tileHeader);
+    expect(metadata).not.toBeDefined();
+    expect(findTileMetadata._oneTimeWarning).toHaveBeenCalled();
+  });
+
   it("returns metadata if there is metadata", function () {
     const tileHeader = {
       boundingVolume: mockBoundingVolume,

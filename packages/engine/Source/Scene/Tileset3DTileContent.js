@@ -97,6 +97,15 @@ class Tileset3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    return this._tileset.show;
+  }
+
+  set show(value) {
+    this._tileset.show = value;
+  }
+
   /**
    * Creates an instance of Tileset3DTileContent from a parsed JSON object
    * @param {Cesium3DTileset} tileset

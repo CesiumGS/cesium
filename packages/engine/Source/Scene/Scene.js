@@ -1613,7 +1613,7 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
+   * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for fewer frustums in the multi-frustum,
    * increasing performance. This property relies on fragmentDepth being supported.
    * @memberof Scene.prototype
    * @type {boolean}
@@ -3712,6 +3712,13 @@ function updateVectorProvider(scene, frameState) {
 
   const frameNumber = frameState.frameNumber;
   markVectorCollections(scene._primitives, vectorProvider, frameNumber);
+
+  if (frameState.passes.render) {
+    // Surfaces bake draped collections as a frame begins, so changes made during it show next frame.
+    frameState.afterRender.push(() =>
+      vectorProvider.changedDuringFrame(frameNumber),
+    );
+  }
 }
 
 /**
@@ -4884,8 +4891,21 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     width,
     height,
   );
+  // The pick pass writes tileIndex * samplesPerTile + sampleIndex + 1,
+  // most significant byte first. 0 means no voxel sample was rendered there.
+  const pickId =
+    voxelCoordinate[0] * 16777216 +
+    voxelCoordinate[1] * 65536 +
+    voxelCoordinate[2] * 256 +
+    voxelCoordinate[3];
+  if (pickId === 0) {
+    return;
+  }
+  const { inputDimensions } = voxelPrimitive;
+  const samplesPerTile =
+    inputDimensions.x * inputDimensions.y * inputDimensions.z;
   // Look up the keyframeNode containing this picked cell
-  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const tileIndex = Math.floor((pickId - 1) / samplesPerTile);
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
   if (!defined(keyframeNode)) {
     // The tile rendered at the pick position has since been discarded by
@@ -4893,7 +4913,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     return;
   }
   // Look up the metadata for the picked cell
-  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  const sampleIndex = (pickId - 1) % samplesPerTile;
   return VoxelCell.fromKeyframeNode(
     voxelPrimitive,
     tileIndex,

@@ -37,6 +37,31 @@ describe(
       expect(context.stencilBits).toBeGreaterThanOrEqual(0);
     });
 
+    it("detects ETC2 support from WEBGL_compressed_texture_etc", function () {
+      if (webglStub) {
+        return;
+      }
+
+      const fakeExtension = {};
+      const prototypes = [WebGLRenderingContext.prototype];
+      if (typeof WebGL2RenderingContext !== "undefined") {
+        prototypes.push(WebGL2RenderingContext.prototype);
+      }
+      for (const prototype of prototypes) {
+        const getExtension = prototype.getExtension;
+        spyOn(prototype, "getExtension").and.callFake(function (name) {
+          if (name === "WEBGL_compressed_texture_etc") {
+            return fakeExtension;
+          }
+          return getExtension.call(this, name);
+        });
+      }
+
+      const c = createContext();
+      expect(c.etc).toBe(true);
+      c.destroyForSpecs();
+    });
+
     it("get maximumCombinedTextureImageUnits", function () {
       expect(
         ContextLimits.maximumCombinedTextureImageUnits,
@@ -301,6 +326,21 @@ describe(
       expect(c.isDestroyed()).toEqual(false);
       c.destroyForSpecs();
       expect(c.isDestroyed()).toEqual(true);
+    });
+
+    it("destroying Context loses the WebGL context", function () {
+      if (!!window.webglStub) {
+        pending("Context loss cannot be observed with the WebGL stub");
+      }
+
+      const contextToDestroy = createContext();
+      contextToDestroy.throwOnWebGLError = true;
+      // getContext returns the existing, unwrapped context for this canvas
+      const gl = contextToDestroy.canvas.getContext(
+        contextToDestroy.webgl2 ? "webgl2" : "webgl",
+      );
+      contextToDestroy.destroyForSpecs();
+      expect(gl.isContextLost()).toBe(true);
     });
 
     it("destroying Context destroys objects in cache", function () {

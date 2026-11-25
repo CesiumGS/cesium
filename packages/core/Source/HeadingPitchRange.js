@@ -1,3 +1,5 @@
+// @ts-check
+
 import defined from "./defined.js";
 
 /**

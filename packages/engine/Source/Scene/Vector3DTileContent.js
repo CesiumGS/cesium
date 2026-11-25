@@ -35,7 +35,7 @@ class Vector3DTileContent {
     this._tileset = tileset;
     this._tile = tile;
     this._resource = resource;
-
+    this._show = true;
     this._polygons = undefined;
     this._polylines = undefined;
     this._points = undefined;
@@ -150,6 +150,15 @@ class Vector3DTileContent {
     this._group = value;
   }
 
+  /** @inheritdoc */
+  get show() {
+    return this._show;
+  }
+
+  set show(value) {
+    this._show = value;
+  }
+
   hasProperty(batchId, name) {
     return this._batchTable.hasProperty(batchId, name);
   }
@@ -205,15 +214,21 @@ class Vector3DTileContent {
     if (defined(this._polygons)) {
       this._polygons.classificationType = this._tileset.classificationType;
       this._polygons.debugWireframe = this._tileset.debugWireframe;
-      this._polygons.update(frameState);
+      if ((this._polygons.ready && this._show) || !this._polygons.ready) {
+        this._polygons.update(frameState);
+      }
       ready = ready && this._polygons.ready;
     }
     if (defined(this._polylines)) {
-      this._polylines.update(frameState);
+      if ((this._polylines.ready && this._show) || !this._polylines.ready) {
+        this._polylines.update(frameState);
+      }
       ready = ready && this._polylines.ready;
     }
     if (defined(this._points)) {
-      this._points.update(frameState);
+      if ((this._points.ready && this._show) || !this._points.ready) {
+        this._points.update(frameState);
+      }
       ready = ready && this._points.ready;
     }
     if (defined(this._batchTable) && ready) {

@@ -1,0 +1,8 @@
+title: Feature Layers — Development
+description: Toggle feature layers from a 3D Tileset (3D Tiles 1.1 groups) or from standalone GeoJSON. Hidden tileset layers are not requested or rendered.
+labels:
+  - 3D Tiles
+  - Metadata
+  - Vectors
+  - Development
+development: true
