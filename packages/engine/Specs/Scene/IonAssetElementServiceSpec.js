@@ -180,6 +180,22 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
+  it("listElements converts null pagination fields to undefined", async function () {
+    mockFetchJson({
+      items: [],
+      total: null,
+      continuationToken: null,
+    });
+
+    const result = await service.listElements();
+
+    expect(result).toEqual({
+      items: [],
+      total: undefined,
+      continuationToken: undefined,
+    });
+  });
+
   it("listElements validates pagination options", async function () {
     await expectAsync(
       service.listElements({ top: 0 }),
