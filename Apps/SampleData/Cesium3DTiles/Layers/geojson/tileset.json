@@ -1,0 +1,148 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "extensionsRequired": [
+    "MAXAR_content_geojson"
+  ],
+  "extensionsUsed": [
+    "MAXAR_content_geojson"
+  ],
+  "schema": {
+    "id": "LayersSample",
+    "classes": {
+      "layer": {
+        "properties": {
+          "name": {
+            "type": "STRING",
+            "semantic": "NAME"
+          }
+        }
+      }
+    }
+  },
+  "groups": [
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Points NW"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Lines NE"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Polygons SW"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Mixed SE"
+      }
+    }
+  ],
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        20
+      ]
+    },
+    "geometricError": 70,
+    "refine": "ADD",
+    "content": {
+      "uri": "center.geojson",
+      "boundingVolume": {
+        "region": [
+          -1.319684095917961,
+          0.69887084218,
+          -1.319675904082039,
+          0.69887715782,
+          0,
+          20
+        ]
+      }
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.698874,
+            -1.31968,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_ul.json",
+          "group": 0
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.698874,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_ur.json",
+          "group": 1
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.31968,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_ll.json",
+          "group": 2
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.6988424218,
+            -1.3196390408203893,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_lr.json",
+          "group": 3
+        }
+      }
+    ]
+  }
+}

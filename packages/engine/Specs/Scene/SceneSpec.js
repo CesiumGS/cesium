@@ -1252,6 +1252,23 @@ describe(
         renderAndExpectMarked(true);
         renderAndExpectMarked(false);
       });
+
+      it("requests another frame after a draped collection is hidden", function () {
+        scene.primitives.add(collection);
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        const changedDuringFrame = spyOn(
+          scene.vectorProvider,
+          "changedDuringFrame",
+        ).and.callThrough();
+
+        collection.show = false;
+        scene.renderForSpecs();
+        expect(changedDuringFrame.calls.mostRecent().returnValue).toBe(true);
+
+        scene.renderForSpecs();
+        expect(changedDuringFrame.calls.mostRecent().returnValue).toBe(false);
+      });
     });
 
     describe("render tests", function () {

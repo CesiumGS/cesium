@@ -1,3 +1,5 @@
+// @ts-check
+
 import Check from "./Check.js";
 import DeveloperError from "./DeveloperError.js";
 
@@ -15,7 +17,7 @@ const HilbertOrder = {};
  * @param {number} level The level of the curve
  * @param {number} x The X coordinate
  * @param {number} y The Y coordinate
- * @returns {number} The Hilbert index.
+ * @returns {bigint} The Hilbert index.
  */
 HilbertOrder.encode2D = function (level, x, y) {
   const n = Math.pow(2, level);
@@ -91,6 +93,10 @@ HilbertOrder.decode2D = function (level, index) {
 };
 
 /**
+ * @param {number} n
+ * @param {{x: number, y: number}} p
+ * @param {number} rx
+ * @param {number} ry
  * @private
  */
 function rotate(n, p, rx, ry) {

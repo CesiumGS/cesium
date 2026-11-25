@@ -1,8 +1,12 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import EllipsoidGeometry from "./EllipsoidGeometry.js";
 import VertexFormat from "./VertexFormat.js";
+
+/** @import Geometry from "./Geometry.js"; */
 
 /**
  * A description of a sphere centered at the origin.
@@ -111,6 +115,11 @@ class SphereGeometry {
 SphereGeometry.packedLength = EllipsoidGeometry.packedLength;
 
 const scratchEllipsoidGeometry = new EllipsoidGeometry();
+
+/**
+ * @type {{radius: number|undefined, radii: Cartesian3, vertexFormat: VertexFormat, stackPartitions: number|undefined, slicePartitions: number|undefined}}
+ * @ignore
+ */
 const scratchOptions = {
   radius: undefined,
   radii: new Cartesian3(),

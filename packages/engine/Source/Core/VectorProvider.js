@@ -150,6 +150,12 @@ class VectorProvider {
     this._markedFrameNumber = -1;
 
     /**
+     * Whether a collection was added or removed since the frame began.
+     * @private
+     */
+    this._changedThisFrame = false;
+
+    /**
      * Cartographic regions changed since the last
      * {@link VectorProvider#makeClean}, so only overlapping terrain
      * tiles are re-baked.
@@ -184,6 +190,7 @@ class VectorProvider {
     this._markedThisFrame.delete(collection);
     if (this._heightReferenceByCollection.delete(collection)) {
       this._markCollectionRegionDirty(collection);
+      this._changedThisFrame = true;
     }
   }
 
@@ -255,6 +262,7 @@ class VectorProvider {
 
     if (!this._heightReferenceByCollection.has(collection)) {
       this._markCollectionRegionDirty(collection);
+      this._changedThisFrame = true;
     }
 
     this._heightReferenceByCollection.set(collection, heightReference);
@@ -281,8 +289,32 @@ class VectorProvider {
       }
     }
     this._markedThisFrame.clear();
+    this._changedThisFrame = false;
 
     this._markedFrameNumber = frameNumber;
+  }
+
+  /**
+   * Whether the draped collections changed during the given frame, after
+   * surfaces baked them, so another frame is needed to show the change. Call
+   * once every collection has been marked for the frame.
+   *
+   * @param {number} frameNumber
+   * @returns {boolean}
+   */
+  changedDuringFrame(frameNumber) {
+    if (frameNumber !== this._markedFrameNumber) {
+      return false;
+    }
+    if (this._changedThisFrame) {
+      return true;
+    }
+    for (const collection of this._heightReferenceByCollection.keys()) {
+      if (!this._markedThisFrame.has(collection)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

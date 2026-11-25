@@ -282,4 +282,74 @@ describe("Scene/buildVectorGltfFromMVT", function () {
     expect(metadata).toBeDefined();
     expect(metadata.schema.classes.mvt_feature.properties._layer).toBeDefined();
   });
+
+  it("gives features in one layer with equal featureIdProperty values one ID", function () {
+    const decoded = {
+      layers: [
+        {
+          name: "roads",
+          extent: 4096,
+          features: [
+            {
+              type: "Point",
+              geometry: [{ x: 100, y: 100 }],
+              properties: { id: 1 },
+            },
+            {
+              type: "Point",
+              geometry: [{ x: 200, y: 200 }],
+              properties: { id: 1 },
+            },
+          ],
+        },
+      ],
+    };
+
+    const glb = buildVectorGltfFromMVT(decoded, tileCoordinates, {
+      featureIdProperty: "id",
+    });
+    const gltf = parseGlbJson(glb);
+
+    expect(
+      gltf.extensions.EXT_structural_metadata.propertyTables[0].count,
+    ).toBe(1);
+  });
+
+  it("gives features in different layers with equal featureIdProperty values different IDs", function () {
+    const decoded = {
+      layers: [
+        {
+          name: "roads",
+          extent: 4096,
+          features: [
+            {
+              type: "Point",
+              geometry: [{ x: 100, y: 100 }],
+              properties: { id: 1 },
+            },
+          ],
+        },
+        {
+          name: "water",
+          extent: 4096,
+          features: [
+            {
+              type: "Point",
+              geometry: [{ x: 200, y: 200 }],
+              properties: { id: 1 },
+            },
+          ],
+        },
+      ],
+    };
+
+    const glb = buildVectorGltfFromMVT(decoded, tileCoordinates, {
+      featureIdProperty: "id",
+    });
+    const gltf = parseGlbJson(glb);
+
+    expect(
+      gltf.extensions.EXT_structural_metadata.propertyTables[0].count,
+    ).toBe(2);
+  });
 });

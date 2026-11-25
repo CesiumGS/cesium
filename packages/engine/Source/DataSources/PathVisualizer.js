@@ -10,6 +10,7 @@ import {
   ReferenceFrame,
   TimeInterval,
   arrayRemoveDuplicates,
+  binarySearch,
   defined,
   destroyObject,
 } from "@cesium/core";
@@ -39,6 +40,7 @@ const update3DCartesian3Scratch3 = new Cartesian3();
 const transformOrientationScratch = new Quaternion();
 const transformVvlhScratch = new Matrix4();
 const transformRotationScratch = new Matrix3();
+const vvlhDeltaTimeScratch = new JulianDate();
 
 /**
  * Transforms a path entity's position into the local frame of the reference entity.
@@ -113,7 +115,7 @@ function computeVvlhTransform(time, positionProperty, result) {
   if (defined(cartesian)) {
     // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
     // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
-    const deltaTime = JulianDate.addSeconds(time, 0.01, new JulianDate());
+    const deltaTime = JulianDate.addSeconds(time, 0.01, vvlhDeltaTimeScratch);
     const deltaCartesian = positionProperty.getValue(
       deltaTime,
       update3DCartesian3Scratch1,
@@ -223,6 +225,9 @@ function EntityData(entity) {
 }
 
 const sampleScratch = new Cartesian3();
+const sampleStepTimeScratch = new JulianDate();
+const callbackStepTimeScratch = new JulianDate();
+const genericStepTimeScratch = new JulianDate();
 function subSampleSampledProperty(
   property,
   start,
@@ -273,11 +278,15 @@ function subSampleSampledProperty(
     JulianDate.lessThanOrEquals(updateTime, start) ||
     JulianDate.greaterThanOrEquals(updateTime, stop);
 
-  //Iterate over all interval times and add the ones that fall in our
-  //time range.  Note that times can contain data outside of
-  //the intervals range.  This is by design for use with interpolation.
-  let t = 0;
+  //Iterate over the interval times that overlap our time range.  Note that
+  //times can contain data outside of the intervals range.  This is by design
+  //for use with interpolation.  Begin at the last time at or before start so
+  //that sub-steps in the gap that straddles start are still taken.
   const len = times.length;
+  let t = binarySearch(times, start, JulianDate.compare);
+  if (t < 0) {
+    t = Math.max(~t - 1, 0);
+  }
   let current = times[t];
   const loopStop = stop;
   let sampling = false;
@@ -340,6 +349,11 @@ function subSampleSampledProperty(
       }
     }
 
+    //Every remaining time is past the end of our time range.
+    if (JulianDate.greaterThanOrEquals(current, loopStop)) {
+      break;
+    }
+
     if (t < len - 1) {
       if (maximumStep > 0 && !sampling) {
         const next = times[t + 1];
@@ -355,10 +369,12 @@ function subSampleSampledProperty(
       }
 
       if (sampling && sampleStepsTaken < sampleStepsToTake) {
+        // current is either an entry in times, which must not be modified,
+        // or this scratch from the previous step.
         current = JulianDate.addSeconds(
           current,
           sampleStepSize,
-          new JulianDate(),
+          sampleStepTimeScratch,
         );
         sampleStepsTaken++;
         continue;
@@ -433,7 +449,11 @@ function subSampleCallbackPositionProperty(
       index++;
     }
     i++;
-    time = JulianDate.addSeconds(start, maximumStep * i, new JulianDate());
+    time = JulianDate.addSeconds(
+      start,
+      maximumStep * i,
+      callbackStepTimeScratch,
+    );
   }
   //Always sample stop.
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -486,7 +506,7 @@ function subSampleGenericProperty(
       index++;
     }
     i++;
-    time = JulianDate.addSeconds(start, stepSize * i, new JulianDate());
+    time = JulianDate.addSeconds(start, stepSize * i, genericStepTimeScratch);
   }
   //Always sample stop.
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -744,7 +764,9 @@ const updateOrientationScratch = new Quaternion();
 const updateRotationScratch = new Matrix3();
 const portionsVisibleIntervalScratch = new TimeInterval();
 const portionsSegmentIntervalScratch = new TimeInterval();
-const portionsDynamicIntervalScratch = new TimeInterval();
+const splitMidTimeScratch = new JulianDate();
+const sampleStartScratch = new JulianDate();
+const sampleStopScratch = new JulianDate();
 
 function getDynamicMaterialProperties(materialData) {
   const dynamic = [];
@@ -776,6 +798,104 @@ function getDynamicMaterialProperties(materialData) {
   return dynamic;
 }
 
+// Adds a split time every step seconds after stepStart that falls strictly inside (rangeStart, rangeStop).
+// Steps are counted from stepStart rather than rangeStart so they fall at the same times as when the whole path is stepped.
+function addStepSplitTimes(stepStart, rangeStart, rangeStop, step, splitTimes) {
+  const offset = JulianDate.secondsDifference(rangeStart, stepStart);
+  for (let i = Math.max(Math.floor(offset / step) + 1, 1); ; i++) {
+    const splitTime = JulianDate.addSeconds(
+      stepStart,
+      i * step,
+      new JulianDate(),
+    );
+    if (!JulianDate.lessThan(splitTime, rangeStop)) {
+      return;
+    }
+    if (JulianDate.greaterThan(splitTime, rangeStart)) {
+      splitTimes.push(splitTime);
+    }
+  }
+}
+
+// Adds split times for a time-varying property over (rangeStart, rangeStop). Interval-based
+// properties split at their boundaries, recursing into interval data that is itself time-varying,
+// such as a SampledProperty or a nested TimeIntervalCollectionProperty inside a CompositeProperty.
+// Other properties step at the path resolution.
+function addPropertySplitTimes(
+  property,
+  rangeStart,
+  rangeStop,
+  stepStart,
+  splitResolution,
+  splitTimes,
+) {
+  const intervals = property.intervals;
+  if (!defined(intervals)) {
+    addStepSplitTimes(
+      stepStart,
+      rangeStart,
+      rangeStop,
+      splitResolution,
+      splitTimes,
+    );
+    return;
+  }
+
+  for (let i = 0; i < intervals.length; i++) {
+    const interval = intervals.get(i);
+    const start = JulianDate.greaterThan(interval.start, rangeStart)
+      ? interval.start
+      : rangeStart;
+    const stop = JulianDate.lessThan(interval.stop, rangeStop)
+      ? interval.stop
+      : rangeStop;
+    if (!JulianDate.lessThan(start, stop)) {
+      continue;
+    }
+
+    if (JulianDate.greaterThan(start, rangeStart)) {
+      splitTimes.push(JulianDate.clone(start));
+    }
+    if (JulianDate.lessThan(stop, rangeStop)) {
+      splitTimes.push(JulianDate.clone(stop));
+    }
+
+    const data = interval.data;
+    if (
+      defined(data) &&
+      typeof data.getValue === "function" &&
+      !Property.isConstant(data)
+    ) {
+      addPropertySplitTimes(
+        data,
+        start,
+        stop,
+        stepStart,
+        splitResolution,
+        splitTimes,
+      );
+    }
+  }
+}
+
+function addDynamicPropertySplitTimes(
+  dynamic,
+  interval,
+  splitResolution,
+  splitTimes,
+) {
+  for (let j = 0; j < dynamic.length; j++) {
+    addPropertySplitTimes(
+      dynamic[j],
+      interval.start,
+      interval.stop,
+      interval.start,
+      splitResolution,
+      splitTimes,
+    );
+  }
+}
+
 function emitSegmentsForSplitTimes(
   splitTimes,
   positionProperty,
@@ -805,10 +925,11 @@ function emitSegmentsForSplitTimes(
     const splitMidTime = JulianDate.addSeconds(
       splitStart,
       JulianDate.secondsDifference(splitStop, splitStart) / 2,
-      new JulianDate(),
+      splitMidTimeScratch,
     );
 
-    // Subsample positions
+    // Subsample positions, reusing this segment polyline's Cartesian3 instances if it exists
+    let segPolyline = item.segmentPolylines[segIndex];
     const subPositions = subSample(
       positionProperty,
       splitStart,
@@ -816,14 +937,13 @@ function emitSegmentsForSplitTimes(
       time,
       referenceFrame,
       resolution,
-      [],
+      defined(segPolyline) ? segPolyline.positions.slice() : [],
     );
     if (subPositions.length < 2) {
       continue;
     }
 
     // Get or create a polyline for this segment
-    let segPolyline = item.segmentPolylines[segIndex];
     if (!defined(segPolyline)) {
       segPolyline = polylineCollection.add();
       segPolyline.id = entity;
@@ -934,10 +1054,14 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     //we won't have to draw anything anyway.
     if (show) {
       if (hasTrailTime) {
-        sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
+        sampleStart = JulianDate.addSeconds(
+          time,
+          -trailTime,
+          sampleStartScratch,
+        );
       }
       if (hasLeadTime) {
-        sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
+        sampleStop = JulianDate.addSeconds(time, leadTime, sampleStopScratch);
       }
 
       if (hasAvailability) {
@@ -991,44 +1115,18 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     defaultResolution,
   );
 
-  const positions = subSample(
-    positionProperty,
-    sampleStart,
-    sampleStop,
-    time,
-    this._referenceFrame,
-    resolution,
-    polyline.positions.slice(),
-  );
-
-  // If the path only has one point, don't show it
-  // This can happen if the position is sampled at a time when it is only defined at a single point
-  if (positions.length < 2) {
-    polyline.show = false;
-    for (let j = 0; j < item.segmentPolylines.length; j++) {
-      item.segmentPolylines[j].show = false;
-    }
-    return;
-  }
-
-  polyline.show = true;
-  polyline.positions = positions;
-
-  polyline.material = MaterialProperty.getValue(
-    time,
-    pathGraphics.material,
-    polyline.material,
-  );
-
   const materialMode = Property.getValueOrUndefined(
     pathGraphics.materialMode,
     time,
   );
   const materialProp = pathGraphics.material;
   if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
-    // Hide the single polyline if it exists
-    if (defined(polyline)) {
-      polyline.show = false;
+    // Segment polylines draw the path, so the single polyline is hidden. Clear
+    // its positions rather than sampling and uploading the whole path for a
+    // polyline that is never shown.
+    polyline.show = false;
+    if (polyline.positions.length > 0) {
+      polyline.positions = [];
     }
 
     // Prevent non-positive split steps from creating non-terminating loops.
@@ -1038,23 +1136,32 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     const intervals = materialProp.intervals;
     let nextSegIndex = 0;
 
+    portionsVisibleIntervalScratch.start = sampleStart;
+    portionsVisibleIntervalScratch.stop = sampleStop;
+    portionsVisibleIntervalScratch.isStartIncluded = true;
+    portionsVisibleIntervalScratch.isStopIncluded = true;
+
     if (!defined(intervals)) {
-      // Sampled/interpolated root material - generate synthetic times at resolution intervals
+      // Sampled/interpolated root material
       const splitTimes = [
         JulianDate.clone(sampleStart),
         JulianDate.clone(sampleStop),
       ];
-      let splitTime = JulianDate.addSeconds(
-        sampleStart,
-        splitResolution,
-        new JulianDate(),
-      );
-      while (JulianDate.lessThan(splitTime, sampleStop)) {
-        splitTimes.push(JulianDate.clone(splitTime));
-        splitTime = JulianDate.addSeconds(
-          splitTime,
+      const dynamic = getDynamicMaterialProperties(materialProp);
+      if (dynamic.length > 0) {
+        addDynamicPropertySplitTimes(
+          dynamic,
+          portionsVisibleIntervalScratch,
           splitResolution,
-          new JulianDate(),
+          splitTimes,
+        );
+      } else {
+        addStepSplitTimes(
+          sampleStart,
+          sampleStart,
+          sampleStop,
+          splitResolution,
+          splitTimes,
         );
       }
       nextSegIndex = emitSegmentsForSplitTimes(
@@ -1071,11 +1178,6 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
         nextSegIndex,
       );
     } else {
-      portionsVisibleIntervalScratch.start = sampleStart;
-      portionsVisibleIntervalScratch.stop = sampleStop;
-      portionsVisibleIntervalScratch.isStartIncluded = true;
-      portionsVisibleIntervalScratch.isStopIncluded = true;
-
       // Interval-based material - process each interval separately
       for (let i = 0; i < intervals.length; i++) {
         const interval = intervals.get(i);
@@ -1103,69 +1205,12 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
           JulianDate.clone(segStart),
           JulianDate.clone(segStop),
         ];
-
-        for (let j = 0; j < dynamic.length; j++) {
-          const prop = dynamic[j];
-          const timeDynamicIntervals = prop.intervals;
-
-          if (defined(timeDynamicIntervals)) {
-            // Interval-based property: collect interval boundaries
-            for (let k = 0; k < timeDynamicIntervals.length; k++) {
-              const timeDynamicInterval = timeDynamicIntervals.get(k);
-
-              if (
-                !TimeInterval.intersect(
-                  timeDynamicInterval,
-                  portionsSegmentIntervalScratch,
-                  portionsDynamicIntervalScratch,
-                )
-              ) {
-                continue;
-              }
-
-              if (
-                JulianDate.greaterThan(
-                  portionsDynamicIntervalScratch.start,
-                  segStart,
-                ) &&
-                JulianDate.lessThan(
-                  portionsDynamicIntervalScratch.start,
-                  segStop,
-                )
-              ) {
-                splitTimes.push(
-                  JulianDate.clone(portionsDynamicIntervalScratch.start),
-                );
-              }
-
-              if (
-                JulianDate.greaterThan(
-                  portionsDynamicIntervalScratch.stop,
-                  segStart,
-                ) &&
-                JulianDate.lessThan(
-                  portionsDynamicIntervalScratch.stop,
-                  segStop,
-                )
-              ) {
-                splitTimes.push(
-                  JulianDate.clone(portionsDynamicIntervalScratch.stop),
-                );
-              }
-            }
-          } else if (!Property.isConstant(prop)) {
-            // Sampled/interpolated property: add resolution-based split times
-            let sampledTime = JulianDate.clone(segStart);
-            while (JulianDate.lessThan(sampledTime, segStop)) {
-              splitTimes.push(JulianDate.clone(sampledTime));
-              sampledTime = JulianDate.addSeconds(
-                sampledTime,
-                splitResolution,
-                new JulianDate(),
-              );
-            }
-          }
-        }
+        addDynamicPropertySplitTimes(
+          dynamic,
+          portionsSegmentIntervalScratch,
+          splitResolution,
+          splitTimes,
+        );
 
         // Emit segments for this interval's split times
         nextSegIndex = emitSegmentsForSplitTimes(
@@ -1195,6 +1240,32 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     for (let j = 0; j < item.segmentPolylines.length; j++) {
       item.segmentPolylines[j].show = false;
     }
+
+    const positions = subSample(
+      positionProperty,
+      sampleStart,
+      sampleStop,
+      time,
+      this._referenceFrame,
+      resolution,
+      polyline.positions.slice(),
+    );
+
+    // If the path only has one point, don't show it
+    // This can happen if the position is sampled at a time when it is only defined at a single point
+    if (positions.length < 2) {
+      polyline.show = false;
+      return;
+    }
+
+    polyline.show = true;
+    polyline.positions = positions;
+
+    polyline.material = MaterialProperty.getValue(
+      time,
+      pathGraphics.material,
+      polyline.material,
+    );
   }
 
   polyline.width = Property.getValueOrDefault(

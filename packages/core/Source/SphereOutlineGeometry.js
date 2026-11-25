@@ -1,7 +1,11 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import EllipsoidOutlineGeometry from "./EllipsoidOutlineGeometry.js";
+
+/** @import Geometry from "./Geometry.js"; */
 
 /**
  * A description of the outline of a sphere.
@@ -109,6 +113,11 @@ class SphereOutlineGeometry {
 SphereOutlineGeometry.packedLength = EllipsoidOutlineGeometry.packedLength;
 
 const scratchEllipsoidGeometry = new EllipsoidOutlineGeometry();
+
+/**
+ * @type {{radius: number|undefined, radii: Cartesian3, stackPartitions: number|undefined, slicePartitions: number|undefined, subdivisions: number|undefined}}
+ * @ignore
+ */
 const scratchOptions = {
   radius: undefined,
   radii: new Cartesian3(),

@@ -1,0 +1,140 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 1",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6139717,
+          40.0428925,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 2",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6139717,
+          40.0434353,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 3",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6139717,
+          40.043978,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 4",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6132677,
+          40.0428925,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 5",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6132677,
+          40.0434353,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 6",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6132677,
+          40.043978,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 7",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6125637,
+          40.0428925,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 8",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6125637,
+          40.0434353,
+          2.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Hydrant 9",
+        "kind": "hydrant"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75.6125637,
+          40.043978,
+          2.0
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "schema": {
+    "id": "LayersSample",
+    "classes": {
+      "layer": {
+        "properties": {
+          "name": {
+            "type": "STRING",
+            "semantic": "NAME"
+          }
+        }
+      }
+    }
+  },
+  "groups": [
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Buildings NW"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Buildings NE"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Buildings SW"
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "name": "Buildings SE"
+      }
+    }
+  ],
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "geometricError": 70,
+    "refine": "ADD",
+    "content": {
+      "uri": "../../Tilesets/Tileset/parent.b3dm",
+      "boundingVolume": {
+        "region": [
+          -1.3197004795898053,
+          0.6988582109,
+          -1.3196595204101946,
+          0.6988897891,
+          0,
+          88
+        ]
+      }
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.698874,
+            -1.31968,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_ul.json",
+          "group": 0
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.698874,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_ur.json",
+          "group": 1
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.31968,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_ll.json",
+          "group": 2
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.6988424218,
+            -1.3196390408203893,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 70,
+        "content": {
+          "uri": "layer_lr.json",
+          "group": 3
+        }
+      }
+    ]
+  }
+}
