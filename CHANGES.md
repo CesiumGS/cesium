@@ -47,7 +47,7 @@
 - Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
-- Fixed `MetadataPipelineStage` baking `propertyTable.count` into generated GLSL when a `CustomShader` reads a property beyond index 0 of an `EXT_structural_metadata` property table, which compiled a separate shader program for each distinct tile feature count. The table length is now passed as a uniform.
+- Fixed `MetadataPipelineStage` baking `propertyTable.count` into generated GLSL when a `CustomShader` reads a property beyond index 0 of an `EXT_structural_metadata` property table, which compiled a separate shader program for each distinct tile feature count. The table length is now passed as a uniform. [#14117](https://github.com/CesiumGS/cesium/pull/14117)
 
 ## 1.147 - 2026-11-02
 
