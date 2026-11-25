@@ -25,6 +25,10 @@ Recommended: A. Merge it as partial. The capacity part stands on its own, gives 
 
 If unanswered by 2026-11-26T12:00:00Z: B. Hold it.
 
+## Amended (2026-11-24, orchestrator)
+
+Per your handbook answer ("In the branches, plus one item"), the branch now updates the handbook itself: the System architecture tab's Engine profiles paragraph says the Viewer takes the engine's capacities within the device's limits, with its date (commit 28c35f2327). The replay is now 63c8ac7884, and `npm run handbook` builds on it. CS-27's handbook round edits the same paragraph, so whichever merges second needs a hand merge there.
+
 ## Answer
 
 Recorded in the front matter once answered.
