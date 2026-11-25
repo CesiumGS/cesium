@@ -18,7 +18,7 @@
 
 #### Breaking Changes :mega:
 
-- The experimental `ElementService` and `IonAssetElementService` now use `undefined` instead of `null` for missing values, including `total`, aggregation `min`, `max`, and `avg`, and element `label`, `displayValue`, and `units`. Raw property `value`s are unchanged.
+- `IonAssetElementService` aggregation and property results now use `undefined` instead of `null` to indicate missing values [#14118](https://github.com/CesiumGS/cesium/pull/14118)
 
 #### Additions :tada:
 
