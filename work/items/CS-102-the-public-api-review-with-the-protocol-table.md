@@ -22,3 +22,13 @@ The public API review, with CS-101's map and the façade's constraints. It also 
 
 - A first pass of this review, by a Fable reviewer, is in `fable-review-api.md` in the chief of staff's shared notes. It covers the surface map, the systemic problems and a proposed order for this review.
 - The owner's answers: tiers and names in one review (CS-975 B); `dispose()` everywhere (CS-976 A); alpha.1's packages may be renamed until this review (CS-973 C).
+
+## Questions from CS-848 (2026-11-24)
+
+CS-848's fix round (render features register passes in named slots) raised five API questions for this review, each with the executor's recommendation:
+
+1. Splat picks return their own shape (`SplatPick`, `RenderFeaturePick`, with a string ID) beside CS-832's `PickResult`. Recommended: return `PickResult` once CS-815's stable IDs reach splats, and mark these provisional until then.
+2. Free functions (`registerRenderFeature`, `pickRenderFeatures`) or methods (`engine.renderFeatures.register(world, f)`, `world.renderFeatures`)? Recommended: the method form, decided with the rest of the engine's surface.
+3. Passes restate their slot's reads and writes, which must match exactly. Recommended: derive them from the slot, or let a pass declare less.
+4. `RenderFeatureRayAdapter` is exported but no cast calls it, and `RenderFeatureRayHit` mixes `t` (a share of the segment) with accuracy in meters. Recommended: unexport it until casts call it (CS-1313), or settle the units now.
+5. The ground and overlay slots are exported and always refused. Recommended: keep them, documented as reserved (CS-1311, CS-1312).
