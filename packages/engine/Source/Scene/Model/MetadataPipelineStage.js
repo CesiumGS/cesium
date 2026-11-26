@@ -894,8 +894,9 @@ function addPropertyTablePropertyMetadata(
   }
 
   // For property tables, all properties are packed into a single texture.
-  // Thus, the texture identifier is based on the table id.
+  // Thus, the texture and table-length uniforms are keyed on the table id.
   const textureUniformName = `u_propertyTableTexture_${propertyTable.id}`;
+  const tableLengthUniformName = `u_propertyTableLength_${propertyTable.id}`;
   const initializationLines = [];
 
   if (!uniformMap.hasOwnProperty(textureUniformName)) {
@@ -908,6 +909,15 @@ function addPropertyTablePropertyMetadata(
       ShaderDestination.BOTH,
     );
     uniformMap[textureUniformName] = () => propertyTable.texture;
+
+    // Pass the table row count as a uniform rather than baking it into the GLSL
+    // so tiles with different feature counts share the same compiled shader program.
+    shaderBuilder.addUniform(
+      "int",
+      tableLengthUniformName,
+      ShaderDestination.BOTH,
+    );
+    uniformMap[tableLengthUniformName] = () => propertyTable.count;
   }
 
   const shaderDestination = propertyInfo.shaderDestination;
@@ -929,9 +939,13 @@ function addPropertyTablePropertyMetadata(
 
   const textureWidthName = `${metadataVariable}_textureWidth`;
   const linearIndexName = `${metadataVariable}_linearIndex`;
+  const propertyOffsetExpression =
+    propertyInfoIndex === 0
+      ? ""
+      : `${propertyInfoIndex} * ${tableLengthUniformName} + `;
   initializationLines.push(
     `int ${textureWidthName} = textureSize(${textureUniformName}, 0).x;`,
-    `int ${linearIndexName} = ${propertyInfoIndex * propertyTable.count} + int(featureIds.${featureIdVariableName});`,
+    `int ${linearIndexName} = ${propertyOffsetExpression}int(featureIds.${featureIdVariableName});`,
   );
   const texCoordExpression = `ivec2(${linearIndexName} % ${textureWidthName}, ${linearIndexName} / ${textureWidthName})`;
   const textureSampleExpression = `texelFetch(${textureUniformName}, ${texCoordExpression}, 0)`;

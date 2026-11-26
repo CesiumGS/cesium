@@ -6,6 +6,7 @@ import {
   defined,
 } from "@cesium/core";
 import {
+  FeatureIdPipelineStage,
   GltfLoader,
   MetadataPipelineStage,
   ModelStatistics,
@@ -35,6 +36,8 @@ describe(
       "./Data/Models/glTF-2.0/PropertyTextureWith32BitTypes/glTF/PropertyTextureWith32BitTypes.gltf";
     const boxTexturedBinary =
       "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
+    const buildingsMetadata =
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const tilesetWithMetadataStatistics =
       "./Data/Cesium3DTiles/Metadata/PropertyAttributesPointCloud/tileset.json";
 
@@ -812,6 +815,77 @@ describe(
           expect(shaderCache.numberOfShaders).toBe(initialCount);
         },
       );
+    });
+
+    it("Shares one shader program across models whose property table counts differ", function () {
+      if (!context.webgl2) {
+        return;
+      }
+
+      return loadGltf(buildingsMetadata).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const node = components.nodes[1];
+        const primitive = node.primitives[0];
+        const frameState = scene.frameState;
+        const propertyTable = components.structuralMetadata.propertyTables[0];
+
+        const customShader = new CustomShader({
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+              // "id" is at propertyInfoIndex 1 (after "height"), so its linear
+              // texel offset depends on the property table's feature count.
+              int buildingId = fsInput.metadata.id;
+              material.diffuse = vec3(float(buildingId));
+            }
+          `,
+        });
+
+        const pipelineResources = [];
+        const programs = [];
+        const shaderCache = context.shaderCache;
+        const initialCount = shaderCache.numberOfShaders;
+
+        for (const count of [10, 25]) {
+          propertyTable._count = count;
+          const renderResources = {
+            shaderBuilder: new ShaderBuilder(),
+            attributes: [],
+            attributeIndex: 1,
+            hasPropertyTable: true,
+            runtimeNode: { node: node },
+            model: {
+              _pipelineResources: pipelineResources,
+              statistics: new ModelStatistics(),
+              structuralMetadata: components.structuralMetadata,
+              customShader: customShader,
+            },
+            uniformMap: {},
+          };
+          FeatureIdPipelineStage.process(
+            renderResources,
+            primitive,
+            frameState,
+          );
+          MetadataPipelineStage.process(renderResources, primitive, frameState);
+
+          expect(renderResources.uniformMap.u_propertyTableLength_0()).toBe(
+            count,
+          );
+          programs.push(
+            renderResources.shaderBuilder.buildShaderProgram(context),
+          );
+        }
+
+        expect(programs[0]).toBe(programs[1]);
+        expect(shaderCache.numberOfShaders).toBe(initialCount + 1);
+
+        cleanup(pipelineResources);
+        for (const program of programs) {
+          program.destroy();
+        }
+        shaderCache.destroyReleasedShaderPrograms();
+        expect(shaderCache.numberOfShaders).toBe(initialCount);
+      });
     });
 
     it("Handles property textures that use multiple channels to represent higher-precision types", function () {
