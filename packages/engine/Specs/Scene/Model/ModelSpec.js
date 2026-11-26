@@ -4761,16 +4761,125 @@ describe(
         );
         const node = model.getNode("Mesh");
 
+        model.modelMatrix = Matrix4.fromTranslation(
+          new Cartesian3(10.0, 20.0, 30.0),
+          new Matrix4(),
+        );
+        scene.renderForSpecs();
+
         const result = new Matrix4();
         const returned = node.computeWorldMatrix(result);
         expect(returned).toBe(result);
+        expect(returned).toEqualEpsilon(
+          expectedWorldMatrix(model, node),
+          CesiumMath.EPSILON14,
+        );
 
-        const expected = Matrix4.multiplyTransformation(
-          model.sceneGraph.computedModelMatrix,
-          node._runtimeNode.computedTransform,
+        // Distinct parent and child transforms, checked before and after the
+        // scene update propagates them.
+        node.parent.matrix = Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
           new Matrix4(),
         );
-        expect(returned).toEqual(expected);
+        node.matrix = Matrix4.fromTranslation(
+          new Cartesian3(4.0, 5.0, 6.0),
+          new Matrix4(),
+        );
+        const expected = expectedWorldMatrix(model, node);
+        expect(node.computeWorldMatrix(new Matrix4())).toEqualEpsilon(
+          expected,
+          CesiumMath.EPSILON14,
+        );
+
+        scene.renderForSpecs();
+        expect(node.computeWorldMatrix(new Matrix4())).toEqualEpsilon(
+          expected,
+          CesiumMath.EPSILON14,
+        );
+        expect(
+          Matrix4.multiplyTransformation(
+            model.sceneGraph.computedModelMatrix,
+            node._runtimeNode.computedTransform,
+            new Matrix4(),
+          ),
+        ).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+      });
+
+      function expectedWorldMatrix(model, node) {
+        // Composes the current local matrices, independent of cached values.
+        let expected = Matrix4.clone(node.matrix);
+        for (let n = node.parent; defined(n); n = n.parent) {
+          expected = Matrix4.multiply(n.matrix, expected, new Matrix4());
+        }
+        return Matrix4.multiply(
+          model.sceneGraph.computedModelMatrix,
+          expected,
+          new Matrix4(),
+        );
+      }
+
+      it("computeWorldMatrix reflects a node matrix change before the next update", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+        const before = node.computeWorldMatrix(new Matrix4());
+
+        node.matrix = Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
+          new Matrix4(),
+        );
+
+        const result = node.computeWorldMatrix(new Matrix4());
+        expect(result).not.toEqual(before);
+        expect(result).toEqualEpsilon(
+          expectedWorldMatrix(model, node),
+          CesiumMath.EPSILON14,
+        );
+      });
+
+      it("computeWorldMatrix reflects an ancestor matrix change before the next update", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+        const parent = node.parent;
+        expect(parent).toBeDefined();
+        const before = node.computeWorldMatrix(new Matrix4());
+
+        parent.matrix = Matrix4.fromTranslation(
+          new Cartesian3(4.0, 5.0, 6.0),
+          new Matrix4(),
+        );
+
+        const result = node.computeWorldMatrix(new Matrix4());
+        expect(result).not.toEqual(before);
+        expect(result).toEqualEpsilon(
+          expectedWorldMatrix(model, node),
+          CesiumMath.EPSILON14,
+        );
+      });
+
+      it("computeWorldMatrix restores the original transform when matrix is undefined", async function () {
+        const model = await loadAndZoomToModelAsync(
+          { gltf: boxArticulationsUrl },
+          scene,
+        );
+        const node = model.getNode("Mesh");
+        const before = node.computeWorldMatrix(new Matrix4());
+
+        node.matrix = Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
+          new Matrix4(),
+        );
+        node.matrix = undefined;
+
+        expect(node.computeWorldMatrix(new Matrix4())).toEqualEpsilon(
+          before,
+          CesiumMath.EPSILON14,
+        );
       });
     });
 
