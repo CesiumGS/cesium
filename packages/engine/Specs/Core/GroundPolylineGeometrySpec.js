@@ -855,8 +855,34 @@ describe("Core/GroundPolylineGeometry", function () {
     const pointsDistance = Cartesian3.distance(positions[0], positions[1]);
 
     expect(boundingSphere.radius).toBeGreaterThan(pointsDistance);
-    // in the GroundPolylineCode radius is sumHeights / 2 -- so we expect radius to be at least double
-    expect(boundingSphere.radius).toBeGreaterThan(3087.0 / 2); // starting top/bottom height
+    // half the height of the volume, from the minimum to the maximum terrain height
+    expect(boundingSphere.radius).toBeGreaterThan(3087.0 / 2);
+  });
+
+  it("creates a bounding sphere that contains the whole polyline volume", function () {
+    // Lisbon - the approximate terrain heights of this region reach from the sea floor,
+    // kilometers below the ellipsoid, to less than 1000 meters above it
+    const groundPolylineGeometry = new GroundPolylineGeometry({
+      positions: Cartesian3.fromDegreesArray([-9.14, 38.72, -9.14, 38.7254]),
+    });
+
+    const geometry = GroundPolylineGeometry.createGeometry(
+      groundPolylineGeometry,
+    );
+
+    const boundingSphere = geometry.boundingSphere;
+    const positionValues = geometry.attributes.position.values;
+    const vertex = new Cartesian3();
+    let farthestVertexDistance = 0.0;
+    for (let i = 0; i < positionValues.length; i += 3) {
+      Cartesian3.unpack(positionValues, i, vertex);
+      farthestVertexDistance = Math.max(
+        farthestVertexDistance,
+        Cartesian3.distance(boundingSphere.center, vertex),
+      );
+    }
+
+    expect(farthestVertexDistance).toBeLessThanOrEqual(boundingSphere.radius);
   });
 
   const packedInstance = [positions.length];
