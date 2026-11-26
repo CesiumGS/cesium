@@ -213,7 +213,8 @@ describe("Scene/Controllers/ScreenSpaceCameraControllers", function () {
     describe("minimumZoomDistance", function () {
       const frameTime = 1000.0 / 60.0;
 
-      // Scrolls for two seconds, then coasts, and returns the closest approach to the target.
+      // Scrolls for two seconds, then coasts, and returns the smallest signed distance remaining
+      // to the target along the initial view direction. Negative means the camera passed the target.
       function zoomTowardTarget(minimumZoomDistance, wheelDelta) {
         const camera = createLevelCamera(100.0);
         const target = Cartesian3.add(
@@ -226,6 +227,7 @@ describe("Scene/Controllers/ScreenSpaceCameraControllers", function () {
           new Cartesian3(),
         );
 
+        const direction = Cartesian3.clone(camera.directionWC);
         const controller = new ScreenSpaceZoomCameraController();
         controller.minimumZoomDistance = minimumZoomDistance;
         controller.pickWorldPosition = (scene, windowPosition, result) =>
@@ -239,10 +241,12 @@ describe("Scene/Controllers/ScreenSpaceCameraControllers", function () {
           }
           controller._lastUpdateTime = getTimestamp() - frameTime;
           controller.update(scene);
-          closest = Math.min(
-            closest,
-            Cartesian3.distance(camera.positionWC, target),
+          const remaining = Cartesian3.subtract(
+            target,
+            camera.positionWC,
+            new Cartesian3(),
           );
+          closest = Math.min(closest, Cartesian3.dot(remaining, direction));
         }
         return closest;
       }
