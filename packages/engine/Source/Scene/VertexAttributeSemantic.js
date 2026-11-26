@@ -1,4 +1,4 @@
-import { Check, DeveloperError, defined } from "@cesium/core";
+import { AttributeType, Check, DeveloperError, defined } from "@cesium/core";
 
 /**
  * An enum describing the built-in vertex attribute semantics.
@@ -288,6 +288,42 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
       throw new DeveloperError("semantic is not a valid value.");
     //>>includeEnd('debug');
   }
+};
+
+/**
+ * Gets the {@link AttributeType} of the values for the given semantic. Unlike
+ * the other helpers, this does not throw for unknown values, so that custom
+ * semantics can be told apart from built-in ones.
+ *
+ * @param {string} semantic The semantic.
+ *
+ * @returns {AttributeType|undefined} The type, or undefined if the semantic has no fixed type, such as a custom semantic.
+ *
+ * @private
+ */
+VertexAttributeSemantic.getAttributeType = function (semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
+  switch (semantic) {
+    case VertexAttributeSemantic.FEATURE_ID:
+    case VertexAttributeSemantic.CUMULATIVE_DISTANCE:
+      return AttributeType.SCALAR;
+    case VertexAttributeSemantic.TEXCOORD:
+      return AttributeType.VEC2;
+    case VertexAttributeSemantic.POSITION:
+    case VertexAttributeSemantic.NORMAL:
+    case VertexAttributeSemantic.SCALE:
+      return AttributeType.VEC3;
+    case VertexAttributeSemantic.TANGENT:
+    case VertexAttributeSemantic.COLOR:
+    case VertexAttributeSemantic.JOINTS:
+    case VertexAttributeSemantic.WEIGHTS:
+    case VertexAttributeSemantic.ROTATION:
+      return AttributeType.VEC4;
+  }
+  return undefined;
 };
 
 /**

@@ -93,7 +93,9 @@ class GeometryAttributeDescriptor {
     //>>includeEnd('debug');
 
     const { semantic, setIndex, type } = options;
-    const builtInType = GeometryAttributeDescriptor.#getBuiltInType(semantic);
+    const builtInType = /** @type {any} */ (
+      VertexAttributeSemantic
+    ).getAttributeType(semantic);
 
     this.#semantic = semantic;
     this.#setIndex = undefined;
@@ -223,32 +225,6 @@ class GeometryAttributeDescriptor {
         this.#semantic === other.semantic &&
         this.#setIndex === other.setIndex)
     );
-  }
-
-  /**
-   * @param {string} semantic
-   * @returns {AttributeType|undefined} The type, or undefined for custom semantics.
-   * @ignore
-   */
-  static #getBuiltInType(semantic) {
-    switch (semantic) {
-      case VertexAttributeSemantic.FEATURE_ID:
-      case VertexAttributeSemantic.CUMULATIVE_DISTANCE:
-        return AttributeType.SCALAR;
-      case VertexAttributeSemantic.TEXCOORD:
-        return AttributeType.VEC2;
-      case VertexAttributeSemantic.POSITION:
-      case VertexAttributeSemantic.NORMAL:
-      case VertexAttributeSemantic.SCALE:
-        return AttributeType.VEC3;
-      case VertexAttributeSemantic.TANGENT:
-      case VertexAttributeSemantic.COLOR:
-      case VertexAttributeSemantic.JOINTS:
-      case VertexAttributeSemantic.WEIGHTS:
-      case VertexAttributeSemantic.ROTATION:
-        return AttributeType.VEC4;
-    }
-    return undefined;
   }
 }
 

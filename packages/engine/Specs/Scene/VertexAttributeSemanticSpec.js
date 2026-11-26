@@ -1,3 +1,4 @@
+import { AttributeType } from "@cesium/core";
 import { VertexAttributeSemantic } from "../../index.js";
 
 describe("Scene/VertexAttributeSemantic", function () {
@@ -192,6 +193,40 @@ describe("Scene/VertexAttributeSemantic", function () {
   it("getGlslType throws if semantic is not a valid value", function () {
     expect(function () {
       VertexAttributeSemantic.getGlslType("OTHER");
+    }).toThrowDeveloperError();
+  });
+
+  it("getAttributeType", function () {
+    const expected = {
+      [VertexAttributeSemantic.POSITION]: AttributeType.VEC3,
+      [VertexAttributeSemantic.NORMAL]: AttributeType.VEC3,
+      [VertexAttributeSemantic.TANGENT]: AttributeType.VEC4,
+      [VertexAttributeSemantic.TEXCOORD]: AttributeType.VEC2,
+      [VertexAttributeSemantic.COLOR]: AttributeType.VEC4,
+      [VertexAttributeSemantic.JOINTS]: AttributeType.VEC4,
+      [VertexAttributeSemantic.WEIGHTS]: AttributeType.VEC4,
+      [VertexAttributeSemantic.FEATURE_ID]: AttributeType.SCALAR,
+      [VertexAttributeSemantic.SCALE]: AttributeType.VEC3,
+      [VertexAttributeSemantic.ROTATION]: AttributeType.VEC4,
+      [VertexAttributeSemantic.CUMULATIVE_DISTANCE]: AttributeType.SCALAR,
+    };
+
+    for (const semantic of Object.keys(expected)) {
+      expect(VertexAttributeSemantic.getAttributeType(semantic)).toBe(
+        expected[semantic],
+      );
+    }
+  });
+
+  it("getAttributeType returns undefined for custom semantics", function () {
+    expect(
+      VertexAttributeSemantic.getAttributeType("_TEMPERATURE"),
+    ).toBeUndefined();
+  });
+
+  it("getAttributeType throws if semantic is undefined", function () {
+    expect(function () {
+      VertexAttributeSemantic.getAttributeType(undefined);
     }).toThrowDeveloperError();
   });
 
