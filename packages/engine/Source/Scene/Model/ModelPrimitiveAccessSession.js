@@ -18,7 +18,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import Buffer from "../../Renderer/Buffer.js"; */
 /** @import { Attribute, Primitive, Quantization } from "../ModelComponents.js"; */
-/** @import { GeometryAccessOptions } from "../GeometryReader.js"; */
+/** @import { GeometryAccessOptions } from "../withGeometryAccessSession.js"; */
 /** @import { GeometryAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
 /** @import GeometryWriteSession, { GeometryAttributeWriter } from "../GeometryWriteSession.js"; */
 

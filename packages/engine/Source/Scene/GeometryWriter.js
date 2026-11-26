@@ -3,7 +3,7 @@
 import { Check } from "@cesium/core";
 import withGeometryAccessSession from "./withGeometryAccessSession.js";
 /** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
-/** @import { GeometryAccessOptions } from "./GeometryReader.js"; */
+/** @import { GeometryAccessOptions } from "./withGeometryAccessSession.js"; */
 /** @import GeometryWriteSession from "./GeometryWriteSession.js"; */
 
 /**

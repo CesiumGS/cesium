@@ -2,8 +2,15 @@
 
 import { Check, DeveloperError, defined } from "@cesium/core";
 /** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
-/** @import { GeometryAccessOptions } from "./GeometryReader.js"; */
 /** @import GeometryReadSession from "./GeometryReadSession.js"; */
+
+/**
+ * The geometry data to access in a read or write session.
+ *
+ * @typedef {object} GeometryAccessOptions
+ * @property {GeometryAttributeDescriptor[]} [attributes=[]] The attributes to access.
+ * @property {boolean} [primitives=false] Whether to read the vertex indices of the primitives.
+ */
 
 /**
  * Validates the requested data against the available attributes, creates a
