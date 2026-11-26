@@ -180,6 +180,22 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
+  it("listElements converts null pagination fields to undefined", async function () {
+    mockFetchJson({
+      items: [],
+      total: null,
+      continuationToken: null,
+    });
+
+    const result = await service.listElements();
+
+    expect(result).toEqual({
+      items: [],
+      total: undefined,
+      continuationToken: undefined,
+    });
+  });
+
   it("listElements validates pagination options", async function () {
     await expectAsync(
       service.listElements({ top: 0 }),
@@ -237,13 +253,13 @@ describe("Scene/IonAssetElementService", function () {
               units: "Units:M",
             },
             "Category.Name": {
-              displayValue: null,
+              displayValue: undefined,
               value: null,
-              units: null,
+              units: undefined,
             },
           },
         },
-        { id: "8796093022213", label: null, properties: {} },
+        { id: "8796093022213", label: undefined, properties: {} },
       ],
       total: 2,
       continuationToken: undefined,
@@ -365,6 +381,31 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
+  it("aggregate converts null statistics to undefined", async function () {
+    mockFetchJson({
+      aggregations: [
+        { key: "Height", count: 0, min: null, max: null, avg: null, sum: 0 },
+      ],
+      total: null,
+    });
+
+    const result = await service.aggregate({ propertyKeys: ["Height"] });
+
+    expect(result).toEqual({
+      aggregations: [
+        {
+          propertyKey: "Height",
+          count: 0,
+          min: undefined,
+          max: undefined,
+          avg: undefined,
+          sum: 0,
+        },
+      ],
+      total: undefined,
+    });
+  });
+
   it("aggregate validates propertyKeys", async function () {
     await expectAsync(service.aggregate()).toBeRejectedWithDeveloperError();
     await expectAsync(
@@ -386,6 +427,13 @@ describe("Scene/IonAssetElementService", function () {
           kind: "model",
           ignored: true,
         },
+        {
+          key: "null-metadata-node-key",
+          label: null,
+          hasChildren: false,
+          id: 8,
+          kind: null,
+        },
       ],
     });
 
@@ -406,6 +454,13 @@ describe("Scene/IonAssetElementService", function () {
           hasChildren: true,
           id: "7",
           kind: "model",
+        },
+        {
+          key: "null-metadata-node-key",
+          label: undefined,
+          hasChildren: false,
+          id: "8",
+          kind: undefined,
         },
       ],
     });

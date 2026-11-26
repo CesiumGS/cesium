@@ -43,7 +43,7 @@ function toIdString(value) {
 function elementFromResponse(response) {
   const result = {
     id: toIdString(response.id),
-    label: response.label,
+    label: response.label ?? undefined,
   };
   if (defined(response.properties)) {
     result.properties = Object.fromEntries(
@@ -52,8 +52,8 @@ function elementFromResponse(response) {
           name,
           {
             value: property.value,
-            displayValue: property.displayValue,
-            units: property.units,
+            displayValue: property.displayValue ?? undefined,
+            units: property.units ?? undefined,
           },
         ];
       }),
@@ -85,10 +85,10 @@ function locationFromResponse(location) {
 function treeNodeFromResponse(response) {
   const result = {
     key: response.key,
-    label: response.label,
+    label: response.label ?? undefined,
     hasChildren: response.hasChildren,
     id: toIdString(response.id),
-    kind: response.kind,
+    kind: response.kind ?? undefined,
   };
   return result;
 }
@@ -99,7 +99,7 @@ function treeNodeFromResponse(response) {
  * @typedef {object} IonAssetElementService.ElementProperty
  * @property {*} value The raw value of this property.
  * @property {string} [displayValue] The human-readable, pre-formatted value, including any unit suffix (e.g. <code>"0.6208 m³"</code>).
- * @property {string|null} [units] The unit of <code>value</code>, or <code>null</code> or <code>undefined</code> when the property is unitless.
+ * @property {string} [units] The unit of <code>value</code>, or <code>undefined</code> when the property is unitless.
  */
 
 /**
@@ -125,7 +125,7 @@ function treeNodeFromResponse(response) {
  *
  * @typedef {object} IonAssetElementService.ElementPage
  * @property {IonAssetElementService.Element[]} items The elements on this page.
- * @property {number|null} total The total number of elements matching the query across all pages, or <code>null</code> when the total is unavailable.
+ * @property {number} [total] The total number of elements matching the query across all pages, or <code>undefined</code> when the total is unavailable.
  * @property {string} [continuationToken] A token to pass as <code>options.continuationToken</code> to retrieve the next page, or <code>undefined</code> when there are no more results.
  */
 
@@ -134,14 +134,14 @@ function treeNodeFromResponse(response) {
  * as returned by {@link IonAssetElementService#aggregate}.
  *
  * Non-numeric properties come back with a <code>count</code> of 0,
- * <code>null</code> for min, max, and avg, and a sum of 0.
+ * <code>undefined</code> for min, max, and avg, and a sum of 0.
  *
  * @typedef {object} IonAssetElementService.Aggregation
  * @property {string} propertyKey The qualified property key these statistics describe.
  * @property {number} count The number of elements that had a numeric value for this property key.
- * @property {number|null} min The minimum value across the matched elements, or <code>null</code> when there are no numeric values.
- * @property {number|null} max The maximum value across the matched elements, or <code>null</code> when there are no numeric values.
- * @property {number|null} avg The mean value across the matched elements, or <code>null</code> when there are no numeric values.
+ * @property {number} [min] The minimum value across the matched elements, or <code>undefined</code> when there are no numeric values.
+ * @property {number} [max] The maximum value across the matched elements, or <code>undefined</code> when there are no numeric values.
+ * @property {number} [avg] The mean value across the matched elements, or <code>undefined</code> when there are no numeric values.
  * @property {number} sum The sum of values across the matched elements.
  */
 
@@ -396,8 +396,8 @@ class IonAssetElementService extends ElementService {
       .fetchJson();
     return {
       items: response.items.map(elementFromResponse),
-      total: response.total,
-      continuationToken: response.continuationToken,
+      total: response.total ?? undefined,
+      continuationToken: response.continuationToken ?? undefined,
     };
   }
 
@@ -431,7 +431,7 @@ class IonAssetElementService extends ElementService {
    * @param {object} options Object with the following properties:
    * @param {string[]} options.propertyKeys The qualified property keys to aggregate. At least one is required.
    * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsAggregate">Aggregate elements</a> ion REST API documentation for the supported structure.
-   * @returns {Promise<{aggregations: IonAssetElementService.Aggregation[], total: number}>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @returns {Promise<{aggregations: IonAssetElementService.Aggregation[], total: (number|undefined)}>} A promise that resolves to the aggregate statistics. The promise rejects with a {@link RequestErrorEvent} if the request fails.
    * @exception {DeveloperError} <code>options.propertyKeys</code> must be a non-empty array of strings.
    *
    * @example
@@ -486,16 +486,16 @@ class IonAssetElementService extends ElementService {
     return {
       aggregations: response.aggregations.map(function (aggregation) {
         return {
-          // accept either key or propertyKey from the server, but always return propertyKey`
+          // accept either key or propertyKey from the server, but always return propertyKey
           propertyKey: aggregation.key ?? aggregation.propertyKey,
           count: aggregation.count,
-          min: aggregation.min,
-          max: aggregation.max,
-          avg: aggregation.avg,
+          min: aggregation.min ?? undefined,
+          max: aggregation.max ?? undefined,
+          avg: aggregation.avg ?? undefined,
           sum: aggregation.sum,
         };
       }),
-      total: response.total,
+      total: response.total ?? undefined,
     };
   }
 

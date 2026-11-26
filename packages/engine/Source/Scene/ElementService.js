@@ -28,7 +28,7 @@ import { DeveloperError } from "@cesium/core";
  *
  * @typedef {object} ElementService.ElementPage
  * @property {ElementService.Element[]} items The elements on this page.
- * @property {number|null} total The total number of matching elements, or <code>null</code> when the total is unavailable.
+ * @property {number} [total] The total number of matching elements, or <code>undefined</code> when the total is unavailable.
  */
 
 /**
@@ -37,9 +37,9 @@ import { DeveloperError } from "@cesium/core";
  * @typedef {object} ElementService.Aggregation
  * @property {string} [propertyKey] The property key these statistics describe.
  * @property {number} count The number of elements included in the statistics.
- * @property {number|null} min The minimum value, or <code>null</code> when unavailable.
- * @property {number|null} max The maximum value, or <code>null</code> when unavailable.
- * @property {number|null} avg The average value, or <code>null</code> when unavailable.
+ * @property {number} [min] The minimum value, or <code>undefined</code> when unavailable.
+ * @property {number} [max] The maximum value, or <code>undefined</code> when unavailable.
+ * @property {number} [avg] The average value, or <code>undefined</code> when unavailable.
  * @property {number} sum The sum of the values.
  */
 
@@ -101,7 +101,7 @@ class ElementService {
    * Computes aggregate statistics for element properties.
    *
    * @param {object} options Provider-specific aggregation options.
-   * @returns {Promise<{aggregations: ElementService.Aggregation[], total: number}>} A promise that resolves to the aggregate statistics.
+   * @returns {Promise<{aggregations: ElementService.Aggregation[], total: (number|undefined)}>} A promise that resolves to the aggregate statistics.
    */
   async aggregate(options) {
     DeveloperError.throwInstantiationError();

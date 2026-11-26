@@ -16,6 +16,10 @@
 
 ### @cesium/engine
 
+#### Breaking Changes :mega:
+
+- `IonAssetElementService` aggregation and property results now use `undefined` instead of `null` to indicate missing values [#14118](https://github.com/CesiumGS/cesium/pull/14118)
+
 #### Additions :tada:
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
