@@ -792,7 +792,7 @@ Resource.prototype.appendForwardSlash = function () {
  * @returns {Promise<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @example
- * // load a single URL asynchronously
+ * // load a single URL asynchronously.
  * resource.fetchArrayBuffer().then(function(arrayBuffer) {
  *     // use the data
  * }).catch(function(error) {
