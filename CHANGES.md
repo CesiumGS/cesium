@@ -34,6 +34,7 @@
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
 - Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
 - Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds. [#13964](https://github.com/CesiumGS/cesium/pull/13694)
+- Fixed Gaussian splat snapshot rebuilds allocating four fresh attribute staging copies (~44 bytes/splat) on every rebuild, which fragmented the heap over long sessions until rendering stopped with `RangeError: Array buffer allocation failed`. The staging buffers are now round-tripped through the texture worker and reused. [#13810](https://github.com/CesiumGS/cesium/issues/13810)
 
 ## 1.147 - 2026-11-02
 
@@ -103,7 +104,6 @@ import { Cartesian3, Color } from "@cesium/core";
 - Fixed draped polylines rendering at the wrong width at large widths, in both `"pixels"` and `"meters"` width units. [#13737](https://github.com/CesiumGS/cesium/pull/13737)
 - Fixed geometry clipped by a `ClippingPolygonCollection` still casting shadows. The clipping uv origin is now read from the eye of the pass being rendered, so it matches the delta computed in the vertex shader during shadow casts. [#13768](https://github.com/CesiumGS/cesium/issues/13768)
 - Fixed terrain-clamped billboards and labels being mispositioned and not properly rendering in 2D/Columbus view. [#5042](https://github.com/CesiumGS/cesium/issues/5042) [#12531](https://github.com/CesiumGS/cesium/issues/12531)
-- Fixed Gaussian splat snapshot rebuilds allocating four fresh attribute staging copies (~44 bytes/splat) on every rebuild, which fragmented the heap over long sessions until rendering stopped with `RangeError: Array buffer allocation failed`. The staging buffers are now round-tripped through the texture worker and reused. [#13810](https://github.com/CesiumGS/cesium/issues/13810)
 
 #### Deprecated :hourglass_flowing_sand:
 

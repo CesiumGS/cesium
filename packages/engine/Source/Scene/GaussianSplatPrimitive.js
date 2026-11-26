@@ -507,7 +507,12 @@ async function processGeneratedSplatTextureData(
   promise,
 ) {
   try {
-    const splatTextureData = await promise;
+    let splatTextureData;
+    try {
+      splatTextureData = await promise;
+    } finally {
+      primitive._textureGenerationInFlight = false;
+    }
     releaseTextureStagingSet(primitive, splatTextureData.attributes);
 
     // The pending snapshot may have been replaced (or the primitive destroyed)
@@ -1167,6 +1172,15 @@ function GaussianSplatPrimitive(options) {
   this._textureStagingHighWater = 0;
 
   /**
+   * Whether a texture generation task is out with the staging set. A second
+   * task started meanwhile would find the pool empty and allocate another
+   * set, one of which is dropped when both return.
+   * @type {boolean}
+   * @private
+   */
+  this._textureGenerationInFlight = false;
+
+  /**
    * The state of the Gaussian splat sorting process.
    * This is used to track the progress of the sorting operation.
    * @type {GaussianSplatSortingState}
@@ -1738,6 +1752,13 @@ GaussianSplatPrimitive.generateSplatTexture = function (
   if (!defined(snapshot) || snapshot.state !== SnapshotState.BUILDING) {
     return;
   }
+  // A rebuild can replace a snapshot whose task is still in flight. Leave the
+  // new one BUILDING until that task returns its staging set; update()
+  // retries every frame, and the single texture worker would have queued the
+  // task behind the earlier one anyway.
+  if (primitive._textureGenerationInFlight) {
+    return;
+  }
   snapshot.state = SnapshotState.TEXTURE_PENDING;
   const count = snapshot.numSplats;
   const staging = acquireTextureStagingSet(primitive, count);
@@ -1761,6 +1782,7 @@ GaussianSplatPrimitive.generateSplatTexture = function (
     snapshot.state = SnapshotState.BUILDING;
     return;
   }
+  primitive._textureGenerationInFlight = true;
   void processGeneratedSplatTextureData(
     primitive,
     frameState,

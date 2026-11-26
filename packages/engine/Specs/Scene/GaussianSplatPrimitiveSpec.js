@@ -292,6 +292,100 @@ describe(
       expect(gsPrim._textureStagingSet).toBeUndefined();
     });
 
+    it("runs one texture generation task at a time", async function () {
+      const tileset = {
+        show: true,
+        splitDirection: 0,
+        modelMatrix: Matrix4.IDENTITY,
+        boundingSphere: undefined,
+        _modelMatrixChanged: false,
+        _selectedTiles: [],
+        tileLoad: {
+          addEventListener: function () {},
+        },
+        tileVisible: {
+          addEventListener: function () {},
+        },
+        update: function () {},
+      };
+      const gsPrim = new GaussianSplatPrimitive({ tileset: tileset });
+
+      // Hold each task open so a second snapshot can arrive mid-flight.
+      const tasks = [];
+      spyOn(
+        GaussianSplatTextureGenerator,
+        "generateFromAttributes",
+      ).and.callFake(function (parameters) {
+        return new Promise(function (resolve, reject) {
+          tasks.push({
+            attributes: parameters.attributes,
+            resolve: function () {
+              resolve({
+                data: new Uint32Array(0),
+                width: 0,
+                height: 0,
+                attributes: parameters.attributes,
+              });
+            },
+            reject: reject,
+          });
+        });
+      });
+      spyOn(console, "error");
+
+      const makeSnapshot = () => ({
+        positions: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+        rotations: new Float32Array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]),
+        scales: new Float32Array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0]),
+        colors: new Uint8Array([255, 255, 255, 255, 255, 255, 255, 255]),
+        numSplats: 2,
+        state: "BUILDING",
+      });
+
+      const frameState = {
+        frameNumber: 1,
+        camera: {
+          viewMatrix: Matrix4.clone(Matrix4.IDENTITY, new Matrix4()),
+          positionWC: Cartesian3.clone(Cartesian3.ZERO, new Cartesian3()),
+          directionWC: Cartesian3.clone(Cartesian3.UNIT_Z, new Cartesian3()),
+        },
+        commandList: [],
+        passes: {
+          pick: false,
+        },
+      };
+
+      const first = makeSnapshot();
+      GaussianSplatPrimitive.generateSplatTexture(gsPrim, frameState, first);
+      expect(first.state).toBe("TEXTURE_PENDING");
+
+      // A snapshot that supersedes the first while its task is in flight
+      // waits rather than allocating a second staging set.
+      const second = makeSnapshot();
+      GaussianSplatPrimitive.generateSplatTexture(gsPrim, frameState, second);
+      expect(tasks.length).toBe(1);
+      expect(second.state).toBe("BUILDING");
+
+      tasks[0].resolve();
+      await pollToPromise(() => first.state === "BUILDING");
+
+      GaussianSplatPrimitive.generateSplatTexture(gsPrim, frameState, second);
+      expect(tasks.length).toBe(2);
+      expect(second.state).toBe("TEXTURE_PENDING");
+      expect(tasks[1].attributes.positions.buffer).toBe(
+        tasks[0].attributes.positions.buffer,
+      );
+
+      // A failed task must not block the tasks after it.
+      tasks[1].reject(new Error("texture generation failed"));
+      await pollToPromise(() => second.state === "BUILDING");
+
+      GaussianSplatPrimitive.generateSplatTexture(gsPrim, frameState, second);
+      expect(tasks.length).toBe(3);
+
+      gsPrim.destroy();
+    });
+
     it("inflates maximumScreenSpaceError during traversal and restores it when splatBudgetSSEScale > 1", function () {
       let capturedSSEDuringTraversal;
       const tileset = {
