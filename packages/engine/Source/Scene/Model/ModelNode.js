@@ -183,13 +183,17 @@ ModelNode.prototype.computeWorldMatrix = function (result) {
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
+  // The runtime node's computedTransform is only refreshed during a scene
+  // update, so compose the current local transforms up the hierarchy instead.
+  result = Matrix4.clone(this.matrix, result);
+  let ancestor = this._parent;
+  while (defined(ancestor)) {
+    result = Matrix4.multiplyTransformation(ancestor.matrix, result, result);
+    ancestor = ancestor._parent;
+  }
+
   const computedModelMatrix = this._model.sceneGraph.computedModelMatrix;
-  const computedTransform = this._runtimeNode.computedTransform;
-  return Matrix4.multiplyTransformation(
-    computedModelMatrix,
-    computedTransform,
-    result,
-  );
+  return Matrix4.multiplyTransformation(computedModelMatrix, result, result);
 };
 
 export default ModelNode;
