@@ -17,14 +17,18 @@ import Resource from "./Resource.js";
  * These Earth Orientation Parameters (EOP) are primarily used in the transformation from
  * the International Celestial Reference Frame (ICRF) to the International Terrestrial
  * Reference Frame (ITRF).
+ * <p>
+ * To use EOP data, assign an instance to {@link CelestialFrameTransforms.earthOrientationParameters}.
  * This object is normally not instantiated directly, use {@link EarthOrientationParameters.fromUrl}.
+ * </p>
  *
  * @alias EarthOrientationParameters
  * @constructor
  *
  * @param {object} [options] Object with the following properties:
- * @param {object} [options.data] The actual EOP data.  If neither this
- *                 parameter nor options.data is specified, all EOP values are assumed
+ * @param {object} [options.data] The actual EOP data, an object with <code>columnNames</code>
+ *                 and <code>samples</code> arrays. See {@link EarthOrientationParameters.fromUrl}
+ *                 for the format. If this parameter is not specified, all EOP values are assumed
  *                 to be 0.0.
  * @param {boolean} [options.addNewLeapSeconds=true] True if leap seconds that
  *                  are specified in the EOP data but not in {@link JulianDate.leapSeconds}
@@ -32,7 +36,7 @@ import Resource from "./Resource.js";
  *                  new leap seconds should be handled correctly in the context
  *                  of the EOP data but otherwise ignored.
  *
- * @private
+ * @see CelestialFrameTransforms.earthOrientationParameters
  */
 function EarthOrientationParameters(options) {
   options = options ?? Frozen.EMPTY_OBJECT;
@@ -76,17 +80,26 @@ function EarthOrientationParameters(options) {
 }
 
 /**
+ * Creates an {@link EarthOrientationParameters} instance from EOP data loaded from a URL.
+ * <p>
+ * The data is a JSON object with a <code>columnNames</code> array and a flat <code>samples</code>
+ * array containing one value per column for each sample, ordered by date. The columns
+ * <code>modifiedJulianDateUtc</code>, <code>xPoleWanderRadians</code>, <code>yPoleWanderRadians</code>,
+ * <code>ut1MinusUtcSeconds</code>, <code>xCelestialPoleOffsetRadians</code>,
+ * <code>yCelestialPoleOffsetRadians</code>, and <code>taiMinusUtcSeconds</code> are required.
+ * </p>
  *
- * @param {Resource|string} [url] The URL from which to obtain EOP data.  If neither this
- *                 parameter nor options.data is specified, all EOP values are assumed
- *                 to be 0.0.  If options.data is specified, this parameter is
- *                 ignored.
+ * @param {Resource|string} url The URL from which to obtain EOP data.
  * @param {object} [options] Object with the following properties:
  * @param {boolean} [options.addNewLeapSeconds=true] True if leap seconds that
  *                  are specified in the EOP data but not in {@link JulianDate.leapSeconds}
  *                  should be added to {@link JulianDate.leapSeconds}.  False if
  *                  new leap seconds should be handled correctly in the context
  *                  of the EOP data but otherwise ignored.
+ * @returns {Promise<EarthOrientationParameters>} A promise that resolves to the loaded EOP data.
+ *
+ * @exception {RuntimeError} An error occurred while retrieving the EOP data from the URL.
+ * @exception {RuntimeError} Error in loaded EOP data.
  *
  * @example
  * // An example EOP data file, EOP.json:
@@ -102,7 +115,7 @@ function EarthOrientationParameters(options) {
  * @example
  * // Loading the EOP data
  * const eop = await Cesium.EarthOrientationParameters.fromUrl('Data/EOP.json');
- * Cesium.Transforms.earthOrientationParameters = eop;
+ * Cesium.CelestialFrameTransforms.earthOrientationParameters = eop;
  */
 EarthOrientationParameters.fromUrl = async function (url, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -131,36 +144,26 @@ EarthOrientationParameters.fromUrl = async function (url, options) {
 
 /**
  * A default {@link EarthOrientationParameters} instance that returns zero for all EOP values.
+ *
+ * @type {EarthOrientationParameters}
+ * @constant
  */
-EarthOrientationParameters.NONE = Object.freeze({
-  compute: function (date, result) {
-    if (!defined(result)) {
-      result = new EarthOrientationParametersSample(0.0, 0.0, 0.0, 0.0, 0.0);
-    } else {
-      result.xPoleWander = 0.0;
-      result.yPoleWander = 0.0;
-      result.xPoleOffset = 0.0;
-      result.yPoleOffset = 0.0;
-      result.ut1MinusUtc = 0.0;
-    }
-    return result;
-  },
-});
+EarthOrientationParameters.NONE = Object.freeze(
+  new EarthOrientationParameters(),
+);
 
 /**
  * Computes the Earth Orientation Parameters (EOP) for a given date by interpolating.
- * If the EOP data has not yet been download, this method returns undefined.
+ * If the date is before the first sample, the first sample is used. If the date is
+ * after the last sample, zero is used for all EOP values.
  *
- * @param {JulianDate} date The date for each to evaluate the EOP.
+ * @param {JulianDate} date The date at which to evaluate the EOP.
  * @param {EarthOrientationParametersSample} [result] The instance to which to copy the result.
  *        If this parameter is undefined, a new instance is created and returned.
- * @returns {EarthOrientationParametersSample} The EOP evaluated at the given date, or
- *          undefined if the data necessary to evaluate EOP at the date has not yet been
- *          downloaded.
+ * @returns {EarthOrientationParametersSample|undefined} The EOP evaluated at the given date, or
+ *          undefined if the EOP data is not available.
  *
- * @exception {RuntimeError} The loaded EOP data has an error and cannot be used.
- *
- * @see EarthOrientationParameters#fromUrl
+ * @private
  */
 EarthOrientationParameters.prototype.compute = function (date, result) {
   // We cannot compute until the samples are available.
