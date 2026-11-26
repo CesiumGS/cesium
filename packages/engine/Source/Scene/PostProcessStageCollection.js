@@ -430,8 +430,9 @@ function removeStages(collection) {
 /**
  * Adds the post-process stage to the collection.
  *
- * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to add to the collection.
- * @return {PostProcessStage|PostProcessStageComposite} The post-process stage that was added to the collection.
+ * @template T
+ * @param {T} stage The {@link PostProcessStage}, {@link PostProcessStageComposite} or {@link TemporalAntiAliasingStage} to add to the collection.
+ * @return {T} The post-process stage that was added to the collection.
  *
  * @exception {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
  */
@@ -474,7 +475,7 @@ PostProcessStageCollection.prototype.add = function (stage) {
 /**
  * Removes a post-process stage from the collection and destroys it.
  *
- * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to remove from the collection.
+ * @param {PostProcessStage|PostProcessStageComposite|TemporalAntiAliasingStage} stage The post-process stage to remove from the collection.
  * @return {boolean} Whether the post-process stage was removed.
  */
 PostProcessStageCollection.prototype.remove = function (stage) {
@@ -510,7 +511,7 @@ PostProcessStageCollection.prototype.remove = function (stage) {
 /**
  * Returns whether the collection contains a post-process stage.
  *
- * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage.
+ * @param {PostProcessStage|PostProcessStageComposite|TemporalAntiAliasingStage} stage The post-process stage.
  * @return {boolean} Whether the collection contains the post-process stage.
  */
 PostProcessStageCollection.prototype.contains = function (stage) {

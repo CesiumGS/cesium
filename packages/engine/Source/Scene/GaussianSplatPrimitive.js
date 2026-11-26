@@ -25,6 +25,7 @@ import GaussianSplatTextureGenerator from "./GaussianSplatTextureGenerator.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
 import GaussianSplatRenderResources from "./GaussianSplatRenderResources.js";
+import GaussianSplatRenderMode from "./GaussianSplatRenderMode.js";
 import BlendingState from "./BlendingState.js";
 import Pass from "../Renderer/Pass.js";
 import ShaderDestination from "../Renderer/ShaderDestination.js";
@@ -242,6 +243,33 @@ function markSteadySortStart(primitive, frameState) {
     primitive._lastSteadySortCameraDirection,
   );
   primitive._hasLastSteadySortCameraDirection = true;
+}
+
+/**
+ * Returns whether the tileset draws its splats with stochastic transparency,
+ * which does not need them to be sorted.
+ *
+ * @param {Cesium3DTileset} tileset The tileset that owns the splats.
+ * @returns {boolean} {@code true} if the splats are not sorted.
+ * @private
+ */
+function usesStochasticTransparency(tileset) {
+  return tileset.gaussianSplatRenderMode === GaussianSplatRenderMode.STOCHASTIC;
+}
+
+/**
+ * Creates the indexes that draw splats in the order they are stored.
+ *
+ * @param {number} count The number of splats.
+ * @returns {Uint32Array} The indexes 0 to count - 1.
+ * @private
+ */
+function createSequentialIndexes(count) {
+  const indexes = new Uint32Array(count);
+  for (let i = 0; i < count; i++) {
+    indexes[i] = i;
+  }
+  return indexes;
 }
 
 /**
@@ -489,6 +517,26 @@ function commitSnapshot(primitive, snapshot, frameState) {
 }
 
 /**
+ * Commits the pending snapshot with the given indexes and builds the draw
+ * command that renders it.
+ *
+ * @param {GaussianSplatPrimitive} primitive The owning primitive.
+ * @param {FrameState} frameState The current frame state.
+ * @param {Uint32Array} indexes The order in which the splats are drawn.
+ * @private
+ */
+function commitPendingSnapshot(primitive, frameState, indexes) {
+  const pending = primitive._pendingSnapshot;
+  pending.indexes = indexes;
+  pending.state = SnapshotState.READY;
+  primitive._pendingSortPromise = undefined;
+  primitive._pendingSort = undefined;
+  commitSnapshot(primitive, pending, frameState);
+  primitive._pendingSnapshot = undefined;
+  GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, frameState);
+}
+
+/**
  * Finalizes async splat texture generation for a snapshot. The resolved data
  * updates or recreates GPU textures, and the snapshot transitions to
  * {@link SnapshotState.TEXTURE_READY} when complete.
@@ -722,14 +770,7 @@ async function resolvePendingSnapshotSort(
       return;
     }
 
-    const pending = pendingSort.snapshot;
-    pending.indexes = sortedData;
-    pending.state = SnapshotState.READY;
-    primitive._pendingSortPromise = undefined;
-    primitive._pendingSort = undefined;
-    commitSnapshot(primitive, pending, frameState);
-    primitive._pendingSnapshot = undefined;
-    GaussianSplatPrimitive.buildGSplatDrawCommand(primitive, frameState);
+    commitPendingSnapshot(primitive, frameState, sortedData);
   } catch (err) {
     if (
       !defined(pendingSort) ||
@@ -1106,6 +1147,15 @@ function GaussianSplatPrimitive(options) {
    * @private
    */
   this._gaussianSplatTexturePending = false;
+
+  /**
+   * Whether the draw command renders with stochastic transparency. When the
+   * tileset switches back to sorted rendering, this stays true until sorted
+   * indexes are available.
+   * @type {boolean}
+   * @private
+   */
+  this._stochastic = false;
 
   /**
    * The draw command used to render the Gaussian splats.
@@ -1695,6 +1745,20 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   const { shaderBuilder } = renderResources;
   const renderStateOptions = renderResources.renderStateOptions;
 
+  const stochastic = usesStochasticTransparency(tileset);
+  primitive._stochastic = stochastic;
+  if (stochastic) {
+    // Each fragment is either discarded or drawn opaque, see the fragment shader.
+    renderStateOptions.depthMask = true;
+    renderStateOptions.blending = BlendingState.DISABLED;
+    shaderBuilder.addDefine(
+      "STOCHASTIC_TRANSPARENCY",
+      undefined,
+      ShaderDestination.BOTH,
+    );
+    shaderBuilder.addVarying("uint", "v_splatIndex", "flat");
+  }
+
   // Splats are inherently translucent, so TRANSLUCENT (like INHERIT) keeps the
   // dedicated GAUSSIAN_SPLATS pass. Routing them through Pass.TRANSLUCENT would
   // darken them under OIT, which premultiplies the already-premultiplied color.
@@ -1966,6 +2030,12 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
  */
 GaussianSplatPrimitive.prototype.update = function (frameState) {
   const tileset = this._tileset;
+  const stochastic = usesStochasticTransparency(tileset);
+  if (stochastic && !this._stochastic) {
+    // Stochastic transparency works with the splats in any order, so it is
+    // used right away. Switching back waits for a steady sort instead.
+    this._shaderDirty = true;
+  }
 
   const targetCustomShader = defined(tileset.customShader)
     ? tileset.customShader
@@ -2053,7 +2123,8 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       selectedTilesChanged ||
       defined(this._pendingSnapshot) ||
       defined(this._pendingSortPromise) ||
-      !defined(this._drawCommand);
+      !defined(this._drawCommand) ||
+      stochastic !== this._stochastic;
     if (
       !hasPendingWork &&
       Matrix4.equals(camera.viewMatrix, this._prevViewMatrix)
@@ -2347,6 +2418,15 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
       Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
+      if (pending.state === SnapshotState.TEXTURE_READY && stochastic) {
+        commitPendingSnapshot(
+          this,
+          frameState,
+          createSequentialIndexes(pending.numSplats),
+        );
+        return;
+      }
+
       if (
         pending.state === SnapshotState.TEXTURE_READY &&
         !defined(this._pendingSortPromise)
@@ -2402,11 +2482,22 @@ GaussianSplatPrimitive.prototype.update = function (frameState) {
       return;
     }
 
+    if (stochastic) {
+      // Nothing to sort. The draw command is only missing if building it failed.
+      if (!defined(this._drawCommand)) {
+        GaussianSplatPrimitive.buildGSplatDrawCommand(this, frameState);
+      }
+      Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
+      return;
+    }
+
     Matrix4.clone(camera.viewMatrix, this._prevViewMatrix);
     Matrix4.multiply(camera.viewMatrix, this._rootTransform, scratchMatrix4A);
 
     if (!defined(this._sorterPromise)) {
-      if (!shouldStartSteadySort(this, frameState)) {
+      // Splats that were drawn with stochastic transparency are not sorted
+      // for the current view, so they are sorted even if the camera is still.
+      if (!this._stochastic && !shouldStartSteadySort(this, frameState)) {
         return;
       }
       const requestId = ++this._sortRequestId;

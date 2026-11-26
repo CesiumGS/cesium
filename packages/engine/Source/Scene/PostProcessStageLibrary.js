@@ -19,6 +19,7 @@ import ModifiedReinhardTonemapping from "../Shaders/PostProcessStages/ModifiedRe
 import NightVision from "../Shaders/PostProcessStages/NightVision.js";
 import ReinhardTonemapping from "../Shaders/PostProcessStages/ReinhardTonemapping.js";
 import Silhouette from "../Shaders/PostProcessStages/Silhouette.js";
+import TemporalAntiAliasingStage from "./TemporalAntiAliasingStage.js";
 import FXAA3_11 from "../Shaders/FXAA3_11.js";
 import AutoExposure from "./AutoExposure.js";
 import PostProcessStage from "./PostProcessStage.js";
@@ -726,6 +727,28 @@ PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function (
  */
 PostProcessStageLibrary.createAutoExposureStage = function () {
   return new AutoExposure();
+};
+
+/**
+ * Creates a post-process stage that averages the scene over successive frames,
+ * which removes the noise of Gaussian splats drawn with
+ * {@link GaussianSplatRenderMode.STOCHASTIC}.
+ *
+ * @param {object} [options] The options of {@link TemporalAntiAliasingStage}.
+ * @return {TemporalAntiAliasingStage} A temporal anti-aliasing stage.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ *
+ * @example
+ * tileset.gaussianSplatRenderMode = Cesium.GaussianSplatRenderMode.STOCHASTIC;
+ * const temporalAntiAliasing =
+ *   Cesium.PostProcessStageLibrary.createTemporalAntiAliasingStage({
+ *     progressive: true,
+ *   });
+ * scene.postProcessStages.add(temporalAntiAliasing);
+ */
+PostProcessStageLibrary.createTemporalAntiAliasingStage = function (options) {
+  return new TemporalAntiAliasingStage(options);
 };
 
 /**

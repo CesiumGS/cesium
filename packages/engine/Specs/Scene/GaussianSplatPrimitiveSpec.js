@@ -5,12 +5,15 @@ import {
   Math as CesiumMath,
   Matrix4,
   PerspectiveFrustum,
+  defined,
 } from "@cesium/core";
 import {
   ResourceCache,
   RequestScheduler,
   CustomShader,
   GaussianSplat3DTileContent,
+  GaussianSplatRenderMode,
+  PostProcessStageLibrary,
   VertexAttributeSemantic,
 } from "../../index.js";
 import GaussianSplatPrimitive from "../../Source/Scene/GaussianSplatPrimitive.js";
@@ -60,6 +63,7 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
+      scene.postProcessStages.removeAll();
       ResourceCache.clearForSpecs();
     });
 
@@ -134,6 +138,56 @@ describe(
         expect(rgba[samplePosition + 1]).toBe(0);
         expect(rgba[samplePosition + 2]).toBe(0);
       });
+    });
+
+    it("renders with stochastic transparency without sorting", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        sphericalHarmonicUrl,
+        {
+          ...options,
+          gaussianSplatRenderMode: GaussianSplatRenderMode.STOCHASTIC,
+        },
+      );
+      scene.camera.lookAt(
+        tileset.boundingSphere.center,
+        new HeadingPitchRange(0.0, -1.57, tileset.boundingSphere.radius),
+      );
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tileset.root);
+
+      const gsPrim = tileset.gaussianSplatPrimitive;
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return defined(gsPrim._drawCommand);
+      });
+
+      expect(gsPrim._sortRequestId).toBe(0);
+      const renderState = gsPrim._drawCommand.renderState;
+      expect(renderState.depthMask).toBe(true);
+      expect(renderState.blending.enabled).toBe(false);
+
+      // The noise is averaged over frames by temporal anti-aliasing.
+      scene.postProcessStages.add(
+        PostProcessStageLibrary.createTemporalAntiAliasingStage({
+          progressive: true,
+        }),
+      );
+      for (let i = 0; i < 8; ++i) {
+        scene.renderForSpecs();
+      }
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[samplePosition + 0]).not.toBe(0);
+        expect(rgba[samplePosition + 1]).not.toBe(0);
+        expect(rgba[samplePosition + 2]).not.toBe(0);
+      });
+
+      // Switching back sorts the splats, even though the camera is still.
+      tileset.gaussianSplatRenderMode = GaussianSplatRenderMode.SORTED;
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return !gsPrim._drawCommand.renderState.depthMask;
+      });
+      expect(gsPrim._sortRequestId).toBeGreaterThan(0);
     });
 
     it("retries pending snapshot sorting when sorter is temporarily unavailable", function () {

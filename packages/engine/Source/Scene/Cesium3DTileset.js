@@ -40,6 +40,7 @@ import Cesium3DTile from "./Cesium3DTile.js";
 import Cesium3DTileColorBlendMode from "./Cesium3DTileColorBlendMode.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import FeatureLayerCollection from "./FeatureLayerCollection.js";
+import GaussianSplatRenderMode from "./GaussianSplatRenderMode.js";
 import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js";
 import Cesium3DTileOptimizations from "./Cesium3DTileOptimizations.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -130,6 +131,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
+ * @property {GaussianSplatRenderMode} [gaussianSplatRenderMode=GaussianSplatRenderMode.SORTED] How the Gaussian splats in this tileset are composited. This option is experimental and is subject to change without Cesium's standard deprecation policy.
  * @property {boolean} [enableCollision=false] When <code>true</code>, enables collisions for camera or CPU picking. While this is <code>true</code> the camera will be prevented from going below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true. This also affects the behavior of {@link HeightReference.CLAMP_TO_GROUND} when clamping to 3D Tiles surfaces. If <code>enableCollision</code> is <code>false</code>, entities may not be correctly clamped to the tileset geometry.
  * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
  * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
@@ -959,6 +961,34 @@ function Cesium3DTileset(options) {
    * @default {@link SplitDirection.NONE}
    */
   this.splitDirection = options.splitDirection ?? SplitDirection.NONE;
+
+  /**
+   * How the Gaussian splats in this tileset are composited. This has no effect
+   * on tilesets without Gaussian splat content.
+   * <p>
+   * {@link GaussianSplatRenderMode.STOCHASTIC} does not sort the splats, so
+   * the image stays responsive while the camera moves. On its own it draws a
+   * noisy image: add a stage created with
+   * {@link PostProcessStageLibrary.createTemporalAntiAliasingStage} to
+   * {@link Scene#postProcessStages} to average the noise over successive
+   * frames.
+   * </p>
+   *
+   * @type {GaussianSplatRenderMode}
+   * @default GaussianSplatRenderMode.SORTED
+   *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @example
+   * tileset.gaussianSplatRenderMode = Cesium.GaussianSplatRenderMode.STOCHASTIC;
+   * scene.postProcessStages.add(
+   *   Cesium.PostProcessStageLibrary.createTemporalAntiAliasingStage({
+   *     progressive: true,
+   *   }),
+   * );
+   */
+  this.gaussianSplatRenderMode =
+    options.gaussianSplatRenderMode ?? GaussianSplatRenderMode.SORTED;
 
   /**
    * If <code>true</code>, allows collisions for camera collisions or picking. While this is  <code>true</code> the camera will be prevented from going in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true. This can have performance implecations if the tileset contains tile with a larger number of vertices.
