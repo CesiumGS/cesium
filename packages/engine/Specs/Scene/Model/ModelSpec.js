@@ -4809,6 +4809,52 @@ describe(
         verifyRender(model, true);
       });
 
+      it("hiding one primitive of a node leaves its siblings visible", async function () {
+        // MorphPrimitivesTest's "mesh" node owns two primitives.
+        const model = await loadAndZoomToModelAsync(
+          { url: morphPrimitivesTestUrl },
+          scene,
+        );
+        const node = model.getNode("mesh");
+        expect(node.primitives.length).toBe(2);
+        const [first, second] = node.primitives;
+
+        const commandList = scene.frameState.commandList;
+        function isDrawn(primitive) {
+          const command =
+            primitive._runtimePrimitive.drawCommand._originalCommand.command;
+          return commandList.includes(command);
+        }
+
+        scene.renderForSpecs();
+        expect(isDrawn(first)).toBe(true);
+        expect(isDrawn(second)).toBe(true);
+
+        first.show = false;
+        scene.renderForSpecs();
+        expect(first.show).toBe(false);
+        expect(second.show).toBe(true);
+        expect(node.show).toBe(true);
+        expect(isDrawn(first)).toBe(false);
+        expect(isDrawn(second)).toBe(true);
+
+        second.show = false;
+        scene.renderForSpecs();
+        expect(isDrawn(first)).toBe(false);
+        expect(isDrawn(second)).toBe(false);
+        expect(commandList.length).toBe(0);
+
+        first.show = true;
+        scene.renderForSpecs();
+        expect(isDrawn(first)).toBe(true);
+        expect(isDrawn(second)).toBe(false);
+
+        second.show = true;
+        scene.renderForSpecs();
+        expect(isDrawn(first)).toBe(true);
+        expect(isDrawn(second)).toBe(true);
+      });
+
       it("worldMatrix returns the node's world transform", async function () {
         const model = await loadAndZoomToModelAsync(
           { gltf: boxArticulationsUrl },
