@@ -191,7 +191,6 @@ function processPickTexture(renderResources, primitive, instances) {
 
 function processInstancedPickIds(renderResources, context) {
   const instanceCount = renderResources.instanceCount;
-  const pickIds = new Array(instanceCount);
   const pickIdsTypedArray = new Uint8Array(instanceCount * 4);
 
   const model = renderResources.model;
@@ -202,7 +201,7 @@ function processInstancedPickIds(renderResources, context) {
 
     const pickId = context.createPickId(pickObject);
     pipelineResources.push(pickId);
-    pickIds[i] = pickId;
+    model._pickIds.push(pickId);
 
     const pickColor = pickId.color;
     pickIdsTypedArray[i * 4 + 0] = Color.floatToByte(pickColor.red);
@@ -210,8 +209,6 @@ function processInstancedPickIds(renderResources, context) {
     pickIdsTypedArray[i * 4 + 2] = Color.floatToByte(pickColor.blue);
     pickIdsTypedArray[i * 4 + 3] = Color.floatToByte(pickColor.alpha);
   }
-
-  model._pickIds = pickIds;
 
   const pickIdsBuffer = Buffer.createVertexBuffer({
     context: context,
