@@ -12,6 +12,7 @@ import {
 } from "@cesium/core";
 import {
   GeographicTilingScheme,
+  Globe,
   Camera,
   GlobeSurfaceTileProvider,
   GlobeTranslucencyState,
@@ -40,6 +41,45 @@ function expectCartographicToEqualEpsilon(actual, expected, epsilon) {
 }
 
 describe("Scene/QuadtreePrimitive", function () {
+  it("does not enqueue removal of a height callback cancelled before tile selection", function () {
+    const quadtree = new QuadtreePrimitive({
+      tileProvider: { tilingScheme: new GeographicTilingScheme() },
+    });
+    const remove = quadtree.updateHeight(
+      Cartographic.fromDegrees(120, 30),
+      function () {},
+    );
+    const registration = quadtree._addHeightCallbacks[0];
+    expect(quadtree._addHeightCallbacks.length).toBe(1);
+    remove();
+
+    expect(quadtree._addHeightCallbacks.length).toBe(0);
+    expect(quadtree._removeHeightCallbacks.length).toBe(0);
+    expect(registration.callback).toBeUndefined();
+  });
+
+  it("does not accumulate cancelled height callbacks while the globe is hidden", function () {
+    const globe = new Globe();
+    globe.show = false;
+    const frameState = { passes: { render: true } };
+    try {
+      for (let i = 0; i < 100; i++) {
+        const remove = globe._surface.updateHeight(
+          Cartographic.fromDegrees(120, 30),
+          function () {},
+        );
+        remove();
+        globe.beginFrame(frameState);
+        globe.render(frameState);
+        globe.endFrame(frameState);
+      }
+      expect(globe._surface._addHeightCallbacks.length).toBe(0);
+      expect(globe._surface._removeHeightCallbacks.length).toBe(0);
+    } finally {
+      globe.destroy();
+    }
+  });
+
   describe("selectTilesForRendering", function () {
     let scene;
     let camera;

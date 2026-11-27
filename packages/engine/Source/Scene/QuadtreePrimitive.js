@@ -286,13 +286,17 @@ QuadtreePrimitive.prototype.updateHeight = function (cartographic, callback) {
   object.removeFunc = function () {
     const addedCallbacks = primitive._addHeightCallbacks;
     const length = addedCallbacks.length;
+    let wasPending = false;
     for (let i = 0; i < length; ++i) {
       if (addedCallbacks[i] === object) {
         addedCallbacks.splice(i, 1);
+        wasPending = true;
         break;
       }
     }
-    primitive._removeHeightCallbacks.push(object);
+    if (!wasPending) {
+      primitive._removeHeightCallbacks.push(object);
+    }
     if (object.callback) {
       object.callback = undefined;
     }
