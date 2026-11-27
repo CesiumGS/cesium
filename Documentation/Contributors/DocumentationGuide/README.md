@@ -38,8 +38,6 @@ npm run build-docs
 
 This creates a `Build/Documentation` directory with the built HTML files.
 
-> Alternatively, you can build documentation in watch mode `npm run build-docs-watch` and have it generated automatically when source files change.
-
 There is a link to the doc from CesiumJS's main `index.html` when running
 
 ```bash

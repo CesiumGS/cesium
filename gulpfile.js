@@ -25,21 +25,14 @@ import { buildGltf } from "./packages/gltf/scripts/build.js";
 import { buildEngine } from "./packages/engine/scripts/build.js";
 import { buildWidgets } from "./packages/widgets/scripts/build.js";
 import {
-  bundleWorkers,
   createCoverageFilter,
   defaultESBuildOptions,
   getWorkspaces,
-  glslToJavaScript,
-  shaderFiles,
 } from "./scripts/build-utilities.js";
-import {
-  buildCesium,
-  bundleTestWorkers,
-  createCombinedSpecList,
-} from "./scripts/build.js";
+import { buildCesium, bundleTestWorkers } from "./scripts/build.js";
 import { readNeedsShimList } from "./scripts/readNeedsShimList.js";
 
-/** @import { BuildContext, Plugin } from "esbuild"; */
+/** @import { Plugin } from "esbuild"; */
 /** @import { FilePattern } from "karma"; */
 /** @import { Workspace } from "./scripts/build-utilities.js"; */
 
@@ -97,7 +90,6 @@ const argv = yargs(process.argv)
     message: { type: "string" },
     minify: { type: "boolean" },
     node: { type: "boolean" },
-    pragmas: { type: "boolean" },
     private: { type: "boolean" },
     production: { type: "boolean" },
     release: { type: "boolean" },
@@ -112,31 +104,6 @@ const argv = yargs(process.argv)
   })
   .parseSync();
 const verbose = argv.verbose;
-
-const sourceFiles = [
-  "packages/engine/Source/**/*.js",
-  "!packages/engine/Source/*.js",
-  "packages/widgets/Source/**/*.js",
-  "!packages/widgets/Source/*.js",
-  "packages/core/Source/*.js",
-  "packages/gltf/Source/*.js",
-  "!packages/engine/Source/Shaders/**",
-  "!packages/engine/Source/ThirdParty/Workers/**",
-  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!packages/engine/Source/ThirdParty/_*",
-];
-
-const watchedSpecFiles = [
-  "packages/engine/Specs/**/*Spec.js",
-  "!packages/engine/Specs/SpecList.js",
-  "packages/widgets/Specs/**/*Spec.js",
-  "!packages/widgets/Specs/SpecList.js",
-  "packages/core/Specs/*Spec.js",
-  "packages/gltf/Specs/*Spec.js",
-  "Specs/*.js",
-  "!Specs/SpecList.js",
-  "Specs/TestWorkers/*.js",
-];
 
 /**
  * TypeScript projects (directories containing tsconfig.json) that are NOT
@@ -180,107 +147,6 @@ export async function build() {
   await buildCesium(buildOptions);
 }
 export default build;
-
-export async function buildWatch() {
-  await build();
-
-  const minify = argv.minify ? argv.minify : false;
-  const removePragmas = argv.pragmas ? argv.pragmas : false;
-  const sourcemap = argv.sourcemap ? argv.sourcemap : true;
-
-  const outputDirectory = join("Build", `Cesium${!minify ? "Unminified" : ""}`);
-
-  const bundles = await buildCesium({
-    minify: minify,
-    outputDirectory: outputDirectory,
-    removePragmas: removePragmas,
-    sourcemap: sourcemap,
-    incremental: true,
-  });
-
-  // Incremental builds return contexts that can be rebuilt and disposed.
-  const esm = /** @type {BuildContext} */ (bundles.esm);
-  const cjs = /** @type {BuildContext|undefined} */ (bundles.node);
-  const iife = /** @type {BuildContext|undefined} */ (bundles.iife);
-  const specs = /** @type {BuildContext} */ (bundles.specs);
-
-  gulp.watch(shaderFiles, async () => {
-    glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
-    await esm.rebuild();
-
-    if (iife) {
-      await iife.rebuild();
-    }
-
-    if (cjs) {
-      await cjs.rebuild();
-    }
-  });
-
-  gulp.watch(
-    [
-      ...sourceFiles,
-      // Shader results are generated in the previous watch task; no need to rebuild twice
-      "!Source/Shaders/**",
-    ],
-    async () => {
-      await esm.rebuild();
-
-      if (iife) {
-        await iife.rebuild();
-      }
-
-      if (cjs) {
-        await cjs.rebuild();
-      }
-
-      await bundleWorkers({
-        minify: minify,
-        path: outputDirectory,
-        removePragmas: removePragmas,
-        sourcemap: sourcemap,
-      });
-    },
-  );
-
-  gulp.watch(
-    watchedSpecFiles,
-    {
-      events: ["add", "unlink"],
-    },
-    async () => {
-      createCombinedSpecList();
-      await specs.rebuild();
-    },
-  );
-
-  gulp.watch(
-    watchedSpecFiles,
-    {
-      events: ["change"],
-    },
-    async () => {
-      await specs.rebuild();
-    },
-  );
-
-  process.on("SIGINT", () => {
-    // Free up resources
-    esm.dispose();
-
-    if (iife) {
-      iife.dispose();
-    }
-
-    if (cjs) {
-      cjs.dispose();
-    }
-
-    specs.dispose();
-
-    process.exit(0);
-  });
-}
 
 export async function buildTs() {
   /** @type {string[]} */
@@ -495,12 +361,6 @@ export async function buildDocs() {
 
   await finished(stream);
   return stream;
-}
-
-export async function buildDocsWatch() {
-  await buildDocs();
-  console.log("Listening for changes in documentation...");
-  return gulp.watch(sourceFiles, buildDocs);
 }
 
 export async function websiteRelease() {

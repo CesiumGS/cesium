@@ -41,7 +41,6 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Remove build and transform tasks since they do not function as intended from within the release zip
   delete scripts.build;
   delete scripts["build-release"];
-  delete scripts["build-watch"];
   delete scripts["build-ts"];
   delete scripts["build-third-party"];
   delete scripts["build-apps"];
@@ -49,7 +48,6 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts.clean;
   delete scripts.cloc;
   delete scripts["build-docs"];
-  delete scripts["build-docs-watch"];
   delete scripts["make-zip"];
   delete scripts.release;
   delete scripts.prettier;
