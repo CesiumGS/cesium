@@ -29,6 +29,7 @@ const polygonScratch = new BufferPolygon();
  * @property {TypedArray} [positions]
  * @property {TypedArray} [holes]
  * @property {TypedArray} [triangles]
+ * @property {TypedArray} [normals] Normal vectors, in model coordinates, three components per vertex. Requires <code>hasNormals: true</code> on the collection.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -50,6 +51,7 @@ const polygonScratch = new BufferPolygon();
  *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
  * @property {boolean} [debugShowBoundingVolume=false]
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {boolean} [hasNormals=false] When <code>true</code>, the collection stores a normal vector, in model coordinates, for every vertex. Each polygon's normals must then be set.
  * @property {HeightReference} [heightReference=HeightReference.NONE] When set to a clamping value, the
  *   collection is draped onto terrain and/or 3D Tiles, rather than drawn as geometry of its own.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -320,6 +322,10 @@ class BufferPolygonCollection extends BufferPrimitiveCollection {
 
     if (defined(options.triangles)) {
       result.setTriangles(options.triangles);
+    }
+
+    if (defined(options.normals)) {
+      result.setNormals(options.normals);
     }
 
     return result;
