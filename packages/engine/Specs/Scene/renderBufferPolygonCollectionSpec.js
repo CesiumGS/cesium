@@ -7,6 +7,7 @@ import {
   Camera,
   HeightReference,
   SceneMode,
+  renderBufferPolygonCollection,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -68,6 +69,98 @@ describe(
 
       scene.primitives.add(collection);
       expect(scene).toRender([255, 255, 255, 255]);
+    });
+
+    [
+      ComponentDatatype.SHORT,
+      ComponentDatatype.FLOAT,
+      ComponentDatatype.DOUBLE,
+    ].forEach(function (positionDatatype) {
+      it(`uploads sorted and updated polygon positions with datatype ${positionDatatype}`, function () {
+        if (!scene.context.webgl2 || window.webglStub) {
+          return;
+        }
+        collection = new BufferPolygonCollection({
+          primitiveCountMax: 2,
+          vertexCountMax: 6,
+          triangleCountMax: 2,
+          positionDatatype: positionDatatype,
+        });
+        const first = [1, 0, 0, 2, 0, 0, 1, 1, 0];
+        const second = [4, 0, 0, 5, 0, 0, 4, 1, 0];
+        collection.add({
+          positions: ComponentDatatype.createTypedArray(
+            positionDatatype,
+            first,
+          ),
+          triangles: triangles,
+        });
+        collection.add({
+          positions: ComponentDatatype.createTypedArray(
+            positionDatatype,
+            second,
+          ),
+          triangles: triangles,
+        });
+        scene.primitives.add(collection);
+        scene.renderForSpecs();
+        const secondConsumer = renderBufferPolygonCollection(
+          collection,
+          scene.frameState,
+        );
+        function readPositions(renderContext) {
+          if (positionDatatype === ComponentDatatype.DOUBLE) {
+            const high = new Float32Array(18);
+            const low = new Float32Array(18);
+            renderContext.vertexArray
+              .getAttribute(0)
+              .vertexBuffer.getBufferData(high);
+            renderContext.vertexArray
+              .getAttribute(1)
+              .vertexBuffer.getBufferData(low);
+            return Array.from(high, (value, index) => value + low[index]);
+          }
+          const result = ComponentDatatype.createTypedArray(
+            positionDatatype,
+            18,
+          );
+          renderContext.vertexArray
+            .getAttribute(0)
+            .vertexBuffer.getBufferData(result);
+          return Array.from(result);
+        }
+        try {
+          collection.sort((a, b) => b.getPositions()[0] - a.getPositions()[0]);
+          scene.renderForSpecs();
+          renderBufferPolygonCollection(
+            collection,
+            scene.frameState,
+            secondConsumer,
+          );
+          expect(readPositions(collection._renderContext)).toEqual([
+            ...second,
+            ...first,
+          ]);
+          expect(readPositions(secondConsumer)).toEqual([...second, ...first]);
+
+          const updated = first.concat(second).map((value) => value * 10);
+          collection.setPositions(
+            ComponentDatatype.createTypedArray(positionDatatype, updated),
+            0,
+            2,
+          );
+          scene.renderForSpecs();
+          renderBufferPolygonCollection(
+            collection,
+            scene.frameState,
+            secondConsumer,
+          );
+          expect(readPositions(collection._renderContext)).toEqual(updated);
+          expect(readPositions(secondConsumer)).toEqual(updated);
+        } finally {
+          secondConsumer.destroy();
+        }
+      });
     });
 
     it("renders polygons after blendOption changes", function () {

@@ -181,6 +181,9 @@ function renderBufferPointCollection(
       showSizeColorAlpha: new Float32Array(featureCountMax * 4),
       outlineWidthColorAlpha: new Float32Array(featureCountMax * 3),
     };
+  } else if (!useFloat64) {
+    // Sorting can replace the collection's position buffer.
+    renderContext.attributeArrays.position = collection._positionView;
   }
 
   if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {

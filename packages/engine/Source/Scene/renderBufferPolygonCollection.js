@@ -125,6 +125,9 @@ function renderBufferPolygonCollection(collection, frameState, renderContext) {
       pickColor: new Uint8Array(vertexCountMax * 4),
       showColorAlpha: new Float32Array(vertexCountMax * 3),
     };
+  } else if (!useFloat64) {
+    // Sorting can replace the collection's position buffer.
+    renderContext.attributeArrays.position = collection._positionView;
   }
 
   if (tracker.count > 0 && tracker.flags & DirtyFlags.PROPERTIES) {

@@ -1,4 +1,4 @@
-import { Cartesian3, Color, Matrix4 } from "@cesium/core";
+import { Cartesian3, Color, ComponentDatatype, Matrix4 } from "@cesium/core";
 import {
   BlendOption,
   BufferPoint,
@@ -6,6 +6,7 @@ import {
   BufferPointMaterial,
   Camera,
   SceneMode,
+  renderBufferPointCollection,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -164,6 +165,92 @@ describe(
 
       collection.sort((a, b) => b.featureId - a.featureId);
       expect(scene).toRender([0, 0, 255, 255]);
+    });
+
+    [
+      ComponentDatatype.SHORT,
+      ComponentDatatype.FLOAT,
+      ComponentDatatype.DOUBLE,
+    ].forEach(function (positionDatatype) {
+      it(`uploads sorted and updated point positions with datatype ${positionDatatype}`, function () {
+        if (!scene.context.webgl2 || window.webglStub) {
+          return;
+        }
+        collection = new BufferPointCollection({
+          primitiveCountMax: 2,
+          positionDatatype: positionDatatype,
+        });
+        collection.add({ position: new Cartesian3(1, 2, 3) });
+        collection.add({ position: new Cartesian3(4, 5, 6) });
+        scene.primitives.add(collection);
+        scene.renderForSpecs();
+        const secondConsumer = renderBufferPointCollection(
+          collection,
+          scene.frameState,
+        );
+        const firstPosition = new Cartesian3();
+        const secondPosition = new Cartesian3();
+        function readPositions(renderContext) {
+          if (positionDatatype === ComponentDatatype.DOUBLE) {
+            const high = new Float32Array(6);
+            const low = new Float32Array(6);
+            renderContext.vertexArray
+              .getAttribute(0)
+              .vertexBuffer.getBufferData(high);
+            renderContext.vertexArray
+              .getAttribute(1)
+              .vertexBuffer.getBufferData(low);
+            return Array.from(high, (value, index) => value + low[index]);
+          }
+          const result = ComponentDatatype.createTypedArray(
+            positionDatatype,
+            6,
+          );
+          renderContext.vertexArray
+            .getAttribute(0)
+            .vertexBuffer.getBufferData(result);
+          return Array.from(result);
+        }
+        try {
+          collection.sort(
+            (a, b) =>
+              b.getPosition(secondPosition).x - a.getPosition(firstPosition).x,
+          );
+          scene.renderForSpecs();
+          renderBufferPointCollection(
+            collection,
+            scene.frameState,
+            secondConsumer,
+          );
+          expect(readPositions(collection._renderContext)).toEqual([
+            4, 5, 6, 1, 2, 3,
+          ]);
+          expect(readPositions(secondConsumer)).toEqual([4, 5, 6, 1, 2, 3]);
+
+          collection.setPositions(
+            ComponentDatatype.createTypedArray(
+              positionDatatype,
+              [10, 20, 30, 40, 50, 60],
+            ),
+            0,
+            2,
+          );
+          scene.renderForSpecs();
+          renderBufferPointCollection(
+            collection,
+            scene.frameState,
+            secondConsumer,
+          );
+          expect(readPositions(collection._renderContext)).toEqual([
+            10, 20, 30, 40, 50, 60,
+          ]);
+          expect(readPositions(secondConsumer)).toEqual([
+            10, 20, 30, 40, 50, 60,
+          ]);
+        } finally {
+          secondConsumer.destroy();
+        }
+      });
     });
 
     it("renders points with updated modelMatrix", function () {
