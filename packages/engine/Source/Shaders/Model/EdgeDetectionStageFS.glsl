@@ -11,17 +11,18 @@ void edgeDetectionStage(inout vec4 color, inout FeatureIds featureIds) {
     // Packed window-space depth from edge pass (0..1)
     float edgeDepthWin = czm_unpackDepth(texture(czm_edgeDepthTexture, screenCoord));
 
-    // Near / far for current frustum
+    // Near plane of the current frustum
     float n = czm_currentFrustum.x;
-    float f = czm_currentFrustum.y;
 
     // geometry depth in eye coordinate
     vec4 geomEC = czm_windowToEyeCoordinates(gl_FragCoord);
     float geomDepthLinear = -geomEC.z;
 
-    // Convert edge depth to linear depth
-    float z_ndc_edge = edgeDepthWin * 2.0 - 1.0;
-    float edgeDepthLinear = (2.0 * n * f) / (f + n - z_ndc_edge * (f - n));
+    // Edge depth in eye coordinates through the inverse projection, which
+    // holds for orthographic and perspective frusta alike. The packed depth is
+    // gl_FragCoord.z, never a logarithmic depth.
+    vec4 edgeEC = czm_windowToEyeCoordinates(vec4(gl_FragCoord.xy, edgeDepthWin, 1.0));
+    float edgeDepthLinear = -edgeEC.z / edgeEC.w;
 
     float d = abs(edgeDepthLinear - geomDepthLinear);
 

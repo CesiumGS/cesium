@@ -1,11 +1,16 @@
 import {
   Cartesian3,
+  Color,
   FixedFrameTransforms as Transforms,
+  Matrix4,
   defined,
 } from "@cesium/core";
 import { EdgeDisplayMode, Model, Pass } from "../../../index.js";
+import concatTypedArrays from "../../../../../Specs/concatTypedArrays.js";
+import createCanvas from "../../../../../Specs/createCanvas.js";
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe("Scene/Model/EdgeVisibilityRendering", function () {
   let scene;
@@ -294,6 +299,7 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
     expect(fragmentShader).toContain("czm_edgeColorTexture");
     expect(fragmentShader).toContain("czm_edgeIdTexture");
     expect(fragmentShader).toContain("czm_globeDepthTexture");
+    expect(fragmentShader).toContain("czm_edgeDepthTexture");
 
     // Verify edge ID presence and feature IDs visibility logic exists
     expect(fragmentShader).toContain("edgeId.r > 0.0");
@@ -614,5 +620,203 @@ describe("Scene/Model/EdgeVisibilityRendering", function () {
       gl.createBuffer = originalCreateBuffer;
       gl.deleteBuffer = originalDeleteBuffer;
     }
+  });
+
+  describe("draws its edges", function () {
+    const size = 64;
+    let edgeScene;
+
+    beforeAll(function () {
+      edgeScene = createScene({ canvas: createCanvas(size, size) });
+      edgeScene.backgroundColor = Color.WHITE;
+    });
+
+    afterAll(function () {
+      edgeScene.destroyForSpecs();
+    });
+
+    afterEach(function () {
+      edgeScene.primitives.removeAll();
+      edgeScene.camera.lookAtTransform(Matrix4.IDENTITY);
+      edgeScene.camera.switchToPerspectiveFrustum();
+    });
+
+    // A unit cube, unlit white, its twelve edges hard in an unlit black edge
+    // material: the edges are the only black pixels.
+    function cubeGltf() {
+      const corners = [];
+      for (let k = 0; k < 8; k++) {
+        corners.push(k & 1, (k >> 1) & 1, (k >> 2) & 1);
+      }
+      // prettier-ignore
+      const indices = [
+        0, 2, 1, 1, 2, 3, 4, 5, 6, 5, 7, 6, 0, 1, 4, 1, 5, 4,
+        2, 6, 3, 3, 6, 7, 0, 4, 2, 2, 4, 6, 1, 3, 5, 3, 7, 5,
+      ];
+      // two bits per triangle edge, 2 for a hard edge: a cube's edge joins
+      // corners that differ along one axis (one bit), a diagonal along two
+      const visibility = new Uint8Array(Math.ceil((indices.length * 2) / 8));
+      for (let e = 0; e < indices.length; e++) {
+        const axes = indices[e] ^ indices[e - (e % 3) + ((e + 1) % 3)];
+        if ((axes & (axes - 1)) === 0) {
+          visibility[e >> 2] |= 2 << ((e & 3) * 2);
+        }
+      }
+      const positions = new Float32Array(corners);
+      const triangles = new Uint16Array(indices);
+      const bytes = concatTypedArrays([positions, triangles, visibility]);
+      const triangleOffset = positions.byteLength;
+      const visibilityOffset = triangleOffset + triangles.byteLength;
+      return {
+        asset: { version: "2.0" },
+        extensionsUsed: [
+          "EXT_mesh_primitive_edge_visibility",
+          "KHR_materials_unlit",
+        ],
+        scenes: [{ nodes: [0] }],
+        scene: 0,
+        nodes: [{ mesh: 0 }],
+        meshes: [
+          {
+            primitives: [
+              {
+                attributes: { POSITION: 0 },
+                indices: 1,
+                material: 0,
+                extensions: {
+                  EXT_mesh_primitive_edge_visibility: {
+                    visibility: 2,
+                    material: 1,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+        materials: [
+          {
+            pbrMetallicRoughness: { baseColorFactor: [1, 1, 1, 1] },
+            extensions: { KHR_materials_unlit: {} },
+          },
+          {
+            pbrMetallicRoughness: { baseColorFactor: [0, 0, 0, 1] },
+            extensions: { KHR_materials_unlit: {} },
+          },
+        ],
+        accessors: [
+          {
+            bufferView: 0,
+            componentType: 5126,
+            count: 8,
+            type: "VEC3",
+            min: [0, 0, 0],
+            max: [1, 1, 1],
+          },
+          { bufferView: 1, componentType: 5123, count: 36, type: "SCALAR" },
+          {
+            bufferView: 2,
+            componentType: 5121,
+            count: visibility.length,
+            type: "SCALAR",
+          },
+        ],
+        bufferViews: [
+          { buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+          {
+            buffer: 0,
+            byteOffset: triangleOffset,
+            byteLength: triangles.byteLength,
+          },
+          {
+            buffer: 0,
+            byteOffset: visibilityOffset,
+            byteLength: visibility.byteLength,
+          },
+        ],
+        buffers: [
+          {
+            byteLength: bytes.byteLength,
+            uri: `data:application/octet-stream;base64,${btoa(String.fromCharCode(...bytes))}`,
+          },
+        ],
+      };
+    }
+
+    // The black pixels of a frame on a white background: the edges.
+    function edgePixels() {
+      edgeScene.renderForSpecs();
+      const rgba = edgeScene.context.readPixels({ width: size, height: size });
+      let count = 0;
+      for (let i = 0; i < rgba.length; i += 4) {
+        if (rgba[i] < 64 && rgba[i + 1] < 64 && rgba[i + 2] < 64) {
+          count++;
+        }
+      }
+      return count;
+    }
+
+    // The views: the camera's offset from the cube in its east-north-up
+    // frame, the factor a perspective field of view is narrowed by, an
+    // orthographic frustum's width, the log depth buffer (on by default).
+    const near = new Cartesian3(1.2, -1.6, 1.2);
+    const views = [
+      { name: "perspective", offset: near, narrow: 1.0, logDepth: true },
+      {
+        name: "perspective without log depth",
+        offset: near,
+        narrow: 1.0,
+        logDepth: false,
+      },
+      // 500 m away, a building seen whole: the cube as large through a narrow
+      // field of view
+      {
+        name: "distant perspective",
+        offset: Cartesian3.multiplyByScalar(near, 200.0, new Cartesian3()),
+        narrow: 200.0,
+        logDepth: true,
+      },
+      // Cesium turns the log depth buffer off for an orthographic frustum
+      { name: "orthographic", offset: near, width: 3.0 },
+    ];
+
+    async function edgesDrawn(view, hdr) {
+      edgeScene.highDynamicRange = hdr;
+      edgeScene.logarithmicDepthBuffer = view.logDepth ?? true;
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: cubeGltf(),
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(
+            Cartesian3.fromDegrees(0.0, 0.0, 100.0),
+          ),
+        },
+        edgeScene,
+      );
+      const camera = edgeScene.camera;
+      camera.lookAt(model.boundingSphere.center, view.offset);
+      if (defined(view.width)) {
+        camera.switchToOrthographicFrustum();
+        camera.frustum.width = view.width;
+      } else {
+        camera.frustum.fov = Math.PI / 3.0 / view.narrow;
+      }
+      model.edgeDisplayMode = EdgeDisplayMode.SURFACES_ONLY;
+      const without = edgePixels();
+      model.edgeDisplayMode = EdgeDisplayMode.SURFACES_AND_EDGES;
+      return edgePixels() - without;
+    }
+
+    views.forEach(function (view) {
+      [false, true].forEach(function (hdr) {
+        it(`in the ${view.name} view${hdr ? " with HDR" : ""}`, async function () {
+          if (!!window.webglStub) {
+            pending("Skipping test in WebGL stub environment");
+          }
+          if (hdr && !edgeScene.highDynamicRangeSupported) {
+            pending("HDR is not supported");
+          }
+          expect(await edgesDrawn(view, hdr)).toBeGreaterThan(size / 4);
+        });
+      });
+    });
   });
 });
