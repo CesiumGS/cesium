@@ -1,10 +1,13 @@
-import { PrimitiveType, combine } from "@cesium/core";
+import { IndexDatatype, PrimitiveType, combine } from "@cesium/core";
 import {
+  Buffer,
+  BufferUsage,
   GltfLoader,
   ModelStatistics,
   Resource,
   ResourceCache,
   ShaderBuilder,
+  VertexAttributeSemantic,
   WireframePipelineStage,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -143,6 +146,57 @@ describe(
           expect(renderResources.count).toBe(72);
         },
       );
+    });
+
+    [Uint8Array, Uint16Array, Uint32Array].forEach(function (ArrayType) {
+      [4, 65536].forEach(function (vertexCount) {
+        it(`reads ${ArrayType.name} indices with ${vertexCount} vertices (WebGL 2)`, function () {
+          const context = sceneWithWebgl2.context;
+          if (!context.webgl2 || window.webglStub) {
+            return;
+          }
+
+          const indices = new ArrayType([0, 2, 1, 0, 3, 2]);
+          const indexDatatype = IndexDatatype.fromSizeInBytes(
+            indices.BYTES_PER_ELEMENT,
+          );
+          const indexBuffer = Buffer.createIndexBuffer({
+            context: context,
+            typedArray: indices,
+            usage: BufferUsage.STATIC_DRAW,
+            indexDatatype: indexDatatype,
+          });
+          resources.push(indexBuffer);
+          const primitive = {
+            attributes: [
+              {
+                semantic: VertexAttributeSemantic.POSITION,
+                count: vertexCount,
+              },
+            ],
+            primitiveType: PrimitiveType.TRIANGLES,
+            indices: {
+              buffer: indexBuffer,
+              count: indices.length,
+              indexDatatype: indexDatatype,
+            },
+          };
+          const renderResources = mockRenderResources(primitive);
+          WireframePipelineStage.process(
+            renderResources,
+            primitive,
+            sceneWithWebgl2.frameState,
+          );
+
+          const wireframeIndexBuffer = renderResources.wireframeIndexBuffer;
+          const ResultArray = vertexCount < 65536 ? Uint16Array : Uint32Array;
+          const result = new ResultArray(12);
+          wireframeIndexBuffer.getBufferData(result);
+          expect(Array.from(result)).toEqual([
+            0, 2, 2, 1, 1, 0, 0, 3, 3, 2, 2, 0,
+          ]);
+        });
+      });
     });
 
     it("Creates wireframe indices from typedArray (WebGL 1)", function () {

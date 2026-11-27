@@ -1,4 +1,9 @@
-import { IndexDatatype, PrimitiveType, defined } from "@cesium/core";
+import {
+  ComponentDatatype,
+  IndexDatatype,
+  PrimitiveType,
+  defined,
+} from "@cesium/core";
 import Buffer from "../../Renderer/Buffer.js";
 import BufferUsage from "../../Renderer/BufferUsage.js";
 import ModelUtility from "./ModelUtility.js";
@@ -84,10 +89,10 @@ function createWireframeIndexBuffer(primitive, indices, frameState) {
     const indicesBuffer = indices.buffer;
     const indicesCount = indices.count;
     if (defined(indicesBuffer) && webgl2) {
-      const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
-      originalIndices = useUint8Array
-        ? new Uint8Array(indicesCount)
-        : IndexDatatype.createTypedArray(vertexCount, indicesCount);
+      originalIndices = ComponentDatatype.createTypedArray(
+        indices.indexDatatype,
+        indicesCount,
+      );
 
       indicesBuffer.getBufferData(originalIndices);
     } else {
