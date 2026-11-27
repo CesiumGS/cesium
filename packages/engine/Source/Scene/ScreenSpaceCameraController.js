@@ -45,11 +45,13 @@ function ScreenSpaceCameraController(scene) {
    * If true, inputs are allowed conditionally with the flags enableTranslate, enableZoom,
    * enableRotate, enableTilt, and enableLook.  If false, all inputs are disabled.
    *
-   * NOTE: This setting is for temporary use cases, such as camera flights and
-   * drag-selection of regions (see Picking demo).  It is typically set to false at the
-   * start of such events, and set true on completion.  To keep inputs disabled
-   * past the end of camera flights, you must use the other booleans (enableTranslate,
-   * enableZoom, enableRotate, enableTilt, and enableLook).
+   * NOTE: This setting is the master switch for this controller. It is also used
+   * temporarily for events such as camera flights and drag-selection of regions
+   * (see Picking demo).  Camera flights suspend inputs while they run and then
+   * restore the value that <code>enableInputs</code> had before the flight started,
+   * whether the flight completes or is canceled.
+   * Code that sets it to false for its own temporary purpose should restore the
+   * previous value rather than assume true.
    * @type {boolean}
    * @default true
    */
