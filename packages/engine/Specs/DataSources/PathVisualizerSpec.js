@@ -1513,8 +1513,23 @@ describe(
       expect(Color.equals(firstColor, secondColor)).toEqual(false);
     });
 
-    function createPortionsPathEntity(material, resolution) {
-      const epoch = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+    /**
+     * Creates a path entity in PORTIONS material mode with a straight sampled path from the
+     * epoch to 400 seconds after it, moving 1000 m along y per second. The lead and trail
+     * times are 200 seconds.
+     *
+     * @param {MaterialProperty} material The path material.
+     * @param {number} resolution The path resolution, in seconds.
+     * @param {object} [options]
+     * @param {string} [options.epoch="2026-04-01T00:00:00Z"] ISO 8601 time of the first position sample.
+     * @param {number} [options.availabilityStart] Seconds after the epoch at which the entity becomes available. If undefined, the entity has no availability.
+     * @returns {JulianDate} The time 200 seconds after the epoch, when the window spans the whole path.
+     */
+    function createPortionsPathEntity(material, resolution, options) {
+      options = options ?? {};
+      const epoch = JulianDate.fromIso8601(
+        options.epoch ?? "2026-04-01T00:00:00Z",
+      );
       const times = [];
       const positions = [];
       for (let s = 0; s <= 400; s += 10) {
@@ -1528,6 +1543,18 @@ describe(
       const position = new SampledPositionProperty();
       position.addSamples(times, positions);
       testObject.position = position;
+      if (options.availabilityStart !== undefined) {
+        testObject.availability = new TimeIntervalCollection([
+          new TimeInterval({
+            start: JulianDate.addSeconds(
+              epoch,
+              options.availabilityStart,
+              new JulianDate(),
+            ),
+            stop: times[times.length - 1],
+          }),
+        ]);
+      }
 
       const path = (testObject.path = new PathGraphics());
       path.materialMode = new ConstantProperty(PathMode.PORTIONS);
@@ -1594,9 +1621,11 @@ describe(
       color.intervals.addInterval(
         new TimeInterval({ start: at(200), stop: at(400), data: sampledColor }),
       );
+      // Availability anchors the resolution steps to the start of the path.
       const time = createPortionsPathEntity(
         new ColorMaterialProperty(color),
         50.0,
+        { availabilityStart: 0.0 },
       );
       visualizer.update(time);
 
@@ -1663,6 +1692,117 @@ describe(
       expect(shownColors[1].blue).toBeLessThan(shownColors[4].blue);
     });
 
+    function expectInteriorSplitsToStayFixed(firstTime, secondTime) {
+      // Skip the first segment, whose start is the trailing edge of the moving window.
+      const getInteriorSegmentStarts = function () {
+        return getShownPolylines(scene)
+          .slice(1)
+          .map(function (polyline) {
+            return Cartesian3.clone(polyline.positions[0]);
+          });
+      };
+
+      visualizer.update(firstTime);
+      const before = getInteriorSegmentStarts();
+      visualizer.update(secondTime);
+      const after = getInteriorSegmentStarts();
+      // Paths from createPortionsPathEntity advance along +y, so splits behind the new trailing edge have dropped off.
+      const trailingEdgeY = getShownPolylines(scene)[0].positions[0].y;
+
+      expect(before.length).toBeGreaterThan(1);
+      for (let i = 0; i < before.length; i++) {
+        if (before[i].y <= trailingEdgeY) {
+          continue;
+        }
+        const stillPresent = after.some(function (position) {
+          return Cartesian3.equalsEpsilon(
+            position,
+            before[i],
+            CesiumMath.EPSILON7,
+          );
+        });
+        expect(stillPresent).toBe(true);
+      }
+      return before;
+    }
+
+    function createSampledColorMaterial(epochIso8601) {
+      const epoch = JulianDate.fromIso8601(epochIso8601);
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(epoch, Color.RED);
+      sampledColor.addSample(
+        JulianDate.addSeconds(epoch, 400, new JulianDate()),
+        Color.BLUE,
+      );
+      return new ColorMaterialProperty(sampledColor);
+    }
+
+    it("keeps time-dynamic material split times fixed as the path window moves in PORTIONS materialMode", function () {
+      const time = createPortionsPathEntity(
+        createSampledColorMaterial("2026-04-01T00:00:00Z"),
+        50.0,
+      );
+
+      expectInteriorSplitsToStayFixed(
+        time,
+        JulianDate.addSeconds(time, 7.3, new JulianDate()),
+      );
+    });
+
+    it("keeps time-dynamic material split times fixed for paths before the default step anchor in PORTIONS materialMode", function () {
+      const epoch = "1999-06-01T00:00:00Z";
+      const time = createPortionsPathEntity(
+        createSampledColorMaterial(epoch),
+        50.0,
+        { epoch: epoch },
+      );
+
+      expectInteriorSplitsToStayFixed(
+        time,
+        JulianDate.addSeconds(time, 7.3, new JulianDate()),
+      );
+    });
+
+    it("steps time-dynamic material split times from the entity availability start in PORTIONS materialMode", function () {
+      const availabilityStart = 3.0;
+      const resolution = 50.0;
+      const time = createPortionsPathEntity(
+        createSampledColorMaterial("2026-04-01T00:00:00Z"),
+        resolution,
+        { availabilityStart: availabilityStart },
+      );
+
+      const splitPositions = expectInteriorSplitsToStayFixed(
+        time,
+        JulianDate.addSeconds(time, 7.3, new JulianDate()),
+      );
+
+      // Sample positions are 1000 m apart per second along y, so y recovers each split's time.
+      for (let i = 0; i < splitPositions.length; i++) {
+        const seconds = splitPositions[i].y / 1000.0;
+        const steps = (seconds - availabilityStart) / resolution;
+        expect(steps).toEqualEpsilon(Math.round(steps), CesiumMath.EPSILON7);
+      }
+    });
+
+    it("keeps split times fixed when the path window clips a time-dynamic material interval in PORTIONS materialMode", function () {
+      const epoch = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        new TimeInterval({
+          start: epoch,
+          stop: JulianDate.addSeconds(epoch, 400, new JulianDate()),
+          data: createSampledColorMaterial("2026-04-01T00:00:00Z"),
+        }),
+      );
+      const time = createPortionsPathEntity(material, 50.0);
+
+      expectInteriorSplitsToStayFixed(
+        time,
+        JulianDate.addSeconds(time, 7.3, new JulianDate()),
+      );
+    });
+
     it("splits time-dynamic materials without inspectable properties every resolution step in PORTIONS materialMode", function () {
       const material = {
         isConstant: false,
@@ -1679,7 +1819,10 @@ describe(
           return this === other;
         },
       };
-      const time = createPortionsPathEntity(material, 50.0);
+      // Availability anchors the resolution steps to the start of the path.
+      const time = createPortionsPathEntity(material, 50.0, {
+        availabilityStart: 0.0,
+      });
       visualizer.update(time);
 
       expect(getShownPolylines(scene).length).toEqual(8);
@@ -1998,6 +2141,41 @@ describe(
       }).not.toThrow();
 
       expect(getShownPolylines(scene).length).toBeGreaterThan(0);
+    });
+
+    it("does not hang when the resolution is too small to step from the anchor in PORTIONS materialMode", function () {
+      // Far from the J2000 default step anchor, a 1e-8 second resolution is below the
+      // floating-point precision of the step index and split times.
+      const updateTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        Color.RED,
+      );
+      sampledColor.addSample(
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+        Color.BLUE,
+      );
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      // A constant position keeps position subsampling from stepping at the tiny resolution.
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantPositionProperty(
+        new Cartesian3(1234, 5678, 9101112),
+      );
+
+      const path = (testObject.path = new PathGraphics());
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.resolution = new ConstantProperty(1e-8);
+      path.leadTime = new ConstantProperty(5e-7);
+      path.trailTime = new ConstantProperty(5e-7);
+      path.material = new ColorMaterialProperty(sampledColor);
+
+      expect(function () {
+        visualizer.update(updateTime);
+      }).not.toThrow();
     });
 
     it("shows only colors in the active lead/trail window", function () {

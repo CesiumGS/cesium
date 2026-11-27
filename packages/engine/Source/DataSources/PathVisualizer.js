@@ -2,6 +2,7 @@ import {
   AssociativeArray,
   Cartesian3,
   DeveloperError,
+  Iso8601,
   JulianDate,
   Math as CesiumMath,
   Matrix3,
@@ -9,6 +10,7 @@ import {
   Quaternion,
   ReferenceFrame,
   TimeInterval,
+  TimeStandard,
   arrayRemoveDuplicates,
   binarySearch,
   defined,
@@ -798,22 +800,52 @@ function getDynamicMaterialProperties(materialData) {
   return dynamic;
 }
 
+// Fallback anchor for step split times when no finite start time is available. Any fixed time
+// works; J2000 is a standard epoch used elsewhere in Cesium.
+const defaultStepAnchor = new JulianDate(2451545.0, 0.0, TimeStandard.TAI);
+
+// Returns a fixed time to anchor step split times to. The anchor must not depend on the
+// visible path window: if it did, split times change every frame as the window moves and the
+// path portions appear to jitter.
+function getStepAnchor(intervalStart, availability) {
+  if (defined(intervalStart) && !intervalStart.equals(Iso8601.MINIMUM_VALUE)) {
+    return intervalStart;
+  }
+  if (
+    defined(availability) &&
+    defined(availability.start) &&
+    !availability.start.equals(Iso8601.MINIMUM_VALUE)
+  ) {
+    return availability.start;
+  }
+  return defaultStepAnchor;
+}
+
 // Adds a split time every step seconds after stepStart that falls strictly inside (rangeStart, rangeStop).
-// Steps are counted from stepStart rather than rangeStart so they fall at the same times as when the whole path is stepped.
+// Steps are counted from stepStart rather than rangeStart so they fall at the same times regardless of
+// which portion of the path is visible.
 function addStepSplitTimes(stepStart, rangeStart, rangeStop, step, splitTimes) {
   const offset = JulianDate.secondsDifference(rangeStart, stepStart);
-  for (let i = Math.max(Math.floor(offset / step) + 1, 1); ; i++) {
+  let previousSplitTime;
+  for (let i = Math.floor(offset / step) + 1; ; i++) {
     const splitTime = JulianDate.addSeconds(
       stepStart,
       i * step,
       new JulianDate(),
     );
-    if (!JulianDate.lessThan(splitTime, rangeStop)) {
+    // Also stop once floating-point precision can no longer advance the split time, which
+    // happens when step is tiny compared to the distance from stepStart.
+    if (
+      !JulianDate.lessThan(splitTime, rangeStop) ||
+      (defined(previousSplitTime) &&
+        !JulianDate.greaterThan(splitTime, previousSplitTime))
+    ) {
       return;
     }
     if (JulianDate.greaterThan(splitTime, rangeStart)) {
       splitTimes.push(splitTime);
     }
+    previousSplitTime = splitTime;
   }
 }
 
@@ -881,6 +913,7 @@ function addPropertySplitTimes(
 function addDynamicPropertySplitTimes(
   dynamic,
   interval,
+  stepStart,
   splitResolution,
   splitTimes,
 ) {
@@ -889,7 +922,7 @@ function addDynamicPropertySplitTimes(
       dynamic[j],
       interval.start,
       interval.stop,
-      interval.start,
+      stepStart,
       splitResolution,
       splitTimes,
     );
@@ -1129,7 +1162,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
       polyline.positions = [];
     }
 
-    // Prevent non-positive split steps from creating non-terminating loops.
+    // Prevent negative split steps from creating infinite loops.
     // Positive fractional resolutions are valid; only values <= 0 fall back to the default.
     const splitResolution = resolution > 0 ? resolution : defaultResolution;
 
@@ -1148,16 +1181,18 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
         JulianDate.clone(sampleStop),
       ];
       const dynamic = getDynamicMaterialProperties(materialProp);
+      const stepStart = getStepAnchor(undefined, entity._availability);
       if (dynamic.length > 0) {
         addDynamicPropertySplitTimes(
           dynamic,
           portionsVisibleIntervalScratch,
+          stepStart,
           splitResolution,
           splitTimes,
         );
       } else {
         addStepSplitTimes(
-          sampleStart,
+          stepStart,
           sampleStart,
           sampleStop,
           splitResolution,
@@ -1208,6 +1243,7 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
         addDynamicPropertySplitTimes(
           dynamic,
           portionsSegmentIntervalScratch,
+          getStepAnchor(interval.start, entity._availability),
           splitResolution,
           splitTimes,
         );
