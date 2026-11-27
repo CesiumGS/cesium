@@ -122,6 +122,41 @@ class Mesh {
       modelMatrix: this.source.worldMatrix,
     });
 
+    /**
+     * Raised on render passes when the mesh's topology changed since the
+     * previous update, before {@link Mesh#_afterUpdate}.
+     *
+     * @type {Event<function(): void>}
+     * @ignore
+     */
+    this._topologyChanged = new Event();
+
+    /**
+     * Raised on render passes when the mesh's geometry changed since the
+     * previous update, before {@link Mesh#_afterUpdate}.
+     *
+     * @type {Event<function(): void>}
+     * @ignore
+     */
+    this._geometryChanged = new Event();
+
+    /**
+     * Raised on every render pass, after the overlay is uploaded, whether or
+     * not the mesh changed. The frame state is passed to listeners.
+     *
+     * @type {Event<function(FrameState): void>}
+     * @ignore
+     */
+    this._afterUpdate = new Event();
+
+    /**
+     * Raised when the mesh is destroyed, before its resources are released.
+     *
+     * @type {Event<function(): void>}
+     * @ignore
+     */
+    this._destroyed = new Event();
+
     // TODO: consider an interface that guarantees the source can be shown/hidden.
     const { source } = this;
     if ("show" in source) {
@@ -677,6 +712,17 @@ class Mesh {
   }
 
   /**
+   * The wasm editor holding the mesh.
+   *
+   * @type {WasmMeshEditor}
+   * @readonly
+   * @ignore
+   */
+  get _wasmEditor() {
+    return this.#wasmEditor;
+  }
+
+  /**
    * Updates the renderer. Draws nothing when <code>show</code> is false, but
    * still uploads the overlay views.
    *
@@ -688,6 +734,34 @@ class Mesh {
     const renderer = this._renderer;
     renderer.show = this.show;
     renderer.update(frameState, overlayViews);
+
+    this.#postUpdate(
+      frameState,
+      overlayViews?.fullRefresh ?? false,
+      defined(overlayViews),
+    );
+  }
+
+  /**
+   * Runs on render passes, after the overlay is uploaded.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @param {boolean} topologyChanged Whether the mesh's topology changed since the previous update.
+   * @param {boolean} geometryChanged Whether the mesh's geometry changed since the previous update.
+   * @ignore
+   */
+  #postUpdate(frameState, topologyChanged, geometryChanged) {
+    if (frameState.passes.render) {
+      if (topologyChanged) {
+        this._topologyChanged.raiseEvent();
+      }
+
+      if (geometryChanged) {
+        this._geometryChanged.raiseEvent();
+      }
+
+      this._afterUpdate.raiseEvent(frameState);
+    }
   }
 
   /**
@@ -698,12 +772,13 @@ class Mesh {
   }
 
   /**
-   * Destroys the overlay renderer and shows the source, if it has a
+   * Destroys the mesh's resources and shows the source, if it has a
    * <code>show</code> property. Called by the editor when it removes the mesh.
    *
    * @ignore
    */
   _destroy() {
+    this._destroyed.raiseEvent();
     this._renderer.destroy();
 
     const { source } = this;
