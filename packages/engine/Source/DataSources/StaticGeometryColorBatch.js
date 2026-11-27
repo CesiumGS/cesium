@@ -29,6 +29,7 @@ function Batch(
   depthFailMaterialProperty,
   closed,
   shadows,
+  asynchronous,
 ) {
   this.translucent = translucent;
   this.appearanceType = appearanceType;
@@ -50,6 +51,7 @@ function Batch(
   this.showsUpdated = new AssociativeArray();
   this.itemsToRemove = [];
   this.invalidated = false;
+  this.asynchronous = asynchronous ?? true;
 
   let removeMaterialSubscription;
   if (defined(depthFailMaterialProperty)) {
@@ -163,7 +165,7 @@ Batch.prototype.update = function (time) {
 
       primitive = new Primitive({
         show: false,
-        asynchronous: true,
+        asynchronous: this.asynchronous,
         geometryInstances: geometries.slice(),
         appearance: new AppearanceType({
           translucent: this.translucent,
@@ -437,7 +439,10 @@ StaticGeometryColorBatch.prototype.add = function (time, updater) {
   const length = items.length;
   for (let i = 0; i < length; i++) {
     const item = items[i];
-    if (item.isMaterial(updater)) {
+    if (
+      item.isMaterial(updater) &&
+      item.asynchronous === updater.asynchronous
+    ) {
       item.add(updater, instance);
       return;
     }
@@ -450,6 +455,7 @@ StaticGeometryColorBatch.prototype.add = function (time, updater) {
     updater.depthFailMaterialProperty,
     this._closed,
     this._shadows,
+    updater.asynchronous,
   );
   batch.add(updater, instance);
   items.push(batch);
