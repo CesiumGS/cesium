@@ -6,18 +6,11 @@ import {
   Check,
   DeveloperError,
   Event,
-  RuntimeError,
   defined,
   destroyObject,
 } from "@cesium/core";
 import {
-  GeometryAttributeDescriptor,
-  GeometryAttributeDomain,
-  VertexAttributeSemantic,
-} from "@cesium/engine";
-import {
   ComponentType,
-  Mesh as WasmMesh,
   MeshEditor as WasmMeshEditor,
   UpdateResult,
 } from "@cesium/mesh-editor";
@@ -27,18 +20,11 @@ import MeshEditorGroup from "./MeshEditorGroup.js";
 import MeshEditorModule from "./MeshEditorModule.js";
 import MeshEditorInputHandler from "./MeshEditorInputHandler.js";
 import MeshEditorStyle from "./MeshEditorStyle.js";
+import createWasmMesh from "./createWasmMesh.js";
 
-/** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
+/** @import { FrameState, GeometrySource, Scene } from "@cesium/engine"; */
 /** @import { ComponentMask } from "@cesium/mesh-editor"; */
 /** @import MeshEditorTool from "./MeshEditorTool.js"; */
-
-// The attribute read from each source.
-const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
-  semantic: VertexAttributeSemantic.POSITION,
-});
-
-// The data read from each source.
-const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
 
 // The components inactive meshes draw, so they stay visible. Wasm's policy
 // covers only active meshes.
@@ -202,10 +188,20 @@ class MeshEditor {
      */
     this.activeToolChanged = new Event();
 
+    /**
+     * Whether to draw every mesh in wireframe: translucent faces, with edges.
+     * Faces are still picked as usual. See also {@link Mesh#wireframe}.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.wireframe = false;
+
     this.#inputHandler = new MeshEditorInputHandler({
       scene: options.scene,
       wasmEditor: this.#wasmEditor,
       meshes: this.#meshes,
+      getActiveTool: () => this.activeTool,
     });
   }
 
@@ -258,7 +254,6 @@ class MeshEditor {
   get root() {
     return this.#root;
   }
-
 
   /**
    * The tool that receives pointer input, or <code>undefined</code> for none.
@@ -374,6 +369,10 @@ class MeshEditor {
    * Adds a geometry source to the editor. If the source has a
    * <code>show</code> property, it's hidden while the mesh is in the editor.
    * The new mesh starts inactive.
+   * <p>
+   * Loads all of the source's attributes. Attributes the editor can't store
+   * are skipped with a warning.
+   * </p>
    *
    * @param {GeometrySource} source The geometry to edit.
    * @param {object} [options] Object with the following properties:
@@ -397,12 +396,13 @@ class MeshEditor {
     this.#checkOptions(options);
     //>>includeEnd('debug');
 
-    const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
+    const key = this.#wasmEditor.addMesh(createWasmMesh(source));
 
     const mesh = new Mesh({
       source,
       name,
       parent,
+      wasmEditor: this.#wasmEditor,
       key,
       module: this.#module,
       style: this.#style,
@@ -646,6 +646,32 @@ class MeshEditor {
   }
 
   /**
+   * Raises {@link Mesh#selectionChanged} for each mesh whose selection wasm
+   * reports changed since the previous update.
+   *
+   * @param {BigUint64Array} selectionChangedMeshes The keys of the meshes whose selection changed.
+   * @ignore
+   */
+  #raiseSelectionChanged(selectionChangedMeshes) {
+    if (selectionChangedMeshes.length === 0) {
+      return;
+    }
+
+    const changedKeys = new Set(selectionChangedMeshes);
+    // Collected first, since listeners may add or remove meshes.
+    const changedMeshes = Array.from(this.#meshes).filter((mesh) =>
+      changedKeys.has(mesh._key),
+    );
+
+    for (const mesh of changedMeshes) {
+      // A listener may have removed the mesh.
+      if (this.#meshes.has(mesh)) {
+        mesh.selectionChanged.raiseEvent(mesh);
+      }
+    }
+  }
+
+  /**
    * Sets which of a mesh's components to draw and pick. Components that are
    * drawn but aren't interactable, like edges in Face mode, aren't pickable, so
    * they don't interfere with picking the interactable components (like vertices) around them.
@@ -704,70 +730,6 @@ class MeshEditor {
   }
 
   /**
-   * Reads a source's geometry into a new wasm mesh.
-   *
-   * @param {GeometrySource} source The geometry to read.
-   * @returns {WasmMesh} The wasm mesh.
-   * @exception {RuntimeError} The source's geometry can't be edited.
-   * @ignore
-   */
-  #createWasmMesh(source) {
-    const { positions, indices, faceVertexCounts } =
-      source.geometryReader.withReadSession(
-        READ_OPTIONS,
-        MeshEditor.#readBuffers,
-      );
-
-    try {
-      // At the moment, we have no use for normals or UVs in the wasm module, so don't read them or pass them in.
-      return WasmMesh.fromBuffers(
-        positions,
-        indices,
-        undefined,
-        undefined,
-        faceVertexCounts,
-      );
-    } catch (error) {
-      throw new RuntimeError(`The geometry can't be edited: ${error.message}`);
-    }
-  }
-
-  /**
-   * Reads a session's positions and primitives as wasm mesh buffers. Each
-   * primitive becomes a face.
-   *
-   * @param {GeometryReadSession} session The read session.
-   * @returns {{ positions: Float32Array, indices: Uint32Array, faceVertexCounts: Uint32Array }} The buffers.
-   * @ignore
-   */
-  static #readBuffers(session) {
-    const vertexCount = session.elementCount(GeometryAttributeDomain.VERTEX);
-    const positions = new Float32Array(vertexCount * 3);
-    const readPosition = session.attributeReader(POSITION_ATTRIBUTE);
-    for (let i = 0; i < vertexCount; ++i) {
-      readPosition(i, positions, i * 3);
-    }
-
-    const primitiveCount = session.elementCount(GeometryAttributeDomain.FACE);
-    const faceVertexCounts = new Uint32Array(primitiveCount);
-    let indexCount = 0;
-    for (let i = 0; i < primitiveCount; ++i) {
-      faceVertexCounts[i] = session.primitiveVertexCount(i);
-      indexCount += faceVertexCounts[i];
-    }
-
-    const indices = new Uint32Array(indexCount);
-    const readPrimitive = session.primitiveReader();
-    let offset = 0;
-    for (let i = 0; i < primitiveCount; ++i) {
-      readPrimitive(i, indices, offset);
-      offset += faceVertexCounts[i];
-    }
-
-    return { positions, indices, faceVertexCounts };
-  }
-
-  /**
    * Called when rendering the scene. On render passes, runs the wasm update
    * and syncs the meshes that became active or inactive.
    * Then updates each mesh's renderer, passing overlay views for meshes whose
@@ -784,10 +746,15 @@ class MeshEditor {
     if (frameState.passes.render) {
       // TODO: pass in real timestep. Currently unused by wasm update, but may be needed in the future.
       this.#wasmEditor.update(0.0, this.#updateResult);
-      const { changedOverlays, activatedMeshes, deactivatedMeshes } =
-        this.#updateResult;
+      const {
+        changedOverlays,
+        selectionChangedMeshes,
+        activatedMeshes,
+        deactivatedMeshes,
+      } = this.#updateResult;
       changedKeys = new Set(changedOverlays);
       this.#syncActiveMeshes(activatedMeshes, deactivatedMeshes);
+      this.#raiseSelectionChanged(selectionChangedMeshes);
     }
 
     for (const mesh of this.#meshes) {
@@ -798,6 +765,7 @@ class MeshEditor {
         overlayViews = this.#wasmEditor.overlayViews(mesh._key);
       }
 
+      mesh._renderer.wireframe = this.wireframe || mesh.wireframe;
       mesh._update(frameState, overlayViews);
     }
 

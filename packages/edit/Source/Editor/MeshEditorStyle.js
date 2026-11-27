@@ -83,6 +83,14 @@ class MeshEditorStyle {
     this.selectedFaceColor = new Color(0.86, 0.75, 0.56, 1.0);
 
     /**
+     * Scales the alpha of face colors on meshes drawn in wireframe.
+     *
+     * @type {number}
+     * @default 0.1
+     */
+    this.wireframeFaceOpacity = 0.1;
+
+    /**
      * The width of the outline around selected meshes, outside their
      * silhouettes.
      *

@@ -4,6 +4,13 @@ import { Check } from "@cesium/core";
 
 /** @import { MeshEditor as WasmMeshEditor } from "@cesium/mesh-editor"; */
 /** @import EditMode from "./EditMode.js"; */
+/** @import { MeshPickHit, PointerModifiers } from "./MeshEditorInputHandler.js"; */
+
+/**
+ * @type {ResolvePicksCallback}
+ * @ignore
+ */
+const returnPicksUnchanged = (picks) => picks;
 
 /**
  * <div class="notice">
@@ -51,6 +58,45 @@ class MeshEditorTool {
      * @ignore
      */
     this._id = options.id;
+
+    /**
+     * Called when the user clicks while this is the editor's active tool,
+     * before the tool handles the click. Receives what the click picked, and
+     * returns what the tool should handle as picked. Use it to change what a
+     * click picks, e.g. to expand a pick to a group of components. By
+     * default, returns the picks unchanged.
+     * <p>
+     * Must be synchronous, and must not change the editor or its meshes.
+     * </p>
+     *
+     * @type {ResolvePicksCallback}
+     *
+     * @example
+     * // Pick every vertex with the same _GROUP_ID as the clicked vertex.
+     * selectTool.resolvePicks = function (picks) {
+     *   return picks.map(({ mesh, componentKeys }) => {
+     *     const verts = componentKeys.verts;
+     *     if (!Cesium.defined(verts) || verts.length === 0) {
+     *       return { mesh, componentKeys };
+     *     }
+     *
+     *     const [groupId] = mesh.getAttributeValues(
+     *       "_GROUP_ID",
+     *       verts.subarray(0, 1),
+     *     );
+     *
+     *     return {
+     *       mesh,
+     *       componentKeys: mesh.queryByAttribute(
+     *         "_GROUP_ID",
+     *         Cesium.ComparisonOperator.EQUAL,
+     *         groupId,
+     *       ),
+     *     };
+     *   });
+     * };
+     */
+    this.resolvePicks = returnPicksUnchanged;
   }
 
   /**
@@ -100,5 +146,16 @@ class MeshEditorTool {
     return this.#wasmEditor.activeTool === this._id;
   }
 }
+
+/**
+ * Changes what a click picks. See {@link MeshEditorTool#resolvePicks}.
+ *
+ * @callback ResolvePicksCallback
+ * @param {MeshPickHit[]} picks What the click picked, at most one per mesh. Empty if the click missed.
+ * @param {PointerModifiers} modifiers The modifier keys held.
+ * @returns {MeshPickHit[]|undefined} What the tool should handle as picked, at most one per mesh. An empty array is a miss. <code>undefined</code> ignores the click.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 
 export default MeshEditorTool;

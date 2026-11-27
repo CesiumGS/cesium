@@ -1,11 +1,22 @@
 // @ts-check
 
-import { destroyObject } from "@cesium/core";
+import {
+  Check,
+  DeveloperError,
+  Event,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
+import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
-/** @import { Matrix4, OrientedBoundingBox } from "@cesium/core"; */
-/** @import { FrameState, GeometrySource } from "@cesium/engine"; */
-/** @import { OverlayViews } from "@cesium/mesh-editor"; */
+/** @import { Cartesian3, Matrix4, OrientedBoundingBox } from "@cesium/core"; */
+/** @import { FrameState, GeometryAttributeDescriptor, GeometrySource } from "@cesium/engine"; */
+/** @import { MeshEditor as WasmMeshEditor, OverlayViews } from "@cesium/mesh-editor"; */
+/** @import ComparisonOperator from "./ComparisonOperator.js"; */
+/** @import EditMode from "./EditMode.js"; */
+/** @import SelectionStep from "./SelectionStep.js"; */
+/** @import { MeshComponentKeys } from "./ComponentKeys.js"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
 
@@ -31,6 +42,9 @@ class Mesh {
   /** @type {MeshEditorGroup} */
   #parent;
 
+  /** @type {WasmMeshEditor} */
+  #wasmEditor;
+
   /**
    * Hides the source, if it has a <code>show</code> property, and creates the
    * mesh's overlay renderer.
@@ -39,6 +53,7 @@ class Mesh {
    * @param {GeometrySource} options.source The geometry being edited.
    * @param {string} [options.name] The mesh's name.
    * @param {MeshEditorGroup} options.parent The group holding the mesh.
+   * @param {*} options.wasmEditor The wasm editor holding the mesh.
    * @param {bigint} options.key The mesh's key in its editor's wasm.
    * @param {*} options.module The loaded wasm module.
    * @param {MeshEditorStyle} options.style The editor's style, shared by its meshes.
@@ -54,6 +69,7 @@ class Mesh {
 
     this.#name = options.name;
     this.#parent = options.parent;
+    this.#wasmEditor = options.wasmEditor;
 
     /**
      * Whether to draw the mesh's vertices, edges and faces.
@@ -62,6 +78,28 @@ class Mesh {
      * @default true
      */
     this.show = true;
+
+    /**
+     * Whether to draw the mesh in wireframe: translucent faces, with edges.
+     * The mesh is also drawn in wireframe while {@link MeshEditor#wireframe}
+     * is true.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.wireframe = false;
+
+    /**
+     * Raised when the mesh's selection changes, whether by a method like
+     * {@link Mesh#setSelection} or by a tool. The mesh is passed to listeners.
+     * <p>
+     * Raised on the frame after it occurs, once for all the changes since
+     * the previous one. Not raised once the mesh is removed from its editor.
+     * </p>
+     *
+     * @type {Event<function(Mesh): void>}
+     */
+    this.selectionChanged = new Event();
 
     /**
      * The mesh's key in its editor's wasm.
@@ -110,6 +148,506 @@ class Mesh {
    */
   get parent() {
     return this.#parent;
+  }
+
+  /**
+   * Gets the list of attributes on the mesh, such as <code>POSITION</code>, or
+   * any custom attributes added to the mesh.
+   *
+   * @returns {GeometryAttributeDescriptor[]} The attributes.
+   */
+  getAttributes() {
+    return this.#wasmEditor
+      .meshAttributes(this._key)
+      .map(WasmMeshAttributeTranslator.toDescriptor);
+  }
+
+  /**
+   * Gets the keys of every component of the given types.
+   *
+   * @param {EditMode} components The component types, combined with <code>|</code>.
+   * @returns {MeshComponentKeys} The components' keys.
+   */
+  getComponentKeys(components) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("components", components);
+    //>>includeEnd('debug');
+
+    return this.#wasmEditor.componentKeys(this._key, components);
+  }
+
+  /**
+   * Adds a custom attribute, giving every component in its domain a default
+   * value.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The attribute.
+   * @param {number|number[]} defaultValue A number for scalar attributes, or an array for vector attributes.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh already has an attribute with that name.
+   * @exception {DeveloperError} The name is reserved for a built-in attribute.
+   * @exception {DeveloperError} The default value doesn't fit the attribute's type.
+   */
+  addAttribute(descriptor, defaultValue) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("descriptor", descriptor);
+    Check.defined("defaultValue", defaultValue);
+    const reason = WasmMeshAttributeTranslator.getUnsupportedReason(descriptor);
+    if (defined(reason)) {
+      throw new DeveloperError(`The attribute can't be added: ${reason}.`);
+    }
+    //>>includeEnd('debug');
+
+    const status = this.#wasmEditor.addAttribute(
+      this._key,
+      descriptor.name,
+      WasmMeshAttributeTranslator.toWasmDomain(descriptor.domain),
+      WasmMeshAttributeTranslator.createDefaultValue(descriptor, defaultValue),
+    );
+
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(
+      status,
+      descriptor.name,
+    );
+  }
+
+  /**
+   * Removes a custom attribute.
+   *
+   * @param {string} name The attribute's name.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is built-in.
+   */
+  removeAttribute(name) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    //>>includeEnd('debug');
+
+    const status = this.#wasmEditor.removeAttribute(this._key, name);
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+  }
+
+  /**
+   * Gets an attribute's values at vertex, edge, or face keys, according to
+   * the given attribute's domain.
+   *
+   * @param {string} name The attribute's name, such as <code>POSITION</code>.
+   * @param {BigUint64Array} keys The components' keys.
+   * @param {Float32Array|Int32Array|Uint32Array} [result] Receives <code>componentCount</code> values per key. Its type must match the attribute's datatype. Allocated if omitted.
+   * @param {number|number[]} [noData] The value for keys that aren't in the mesh.
+   * @returns {Float32Array|Int32Array|Uint32Array} The values.
+   *
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   * @exception {DeveloperError} A key isn't in the mesh, and noData is undefined.
+   */
+  getAttributeValues(name, keys, result, noData) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    Check.typeOf.object("keys", keys);
+    //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      const descriptor = this.getAttributes().find(
+        (attribute) => attribute.name === name,
+      );
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(descriptor)) {
+        throw new DeveloperError(`The mesh has no attribute named ${name}.`);
+      }
+      //>>includeEnd('debug');
+
+      const ArrayType = WasmMeshAttributeTranslator.getArrayType(descriptor);
+      result = new ArrayType(keys.length * descriptor.componentCount);
+    }
+
+    const status = this.#wasmEditor.attributeValues(
+      this._key,
+      name,
+      keys,
+      result,
+      noData,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+
+    return result;
+  }
+
+  /**
+   * Sets an attribute's values at vertex, edge or face keys, matching the
+   * attribute's domain.
+   *
+   * @param {string} name The attribute's name, such as <code>POSITION</code>.
+   * @param {BigUint64Array} keys The components' keys.
+   * @param {Float32Array|Int32Array|Uint32Array} values <code>componentCount</code> values per key, in an array matching the attribute's datatype.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   */
+  setAttributeValues(name, keys, values) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    Check.typeOf.object("keys", keys);
+    Check.typeOf.object("values", values);
+    //>>includeEnd('debug');
+
+    const status = this.#wasmEditor.setAttributeValues(
+      this._key,
+      name,
+      keys,
+      values,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+  }
+
+  /**
+   * Finds the vertices, edges or faces, matching the attribute's domain, whose
+   * value of an attribute compares to a value. Includes hidden components, and
+   * works whether or not the mesh is active.
+   *
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
+   * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+   * @returns {MeshComponentKeys} The matching components' keys.
+   *
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   * @exception {DeveloperError} The value doesn't fit the attribute's type.
+   * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
+   */
+  queryByAttribute(name, comparison, value) {
+    Mesh.#debugCheckAttributeQuery(name, comparison, value);
+
+    const { status, keys } = this.#wasmEditor.queryByAttribute(
+      this._key,
+      name,
+      comparison,
+      value,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+
+    return keys;
+  }
+
+  /**
+   * Adds the components whose value of an attribute compares to a value to
+   * the selection, like {@link Mesh#selectComponents}.
+   *
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
+   * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   * @exception {DeveloperError} The value doesn't fit the attribute's type.
+   * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
+   */
+  selectByAttribute(name, comparison, value) {
+    Mesh.#debugCheckAttributeQuery(name, comparison, value);
+
+    const status = this.#wasmEditor.selectByAttribute(
+      this._key,
+      name,
+      comparison,
+      value,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+  }
+
+  /**
+   * Gets the selected components.
+   *
+   * @returns {MeshComponentKeys} The selected components' keys.
+   */
+  getSelectedComponents() {
+    return this.#wasmEditor.selectedComponents(this._key);
+  }
+
+  /**
+   * Replaces the selection. Ignores components of types that the current edit
+   * mode excludes, and unknown keys.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to select.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  setSelection(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.setSelection(this._key, componentKeys);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Adds components to the selection, like {@link Mesh#setSelection}.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to select.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  selectComponents(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.selectComponents(
+      this._key,
+      componentKeys,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Removes components from the selection.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to deselect.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  deselectComponents(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.deselectComponents(
+      this._key,
+      componentKeys,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Deselects every component.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  clearSelection() {
+    const isActive = this.#wasmEditor.clearSelection(this._key);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Selects the given components that aren't selected, and deselects those
+   * that are, like {@link Mesh#setSelection}.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to toggle.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  toggleComponents(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.toggleComponents(
+      this._key,
+      componentKeys,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Grows the selection by one layer of neighboring components.
+   *
+   * @param {SelectionStep} step What makes components neighbors.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  growSelection(step) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("step", step);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.growSelection(this._key, step);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Shrinks the selection by one layer from its boundary.
+   *
+   * @param {SelectionStep} step What makes components neighbors.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  shrinkSelection(step) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("step", step);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.shrinkSelection(this._key, step);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Moves the selected vertices, including those of selected edges and faces.
+   *
+   * @param {Cartesian3} offset The offset, in the mesh's local space.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  translateSelected(offset) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("offset", offset);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.translateSelected(
+      this._key,
+      offset.x,
+      offset.y,
+      offset.z,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Hides and deselects components. Ignores components of types that the
+   * current edit mode excludes, and unknown keys.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to hide.
+   * @param {MeshVisibilityOptions} [options] The options.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  hideComponents(componentKeys, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const wasmEditor = this.#wasmEditor;
+    const isActive = wasmEditor.hideComponents(
+      this._key,
+      componentKeys,
+      options,
+    );
+    Mesh.#debugCheckActive(isActive);
+
+    wasmEditor.deselectComponents(this._key, componentKeys);
+  }
+
+  /**
+   * Shows hidden components. Ignores components of types that the current edit
+   * mode excludes, and unknown keys.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to show.
+   * @param {MeshVisibilityOptions} [options] The options.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  showComponents(componentKeys, options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.showComponents(
+      this._key,
+      componentKeys,
+      options,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Deselects and hides the selected components of the types that the current edit
+   * mode includes.
+   *
+   * @param {MeshVisibilityOptions} [options] The options.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  hideSelected(options) {
+    const isActive = this.#wasmEditor.hideSelected(this._key, options);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Shows every hidden component, whatever the current edit mode.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  showAllComponents() {
+    const isActive = this.#wasmEditor.showAllComponents(this._key);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Hides and deselects the components whose value of an attribute compares
+   * to a value, like {@link Mesh#hideComponents}.
+   *
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
+   * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+   * @param {MeshVisibilityOptions} [options] The options.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   * @exception {DeveloperError} The value doesn't fit the attribute's type.
+   * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
+   */
+  hideByAttribute(name, comparison, value, options) {
+    // Hides through hideComponents, which also deselects.
+    const componentKeys = this.queryByAttribute(name, comparison, value);
+    this.hideComponents(componentKeys, options);
+  }
+
+  /**
+   * Shows the hidden components whose value of an attribute compares to a
+   * value, like {@link Mesh#showComponents}.
+   *
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
+   * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+   * @param {MeshVisibilityOptions} [options] The options.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   * @exception {DeveloperError} The value doesn't fit the attribute's type.
+   * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
+   */
+  showByAttribute(name, comparison, value, options) {
+    Mesh.#debugCheckAttributeQuery(name, comparison, value);
+
+    const status = this.#wasmEditor.showByAttribute(
+      this._key,
+      name,
+      comparison,
+      value,
+      options,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+  }
+
+  /**
+   * @param {boolean} isActive Whether wasm found the mesh active.
+   * @ignore
+   */
+  static #debugCheckActive(isActive) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!isActive) {
+      throw new DeveloperError("The mesh isn't active.");
+    }
+    //>>includeEnd('debug');
+  }
+
+  /**
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison The comparison.
+   * @param {number|number[]} value The value to compare to.
+   * @ignore
+   */
+  static #debugCheckAttributeQuery(name, comparison, value) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    Check.typeOf.number("comparison", comparison);
+    Check.defined("value", value);
+    //>>includeEnd('debug');
   }
 
   /**
@@ -176,5 +714,14 @@ class Mesh {
     destroyObject(this);
   }
 }
+
+/**
+ * Options for hiding and showing a {@link Mesh}'s components.
+ *
+ * @typedef {object} MeshVisibilityOptions
+ * @property {boolean} [extendToConnectedFaces=false] Also hide or show faces that use any of the affected vertices or edges, even if the current edit mode excludes faces.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 
 export default Mesh;

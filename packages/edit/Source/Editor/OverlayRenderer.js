@@ -116,6 +116,8 @@ const PICK_COLOR_UNIFORM = "u_pickColorTexture";
 
 const scratchBoundsSize = new Cartesian3();
 const scratchLocalBoxMatrix = new Matrix4();
+const scratchWireframeFaceColor = new Color();
+const scratchWireframeSelectedFaceColor = new Color();
 
 /**
  * @type {TextureFormat}
@@ -166,6 +168,17 @@ const STENCIL_FACE_RENDER_STATE = {
       zPass: StencilOperation.REPLACE,
     },
   },
+};
+
+// In wireframe, translucent faces don't write depth, so they don't hide what's behind them.
+const WIREFRAME_FACE_RENDER_STATE = {
+  ...FACE_RENDER_STATE,
+  depthMask: false,
+};
+
+const WIREFRAME_STENCIL_FACE_RENDER_STATE = {
+  ...STENCIL_FACE_RENDER_STATE,
+  depthMask: false,
 };
 
 // The point and edge render state, but drawn only where faces didn't mark the
@@ -272,6 +285,18 @@ class OverlayRenderer {
   /** @type {RenderState} */
   #outlineRenderState = RenderState.fromCache(OUTLINE_RENDER_STATE);
 
+  /** @type {RenderState} */
+  #wireframeFaceRenderState = RenderState.fromCache(
+    WIREFRAME_FACE_RENDER_STATE,
+  );
+
+  /** @type {RenderState} */
+  #wireframeStencilFaceRenderState = RenderState.fromCache(
+    WIREFRAME_STENCIL_FACE_RENDER_STATE,
+  );
+
+  #wireframe = false;
+
   /**
    * @param {object} options
    * @param {MeshEditorModule} options.module The loaded module, for its shaders and memory.
@@ -347,8 +372,18 @@ class OverlayRenderer {
       shaderSources: shaders.face,
       styleUniforms: {
         [depthBias]: () => FACE_DEPTH_BIAS,
-        [face.color]: () => style.faceColor,
-        [face.selectedColor]: () => style.selectedFaceColor,
+        [face.color]: () =>
+          this.#getFaceColor(
+            style.faceColor,
+            style.wireframeFaceOpacity,
+            scratchWireframeFaceColor,
+          ),
+        [face.selectedColor]: () =>
+          this.#getFaceColor(
+            style.selectedFaceColor,
+            style.wireframeFaceOpacity,
+            scratchWireframeSelectedFaceColor,
+          ),
         [face.isPickPass]: () => this.#isPickPass,
       },
       outlineUniforms: undefined,
@@ -391,6 +426,26 @@ class OverlayRenderer {
    */
   get modelMatrix() {
     return this.#modelMatrix;
+  }
+
+  /**
+   * Whether to draw faces translucent, without hiding what's behind them,
+   * and to draw edges even if they aren't shown. Picking is unchanged.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  get wireframe() {
+    return this.#wireframe;
+  }
+
+  set wireframe(value) {
+    if (value === this.#wireframe) {
+      return;
+    }
+
+    this.#wireframe = value;
+    this.#updateCommands();
   }
 
   /**
@@ -486,13 +541,9 @@ class OverlayRenderer {
     this.#isPickPass = frameState.passes.pick;
     this.#pixelRatio = frameState.pixelRatio;
 
-    // While outlined, faces also mark their pixels in the stencil, so the
-    // outline isn't drawn over them.
     const faceCommand = this.#faceOverlay.command;
     if (defined(faceCommand)) {
-      faceCommand.renderState = this.outlined
-        ? this.#stencilFaceRenderState
-        : this.#faceOverlay.renderState;
+      faceCommand.renderState = this.#getFaceRenderState();
     }
 
     const commands = this.#isPickPass ? this.#pickCommands : this.#commands;
@@ -641,17 +692,21 @@ class OverlayRenderer {
   }
 
   /**
-   * Collects the commands of the shown component types that have instances to
-   * draw, and of those, the pickable ones.
+   * Collects the commands of the drawn component types (the shown ones, and
+   * edges in wireframe) that have instances to draw, and of those, the
+   * pickable ones.
    *
    * @ignore
    */
   #updateCommands() {
     this.#commands = [];
     this.#pickCommands = [];
-    for (const { shown, pickable, command } of this.#componentOverlays) {
+    for (const overlay of this.#componentOverlays) {
+      const { shown, pickable, command } = overlay;
+      const drawn = shown || (this.#wireframe && overlay === this.#edgeOverlay);
+
       // An instance count of zero would draw the command once, not instanced.
-      if (!shown || !defined(command) || command.instanceCount === 0) {
+      if (!drawn || !defined(command) || command.instanceCount === 0) {
         continue;
       }
 
@@ -660,6 +715,44 @@ class OverlayRenderer {
         this.#pickCommands.push(command);
       }
     }
+  }
+
+  /**
+   * While outlined, faces also mark their pixels in the stencil, so the
+   * outline isn't drawn over them. In wireframe, faces don't write depth,
+   * except in the pick pass, so they still hide what's behind them from picking.
+   *
+   * @returns {RenderState} The face command's render state for the current pass.
+   * @ignore
+   */
+  #getFaceRenderState() {
+    const wireframe = this.#wireframe && !this.#isPickPass;
+    if (this.outlined) {
+      return wireframe
+        ? this.#wireframeStencilFaceRenderState
+        : this.#stencilFaceRenderState;
+    }
+
+    return wireframe
+      ? this.#wireframeFaceRenderState
+      : this.#faceOverlay.renderState;
+  }
+
+  /**
+   * @param {Color} color A face color from the style.
+   * @param {number} wireframeOpacity The style's wireframe face opacity.
+   * @param {Color} result Receives the scaled color in wireframe.
+   * @returns {Color} The color, or in wireframe outside the pick pass, the result with its alpha scaled by the opacity.
+   * @ignore
+   */
+  #getFaceColor(color, wireframeOpacity, result) {
+    if (!this.#wireframe || this.#isPickPass) {
+      return color;
+    }
+
+    Color.clone(color, result);
+    result.alpha *= wireframeOpacity;
+    return result;
   }
 
   /**
