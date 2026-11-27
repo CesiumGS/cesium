@@ -320,7 +320,7 @@ I3SGeometry.prototype._generateGltf = function (
       materialIndex < this._layer._data.materialDefinitions.length
     ) {
       materialDefinition = this._layer._data.materialDefinitions[materialIndex];
-      gltfMaterial = materialDefinition;
+      gltfMaterial = clone(materialDefinition, true);
 
       if (
         defined(gltfMaterial.pbrMetallicRoughness) &&
