@@ -14,6 +14,7 @@ const storage = typeof sessionStorage !== "undefined" ? sessionStorage : null;
 
 function serializeSettings(value: CopilotSettings): string {
   return JSON.stringify({
+    openaiReasoningEffort: value.openaiReasoningEffort,
     extendedThinking:
       value.extendedThinking ?? initialCopilotSettings.extendedThinking,
     customPromptAddendum:
@@ -26,6 +27,9 @@ function serializeSettings(value: CopilotSettings): string {
 function deserializeSettings(raw: string): CopilotSettings {
   const parsed = JSON.parse(raw);
   return {
+    openaiReasoningEffort:
+      parsed.openaiReasoningEffort ??
+      initialCopilotSettings.openaiReasoningEffort,
     extendedThinking: {
       ...initialCopilotSettings.extendedThinking,
       ...parsed.extendedThinking,

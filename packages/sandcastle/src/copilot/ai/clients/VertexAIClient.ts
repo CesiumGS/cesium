@@ -80,8 +80,12 @@ export class VertexAIClient implements AIClient {
     };
 
     const provider = AIClientFactory.getProviderForModel(model);
+    if (provider === "openai") {
+      throw new Error("OpenAI models require a direct OpenAI API key.");
+    }
     this.publisher = provider === "gemini" ? "google" : "anthropic";
-    this.vertexModelId = VERTEX_MODEL_IDS[model];
+    this.vertexModelId =
+      VERTEX_MODEL_IDS[model as keyof typeof VERTEX_MODEL_IDS];
   }
 
   async *generateWithContext(

@@ -186,6 +186,9 @@ export function useToolChainExecution({
       tools?: ToolDefinition[],
       abortSignal?: AbortSignal,
     ) => {
+      const isOpenAIModel =
+        AIClientFactory.getProviderForModel(selectedModel as AIModel) ===
+        "openai";
       const isGeminiModel =
         AIClientFactory.getProviderForModel(selectedModel as AIModel) ===
         "gemini";
@@ -294,6 +297,13 @@ export function useToolChainExecution({
                   ],
                 });
               }
+            }
+            if (rchunk.type === "openai_output") {
+              ensureContMsg({});
+              updateMessage(contMsgId!, { openAIOutput: rchunk.output });
+            }
+            if (rchunk.type === "usage" && contMsgId) {
+              updateMessage(contMsgId, { thoughtTokens: rchunk.thoughtTokens });
             }
             if (rchunk.type === "error") {
               if (rchunk.error === "Request stopped by user") {
@@ -441,7 +451,7 @@ export function useToolChainExecution({
               ],
             },
           ];
-        } else {
+        } else if (!isOpenAIModel) {
           historyBeforeToolResult = [
             ...historyBeforeToolResult,
             buildToolResultMessage(currentCall, currentResult),

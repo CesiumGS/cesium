@@ -16,6 +16,8 @@ jobs:
       - uses: ./.github/actions/install-dependencies
       - name: lint *.js
         run: npm run eslint
+      - name: Copilot tests
+        run: npm run test-copilot
       - name: lint *.md
         run: npm run markdownlint
       - name: format code
