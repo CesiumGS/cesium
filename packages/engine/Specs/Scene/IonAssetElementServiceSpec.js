@@ -489,6 +489,99 @@ describe("Scene/IonAssetElementService", function () {
     });
   });
 
+  it("listProperties requests and adapts a page", async function () {
+    const getFetchedResource = mockFetchJson({
+      items: [{ propertyKey: "Height", type: "number", ignored: true }],
+      total: 1,
+      continuationToken: "next",
+    });
+
+    const result = await service.listProperties({
+      top: 10,
+      continuationToken: "current",
+    });
+
+    const resource = getFetchedResource();
+    expect(resource.getUrlComponent(false)).toBe(
+      `https://example.com/v1/assets/${assetId}/elements/properties`,
+    );
+    expect(resource.queryParameters).toEqual({
+      top: 10,
+      continuationToken: "current",
+    });
+    expect(result).toEqual({
+      items: [{ propertyKey: "Height", type: "number" }],
+      total: 1,
+      continuationToken: "next",
+    });
+  });
+
+  it("listPropertyValues requests and adapts a page", async function () {
+    const getFetchedResource = mockFetchJson({
+      items: [
+        {
+          value: 2.5,
+          displayValue: "2.5 m",
+          units: "Units:M",
+          type: "number",
+          ignored: true,
+        },
+      ],
+      continuationToken: "next",
+    });
+
+    const result = await service.listPropertyValues({
+      propertyKey: "Dimensions.Height",
+      type: "number",
+      top: 5,
+      continuationToken: "current",
+    });
+
+    const resource = getFetchedResource();
+    expect(resource.getUrlComponent(false)).toBe(
+      `https://example.com/v1/assets/${assetId}/elements/properties/values`,
+    );
+    expect(resource.queryParameters).toEqual({
+      propertyKey: "Dimensions.Height",
+      type: "number",
+      top: 5,
+      continuationToken: "current",
+    });
+    expect(result).toEqual({
+      items: [
+        {
+          value: 2.5,
+          displayValue: "2.5 m",
+          units: "Units:M",
+          type: "number",
+        },
+      ],
+      continuationToken: "next",
+    });
+  });
+
+  it("listPropertyValues converts null units and continuationToken to undefined", async function () {
+    mockFetchJson({
+      items: [
+        {
+          value: "Wall",
+          displayValue: "Wall",
+          units: null,
+          type: "string",
+        },
+      ],
+      continuationToken: null,
+    });
+
+    const result = await service.listPropertyValues({
+      propertyKey: "Category.Name",
+      type: "string",
+    });
+
+    expect(result.items[0].units).toBeUndefined();
+    expect(result.continuationToken).toBeUndefined();
+  });
+
   it("propagates request errors", async function () {
     const error = new RequestErrorEvent(404, "Not found");
     spyOn(Resource.prototype, "fetchJson").and.rejectWith(error);

@@ -126,6 +126,27 @@ class ElementService {
   async getElementTreeParents(elementId) {
     DeveloperError.throwInstantiationError();
   }
+
+  /**
+   * Retrieves a page of the properties that exist across all elements.
+   *
+   * @param {object} [options] Provider-specific pagination options.
+   * @returns {Promise<object>} A promise that resolves to a page of properties.
+   */
+  async listProperties(options) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Retrieves a page of the distinct values of an element property across
+   * all elements.
+   *
+   * @param {object} options Provider-specific query options.
+   * @returns {Promise<object>} A promise that resolves to a page of property values.
+   */
+  async listPropertyValues(options) {
+    DeveloperError.throwInstantiationError();
+  }
 }
 
 export default ElementService;

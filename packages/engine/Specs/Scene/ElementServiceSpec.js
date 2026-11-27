@@ -36,4 +36,16 @@ describe("Scene/ElementService", function () {
       service.getElementTreeParents("1"),
     ).toBeRejectedWithDeveloperError();
   });
+
+  it("listProperties must be implemented by a subclass", async function () {
+    await expectAsync(
+      service.listProperties(),
+    ).toBeRejectedWithDeveloperError();
+  });
+
+  it("listPropertyValues must be implemented by a subclass", async function () {
+    await expectAsync(
+      service.listPropertyValues({}),
+    ).toBeRejectedWithDeveloperError();
+  });
 });
