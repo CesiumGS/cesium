@@ -3,3 +3,4 @@ Specs/SpecList.js
 index.js
 index.d.ts
 Source/Shaders/**/*.js
+Source/ThirdParty/mesh-editor_bg.wasm
