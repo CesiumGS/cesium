@@ -97,6 +97,18 @@ const viewModel = {
       resource: "../../SampleData/vector/sample-us-states-v02.tileset.json",
     },
     {
+      name: "Vector (3D Tiles 2.0) - Sample Cities Spain",
+      resource: "../../SampleData/vector/sample-cities-spain-2.0.tileset.gltf",
+    },
+    {
+      name: "Vector (3D Tiles 2.0) - Sample U.S. Outline",
+      resource: "../../SampleData/vector/sample-us-outline-2.0.tileset.gltf",
+    },
+    {
+      name: "Vector (3D Tiles 2.0) - Sample U.S. States",
+      resource: "../../SampleData/vector/sample-us-states-2.0.tileset.gltf",
+    },
+    {
       name: "Vector (deprecated) - Sample Cities Spain",
       resource: "../../SampleData/vector/sample-cities-spain.tileset.json",
     },
@@ -139,9 +151,15 @@ Cesium.knockout
 
     resourceToLoad = options.resource;
     try {
-      tileset = await Cesium.Cesium3DTileset.fromUrl(resourceToLoad, {
-        enableDebugWireframe: true,
-      });
+      if (resourceToLoad.endsWith(".tileset.gltf")) {
+        tileset = await Cesium.Cesium3DTileset.fromGltf(resourceToLoad, {
+          enableDebugWireframe: true,
+        });
+      } else {
+        tileset = await Cesium.Cesium3DTileset.fromUrl(resourceToLoad, {
+          enableDebugWireframe: true,
+        });
+      }
       if (options.resource !== resourceToLoad) {
         // Another tileset was loaded. Discard the result.
         return;

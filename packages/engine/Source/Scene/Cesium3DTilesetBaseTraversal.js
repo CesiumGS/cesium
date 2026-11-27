@@ -251,9 +251,7 @@ function executeEmptyTraversal(root, frameState) {
   // through implicit or external placeholders do not block their content siblings.
   // Note: it's likely we don't need to limit this behavior to vector tilesets. However,
   // we are being cautious of breaking changes to existing tilesets.
-  const isVectorTileset = root.tileset.hasExtension(
-    "3DTILES_content_gltf_vector",
-  );
+  const isVectorTileset = root.tileset.isVectorTileset();
   let allDescendantsLoaded = true;
   const stack = emptyTraversal.stack;
   stack.push(root);

@@ -7,6 +7,28 @@ describe("constructBoundingVolumeJson", function () {
     { type: "sphere", sphere: { radius: 1.0 } },
     { type: "sphere", sphere: {} },
     { type: "capsule", capsule: {} },
+    {
+      type: "ellipsoid region",
+      extensions: {
+        "3DTILES_shape_ellipsoid_region": {
+          minimumHeight: -10.0,
+          maximumHeight: 100.0,
+          minimumLongitude: 0.1,
+          maximumLongitude: 0.2,
+          minimumLatitude: 0.3,
+          maximumLatitude: 0.4,
+        },
+      },
+    },
+    {
+      type: "ellipsoid region",
+      extensions: {
+        "3DTILES_shape_ellipsoid_region": {
+          minimumHeight: 0.0,
+          maximumHeight: 0.5,
+        },
+      },
+    },
   ];
 
   it("converts the box size to half axes centered at the origin", function () {
@@ -95,7 +117,29 @@ describe("constructBoundingVolumeJson", function () {
     expect(result.sphere).toEqual([0, 0, 0, 1]);
   });
 
-  it("throws for shapes other than box and sphere", function () {
+  it("converts an ellipsoid region to a region", function () {
+    const result = constructBoundingVolumeJson({ shape: 4 }, shapes);
+    expect(result).toEqual({
+      region: [0.1, 0.3, 0.2, 0.4, -10.0, 100.0],
+    });
+  });
+
+  it("uses default longitude and latitude bounds for an ellipsoid region", function () {
+    const result = constructBoundingVolumeJson({ shape: 5 }, shapes);
+    expect(result).toEqual({
+      region: [-Math.PI, -Math.PI / 2.0, Math.PI, Math.PI / 2.0, 0.0, 0.5],
+    });
+  });
+
+  it("ignores the transform for ellipsoid regions", function () {
+    const result = constructBoundingVolumeJson(
+      { shape: 4, translation: [10, 20, 30], scale: [2, 2, 2] },
+      shapes,
+    );
+    expect(result.region).toEqual([0.1, 0.3, 0.2, 0.4, -10.0, 100.0]);
+  });
+
+  it("throws for unsupported shapes", function () {
     expect(function () {
       constructBoundingVolumeJson({ shape: 3 }, shapes);
     }).toThrowError(DeveloperError);
