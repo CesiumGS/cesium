@@ -417,6 +417,80 @@ describe(
         expect(destArray).toEqual(typedArray);
       });
 
+      [Uint8Array, Uint16Array, Uint32Array, Float32Array].forEach(
+        function (ArrayType) {
+          it(`getBufferData reads ${ArrayType.name} element ranges`, function () {
+            if (!context.webgl2 || window.webglStub) {
+              return;
+            }
+            buffer = Buffer.createVertexBuffer({
+              context: context,
+              typedArray: new ArrayType([10, 20, 30, 40]),
+              usage: BufferUsage.STATIC_DRAW,
+            });
+            const result = new ArrayType(4);
+            const sourceOffset = ArrayType.BYTES_PER_ELEMENT;
+            buffer.getBufferData(result, sourceOffset, 1);
+            expect(Array.from(result)).toEqual([0, 20, 30, 40]);
+
+            result.fill(0);
+            buffer.getBufferData(result, sourceOffset, 1, 2);
+            expect(Array.from(result)).toEqual([0, 20, 30, 0]);
+
+            result.fill(0);
+            buffer.getBufferData(result, sourceOffset, 1, 0);
+            expect(Array.from(result)).toEqual([0, 20, 30, 40]);
+          });
+
+          it(`getBufferData validates ${ArrayType.name} element ranges`, function () {
+            if (!context.webgl2) {
+              return;
+            }
+            buffer = Buffer.createVertexBuffer({
+              context: context,
+              typedArray: new ArrayType(4),
+              usage: BufferUsage.STATIC_DRAW,
+            });
+            const result = new ArrayType(4);
+            expect(function () {
+              buffer.getBufferData(result, ArrayType.BYTES_PER_ELEMENT, 0, 4);
+            }).toThrowDeveloperError();
+            expect(function () {
+              buffer.getBufferData(result, 0, 5);
+            }).toThrowDeveloperError();
+            expect(function () {
+              buffer.getBufferData(result, 0, 2, 3);
+            }).toThrowDeveloperError();
+          });
+        },
+      );
+
+      it("getBufferData reads DataView byte ranges", function () {
+        if (!context.webgl2 || window.webglStub) {
+          return;
+        }
+        buffer = Buffer.createVertexBuffer({
+          context: context,
+          typedArray: new Uint8Array([10, 20, 30, 40]),
+          usage: BufferUsage.STATIC_DRAW,
+        });
+        const result = new DataView(new ArrayBuffer(4));
+        buffer.getBufferData(result, 1, 1);
+        expect(Array.from(new Uint8Array(result.buffer))).toEqual([
+          0, 20, 30, 40,
+        ]);
+        new Uint8Array(result.buffer).fill(0);
+        buffer.getBufferData(result, 1, 1, 2);
+        expect(Array.from(new Uint8Array(result.buffer))).toEqual([
+          0, 20, 30, 0,
+        ]);
+        new Uint8Array(result.buffer).fill(0);
+        buffer.getBufferData(result, 1, 1, 0);
+        expect(Array.from(new Uint8Array(result.buffer))).toEqual([
+          0, 20, 30, 40,
+        ]);
+      });
+
       it(`copyFromBuffer throws without WebGL 2`, function () {
         if (context.webgl2) {
           return;

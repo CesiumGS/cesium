@@ -386,27 +386,11 @@ Buffer.prototype.getBufferData = function (
     throw new DeveloperError("arrayView is required.");
   }
 
-  let copyLength;
-  let elementSize;
-  let arrayLength = arrayView.byteLength;
-  if (!defined(length)) {
-    if (defined(arrayLength)) {
-      copyLength = arrayLength - destinationOffset;
-      elementSize = 1;
-    } else {
-      arrayLength = arrayView.length;
-      copyLength = arrayLength - destinationOffset;
-      elementSize = arrayView.BYTES_PER_ELEMENT;
-    }
-  } else {
-    copyLength = length;
-    if (defined(arrayLength)) {
-      elementSize = 1;
-    } else {
-      arrayLength = arrayView.length;
-      elementSize = arrayView.BYTES_PER_ELEMENT;
-    }
-  }
+  // WebGL uses elements for typed-array ranges, and bytes for DataView ranges.
+  const elementSize = arrayView.BYTES_PER_ELEMENT ?? 1;
+  const arrayLength = arrayView.byteLength / elementSize;
+  const copyLength =
+    !defined(length) || length === 0 ? arrayLength - destinationOffset : length;
 
   if (destinationOffset < 0 || destinationOffset > arrayLength) {
     throw new DeveloperError(
