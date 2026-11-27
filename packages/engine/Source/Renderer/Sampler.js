@@ -4,7 +4,8 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
 import TextureWrap from "./TextureWrap.js";
 
 /**
- * @private
+ * @constructor
+ * @internal
  */
 function Sampler(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

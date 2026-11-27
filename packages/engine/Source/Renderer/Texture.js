@@ -34,7 +34,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @property {boolean} [preMultiplyAlpha] If true, the alpha channel will be multiplied into the other channels.
  * @property {string} [id] A unique identifier for the texture. If this is not given, then a GUID will be created.
  *
- * @private
+ * @internal
  */
 
 /**
@@ -45,7 +45,7 @@ import TextureMinificationFilter from "./TextureMinificationFilter.js";
  * @constructor
  *
  * @param {Texture.ConstructorOptions} options
- * @private
+ * @internal
  */
 function Texture(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

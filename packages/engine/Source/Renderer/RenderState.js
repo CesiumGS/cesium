@@ -88,7 +88,8 @@ function validateStencilOperation(stencilOperation) {
 }
 
 /**
- * @private
+ * @constructor
+ * @internal
  */
 function RenderState(renderState) {
   const rs = renderState ?? Frozen.EMPTY_OBJECT;
@@ -455,10 +456,12 @@ let renderStateCache = {};
  *
  * const rs = RenderState.fromCache(defaults);
  *
+ * @returns {RenderState} The cached render state.
+ *
  * @see DrawCommand
  * @see ClearCommand
  *
- * @ignore
+ * @internal
  */
 RenderState.fromCache = function (renderState) {
   const partialKey = JSON.stringify(renderState);
@@ -498,7 +501,11 @@ RenderState.fromCache = function (renderState) {
 };
 
 /**
- * @ignore
+ * Releases a render state from {@link RenderState.fromCache}.
+ *
+ * @param {object} [renderState] The states passed to {@link RenderState.fromCache}.
+ *
+ * @internal
  */
 RenderState.removeFromCache = function (renderState) {
   const states = new RenderState(renderState);
