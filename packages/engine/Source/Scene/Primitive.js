@@ -14,6 +14,7 @@ import {
   GeometryAttributes,
   GeometryOffsetAttribute,
   Intersect,
+  Matrix3,
   Matrix4,
   Plane,
   RuntimeError,
@@ -324,6 +325,13 @@ function Primitive(options) {
   this._spDepthFail = undefined;
   this._frontFaceDepthFailRS = undefined;
   this._backFaceDepthFailRS = undefined;
+
+  this._frontFaceMirroredRS = undefined;
+  this._backFaceMirroredRS = undefined;
+  this._frontFaceDepthFailMirroredRS = undefined;
+  this._backFaceDepthFailMirroredRS = undefined;
+  this._renderStateMirror = undefined;
+  this._useMirroredRenderState = false;
 
   this._pickIds = [];
 
@@ -1289,6 +1297,7 @@ function loadAsynchronous(primitive, frameState) {
           result.modelMatrix,
           primitive.modelMatrix,
         );
+        primitive._useMirroredRenderState = false;
         primitive._pickOffsets = result.pickOffsets;
         primitive._offsetInstanceExtend = result.offsetInstanceExtend;
         primitive._instanceBoundingSpheres = result.boundingSpheres;
@@ -1360,6 +1369,7 @@ function loadSynchronous(primitive, frameState) {
     result.modelMatrix,
     primitive.modelMatrix,
   );
+  primitive._useMirroredRenderState = false;
   primitive._pickOffsets = result.pickOffsets;
   primitive._offsetInstanceExtend = result.offsetInstanceExtend;
   primitive._instanceBoundingSpheres = result.boundingSpheres;
@@ -1681,9 +1691,40 @@ function createVertexArray(primitive, frameState) {
   setReady(primitive, frameState, PrimitiveState.COMPLETE, undefined);
 }
 
+function createMirroredRenderState(renderState) {
+  const mirrored = clone(renderState, false);
+  if (defined(mirrored.cull)) {
+    let face = mirrored.cull.face;
+    if (face === CullFace.BACK) {
+      face = CullFace.FRONT;
+    } else if (face === CullFace.FRONT) {
+      face = CullFace.BACK;
+    }
+    // FRONT_AND_BACK is symmetric, so it stays as-is.
+    mirrored.cull = {
+      enabled: mirrored.cull.enabled,
+      face: face,
+    };
+  }
+  return RenderState.fromCache(mirrored);
+}
+
+function cacheRenderStatePair(renderState) {
+  return {
+    renderState: RenderState.fromCache(renderState),
+    mirroredRenderState: createMirroredRenderState(renderState),
+  };
+}
+
 function createRenderStates(primitive, context, appearance, twoPasses) {
   let renderState = appearance.getRenderState();
   let rs;
+  let pair;
+
+  primitive._frontFaceDepthFailRS = undefined;
+  primitive._backFaceDepthFailRS = undefined;
+  primitive._frontFaceDepthFailMirroredRS = undefined;
+  primitive._backFaceDepthFailMirroredRS = undefined;
 
   if (twoPasses) {
     rs = clone(renderState, false);
@@ -1691,13 +1732,20 @@ function createRenderStates(primitive, context, appearance, twoPasses) {
       enabled: true,
       face: CullFace.BACK,
     };
-    primitive._frontFaceRS = RenderState.fromCache(rs);
+    pair = cacheRenderStatePair(rs);
+    primitive._frontFaceRS = pair.renderState;
+    primitive._frontFaceMirroredRS = pair.mirroredRenderState;
 
     rs.cull.face = CullFace.FRONT;
-    primitive._backFaceRS = RenderState.fromCache(rs);
+    pair = cacheRenderStatePair(rs);
+    primitive._backFaceRS = pair.renderState;
+    primitive._backFaceMirroredRS = pair.mirroredRenderState;
   } else {
-    primitive._frontFaceRS = RenderState.fromCache(renderState);
+    pair = cacheRenderStatePair(renderState);
+    primitive._frontFaceRS = pair.renderState;
+    primitive._frontFaceMirroredRS = pair.mirroredRenderState;
     primitive._backFaceRS = primitive._frontFaceRS;
+    primitive._backFaceMirroredRS = primitive._frontFaceMirroredRS;
   }
 
   rs = clone(renderState, false);
@@ -1714,15 +1762,37 @@ function createRenderStates(primitive, context, appearance, twoPasses) {
         enabled: true,
         face: CullFace.BACK,
       };
-      primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+      pair = cacheRenderStatePair(rs);
+      primitive._frontFaceDepthFailRS = pair.renderState;
+      primitive._frontFaceDepthFailMirroredRS = pair.mirroredRenderState;
 
       rs.cull.face = CullFace.FRONT;
-      primitive._backFaceDepthFailRS = RenderState.fromCache(rs);
+      pair = cacheRenderStatePair(rs);
+      primitive._backFaceDepthFailRS = pair.renderState;
+      primitive._backFaceDepthFailMirroredRS = pair.mirroredRenderState;
     } else {
-      primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+      pair = cacheRenderStatePair(rs);
+      primitive._frontFaceDepthFailRS = pair.renderState;
+      primitive._frontFaceDepthFailMirroredRS = pair.mirroredRenderState;
       primitive._backFaceDepthFailRS = primitive._frontFaceRS;
+      primitive._backFaceDepthFailMirroredRS = primitive._frontFaceMirroredRS;
     }
   }
+
+  const mirror = new Map();
+  const renderStates = [
+    [primitive._frontFaceRS, primitive._frontFaceMirroredRS],
+    [primitive._backFaceRS, primitive._backFaceMirroredRS],
+    [primitive._frontFaceDepthFailRS, primitive._frontFaceDepthFailMirroredRS],
+    [primitive._backFaceDepthFailRS, primitive._backFaceDepthFailMirroredRS],
+  ];
+  for (const [normal, mirrored] of renderStates) {
+    if (defined(normal) && defined(mirrored) && normal !== mirrored) {
+      mirror.set(normal, mirrored);
+      mirror.set(mirrored, normal);
+    }
+  }
+  primitive._renderStateMirror = mirror;
 }
 
 function createShaderProgram(primitive, frameState, appearance) {
@@ -1788,6 +1858,7 @@ function createShaderProgram(primitive, frameState, appearance) {
 }
 
 const modifiedModelViewScratch = new Matrix4();
+const scratchMatrix3 = new Matrix3();
 const rtcScratch = new Cartesian3();
 
 function getUniforms(primitive, appearance, material, frameState) {
@@ -1942,6 +2013,8 @@ function createCommands(
 
     ++vaIndex;
   }
+
+  primitive._useMirroredRenderState = false;
 }
 
 Primitive._updateBoundingVolumes = function (
@@ -1998,6 +2071,16 @@ Primitive._updateBoundingVolumes = function (
   }
 };
 
+function usesMirroredRenderState(modelMatrix) {
+  // The instance matrices are either already baked into the vertices or, on
+  // the un-baked path, folded into this matrix. Either way this is the
+  // transform that is applied to the draw command, so a negative determinant
+  // mirrors the geometry that reaches the rasterizer and flips its front
+  // faces. A singular matrix has no orientation, so it is never mirrored.
+  Matrix4.getMatrix3(modelMatrix, scratchMatrix3);
+  return Matrix3.determinant(scratchMatrix3) < 0.0;
+}
+
 function updateAndQueueCommands(
   primitive,
   frameState,
@@ -2020,6 +2103,25 @@ function updateAndQueueCommands(
   //>>includeEnd('debug');
 
   Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
+
+  const mirrored = usesMirroredRenderState(modelMatrix);
+  if (mirrored !== primitive._useMirroredRenderState) {
+    const mirror = primitive._renderStateMirror;
+    if (defined(mirror)) {
+      for (let i = 0; i < colorCommands.length; ++i) {
+        const command = colorCommands[i];
+        const mirroredRenderState = mirror.get(command.renderState);
+        if (defined(mirroredRenderState)) {
+          command.renderState = mirroredRenderState;
+          // Derived commands (depth, picking, OIT, ...) cache their render
+          // state by shader program, so they have to be recreated when the
+          // cull face changes.
+          command.derivedCommands = {};
+        }
+      }
+    }
+    primitive._useMirroredRenderState = mirrored;
+  }
 
   let boundingSpheres;
   if (frameState.mode === SceneMode.SCENE3D) {

@@ -25,6 +25,7 @@ import {
 } from "@cesium/core";
 import {
   Camera,
+  CullFace,
   MaterialAppearance,
   PerInstanceColorAppearance,
   Primitive,
@@ -1056,6 +1057,184 @@ describe(
       frameState.commandList.length = 0;
       primitive.update(frameState);
       expect(frameState.commandList[0].cull).toEqual(false);
+    });
+
+    it("updates the cull face when the primitive model matrix determinant sign changes", function () {
+      frameState.scene3DOnly = false;
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance1,
+        appearance: new PerInstanceColorAppearance({
+          closed: true,
+          translucent: false,
+        }),
+        modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+        asynchronous: false,
+      });
+
+      const commands = frameState.commandList;
+      commands.length = 0;
+      primitive.update(frameState);
+      expect(commands.length).toEqual(1);
+      // The instance matrices are not mirrored, so the winding order is not
+      // changed; the mirrored primitive matrix flips the cull face instead.
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.FRONT);
+
+      primitive.modelMatrix = Matrix4.IDENTITY;
+      commands.length = 0;
+      primitive.update(frameState);
+      expect(commands.length).toEqual(1);
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.BACK);
+    });
+
+    it("uses a front cull face for a mirrored combined matrix on the un-baked path", function () {
+      frameState.scene3DOnly = true;
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance1,
+        appearance: new PerInstanceColorAppearance({
+          closed: true,
+          translucent: false,
+        }),
+        modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+        asynchronous: false,
+      });
+
+      const commands = frameState.commandList;
+      commands.length = 0;
+      primitive.update(frameState);
+      frameState.scene3DOnly = false;
+
+      expect(commands.length).toEqual(1);
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.FRONT);
+    });
+
+    it("applies the cull face for a mirrored model matrix after the asynchronous round trip", function () {
+      scene.frameState.scene3DOnly = false;
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance1,
+        appearance: new PerInstanceColorAppearance({
+          closed: true,
+          translucent: false,
+        }),
+        modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+        asynchronous: true,
+      });
+
+      frameState.afterRender.length = 0;
+      scene.primitives.add(primitive);
+
+      return pollToPromise(function () {
+        if (frameState.afterRender.length > 0) {
+          frameState.afterRender[0]();
+        }
+        scene.render();
+        return primitive.ready;
+      }).then(function () {
+        frameState.commandList.length = 0;
+        primitive.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+        expect(frameState.commandList[0].renderState.cull.face).toEqual(
+          CullFace.FRONT,
+        );
+      });
+    });
+
+    it("preserves FRONT_AND_BACK culling when the model matrix changes sign", function () {
+      frameState.scene3DOnly = false;
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance1,
+        appearance: new PerInstanceColorAppearance({
+          renderState: {
+            cull: {
+              enabled: true,
+              face: CullFace.FRONT_AND_BACK,
+            },
+          },
+        }),
+        asynchronous: false,
+      });
+
+      const commands = frameState.commandList;
+      commands.length = 0;
+      primitive.update(frameState);
+      expect(commands.length).toEqual(1);
+      expect(commands[0].renderState.cull.face).toEqual(
+        CullFace.FRONT_AND_BACK,
+      );
+
+      primitive.modelMatrix = Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0));
+      commands.length = 0;
+      primitive.update(frameState);
+      expect(commands.length).toEqual(1);
+      expect(commands[0].renderState.cull.face).toEqual(
+        CullFace.FRONT_AND_BACK,
+      );
+    });
+
+    it("does not flip the cull face for a singular baked model matrix", function () {
+      frameState.scene3DOnly = false;
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance1,
+        appearance: new PerInstanceColorAppearance({
+          closed: true,
+          translucent: false,
+        }),
+        modelMatrix: Matrix4.fromUniformScale(0.0),
+        asynchronous: false,
+      });
+
+      const commands = frameState.commandList;
+      commands.length = 0;
+      primitive.update(frameState);
+      expect(commands.length).toEqual(1);
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.BACK);
+
+      primitive.modelMatrix = Matrix4.IDENTITY;
+      commands.length = 0;
+      primitive.update(frameState);
+      expect(commands.length).toEqual(1);
+      expect(commands[0].renderState.cull.face).toEqual(CullFace.BACK);
+    });
+
+    it("recreates derived commands when the cull face changes", function () {
+      frameState.scene3DOnly = false;
+
+      primitive = new Primitive({
+        geometryInstances: rectangleInstance1,
+        appearance: new PerInstanceColorAppearance({
+          closed: true,
+          translucent: false,
+        }),
+        modelMatrix: Matrix4.fromScale(new Cartesian3(-1.0, 1.0, 1.0)),
+        asynchronous: false,
+      });
+
+      frameState.commandList.length = 0;
+      primitive.update(frameState);
+
+      const command = primitive._colorCommands[0];
+      scene.updateDerivedCommands(command);
+      expect(command.derivedCommands.depth).toBeDefined();
+      expect(
+        command.derivedCommands.depth.depthOnlyCommand.renderState.cull.face,
+      ).toEqual(CullFace.FRONT);
+
+      primitive.modelMatrix = Matrix4.IDENTITY;
+      frameState.commandList.length = 0;
+      primitive.update(frameState);
+
+      // The swap clears the derived command cache so the depth, picking and
+      // OIT variants are rebuilt with the new cull face.
+      expect(command.derivedCommands.depth).toBeUndefined();
+
+      scene.updateDerivedCommands(command);
+      expect(
+        command.derivedCommands.depth.depthOnlyCommand.renderState.cull.face,
+      ).toEqual(CullFace.BACK);
     });
 
     it("update throws when geometry primitive types are different", function () {
