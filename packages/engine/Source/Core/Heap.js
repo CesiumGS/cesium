@@ -218,7 +218,22 @@ Heap.prototype.pop = function (index) {
   const array = this._array;
   const root = array[index];
   swap(array, index, --this._length);
-  this.heapify(index);
+  if (index < this._length) {
+    const comparator = this._comparator;
+    const originalIndex = index;
+    // Removing a non-root node can move a higher-priority element below its parent.
+    while (index > 0) {
+      const parent = Math.floor((index - 1) / 2);
+      if (comparator(array[index], array[parent]) >= 0) {
+        break;
+      }
+      swap(array, index, parent);
+      index = parent;
+    }
+    if (index === originalIndex) {
+      this.heapify(index);
+    }
+  }
   array[this._length] = undefined; // Remove trailing reference
   return root;
 };
