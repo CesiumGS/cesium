@@ -37,7 +37,6 @@ describe("Scene/ShadowVolumeAppearance", function () {
     ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
       largeTestRectangle,
       [0, 0, 0, 1, 1, 0],
-      unitSphereEllipsoid,
       projection,
     );
   const smallRectangleAttributes =
@@ -143,6 +142,35 @@ describe("Scene/ShadowVolumeAppearance", function () {
     expect(longitudeRotation.normalize).toEqual(false);
     value = longitudeRotation.value;
     expect(value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON4);
+  });
+
+  it("computes Spherical extents from geodetic coordinates", function () {
+    const rectangle = Rectangle.fromDegrees(-86.6, 23.7, -70.2, 46.2);
+    const value =
+      ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
+        rectangle,
+        [0, 0, 0, 1, 1, 0],
+        projection,
+      ).sphericalExtents.value;
+
+    // Extents are the rectangle itself, padded by EPSILON5 on each side
+    const padding = CesiumMath.EPSILON5;
+    expect(value[0]).toEqualEpsilon(
+      rectangle.south - padding,
+      CesiumMath.EPSILON10,
+    );
+    expect(value[1]).toEqualEpsilon(
+      rectangle.west - padding,
+      CesiumMath.EPSILON10,
+    );
+    expect(value[2]).toEqualEpsilon(
+      1.0 / (rectangle.height + 2.0 * padding),
+      CesiumMath.EPSILON10,
+    );
+    expect(value[3]).toEqualEpsilon(
+      1.0 / (rectangle.width + 2.0 * padding),
+      CesiumMath.EPSILON10,
+    );
   });
 
   function checkGeometryInstanceAttributeVec3(attribute) {

@@ -52,6 +52,7 @@
 - Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
+- Fixed textures on large ground primitives, such as KML `GroundOverlay`s, being misaligned in 3D by up to tens of kilometers. Texture coordinates now use geodetic latitude and longitude, matching 2D and Google Earth. [#12943](https://github.com/CesiumGS/cesium/issues/12943)
 
 ## 1.147 - 2026-11-02
 
