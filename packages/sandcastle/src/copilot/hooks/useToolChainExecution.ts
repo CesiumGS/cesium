@@ -107,7 +107,11 @@ export function useToolChainExecution({
   }, []);
 
   const executeToolCall = useCallback(
-    async (toolCall: ToolCall): Promise<ToolResult> => {
+    async (
+      toolCall: ToolCall,
+      abortSignal?: AbortSignal,
+    ): Promise<ToolResult> => {
+      abortSignal?.throwIfAborted();
       const registry = registryRef.current;
       if (toolCall.name !== "apply_diff" || !registry) {
         return {
@@ -118,6 +122,9 @@ export function useToolChainExecution({
       }
 
       const result = await registry.executeTool(toolCall);
+      // Tool execution can finish after reset even when its stream was aborted.
+      // Reject the result before it can update the editor or working snapshot.
+      abortSignal?.throwIfAborted();
 
       // Update workingCodeRef so subsequent chained calls see the modified code.
       if (result.status === "success" && result.output) {
@@ -231,6 +238,9 @@ export function useToolChainExecution({
       let currentResult = initialResult;
 
       for (let i = 0; i < MAX_CHAINED_TOOL_CALLS; i++) {
+        if (abortSignal?.aborted) {
+          return;
+        }
         let contText = "";
         let contReasoning = "";
         let streamError = "";
@@ -263,6 +273,9 @@ export function useToolChainExecution({
             tools,
             abortSignal,
           )) {
+            if (abortSignal?.aborted) {
+              return;
+            }
             if (rchunk.type === "reasoning") {
               contReasoning += rchunk.reasoning;
               ensureContMsg({ reasoning: contReasoning });
@@ -341,6 +354,9 @@ export function useToolChainExecution({
             });
           }
         } catch (error) {
+          if (abortSignal?.aborted) {
+            return;
+          }
           console.warn(
             "[useToolChainExecution] Error in tool chain continuation:",
             error,
@@ -366,6 +382,10 @@ export function useToolChainExecution({
               error: true,
             });
           }
+          return;
+        }
+
+        if (abortSignal?.aborted) {
           return;
         }
 
@@ -397,11 +417,14 @@ export function useToolChainExecution({
 
         let nextResult: ToolResult;
         try {
-          nextResult = await executeToolCall(nextToolCall);
+          nextResult = await executeToolCall(nextToolCall, abortSignal);
           if (contMsgId) {
             updateToolCallResult(contMsgId, nextToolCall.id, nextResult);
           }
         } catch (error) {
+          if (abortSignal?.aborted) {
+            return;
+          }
           nextResult = {
             tool_call_id: nextToolCall.id,
             status: "error",

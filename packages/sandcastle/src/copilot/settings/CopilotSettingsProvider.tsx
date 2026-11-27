@@ -86,12 +86,27 @@ export function CopilotSettingsProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const resetSettings = useCallback(() => {
+    // Remove the stored value synchronously. The persistence effect can then
+    // save defaults rather than retaining the previous custom prompt.
+    try {
+      storage?.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn(
+        "Failed to clear Copilot settings from sessionStorage:",
+        error,
+      );
+    }
+    setSettings(initialCopilotSettings);
+  }, []);
+
   const contextValue = useMemo(
     () => ({
       settings,
       updateSettings: mergeSettings,
+      resetSettings,
     }),
-    [settings, mergeSettings],
+    [settings, mergeSettings, resetSettings],
   );
 
   return (

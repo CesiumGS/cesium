@@ -176,6 +176,7 @@ export function ChatPanel({
   const shouldStickToBottomRef = useRef(true);
   const isAtBottomRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const resetVersionRef = useRef(0);
   const wasUserStoppedRef = useRef(false);
   // Model/provider of the in-flight request, read by the tool chain when
   // copilot code is applied so the analytics event can carry them
@@ -533,6 +534,12 @@ export function ChatPanel({
           attachments,
           abortController.signal,
         )) {
+          if (abortControllerRef.current !== abortController) {
+            return;
+          }
+          if (abortController.signal.aborted) {
+            break;
+          }
           switch (chunk.type) {
             case "reasoning":
               reasoning += chunk.reasoning;
@@ -554,7 +561,11 @@ export function ChatPanel({
 
               if (chunk.toolCall.name === "apply_diff") {
                 try {
-                  const result = await executeToolCall(chunk.toolCall);
+                  const result = await executeToolCall(
+                    chunk.toolCall,
+                    abortController.signal,
+                  );
+                  abortController.signal.throwIfAborted();
 
                   setMessages((prev) =>
                     prev.map((msg) => ({
@@ -642,6 +653,9 @@ export function ChatPanel({
                     abortController.signal,
                   );
                 } catch (error) {
+                  if (abortController.signal.aborted) {
+                    break;
+                  }
                   const errorContent =
                     error instanceof Error
                       ? error.message
@@ -652,17 +666,21 @@ export function ChatPanel({
                     isStreaming: false,
                   });
                 } finally {
-                  unlockToolChain();
                   // All tool calls in this turn are done — trigger a single auto-run and
                   // collect any runtime errors so auto-fix can observe them. Defer the
                   // observe() call until the outer sendMessageWithContent's finally has
                   // cleared isLoading/isCurrentlyStreaming; otherwise the synthetic retry
                   // that observe() schedules gets dropped by the re-entry guard.
-                  if (onRunAndCollectErrors) {
-                    pendingAutoFixResultRef.current =
-                      await onRunAndCollectErrors();
-                  } else {
-                    onApplyCode(undefined, undefined, true);
+                  if (!abortController.signal.aborted) {
+                    unlockToolChain();
+                    if (onRunAndCollectErrors) {
+                      const result = await onRunAndCollectErrors();
+                      if (!abortController.signal.aborted) {
+                        pendingAutoFixResultRef.current = result;
+                      }
+                    } else {
+                      onApplyCode(undefined, undefined, true);
+                    }
                   }
                 }
               }
@@ -682,6 +700,9 @@ export function ChatPanel({
               break;
           }
 
+          if (abortControllerRef.current !== abortController) {
+            return;
+          }
           if (!batchedMessageUpdate) {
             batchedMessageUpdate = createBatchedUpdater(assistantMessageId);
           }
@@ -693,6 +714,9 @@ export function ChatPanel({
           batchedMessageUpdate(updatePayload);
         }
 
+        if (abortControllerRef.current !== abortController) {
+          return;
+        }
         cancelPendingRaf();
 
         const finalContent =
@@ -712,6 +736,9 @@ export function ChatPanel({
           error: !!streamError && !accumulatedText,
         });
       } catch (error) {
+        if (abortControllerRef.current !== abortController) {
+          return;
+        }
         if (wasUserStoppedRef.current) {
           const stoppedWithoutVisibleContent =
             !accumulatedText && !reasoning && !streamError;
@@ -737,11 +764,16 @@ export function ChatPanel({
           isStreaming: false,
         });
       } finally {
-        abortControllerRef.current = null;
-        wasUserStoppedRef.current = false;
-        cancelPendingRaf();
-        setIsLoading(false);
-        setIsCurrentlyStreaming(false);
+        // A reset or a newer request owns the UI now. An old request must not
+        // clear its controller, loading flags, or pending animation frames.
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null;
+          wasUserStoppedRef.current = false;
+          unlockToolChain();
+          cancelPendingRaf();
+          setIsLoading(false);
+          setIsCurrentlyStreaming(false);
+        }
       }
     },
     [
@@ -843,15 +875,22 @@ export function ChatPanel({
 
   const handlePasteImages = useCallback(
     async (files: File[]) => {
+      const resetVersion = resetVersionRef.current;
       try {
         const newAttachments = await Promise.all(
           files.map((file) => createImageAttachment(file)),
         );
+        if (resetVersion !== resetVersionRef.current) {
+          return;
+        }
         setPendingAttachments((currentAttachments) => [
           ...currentAttachments,
           ...newAttachments,
         ]);
       } catch (error) {
+        if (resetVersion !== resetVersionRef.current) {
+          return;
+        }
         console.error("Failed to process pasted image:", error);
         const reason = error instanceof Error ? error.message : "Unknown error";
         addMessage({
@@ -878,6 +917,32 @@ export function ChatPanel({
     abortControllerRef.current?.abort();
     autoFix.abort();
   }, [autoFix]);
+
+  const handleResetData = useCallback(() => {
+    resetVersionRef.current += 1;
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    pendingAutoFixResultRef.current = null;
+    pendingAutoFixMessageIdRef.current = null;
+    applyTrackingRef.current = null;
+    messagesRef.current = [];
+    cancelPendingRaf();
+    unlockToolChain();
+    resetChat();
+    setPendingAttachments([]);
+    setIsLoading(false);
+    setIsCurrentlyStreaming(false);
+    setHasApiKey(false);
+    setShowApiKeyDialog(false);
+    autoFix.resetTurn();
+  }, [
+    autoFix,
+    cancelPendingRaf,
+    unlockToolChain,
+    resetChat,
+    setIsLoading,
+    setIsCurrentlyStreaming,
+  ]);
 
   const handleApiKeySuccess = useCallback(() => {
     setHasApiKey(ApiKeyManager.hasAnyCredentials());
@@ -1288,7 +1353,10 @@ Add a DOM-based overlay to the #toolbar showing the current sites's name, countr
         </div>
 
         {showSettingsPanel && (
-          <SettingsPanel onClose={() => setShowSettingsPanel(false)} />
+          <SettingsPanel
+            onClose={() => setShowSettingsPanel(false)}
+            onResetData={handleResetData}
+          />
         )}
       </div>
 

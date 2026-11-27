@@ -1,18 +1,28 @@
 import { useState, useContext } from "react";
 import { Button, Text, Field, TextBox } from "@stratakit/bricks";
 import { CopilotSettingsContext } from "./CopilotSettingsContext";
+import { ApiKeyManager } from "../ai/clients/ApiKeyManager";
+import { useModel } from "../contexts/useModel";
 
-export function AdvancedSettings() {
+export function AdvancedSettings({ onResetData }: { onResetData: () => void }) {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
-  const { settings, updateSettings } = useContext(CopilotSettingsContext);
+  const { settings, updateSettings, resetSettings } = useContext(
+    CopilotSettingsContext,
+  );
+  const { resetModelSelection } = useModel();
 
   const handleResetData = () => {
     if (!showConfirmReset) {
       setShowConfirmReset(true);
       return;
     }
-    localStorage.clear();
-    window.location.reload();
+    // Stop the chat before clearing credentials. Reset in place so unsaved
+    // editor changes never need to be discarded to finish clearing Copilot.
+    onResetData();
+    ApiKeyManager.clearAllCredentials();
+    resetModelSelection();
+    resetSettings();
+    setShowConfirmReset(false);
   };
 
   return (
@@ -45,7 +55,8 @@ export function AdvancedSettings() {
       ) : (
         <div className="reset-confirmation">
           <Text variant="body-md" className="reset-warning">
-            Are you sure? This will delete all your settings and API keys.
+            Are you sure? This will delete all your Copilot settings and API
+            keys, and clear the current chat. Your code will be preserved.
           </Text>
           <div className="reset-actions">
             <Button variant="solid" onClick={handleResetData}>
