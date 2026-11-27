@@ -46,6 +46,26 @@ function isFunctionLocal(doclet) {
   return !isThisMemberAssignment(node);
 }
 
+const PRIVATE_MEMBER_TYPES = new Set([
+  "ClassPrivateProperty",
+  "ClassPrivateMethod",
+]);
+
+/**
+ * Returns true for doclets on or inside a `#private` class member, otherwise
+ * false. JSDoc can't name private members, so doclets inside them, such as
+ * type annotations on properties of `static #scratch = { ... }`, would
+ * otherwise become globals.
+ */
+function isInPrivateMember(doclet) {
+  for (let node = doclet.meta?.code?.node; node; node = node.parent) {
+    if (PRIVATE_MEMBER_TYPES.has(node.type)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 exports.handlers = {
   newDoclet: function (e) {
     const doclet = e.doclet;
@@ -53,7 +73,7 @@ exports.handlers = {
       return;
     }
 
-    if (isFunctionLocal(doclet)) {
+    if (isFunctionLocal(doclet) || isInPrivateMember(doclet)) {
       doclet.ignore = true;
       return;
     }

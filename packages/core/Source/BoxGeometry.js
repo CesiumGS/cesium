@@ -1,3 +1,5 @@
+// @ts-check
+
 import BoundingSphere from "./BoundingSphere.js";
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
@@ -12,7 +14,22 @@ import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js";
 import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 
-const diffScratch = new Cartesian3();
+/** @import AxisAlignedBoundingBox from "./AxisAlignedBoundingBox.js"; */
+
+/**
+ * @typedef {object} BoxGeometryConstructorOptions
+ * @property {Cartesian3} minimum The minimum x, y, and z coordinates of the box.
+ * @property {Cartesian3} maximum The maximum x, y, and z coordinates of the box.
+ * @property {VertexFormat} [vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+ * @property {GeometryOffsetAttribute} [offsetAttribute]
+ */
+
+/**
+ * @typedef {object} BoxGeometryFromDimensionsOptions
+ * @property {Cartesian3} dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+ * @property {VertexFormat} [vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+ * @property {GeometryOffsetAttribute} [offsetAttribute]
+ */
 
 /**
  * Describes a cube centered at the origin.
@@ -33,13 +50,12 @@ const diffScratch = new Cartesian3();
  */
 class BoxGeometry {
   /**
-   * @param {object} options Object with the following properties:
-   * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
-   * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
-   * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+   * @param {BoxGeometryConstructorOptions} [options]
    */
   constructor(options) {
-    options = options ?? Frozen.EMPTY_OBJECT;
+    options =
+      options ??
+      /** @type {BoxGeometryConstructorOptions} */ (Frozen.EMPTY_OBJECT);
 
     const min = options.minimum;
     const max = options.maximum;
@@ -69,9 +85,7 @@ class BoxGeometry {
   /**
    * Creates a cube centered at the origin given its dimensions.
    *
-   * @param {object} options Object with the following properties:
-   * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
-   * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+   * @param {BoxGeometryFromDimensionsOptions} [options]
    * @returns {BoxGeometry}
    *
    * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
@@ -87,7 +101,10 @@ class BoxGeometry {
    * @see BoxGeometry.createGeometry
    */
   static fromDimensions(options) {
-    options = options ?? Frozen.EMPTY_OBJECT;
+    options =
+      options ??
+      /** @type {BoxGeometryFromDimensionsOptions} */ (Frozen.EMPTY_OBJECT);
+
     const dimensions = options.dimensions;
 
     //>>includeStart('debug', pragmas.debug);
@@ -177,6 +194,16 @@ class BoxGeometry {
     return array;
   }
 
+  static #unpackScratch = {
+    /** @type {BoxGeometryConstructorOptions} */
+    options: {
+      minimum: new Cartesian3(),
+      maximum: new Cartesian3(),
+      vertexFormat: new VertexFormat(),
+      offsetAttribute: undefined,
+    },
+  };
+
   /**
    * Retrieves an instance from a packed array.
    *
@@ -190,18 +217,20 @@ class BoxGeometry {
     Check.defined("array", array);
     //>>includeEnd('debug');
 
+    const { options } = BoxGeometry.#unpackScratch;
+
     startingIndex = startingIndex ?? 0;
 
-    const min = Cartesian3.unpack(array, startingIndex, scratchMin);
+    const min = Cartesian3.unpack(array, startingIndex, options.minimum);
     const max = Cartesian3.unpack(
       array,
       startingIndex + Cartesian3.packedLength,
-      scratchMax,
+      options.maximum,
     );
     const vertexFormat = VertexFormat.unpack(
       array,
       startingIndex + 2 * Cartesian3.packedLength,
-      scratchVertexFormat,
+      options.vertexFormat,
     );
     const offsetAttribute =
       array[
@@ -209,9 +238,9 @@ class BoxGeometry {
       ];
 
     if (!defined(result)) {
-      scratchOptions.offsetAttribute =
+      options.offsetAttribute =
         offsetAttribute === -1 ? undefined : offsetAttribute;
-      return new BoxGeometry(scratchOptions);
+      return new BoxGeometry(options);
     }
 
     result._minimum = Cartesian3.clone(min, result._minimum);
@@ -225,6 +254,8 @@ class BoxGeometry {
 
     return result;
   }
+
+  static #createGeometryScratch = { diff: new Cartesian3() };
 
   /**
    * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
@@ -836,7 +867,11 @@ class BoxGeometry {
       indices[35] = 4;
     }
 
-    const diff = Cartesian3.subtract(max, min, diffScratch);
+    const diff = Cartesian3.subtract(
+      max,
+      min,
+      BoxGeometry.#createGeometryScratch.diff,
+    );
     const radius = Cartesian3.magnitude(diff) * 0.5;
 
     if (defined(boxGeometry._offsetAttribute)) {
@@ -860,6 +895,11 @@ class BoxGeometry {
     });
   }
 
+  static #getUnitBoxScratch = {
+    /** @type {Geometry|undefined} */
+    unitBoxGeometry: undefined,
+  };
+
   /**
    * Returns the geometric representation of a unit box, including its vertices, indices, and a bounding sphere.
    * @returns {Geometry} The computed vertices and indices.
@@ -867,15 +907,16 @@ class BoxGeometry {
    * @private
    */
   static getUnitBox() {
-    if (!defined(unitBoxGeometry)) {
-      unitBoxGeometry = BoxGeometry.createGeometry(
+    const scratch = BoxGeometry.#getUnitBoxScratch;
+    if (!defined(scratch.unitBoxGeometry)) {
+      scratch.unitBoxGeometry = BoxGeometry.createGeometry(
         BoxGeometry.fromDimensions({
           dimensions: new Cartesian3(1.0, 1.0, 1.0),
           vertexFormat: VertexFormat.POSITION_ONLY,
         }),
       );
     }
-    return unitBoxGeometry;
+    return scratch.unitBoxGeometry;
   }
 }
 
@@ -885,17 +926,5 @@ class BoxGeometry {
  */
 BoxGeometry.packedLength =
   2 * Cartesian3.packedLength + VertexFormat.packedLength + 1;
-
-const scratchMin = new Cartesian3();
-const scratchMax = new Cartesian3();
-const scratchVertexFormat = new VertexFormat();
-const scratchOptions = {
-  minimum: scratchMin,
-  maximum: scratchMax,
-  vertexFormat: scratchVertexFormat,
-  offsetAttribute: undefined,
-};
-
-let unitBoxGeometry;
 
 export default BoxGeometry;
