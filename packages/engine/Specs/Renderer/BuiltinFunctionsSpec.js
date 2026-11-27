@@ -527,6 +527,18 @@ describe(
       }).contextToRender();
     });
 
+    it("has czm_inverseGamma, which clamps negative components to zero", function () {
+      context.uniformState.gamma = 2.2;
+      const fs = `void main() {
+        vec3 color = czm_inverseGamma(vec3(-0.01, 0.0, 1.0));
+        out_FragColor = vec4(all(lessThan(abs(color - vec3(0.0, 0.0, 1.0)), vec3(0.000001))));
+      }`;
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
     it("has czm_eyeToCartographicDelta at the camera position", function () {
       const camera = createCamera({
         target: Cartesian3.fromRadians(0.3, 0.5, 0.0),

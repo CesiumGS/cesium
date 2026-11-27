@@ -52,6 +52,7 @@
 - Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
 - Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
+- Fixed fogged globe tiles turning yellow with ripple banding when the sun is just above the horizon and `Globe.enableLighting` is on. `czm_inverseGamma` now clamps negative components to zero instead of passing them to `pow`. [#14125](https://github.com/CesiumGS/cesium/pull/14125)
 
 ## 1.147 - 2026-11-02
 

@@ -8,5 +8,5 @@
  * @returns {vec3} The color in RGB space.
  */
 vec3 czm_inverseGamma(vec3 color) {
-    return pow(color, vec3(1.0 / czm_gamma));
+    return pow(max(color, vec3(0.0)), vec3(1.0 / czm_gamma));
 }
